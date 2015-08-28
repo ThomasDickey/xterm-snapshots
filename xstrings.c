@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.61 2015/04/10 00:23:33 Ross.Combs Exp $ */
+/* $XTermId: xstrings.c,v 1.62 2015/08/27 23:30:42 Martin.Tournoij Exp $ */
 
 /*
  * Copyright 2000-2014,2015 by Thomas E. Dickey
@@ -459,6 +459,33 @@ x_strtrim(const char *source)
 	    while ((*d++ = *s++) != '\0') {
 		;
 	    }
+	    if (*t != '\0') {
+		s = t + strlen(t);
+		while (s != t && IsSpace(CharOf(s[-1]))) {
+		    *--s = '\0';
+		}
+	    }
+	}
+	result = t;
+    } else {
+	result = x_strdup("");
+    }
+    return result;
+}
+
+/*
+ * Trims trailing whitespace from a copy of the string.
+ */
+char *
+x_strrtrim(const char *source)
+{
+    char *result;
+    char *s;
+
+    if (source != 0 && *source != '\0') {
+	char *t = x_strdup(source);
+	if (t != 0) {
+	    s = t;
 	    if (*t != '\0') {
 		s = t + strlen(t);
 		while (s != t && IsSpace(CharOf(s[-1]))) {

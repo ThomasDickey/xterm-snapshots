@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.612 2015/07/20 09:22:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.615 2015/08/28 00:36:11 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -2793,10 +2793,10 @@ via a control sequence.
 The corresponding terminfo capabilities \fBsmm\fP (set meta mode)
 and \fBrmm\fP (reset meta mode)
 have been recognized by \fIbash\fP for some time.
-Interestingly enough, \fIbash\fP's notion of "meta mode"
+Interestingly enough, \fIbash\fP's notion of \*(``meta mode\*(''
 differs from the standard definition (in the \fIterminfo\fP manual),
 which describes the change to the eighth bit of a character.
-It happens that \fIbash\fP views "meta mode"
+It happens that \fIbash\fP views \*(``meta mode\*(''
 as the ESC character that \fI\*n\fP puts before a character when a
 special meta key is pressed.
 \fIbash\fP's early documentation talks about the ESC character
@@ -5781,8 +5781,14 @@ the content of the selection, unmodified.
 the length of the string that \*(``%t\*('' would insert.
 .TP 5
 %t
-the selection, trimmed of leading/trailing whitespace, and newlines
-changed to single spaces.
+the selection, trimmed of leading/trailing whitespace.
+Embedded spaces (and newlines) are copied as is.
+.TP 5
+%R
+the length of the string that \*(``%r\*('' would insert.
+.TP 5
+%r
+the selection, trimmed of trailing whitespace.
 .TP 5
 %V
 the video attributes at the beginning of the highlighted region,
