@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.324 2015/08/19 23:20:41 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.325 2015/09/27 23:18:55 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #318
-.ds RF 2015/08/19
+.ds LF Patch #321
+.ds RF 2015/09/27
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1193,10 +1193,10 @@ ISO-8613-3 can be interpreted in more than one way;
 .RE
 .sP
 These ISO-8613-3 controls are supported:
-  \*(Ps = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
-  \*(Ps = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to the second \*(Ps.
-  \*(Ps = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
-  \*(Ps = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to the second \*(Ps.
+  \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+  \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to the second \*(Ps.
+  \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+  \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to the second \*(Ps.
 .sp
 .
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*m
