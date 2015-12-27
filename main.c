@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.774 2015/12/27 18:16:22 tom Exp $ */
+/* $XTermId: main.c,v 1.775 2015/12/27 18:50:50 Tobias.Stoeckmann Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -3227,6 +3227,7 @@ validShell(const char *pathname)
 	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
+	&& (sb.st_size < ((size_t) ~0) - 2)
 	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
 	if ((fp = fopen(ok_shells, "r")) != 0) {
 	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
