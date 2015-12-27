@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.773 2015/08/26 23:39:36 tom Exp $ */
+/* $XTermId: main.c,v 1.774 2015/12/27 18:16:22 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -2628,6 +2628,10 @@ get_pty(int *pty, char *from GCC_UNUSED)
 
 #if defined(USE_OPENPTY)
     result = openpty(pty, &opened_tty, ttydev, NULL, NULL);
+    if (opened_tty >= 0) {
+	close(opened_tty);
+	opened_tty = -1;
+    }
 #elif defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
@@ -2783,12 +2787,6 @@ get_pty(int *pty, char *from)
 	seteuid(save_ruid);
 	TRACE_IDS;
 
-#ifdef USE_OPENPTY
-	if (opened_tty >= 0) {
-	    close(opened_tty);
-	    opened_tty = -1;
-	}
-#endif
     } else if (m_pty != -1) {
 	*pty = m_pty;
 	result = 0;
@@ -2800,6 +2798,12 @@ get_pty(int *pty, char *from)
 	   ptydev != 0 ? ptydev : "?",
 	   result ? "FAIL" : "OK",
 	   pty != 0 ? *pty : -1));
+#ifdef USE_OPENPTY
+    if (opened_tty >= 0) {
+	close(opened_tty);
+	opened_tty = -1;
+    }
+#endif
     return result;
 }
 #endif
