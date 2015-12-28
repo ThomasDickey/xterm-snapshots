@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.404 2015/04/12 19:43:57 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.405 2015/12/27 22:35:12 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -35,7 +35,7 @@ dnl See
 dnl		http://invisible-island.net/autoconf/autoconf.html
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
-dnl AM_LANGINFO_CODESET version: 3 updated: 2002/10/27 23:21:42
+dnl AM_LANGINFO_CODESET version: 4 updated: 2015/04/18 08:56:57
 dnl -------------------
 dnl Inserted as requested by gettext 0.10.40
 dnl File from /usr/share/aclocal
@@ -46,16 +46,16 @@ dnl
 dnl From Bruno Haible.
 AC_DEFUN([AM_LANGINFO_CODESET],
 [
-  AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
-    [AC_TRY_LINK([#include <langinfo.h>],
-      [char* cs = nl_langinfo(CODESET);],
-      am_cv_langinfo_codeset=yes,
-      am_cv_langinfo_codeset=no)
-    ])
-  if test $am_cv_langinfo_codeset = yes; then
-    AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
-      [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
-  fi
+AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
+	[AC_TRY_LINK([#include <langinfo.h>],
+	[char* cs = nl_langinfo(CODESET);],
+	am_cv_langinfo_codeset=yes,
+	am_cv_langinfo_codeset=no)
+	])
+	if test $am_cv_langinfo_codeset = yes; then
+		AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
+		[Define if you have <langinfo.h> and nl_langinfo(CODESET).])
+	fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ACVERSION_CHECK version: 5 updated: 2014/06/04 19:11:49
@@ -231,7 +231,7 @@ dnl Allow user to enable a normally-off option.
 AC_DEFUN([CF_ARG_ENABLE],
 [CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ARG_OPTION version: 4 updated: 2010/05/26 05:38:42
+dnl CF_ARG_OPTION version: 5 updated: 2015/05/10 19:52:14
 dnl -------------
 dnl Restricted form of AC_ARG_ENABLE that ensures user doesn't give bogus
 dnl values.
@@ -244,15 +244,15 @@ dnl $4 = action if perform if option is default
 dnl $5 = default option value (either 'yes' or 'no')
 AC_DEFUN([CF_ARG_OPTION],
 [AC_ARG_ENABLE([$1],[$2],[test "$enableval" != ifelse([$5],no,yes,no) && enableval=ifelse([$5],no,no,yes)
-  if test "$enableval" != "$5" ; then
+	if test "$enableval" != "$5" ; then
 ifelse([$3],,[    :]dnl
 ,[    $3]) ifelse([$4],,,[
-  else
-    $4])
-  fi],[enableval=$5 ifelse([$4],,,[
-  $4
+	else
+		$4])
+	fi],[enableval=$5 ifelse([$4],,,[
+	$4
 ])dnl
-  ])])dnl
+])])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_CC_ENV_FLAGS version: 2 updated: 2015/04/12 15:39:00
 dnl ---------------
@@ -337,7 +337,7 @@ AC_TRY_LINK([#include <stdio.h>],[printf("Hello world");],,
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_ERRNO version: 11 updated: 2010/05/26 05:38:42
+dnl CF_CHECK_ERRNO version: 12 updated: 2015/04/18 08:56:57
 dnl --------------
 dnl Check for data that is usually declared in <stdio.h> or <errno.h>, e.g.,
 dnl the 'errno' variable.  Define a DECL_xxx symbol if we must declare it
@@ -348,28 +348,28 @@ dnl $2 = the assumed type
 AC_DEFUN([CF_CHECK_ERRNO],
 [
 AC_CACHE_CHECK(if external $1 is declared, cf_cv_dcl_$1,[
-    AC_TRY_COMPILE([
+	AC_TRY_COMPILE([
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h> ],
-    ifelse([$2],,int,[$2]) x = (ifelse([$2],,int,[$2])) $1,
-    [cf_cv_dcl_$1=yes],
-    [cf_cv_dcl_$1=no])
+	ifelse([$2],,int,[$2]) x = (ifelse([$2],,int,[$2])) $1,
+	[cf_cv_dcl_$1=yes],
+	[cf_cv_dcl_$1=no])
 ])
 
 if test "$cf_cv_dcl_$1" = no ; then
-    CF_UPPER(cf_result,decl_$1)
-    AC_DEFINE_UNQUOTED($cf_result)
+	CF_UPPER(cf_result,decl_$1)
+	AC_DEFINE_UNQUOTED($cf_result)
 fi
 
 # It's possible (for near-UNIX clones) that the data doesn't exist
 CF_CHECK_EXTERN_DATA($1,ifelse([$2],,int,[$2]))
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_EXTERN_DATA version: 3 updated: 2001/12/30 18:03:23
+dnl CF_CHECK_EXTERN_DATA version: 4 updated: 2015/04/18 08:56:57
 dnl --------------------
 dnl Check for existence of external data in the current set of libraries.  If
 dnl we can modify it, it's real enough.
@@ -378,18 +378,18 @@ dnl $2 = its type
 AC_DEFUN([CF_CHECK_EXTERN_DATA],
 [
 AC_CACHE_CHECK(if external $1 exists, cf_cv_have_$1,[
-    AC_TRY_LINK([
+	AC_TRY_LINK([
 #undef $1
 extern $2 $1;
 ],
-    [$1 = 2],
-    [cf_cv_have_$1=yes],
-    [cf_cv_have_$1=no])
+	[$1 = 2],
+	[cf_cv_have_$1=yes],
+	[cf_cv_have_$1=no])
 ])
 
 if test "$cf_cv_have_$1" = yes ; then
-    CF_UPPER(cf_result,have_$1)
-    AC_DEFINE_UNQUOTED($cf_result)
+	CF_UPPER(cf_result,have_$1)
+	AC_DEFINE_UNQUOTED($cf_result)
 fi
 
 ])dnl
@@ -457,7 +457,7 @@ test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
 AC_SUBST(DESKTOP_FLAGS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_ECHO version: 12 updated: 2012/10/06 16:30:28
+dnl CF_DISABLE_ECHO version: 13 updated: 2015/04/18 08:56:57
 dnl ---------------
 dnl You can always use "make -n" to see the actual options, but it's hard to
 dnl pick out/analyze warning messages when the compile-line is long.
@@ -474,17 +474,17 @@ AC_MSG_CHECKING(if you want to see long compiling messages)
 CF_ARG_DISABLE(echo,
 	[  --disable-echo          do not display "compiling" commands],
 	[
-    ECHO_LT='--silent'
-    ECHO_LD='@echo linking [$]@;'
-    RULE_CC='@echo compiling [$]<'
-    SHOW_CC='@echo compiling [$]@'
-    ECHO_CC='@'
+	ECHO_LT='--silent'
+	ECHO_LD='@echo linking [$]@;'
+	RULE_CC='@echo compiling [$]<'
+	SHOW_CC='@echo compiling [$]@'
+	ECHO_CC='@'
 ],[
-    ECHO_LT=''
-    ECHO_LD=''
-    RULE_CC=''
-    SHOW_CC=''
-    ECHO_CC=''
+	ECHO_LT=''
+	ECHO_LD=''
+	RULE_CC=''
+	SHOW_CC=''
+	ECHO_CC=''
 ])
 AC_MSG_RESULT($enableval)
 AC_SUBST(ECHO_LT)
@@ -719,7 +719,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 20 updated: 2015/04/12 15:39:00
+dnl CF_FUNC_TGETENT version: 21 updated: 2015/09/12 14:59:46
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -774,7 +774,7 @@ else
 fi
 for cf_termlib in '' $cf_TERMLIB ; do
 	LIBS="$cf_save_LIBS"
-	test -n "$cf_termlib" && CF_ADD_LIB($cf_termlib)
+	test -n "$cf_termlib" && { CF_ADD_LIB($cf_termlib) }
 	AC_TRY_RUN([
 /* terminfo implementations ignore the buffer argument, making it useless for
  * the xterm application, which uses this information to make a new TERMCAP
@@ -804,7 +804,7 @@ LIBS="$cf_save_LIBS"
 # not have side effects other than setting the cache variable, because
 # they are not executed when a cached value exists.)
 if test "x$cf_cv_lib_tgetent" != xno ; then
-	test "x$cf_cv_lib_tgetent" != xyes && CF_ADD_LIBS($cf_cv_lib_tgetent)
+	test "x$cf_cv_lib_tgetent" != xyes && { CF_ADD_LIBS($cf_cv_lib_tgetent) }
 	AC_DEFINE(USE_TERMCAP,1,[Define 1 to indicate that working tgetent is found])
 	if test "$cf_full_tgetent" = no ; then
 		AC_TRY_COMPILE([
@@ -1619,7 +1619,7 @@ if test -n "$cf_path_prog" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 15 updated: 2015/04/12 15:39:00
+dnl CF_PATH_SYNTAX version: 16 updated: 2015/04/18 08:56:57
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
@@ -1627,36 +1627,36 @@ dnl result begins with 'NONE'.  This is necessary to work around autoconf's
 dnl delayed evaluation of those symbols.
 AC_DEFUN([CF_PATH_SYNTAX],[
 if test "x$prefix" != xNONE; then
-  cf_path_syntax="$prefix"
+	cf_path_syntax="$prefix"
 else
-  cf_path_syntax="$ac_default_prefix"
+	cf_path_syntax="$ac_default_prefix"
 fi
 
 case ".[$]$1" in
 (.\[$]\(*\)*|.\'*\'*)
-  ;;
+	;;
 (..|./*|.\\*)
-  ;;
+	;;
 (.[[a-zA-Z]]:[[\\/]]*) # OS/2 EMX
-  ;;
+	;;
 (.\[$]{*prefix}*|.\[$]{*dir}*)
-  eval $1="[$]$1"
-  case ".[$]$1" in
-  (.NONE/*)
-    $1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
-    ;;
-  esac
-  ;;
+	eval $1="[$]$1"
+	case ".[$]$1" in
+	(.NONE/*)
+		$1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
+		;;
+	esac
+	;;
 (.no|.NONE/*)
-  $1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
-  ;;
+	$1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
+	;;
 (*)
-  ifelse([$2],,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
-  ;;
+	ifelse([$2],,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
+	;;
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 9 updated: 2015/04/12 15:39:00
+dnl CF_PKG_CONFIG version: 10 updated: 2015/04/26 18:06:58
 dnl -------------
 dnl Check for the package-config program, unless disabled by command-line.
 AC_DEFUN([CF_PKG_CONFIG],
@@ -1685,7 +1685,7 @@ esac
 test -z "$PKG_CONFIG" && PKG_CONFIG=none
 if test "$PKG_CONFIG" != none ; then
 	CF_PATH_SYNTAX(PKG_CONFIG)
-else
+elif test "x$cf_pkg_config" != xno ; then
 	AC_MSG_WARN(pkg-config is not installed)
 fi
 
@@ -1874,12 +1874,13 @@ CF_ACVERSION_CHECK(2.52,
 CF_CC_ENV_FLAGS
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_GROFF version: 1 updated: 2013/01/02 20:37:18
+dnl CF_PROG_GROFF version: 2 updated: 2015/07/04 11:16:27
 dnl -------------
 dnl Check if groff is available, for cases (such as html output) where nroff
 dnl is not enough.
 AC_DEFUN([CF_PROG_GROFF],[
 AC_PATH_PROG(GROFF_PATH,groff,no)
+AC_PATH_PROG(NROFF_PATH,nroff,no)
 if test "x$GROFF_PATH" = xno
 then
 	NROFF_NOTE=
@@ -1888,12 +1889,11 @@ else
 	NROFF_NOTE="#"
 	GROFF_NOTE=
 fi
-AC_SUBST(GROFF_PATH)
 AC_SUBST(GROFF_NOTE)
 AC_SUBST(NROFF_NOTE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 11 updated: 2015/04/12 15:39:00
+dnl CF_REGEX version: 12 updated: 2015/04/18 08:56:57
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -1966,10 +1966,10 @@ esac
 ])
 
 case $cf_cv_regex_hdrs in
-    (no)	    AC_MSG_WARN(no regular expression header found) ;;
-    (regex.h)   AC_DEFINE(HAVE_REGEX_H_FUNCS,1,[Define to 1 to include regex.h for regular expressions]) ;;
-    (regexp.h)  AC_DEFINE(HAVE_REGEXP_H_FUNCS,1,[Define to 1 to include regexp.h for regular expressions]) ;;
-    (regexpr.h) AC_DEFINE(HAVE_REGEXPR_H_FUNCS,1,[Define to 1 to include regexpr.h for regular expressions]) ;;
+	(no)		AC_MSG_WARN(no regular expression header found) ;;
+	(regex.h)	AC_DEFINE(HAVE_REGEX_H_FUNCS,1,[Define to 1 to include regex.h for regular expressions]) ;;
+	(regexp.h)	AC_DEFINE(HAVE_REGEXP_H_FUNCS,1,[Define to 1 to include regexp.h for regular expressions]) ;;
+	(regexpr.h) AC_DEFINE(HAVE_REGEXPR_H_FUNCS,1,[Define to 1 to include regexpr.h for regular expressions]) ;;
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -3544,7 +3544,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 3 updated: 2015/04/12 15:39:00
+dnl CF_WITH_MAN2HTML version: 5 updated: 2015/08/20 04:51:36
 dnl ----------------
 dnl Check for man2html and groff.  Optionally prefer man2html over groff.
 dnl Generate a shell script which hides the differences between the two.
@@ -3580,14 +3580,14 @@ esac
 
 MAN2HTML_TEMP="man2html.tmp"
 	cat >$MAN2HTML_TEMP <<CF_EOF
-#!/bin/sh
+#!$SHELL
 # Temporary script generated by CF_WITH_MAN2HTML
 # Convert inputs to html, sending result to standard output.
 #
 # Parameters:
-# $1 = rootname of file to convert
-# $2 = suffix of file to convert, e.g., "1"
-# $3 = macros to use, e.g., "man"
+# \${1} = rootname of file to convert
+# \${2} = suffix of file to convert, e.g., "1"
+# \${3} = macros to use, e.g., "man"
 #
 ROOT=\[$]1
 TYPE=\[$]2
@@ -3607,7 +3607,7 @@ then
 	MAN2HTML_NOTE="$GROFF_NOTE"
 	MAN2HTML_PATH="$GROFF_PATH"
 	cat >>$MAN2HTML_TEMP <<CF_EOF
-/bin/sh -c "tbl \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
+$SHELL -c "tbl \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
 CF_EOF
 else
 	MAN2HTML_NOTE=""
@@ -3925,7 +3925,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 49 updated: 2015/04/12 15:39:00
+dnl CF_XOPEN_SOURCE version: 50 updated: 2015/10/17 19:03:33
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3994,6 +3994,9 @@ case $host_os in
 	;;
 (openbsd*)
 	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncursesw
+	;;
+(os2*)
+	cf_XOPEN_SOURCE=
 	;;
 (osf[[45]]*)
 	cf_xopen_source="-D_OSF_SOURCE"
