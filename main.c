@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.775 2015/12/27 18:50:50 Tobias.Stoeckmann Exp $ */
+/* $XTermId: main.c,v 1.776 2015/12/29 15:19:35 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -1947,6 +1947,23 @@ setEffectiveUser(uid_t user)
 #endif
 #endif /* HAVE_POSIX_SAVED_IDS */
 
+#if OPT_LUIT_PROG
+static Boolean
+complex_command(char **args)
+{
+    Boolean result = False;
+    if (x_countargv(args) == 1) {
+	char *check = xtermFindShell(args[0], False);
+	if (check == 0) {
+	    result = True;
+	} else {
+	    free(check);
+	}
+    }
+    return result;
+}
+#endif
+
 int
 main(int argc, char *argv[]ENVP_ARG)
 {
@@ -2448,10 +2465,15 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 	command_length_with_luit = x_countargv(command_to_exec_with_luit);
 	if (count_exec) {
+	    static char *fixup_shell[] =
+	    {"sh", "-c", 0};
 	    char *delimiter[2];
 	    delimiter[0] = x_strdup("--");
 	    delimiter[1] = 0;
 	    x_appendargv(command_to_exec_with_luit, delimiter);
+	    if (complex_command(command_to_exec)) {
+		x_appendargv(command_to_exec_with_luit, fixup_shell);
+	    }
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
 	}
 	TRACE_ARGV("luit command", command_to_exec_with_luit);
@@ -3227,7 +3249,7 @@ validShell(const char *pathname)
 	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
-	&& (sb.st_size < ((size_t) ~0) - 2)
+	&& (sb.st_size < (off_t) (((size_t) ~0) - 2))
 	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
 	if ((fp = fopen(ok_shells, "r")) != 0) {
 	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
