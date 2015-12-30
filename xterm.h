@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.758 2015/08/19 00:26:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.759 2015/12/30 02:00:38 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -472,6 +472,7 @@ extern char **environ;
 #define XtNinternalBorder	"internalBorder"
 #define XtNitalicULMode		"italicULMode"
 #define XtNjumpScroll		"jumpScroll"
+#define XtNkeepClipboard	"keepClipboard"
 #define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlimitResize		"limitResize"
@@ -656,6 +657,7 @@ extern char **environ;
 #define XtCIconHint		"IconHint"
 #define XtCInitialFont		"InitialFont"
 #define XtCJumpScroll		"JumpScroll"
+#define XtCKeepClipboard	"KeepClipboard"
 #define XtCKeepSelection	"KeepSelection"
 #define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLimitResize		"LimitResize"
