@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2015)
-               updated for XTerm Patch #321 (2015/09/27)
+               updated for XTerm Patch #321 (2015/12/30)
 
 
 
@@ -491,6 +491,8 @@ CSI ? Pm h
           resource).
             Ps = 1 0 4 3  -> Enable raising of the window when Control-G
           is received.  (enables the popOnBell resource).
+            Ps = 1 0 4 4  -> Reuse the most recent data copied to CLIP-
+          BOARD.  (This enables the keepClipboard resource).
             Ps = 1 0 4 7  -> Use Alternate Screen Buffer.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Save cursor as in DECSC.  (This may be dis-

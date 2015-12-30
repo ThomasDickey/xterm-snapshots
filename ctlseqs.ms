@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.325 2015/09/27 23:18:55 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.326 2015/12/30 10:02:15 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #321
-.ds RF 2015/09/27
+.ds RF 2015/12/30
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1001,6 +1001,8 @@ See the section \fBMouse Tracking\fP.  This is the X11 xterm mouse protocol.
 (This enables the \fBbellIsUrgent\fP resource).
   \*(Ps = \*1\*0\*4\*3 \(-> Enable raising of the window when Control-G is received.
 (enables the \fBpopOnBell\fP resource).
+  \*(Ps = \*1\*0\*4\*4 \(-> Reuse the most recent data copied to CLIPBOARD.
+(This enables the \fBkeepClipboard\fP resource).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC.  (This may be
