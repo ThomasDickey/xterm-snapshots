@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.497 2015/12/30 01:55:30 tom Exp $ */
+/* $XTermId: button.c,v 1.498 2015/12/31 11:26:38 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3938,7 +3938,8 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
     return result;
 }
 
-#define keepClipboard(atom) (atom == XInternAtom(screen->display, "CLIPBOARD", False))
+#define keepClipboard(atom) ((screen->keepClipboard) && \
+	 (atom == XInternAtom(screen->display, "CLIPBOARD", False)))
 
 static Boolean
 ConvertSelection(Widget w,
