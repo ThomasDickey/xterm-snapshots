@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.728 2015/08/19 00:54:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.729 2016/01/28 00:27:43 Iwamoto.Kouichi Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4058,6 +4058,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    sprintf(reply, "%d;%ds",
 			    screen->lft_marg + 1,
 			    screen->rgt_marg + 1);
+		} else {
+		    okay = False;
 		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
 		strcpy(reply, "0");
