@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.88 2016/01/27 09:48:15 tom Exp $
+# $XTermId: xterm.spec,v 1.89 2016/01/29 10:06:59 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -125,6 +125,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-paste64 \
 	--enable-regis-graphics \
 	--enable-sco-fkeys \
+	--enable-screen-dumps \
 	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \
@@ -240,6 +241,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_pixmapsdir}/xterm.xpm
 
 %changelog
+
+* Fri Jan 29 2016 Thomas E. Dickey
+- use --enable-screen-dumps
 
 * Mon May 27 2013 Thomas E. Dickey
 - use --with-icon-symlink

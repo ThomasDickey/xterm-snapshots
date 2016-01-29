@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-322a
+MANIFEST for xterm, version xterm-322b
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -53,6 +53,7 @@ graphics_regis.c                support for ReGIS
 graphics_regis.h                interface of graphics_regis.c
 graphics_sixel.c                support for Sixels
 graphics_sixel.h                interface of graphics_sixel.c
+html.c                          format HTML-screendumps
 input.c                         VT100 key-symbol and function-key translation
 install-sh                      install-script (needed by configure)
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms
@@ -81,6 +82,7 @@ screen.c                        VT100 screen update functions
 scrollback.c                    manage scrollback (a big FIFO)
 scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
+svg.c                           format SVG-screendumps
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
 terminfo                        terminfo entries for 'xterm'

@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.759 2015/12/30 02:00:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.761 2016/01/28 02:15:29 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1171,6 +1171,13 @@ extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */, Prin
 extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
 extern void xtermPrintImmediately (XtermWidget /* xw */, String /* filename */, int /* opts */, int /* attributes */);
 extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
+
+#if OPT_SCREEN_DUMPS
+/* html.c */
+extern void xtermDumpHtml (XtermWidget /* xw */);
+/* svg.c */
+extern void xtermDumpSvg (XtermWidget /* xw */);
+#endif
 
 /* ptydata.c */
 #ifdef VMS

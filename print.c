@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.152 2014/06/13 00:36:51 tom Exp $ */
+/* $XTermId: print.c,v 1.154 2016/01/28 02:15:29 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -571,6 +571,14 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	case 5:
 	    setPrinterControlMode(xw, 2);
 	    break;
+#if OPT_SCREEN_DUMPS
+	case 10:
+	    xtermDumpHtml(xw);
+	    break;
+	case 11:
+	    xtermDumpSvg(xw);
+	    break;
+#endif
 	}
     }
 }

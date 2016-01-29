@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.619 2015/12/31 12:41:07 tom Exp $
+.\" $XTermId: xterm.man,v 1.621 2016/01/28 10:18:27 tom Exp $
 .\"
-.\" Copyright 1996-2014,2015 by Thomas E. Dickey
+.\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -4362,6 +4362,12 @@ This entry invokes the \fBprint()\fP action.
 .B "print-redir (\fPclass\fB SmeBSB)"
 This entry invokes the \fBprint-redir()\fP action.
 .TP 8
+.B "dump-html (\fPclass\fB SmeBSB)"
+This entry invokes the \fBdump-html()\fP action.
+.TP 8
+.B "dump-svg (\fPclass\fB SmeBSB)"
+This entry invokes the \fBdump-svg()\fP action.
+.TP 8
 .B "8-bit-control (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-8-bit-control(toggle)\fP action.
 .TP 8
@@ -4920,6 +4926,84 @@ You can use this to turn the printer on as if an application had sent
 the appropriate control sequence.
 It is also useful for switching the printer
 off if an application turns it on without resetting the print control mode.
+.TP
+XHTML Screen Dump (dump-html)
+Available only when compiled with screen dump support.
+Invokes the \fBdump-html\fP action.
+This creates an XHTML file matching the contents of the current screen,
+including the border, internal border, colors and most attributes: bold, italic,
+underline, faint, strikeout, reverse; blink is rendered as white-on-red;
+double underline is rendered the same as underline since
+there is no portable equivalent
+in CSS 2.2. The font is whatever your browser uses for preformatted (<pre>)
+elements. The XHTML file references a cascading style sheet (CSS)
+named \*(``\fBxterm.css\fP\*('' that you can create to select a font or
+override properties. The following CSS selectors are used with
+the expected default behavior in the XHTML file:
+\fI.ul\fP for underline,
+\fI.bd\fP for bold,
+\fI.it\fP for italic,
+\fI.st\fP for strikeout,
+\fI.lu\fP for strikeout combined with underline. In addition you may use
+\fI.ev\fP to affect even numbered lines and
+\fI.od\fP to affect odd numbered lines.
+Attributes faint, reverse and blink are implemented as \fIstyle\fP attributes
+setting color properties. All colors are specified as RGB percentages
+in order to support displays with 10 bits per RGB.
+The name of the file will be
+\*(``\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.xhtml\*('', where
+.IR yyyy ,
+.IR MM ,
+.IR dd ,
+.IR hh ,
+.I mm
+and
+.I ss
+are the year, month, day, hour, minute and second when the screen dump was performed
+(the file is created in the directory
+.I \*n
+is started in, or the home directory for a login
+.IR \*n ).
+The \fBdump-html\fP action can also be triggered using the Media Copy
+control sequence CSI 1 0 i, for example from a shell script with
+.NS
+printf '\\033[10i'
+.NE
+.sp
+Only the UTF-8 encoding is supported.
+.TP
+SVG Screen Dump (dump-svg)
+Available only when compiled with screen dump support.
+Invokes the \fBdump-svg\fP action.
+This creates a Scalable Vector Graphics (SVG) file matching
+the contents of the current screen, including the border,
+internal border, colors and most attributes: bold, italic,
+underline, double underline, faint, strikeout, reverse;
+blink is rendered as white-on-red.
+The font is whatever your renderer uses for the \fImonospace\fP font-family.
+All colors are specified as RGB percentages
+in order to support displays with 10 bits per RGB.
+The name of the file will be
+\*(``\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.svg\*('', where
+.IR yyyy ,
+.IR MM ,
+.IR dd ,
+.IR hh ,
+.I mm
+and
+.I ss
+are the year, month, day, hour, minute and second when the screen dump was performed
+(the file is created in the directory
+.I \*n
+is started in, or the home directory for a login
+.IR \*n ).
+The \fBdump-svg\fP action can also be triggered using the Media Copy
+control sequence CSI 1 1 i, for example from a shell script with
+.NS
+printf '\\033[11i'
+.NE
+.sp
+Only the UTF-8 encoding is supported.
 .RE
 .TP
 Modes for setting keyboard style:
@@ -7142,6 +7226,7 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon,
+Jens Schweikhardt,
 Ross Combs,
 Stephen P. Wall,
 David Wexelblat, and

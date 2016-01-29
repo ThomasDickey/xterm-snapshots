@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.825 2015/12/30 02:07:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.827 2016/01/28 02:15:29 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -530,6 +530,10 @@ typedef struct {
 
 #ifndef OPT_SIXEL_GRAPHICS
 #define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
+#endif
+
+#ifndef OPT_SCREEN_DUMPS
+#define OPT_SCREEN_DUMPS 0 /* true if xterm supports screen dumps */
 #endif
 
 #ifndef OPT_REGIS_GRAPHICS
