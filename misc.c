@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.729 2016/01/28 00:27:43 Iwamoto.Kouichi Exp $ */
+/* $XTermId: misc.c,v 1.730 2016/01/28 10:16:21 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4969,7 +4969,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 #endif
 	}
     }
-    if (IsTitleMode(xw, tmSetBase16)) {
+    if (IsTitleMode(xw, tmSetBase16) && (value != emptyString)) {
 	free(value);
     }
     free(my_attr);
