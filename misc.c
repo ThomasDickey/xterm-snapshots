@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.730 2016/01/28 10:16:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.733 2016/02/11 01:05:47 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1996,33 +1996,34 @@ StartLog(XtermWidget xw)
 	    free(screen->logfile);
 	if (log_default == NULL) {
 #if defined(HAVE_GETHOSTNAME) && defined(HAVE_STRFTIME)
-	    char log_def_name[512];	/* see sprintf below */
-	    char hostname[255 + 1];	/* Internet standard limit (RFC 1035):
+	    const char form[] = "Xterm.log.%s%s.%d";
+	    char where[255 + 1];	/* Internet standard limit (RFC 1035):
 					   ``To simplify implementations, the
 					   total length of a domain name (i.e.,
 					   label octets and label length
 					   octets) is restricted to 255 octets
 					   or less.'' */
-	    char yyyy_mm_dd_hh_mm_ss[4 + 5 * (1 + 2) + 1];
+	    char when[LEN_TIMESTAMP];
+	    char formatted[sizeof(form) + sizeof(where) + sizeof(when) + 9];
 	    time_t now;
 	    struct tm *ltm;
 
 	    now = time((time_t *) 0);
 	    ltm = (struct tm *) localtime(&now);
-	    if ((gethostname(hostname, sizeof(hostname)) == 0) &&
-		(strftime(yyyy_mm_dd_hh_mm_ss,
-			  sizeof(yyyy_mm_dd_hh_mm_ss),
-			  "%Y.%m.%d.%H.%M.%S", ltm) > 0)) {
-		(void) sprintf(log_def_name, "Xterm.log.%.255s.%.20s.%d",
-			       hostname, yyyy_mm_dd_hh_mm_ss, (int) getpid());
-	    }
-	    if ((log_default = x_strdup(log_def_name)) == NULL)
+	    if ((gethostname(where, sizeof(where)) == 0) &&
+		(strftime(when, sizeof(when), FMT_TIMESTAMP, ltm) > 0)) {
+		(void) sprintf(formatted, form, where, when, (int) getpid());
+	    } else {
 		return;
+	    }
+	    if ((log_default = x_strdup(formatted)) == NULL) {
+		return;
+	    }
 #else
 	    static const char log_def_name[] = "XtermLog.XXXXXX";
-	    if ((log_default = x_strdup(log_def_name)) == NULL)
+	    if ((log_default = x_strdup(log_def_name)) == NULL) {
 		return;
-
+	    }
 	    mktemp(log_default);
 #endif
 	}

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.761 2016/01/28 02:15:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.762 2016/02/11 00:30:54 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -372,6 +372,10 @@ extern char **environ;
 	    name = x_strdup(name)
 #define FREE_STRING(name) \
 	    free_string(name)
+
+/* strftime format and length of the result */
+#define FMT_TIMESTAMP ".%Y.%m.%d.%H.%M.%S"
+#define LEN_TIMESTAMP sizeof(".YYYY.MM.DD.hh.mm.ss")
 
 /***====================================================================***/
 
