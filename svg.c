@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.2 2016/01/28 02:21:07 tom Exp $ */
+/* $XTermId: svg.c,v 1.4 2016/02/11 00:34:14 tom Exp $ */
 
 /*
  * Copyright 2015 Jens Schweikhardt
@@ -37,8 +37,12 @@
 #define CELLW 10
 #define CELLH 20
 
+#define DUMP_PREFIX "xterm"
+#define DUMP_SUFFIX ".svg"
+#define DEFAULTNAME DUMP_PREFIX DUMP_SUFFIX
+
 #ifdef VMS
-#define VMS_SVG_FILE "sys$scratch:xterm.svg"
+#define VMS_SVG_FILE "sys$scratch:" DEFAULTNAME
 #endif
 
 extern char *PixelToCSSColor(XtermWidget xw, Pixel p);	/* in html.c */
@@ -63,7 +67,7 @@ xtermDumpSvg(XtermWidget xw)
     fp = fopen(VMS_HTML_FILE, "wb");
 #elif defined(HAVE_STRFTIME)
     {
-	char fname[sizeof "xterm.YYYY.MM.DD.hh.mm.ss.svg"];
+	char fname[sizeof(DEFAULTNAME) + LEN_TIMESTAMP];
 	time_t now;
 	struct tm *ltm;
 
@@ -71,14 +75,14 @@ xtermDumpSvg(XtermWidget xw)
 	ltm = localtime(&now);
 
 	if (strftime(fname, sizeof fname,
-		     "xterm.%Y.%m.%d.%H.%M.%S.svg", ltm) > 0) {
+		     DUMP_PREFIX FMT_TIMESTAMP DUMP_SUFFIX, ltm) > 0) {
 	    fp = fopen(fname, "wb");
 	} else {
-	    fp = fopen("xterm.svg", "wb");
+	    fp = fopen(DEFAULTNAME, "wb");
 	}
     }
 #else
-    fp = fopen("xterm.svg", "wb");
+    fp = fopen(DEFAULTNAME, "wb");
 #endif
 
     if (fp != 0) {

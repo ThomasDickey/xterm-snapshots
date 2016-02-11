@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.2 2016/01/28 02:23:09 tom Exp $ */
+/* $XTermId: html.c,v 1.4 2016/02/11 00:32:20 tom Exp $ */
 
 /*
  * Copyright 2015 Jens Schweikhardt
@@ -35,8 +35,12 @@
 #define NO_COLOR	((unsigned)-1)
 #define RGBPCT(c) c.red / 655.35, c.green / 655.35, c.blue / 655.35
 
+#define DUMP_PREFIX "xterm"
+#define DUMP_SUFFIX ".xhtml"
+#define DEFAULTNAME DUMP_PREFIX DUMP_SUFFIX
+
 #ifdef VMS
-#define VMS_HTML_FILE "sys$scratch:xterm.xhtml"
+#define VMS_HTML_FILE "sys$scratch:" DEFAULTNAME
 #endif
 
 static void dumpHtmlHeader(XtermWidget xw, FILE *fp);
@@ -56,7 +60,7 @@ xtermDumpHtml(XtermWidget xw)
     fp = fopen(VMS_HTML_FILE, "wb");
 #elif defined(HAVE_STRFTIME)
     {
-	char fname[sizeof "xterm.YYYY.MM.DD.hh.mm.ss.xhtml"];
+	char fname[sizeof(DEFAULTNAME) + LEN_TIMESTAMP];
 	time_t now;
 	struct tm *ltm;
 
@@ -64,14 +68,14 @@ xtermDumpHtml(XtermWidget xw)
 	ltm = localtime(&now);
 
 	if (strftime(fname, sizeof fname,
-		     "xterm.%Y.%m.%d.%H.%M.%S.xhtml", ltm) > 0) {
+		     DUMP_PREFIX FMT_TIMESTAMP DUMP_SUFFIX, ltm) > 0) {
 	    fp = fopen(fname, "wb");
 	} else {
-	    fp = fopen("xterm.xhtml", "wb");
+	    fp = fopen(DEFAULTNAME, "wb");
 	}
     }
 #else
-    fp = fopen("xterm.xhtml", "wb");
+    fp = fopen(DEFAULTNAME, "wb");
 #endif
 
     if (fp != 0) {
@@ -201,8 +205,8 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	    bgcolor = tmp;
 	}
 
-	slen = sprintf(attr + slen, "<span class=' %s", row % 2 ? "ev" :
-		       "od");
+	slen = sprintf(attr + slen, "<span class=' %s",
+		       ((row % 2) ? "ev" : "od"));
 	if (ld->attribs[col] & BOLD)
 	    slen += sprintf(attr + slen, " bd");
 #if OPT_WIDE_ATTRS
