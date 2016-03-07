@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1416 2016/01/28 02:15:29 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1417 2016/02/12 00:18:59 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -7861,9 +7861,11 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.cursor_underline);
     /* resources allow for underline or block, not (yet) bar */
     InitCursorShape(TScreenOf(wnew), TScreenOf(request));
+#if OPT_BLINK_CURS
     TRACE(("cursor_shape:%d blinks:%s\n",
 	   TScreenOf(wnew)->cursor_shape,
 	   BtoS(TScreenOf(wnew)->cursor_blink)));
+#endif
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
@@ -10642,9 +10644,11 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     /* make cursor visible */
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
+#if OPT_BLINK_CURS
     TRACE(("cursor_shape:%d blinks:%s\n",
 	   screen->cursor_shape,
 	   BtoS(screen->cursor_blink)));
+#endif
 
     /* reset scrolling region */
     reset_margins(screen);

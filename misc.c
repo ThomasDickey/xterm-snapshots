@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.733 2016/02/11 01:05:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.734 2016/03/06 18:49:27 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -868,6 +868,25 @@ HandleStringEvent(Widget w GCC_UNUSED,
 #define PROCFS_ROOT "/proc"
 #endif
 
+/*
+ * Determine the current working directory of the child so that we can
+ * spawn a new terminal in the same directory.
+ *
+ * If we cannot get the CWD of the child, just use our own.
+ */
+char *
+ProcGetCWD(pid_t pid)
+{
+    char *child_cwd = NULL;
+
+    if (pid) {
+	char child_cwd_link[sizeof(PROCFS_ROOT) + 80];
+	sprintf(child_cwd_link, PROCFS_ROOT "/%lu/cwd", (unsigned long) pid);
+	child_cwd = Readlink(child_cwd_link);
+    }
+    return child_cwd;
+}
+
 /* ARGSUSED */
 void
 HandleSpawnTerminal(Widget w GCC_UNUSED,
@@ -898,17 +917,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    return;
     }
 
-    /*
-     * Determine the current working directory of the child so that we can
-     * spawn a new terminal in the same directory.
-     *
-     * If we cannot get the CWD of the child, just use our own.
-     */
-    if (screen->pid) {
-	char child_cwd_link[sizeof(PROCFS_ROOT) + 80];
-	sprintf(child_cwd_link, PROCFS_ROOT "/%lu/cwd", (unsigned long) screen->pid);
-	child_cwd = Readlink(child_cwd_link);
-    }
+    child_cwd = ProcGetCWD(screen->pid);
 
     /* The reaper will take care of cleaning up the child */
     pid = fork();
