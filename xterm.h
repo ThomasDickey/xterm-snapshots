@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.762 2016/02/11 00:30:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.764 2016/03/06 19:11:58 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1111,6 +1111,12 @@ extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
+#endif
+
+#if OPT_EXEC_XTERM
+extern char *ProcGetCWD(pid_t /* pid */);
+#else
+#define ProcGetCWD(pid) NULL
 #endif
 
 #if OPT_MAXIMIZE

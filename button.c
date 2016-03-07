@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.498 2015/12/31 11:26:38 tom Exp $ */
+/* $XTermId: button.c,v 1.501 2016/03/06 19:16:35 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4230,7 +4230,8 @@ _OwnSelection(XtermWidget xw,
 	} else if (keepClipboard(atoms[i])) {
 	    Char *buf;
 	    TRACE(("saving selection to clipboard buffer\n"));
-	    if ((buf = (Char *) malloc((size_t) screen->selection_length)) == 0)
+	    if ((buf = (Char *) malloc((size_t) screen->selection_length))
+		== 0)
 		SysError(ERROR_BMALLOC2);
 
 	    XtFree((char *) screen->clipboard_data);
@@ -5086,10 +5087,16 @@ expandFormat(XtermWidget xw,
 
 /* execute the command after forking.  The main process frees its data */
 static void
-executeCommand(char **argv)
+executeCommand(pid_t pid, char **argv)
 {
+    char *child_cwd = ProcGetCWD(pid);
+
+    (void) pid;
     if (argv != 0 && argv[0] != 0) {
 	if (fork() == 0) {
+	    if (child_cwd) {
+		IGNORE_RC(chdir(child_cwd));	/* We don't care if this fails */
+	    }
 	    execvp(argv[0], argv);
 	    exit(EXIT_FAILURE);
 	}
@@ -5126,7 +5133,7 @@ reallyExecFormatted(Widget w, char *format, char *data, CELL *start, CELL *finis
 	    for (argc = 0; argv[argc] != 0; ++argc) {
 		argv[argc] = expandFormat(xw, argv[argc], data, start, finish);
 	    }
-	    executeCommand(argv);
+	    executeCommand(TScreenOf(xw)->pid, argv);
 	    freeArgv(blob, argv);
 	}
     }
@@ -5173,7 +5180,7 @@ HandleExecSelectable(Widget w,
 			argv[argc] = expandFormat(xw, argv[argc], data,
 						  &start, &finish);
 		    }
-		    executeCommand(argv);
+		    executeCommand(TScreenOf(xw)->pid, argv);
 		    freeArgv(blob, argv);
 		}
 		free(data);

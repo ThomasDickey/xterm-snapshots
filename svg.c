@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.4 2016/02/11 00:34:14 tom Exp $ */
+/* $XTermId: svg.c,v 1.5 2016/02/12 00:21:15 tom Exp $ */
 
 /*
  * Copyright 2015 Jens Schweikhardt
@@ -153,23 +153,26 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 
 	/* Count how many consecutive cells have the same color & attributes. */
 	for (sal = 1; col + sal < MaxCols(s); ++sal) {
+#if OPT_ISO_COLORS
 	    if (ld->color[col] != ld->color[col + sal])
 		break;
+#endif
 	    if (ld->attribs[col] != ld->attribs[col + sal])
 		break;
 	}
 
+	fgcolor.pixel = xw->old_foreground;
+	bgcolor.pixel = xw->old_background;
+#if OPT_ISO_COLORS
 	if (ld->attribs[col] & FG_COLOR) {
 	    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
 	    fgcolor.pixel = s->Acolors[fg].value;
-	} else
-	    fgcolor.pixel = xw->old_foreground;
-
+	}
 	if (ld->attribs[col] & BG_COLOR) {
 	    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
 	    bgcolor.pixel = s->Acolors[bg].value;
-	} else
-	    bgcolor.pixel = xw->old_background;
+	}
+#endif
 
 	XQueryColor(xw->screen.display, xw->core.colormap, &fgcolor);
 	XQueryColor(xw->screen.display, xw->core.colormap, &bgcolor);

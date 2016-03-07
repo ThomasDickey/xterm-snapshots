@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.621 2016/01/28 10:18:27 tom Exp $
+.\" $XTermId: xterm.man,v 1.623 2016/03/06 16:07:50 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -3694,7 +3694,7 @@ The default is \*(``0\*(''.
 .TP 8
 .B "printOptsImmediate (\fPPrintOptsImmediate)"
 Specify the range of text which is printed to a file when
-the \fBprint-immediately\fP action is invoked.
+the \fBprint-immediate\fP action is invoked.
 .RS
 .bP
 If zero (0), then this selects the current (visible screen) plus the
@@ -4935,23 +4935,44 @@ including the border, internal border, colors and most attributes: bold, italic,
 underline, faint, strikeout, reverse; blink is rendered as white-on-red;
 double underline is rendered the same as underline since
 there is no portable equivalent
-in CSS 2.2. The font is whatever your browser uses for preformatted (<pre>)
+in CSS 2.2.
+.IP
+The font is whatever your browser uses for preformatted (<pre>)
 elements. The XHTML file references a cascading style sheet (CSS)
 named \*(``\fBxterm.css\fP\*('' that you can create to select a font or
-override properties. The following CSS selectors are used with
+override properties.
+.RS
+.LP
+The following CSS selectors are used with
 the expected default behavior in the XHTML file:
+.sp
 \fI.ul\fP for underline,
+.br
 \fI.bd\fP for bold,
+.br
 \fI.it\fP for italic,
+.br
 \fI.st\fP for strikeout,
-\fI.lu\fP for strikeout combined with underline. In addition you may use
+.br
+\fI.lu\fP for strikeout combined with underline.
+.LP
+In addition you may use
+.sp
 \fI.ev\fP to affect even numbered lines and
+.br
 \fI.od\fP to affect odd numbered lines.
+.RE
+.IP
 Attributes faint, reverse and blink are implemented as \fIstyle\fP attributes
 setting color properties. All colors are specified as RGB percentages
 in order to support displays with 10 bits per RGB.
+.IP
 The name of the file will be
-\*(``\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.xhtml\*('', where
+.NS
+\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.xhtml
+.NE
+.IP
+where
 .IR yyyy ,
 .IR MM ,
 .IR dd ,
@@ -4964,6 +4985,7 @@ are the year, month, day, hour, minute and second when the screen dump was perfo
 .I \*n
 is started in, or the home directory for a login
 .IR \*n ).
+.IP
 The \fBdump-html\fP action can also be triggered using the Media Copy
 control sequence CSI 1 0 i, for example from a shell script with
 .NS
@@ -4983,8 +5005,13 @@ blink is rendered as white-on-red.
 The font is whatever your renderer uses for the \fImonospace\fP font-family.
 All colors are specified as RGB percentages
 in order to support displays with 10 bits per RGB.
+.IP
 The name of the file will be
-\*(``\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.svg\*('', where
+.NS
+\fBxterm.\fIyyyy\fB\.\fIMM\fB\.\fIdd\fB.\fIhh\fB.\fImm\fB.\fIss\fR\.svg
+.NE
+.IP
+where
 .IR yyyy ,
 .IR MM ,
 .IR dd ,
@@ -4997,6 +5024,7 @@ are the year, month, day, hour, minute and second when the screen dump was perfo
 .I \*n
 is started in, or the home directory for a login
 .IR \*n ).
+.IP
 The \fBdump-svg\fP action can also be triggered using the Media Copy
 control sequence CSI 1 1 i, for example from a shell script with
 .NS

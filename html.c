@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.4 2016/02/11 00:32:20 tom Exp $ */
+/* $XTermId: html.c,v 1.5 2016/02/12 00:20:24 tom Exp $ */
 
 /*
  * Copyright 2015 Jens Schweikhardt
@@ -172,17 +172,18 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 	IChar chr = ld->charData[col];
 	int slen = 0;
 
+	fgcolor.pixel = xw->old_foreground;
+	bgcolor.pixel = xw->old_background;
+#if OPT_ISO_COLORS
 	if (ld->attribs[col] & FG_COLOR) {
 	    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
 	    fgcolor.pixel = s->Acolors[fg].value;
-	} else
-	    fgcolor.pixel = xw->old_foreground;
-
+	}
 	if (ld->attribs[col] & BG_COLOR) {
 	    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
 	    bgcolor.pixel = s->Acolors[bg].value;
-	} else
-	    bgcolor.pixel = xw->old_background;
+	}
+#endif
 
 	XQueryColor(xw->screen.display, xw->core.colormap, &fgcolor);
 	XQueryColor(xw->screen.display, xw->core.colormap, &bgcolor);
