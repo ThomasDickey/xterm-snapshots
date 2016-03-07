@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.405 2015/12/27 22:35:12 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.406 2016/03/07 01:30:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2014,2015 by Thomas E. Dickey
+dnl Copyright 1997-2015,2016 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1723,26 +1723,18 @@ AC_CACHE_CHECK(if we should define _POSIX_C_SOURCE,cf_cv_posix_c_source,[
 make an error
 #endif],
 	[cf_cv_posix_c_source=no],
-	[cf_want_posix_source=no
-	 case .$cf_POSIX_C_SOURCE in
-	 (.[[12]]??*)
+	[case .$cf_POSIX_C_SOURCE in
+	 (.[[12]]??*|.2)
 		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
-		;;
-	 (.2)
-		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
-		cf_want_posix_source=yes
 		;;
 	 (.*)
-		cf_want_posix_source=yes
 		;;
 	 esac
-	 if test "$cf_want_posix_source" = yes ; then
-		AC_TRY_COMPILE([#include <sys/types.h>],[
+	AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifdef _POSIX_SOURCE
 make an error
 #endif],[],
 		cf_cv_posix_c_source="$cf_cv_posix_c_source -D_POSIX_SOURCE")
-	 fi
 	 CF_MSG_LOG(ifdef from value $cf_POSIX_C_SOURCE)
 	 CFLAGS="$cf_trim_CFLAGS"
 	 CPPFLAGS="$cf_trim_CPPFLAGS $cf_cv_posix_c_source"
@@ -1763,6 +1755,17 @@ if test "$cf_cv_posix_c_source" != no ; then
 	CF_ADD_CFLAGS($cf_cv_posix_c_source)
 fi
 
+AC_CACHE_CHECK(if we should define _POSIX_SOURCE,cf_cv_posix_source,[
+	AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifdef _POSIX_SOURCE
+make an error
+#endif],[cf_cv_posix_source=yes],
+		[cf_cv_posix_source=no])
+])
+
+if test "$cf_cv_posix_source" != no ; then
+	CF_ADD_CFLAGS(-D_POSIX_SOURCE)
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_POSIX_SAVED_IDS version: 8 updated: 2012/10/04 20:12:20
@@ -3982,7 +3985,6 @@ case $host_os in
 (mirbsd*)
 	# setting _XOPEN_SOURCE or _POSIX_SOURCE breaks <sys/select.h> and other headers which use u_int / u_short types
 	cf_XOPEN_SOURCE=
-	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	;;
 (netbsd*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
@@ -4017,9 +4019,10 @@ case $host_os in
 	;;
 (*)
 	CF_TRY_XOPEN_SOURCE
-	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	;;
 esac
+
+CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 
 if test -n "$cf_xopen_source" ; then
 	CF_ADD_CFLAGS($cf_xopen_source,true)
