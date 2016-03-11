@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1647 2016/03/08 01:49:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.1651 2016/03/11 02:02:09 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_324">Patch #324 - 2016/03/10</a></li>
+
     <li><a href="#xterm_323">Patch #323 - 2016/03/07</a></li>
 
     <li><a href="#xterm_322">Patch #322 - 2016/01/02</a></li>
@@ -929,6 +931,23 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_324" id="xterm_324">Patch #324 -
+  2016/03/10</a></h1>
+
+  <ul>
+    <li>updated configure macro <code>CF_LD_RPATH_OPT</code> from
+    ncurses changes.</li>
+
+    <li>provide alternate fix for Juha Nurmela's report by turning
+    on POSIX signals if <code>_POSIX_C_SOURCE</code> is at least
+    one. This is done to improve the behavior if a direct child
+    process receives a <code>STOP</code> signal.</li>
+
+    <li>revert change to <code>CF_POSIX_C_SOURCE</code> from
+    <a href="#xterm-323">patch #323</a> (reports by Ashish Shukla,
+    Christian Weisgerber).</li>
   </ul>
 
   <h1><a name="xterm_323" id="xterm_323">Patch #323 -

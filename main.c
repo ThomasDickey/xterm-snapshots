@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.777 2016/01/02 14:12:19 tom Exp $ */
+/* $XTermId: main.c,v 1.778 2016/03/11 00:31:37 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -140,7 +140,7 @@
 static void Syntax(char *) GCC_NORETURN;
 static void HsSysError(int) GCC_NORETURN;
 
-#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE)
+#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || ( defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 1) )
 #define USE_POSIX_SIGNALS
 #endif
 
