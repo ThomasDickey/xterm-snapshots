@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.5 2016/02/12 00:21:15 tom Exp $ */
+/* $XTermId: svg.c,v 1.6 2016/05/22 19:09:17 tom Exp $ */
 
 /*
- * Copyright 2015 Jens Schweikhardt
+ * Copyright 2015,2016 Jens Schweikhardt
  *
  * All Rights Reserved
  *
@@ -128,7 +128,9 @@ dumpSvgScreen(XtermWidget xw, FILE *fp)
 	    cols * CELLW + 2 * (bw + ib), rows * CELLH + 2 * (bw + ib),
 	    PixelToCSSColor(xw, xw->core.border_pixel));
     fprintf(fp, "  <rect x='%u' y='%u' width='%u' height='%u' fill='%s'/>\n",
-	    bw, bw, MaxCols(s) * CELLW + 2 * ib, rows * CELLH + 2 * ib,
+	    bw, bw,
+	    MaxCols(s) * CELLW + 2 * ib,
+	    (unsigned) (rows * CELLH + 2 * ib),
 	    PixelToCSSColor(xw, xw->old_background));
 
     for (row = s->top_marg; row <= s->bot_marg; ++row) {

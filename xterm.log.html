@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1651 2016/03/11 02:02:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.1658 2016/05/22 20:25:04 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_dev">Development</a></li>
+
     <li><a href="#xterm_324">Patch #324 - 2016/03/10</a></li>
 
     <li><a href="#xterm_323">Patch #323 - 2016/03/07</a></li>
@@ -931,6 +933,37 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
+
+  <ul>
+    <li>update keysym2ucs.c based on Unicode 9.0</li>
+
+    <li>fixed most <code>cppcheck --enable=all</code> warnings,
+    including for style. There was one bug-fix:
+
+      <ul>
+        <li>RGB least-squares computation in
+        <code>allocateClosestRGB</code> used only one ordinate</li>
+      </ul>
+    </li>
+
+    <li>add <code>cppcheck</code> to lint-like programs in
+    configure script and makefile.</li>
+
+    <li>updates for SIXEL and ReGIS (Ross Combs):
+
+      <ul>
+        <li>Fixes some const correctness issues and points out an
+        array lifetime issue</li>
+
+        <li>Sixel drawing should still happen after an error if
+        some commands have been processed</li>
+
+        <li>Tiny steps toward reporting ReGIS input</li>
+      </ul>
+    </li>
   </ul>
 
   <h1><a name="xterm_324" id="xterm_324">Patch #324 -

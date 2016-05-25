@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.338 2016/01/28 02:15:29 tom Exp $
+dnl $XTermId: configure.in,v 1.339 2016/05/15 16:00:26 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -58,7 +58,7 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
-AC_CHECK_PROGS(LINT, tdlint lint alint)
+CF_PROG_LINT
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE
