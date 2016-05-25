@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.778 2016/03/11 00:31:37 tom Exp $ */
+/* $XTermId: main.c,v 1.779 2016/05/22 19:05:49 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -4015,7 +4015,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* __MVS__ */
 		/* Clear CLOCAL so that SIGHUP is sent to us
 		   when the xterm ends */
-		tio.c_cflag &= ~CLOCAL;
+		tio.c_cflag &= (unsigned) ~CLOCAL;
 #endif /* USE_POSIX_TERMIOS */
 		/* enable signals, canonical processing (erase, kill, etc),
 		 * echo

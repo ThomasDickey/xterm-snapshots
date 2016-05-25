@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.198 2014/07/12 22:55:02 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.199 2016/05/16 09:14:46 tom Exp $ */
 
 /*
- * Copyright 2001-2012,2014 by Thomas E. Dickey
+ * Copyright 2001-2014,2016 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -416,12 +416,11 @@ Tekparse(TekWidget tw)
     TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
     int x, y;
-    IChar c = 0;
     IChar ch;
     int nextstate;
 
     for (;;) {
-	c = input();
+	IChar c = input();
 	/*
 	 * The parsing tables all have 256 entries.  If we're supporting
 	 * wide characters, we handle them by treating them the same as
@@ -1036,12 +1035,15 @@ TekPage(TekWidget tw)
 static int
 getpoint(TekWidget tw)
 {
-    int c, x, y, e, lo_y = 0;
+    int x, y, e, lo_y = 0;
     TekScreen *tekscr = TekScreenOf(tw);
 
     x = tekscr->cur.x;
     y = tekscr->cur.y;
+
     for (;;) {
+	int c;
+
 	if ((c = (int) input()) < ' ') {	/* control character */
 	    unput(c);
 	    return (0);
@@ -1083,16 +1085,12 @@ TCursorBack(TekWidget tw)
 {
     TekScreen *tekscr = TekScreenOf(tw);
     const struct Tek_Char *t;
-    int x, l;
-
-    x = (tekscr->cur_X -=
-	 (t = &TekChar[tekscr->cur.fontsize])->hsize
-	);
+    int x = (tekscr->cur_X -= (t = &TekChar[tekscr->cur.fontsize])->hsize);
 
     if (((tekscr->margin == MARGIN1) && (x < 0))
 	|| ((tekscr->margin == MARGIN2) && (x < TEKWIDTH / 2))) {
-	if ((l = (tekscr->cur_Y + (t->vsize - 1)) / t->vsize + 1) >=
-	    t->nlines) {
+	int l = ((tekscr->cur_Y + (t->vsize - 1)) / t->vsize + 1);
+	if (l >= t->nlines) {
 	    tekscr->margin = !tekscr->margin;
 	    l = 0;
 	}
@@ -1105,14 +1103,11 @@ static void
 TCursorForward(TekWidget tw)
 {
     TekScreen *tekscr = TekScreenOf(tw);
-    const struct Tek_Char *t;
-    int l;
+    const struct Tek_Char *t = &TekChar[tekscr->cur.fontsize];
 
-    if ((tekscr->cur_X +=
-	 (t = &TekChar[tekscr->cur.fontsize])->hsize
-	) > TEKWIDTH
-	) {
-	if ((l = tekscr->cur_Y / t->vsize - 1) < 0) {
+    if ((tekscr->cur_X += t->hsize) > TEKWIDTH) {
+	int l = (tekscr->cur_Y / t->vsize - 1);
+	if (l < 0) {
 	    tekscr->margin = !tekscr->margin;
 	    l = t->nlines - 1;
 	}
@@ -1733,7 +1728,6 @@ void
 ChangeTekColors(TekWidget tw, TScreen *screen, ScrnColors * pNew)
 {
     TekScreen *tekscr = TekScreenOf(tw);
-    int i;
     XGCValues gcv;
 
     if (COLOR_DEFINED(pNew, TEK_FG)) {
@@ -1753,6 +1747,8 @@ ChangeTekColors(TekWidget tw, TScreen *screen, ScrnColors * pNew)
     }
 
     if (tw) {
+	int i;
+
 	XSetForeground(XtDisplay(tw), tekscr->TnormalGC,
 		       T_COLOR(screen, TEK_FG));
 	XSetBackground(XtDisplay(tw), tekscr->TnormalGC,
@@ -1785,7 +1781,6 @@ TekReverseVideo(TekWidget tw)
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
-    int i;
     Pixel tmp;
     XGCValues gcv;
 
@@ -1794,6 +1789,8 @@ TekReverseVideo(TekWidget tw)
     T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
 
     if (tw) {
+	int i;
+
 	XSetForeground(XtDisplay(tw), tekscr->TnormalGC, T_COLOR(screen, TEK_FG));
 	XSetBackground(XtDisplay(tw), tekscr->TnormalGC, T_COLOR(screen, TEK_BG));
 
@@ -1903,7 +1900,6 @@ TekCopy(TekWidget tw)
 
 	TekLink *Tp;
 	char buf[TIMESTAMP_LEN + 10];
-	char initbuf[5];
 	int tekcopyfd;
 
 	timestamp_filename(buf, "COPY");
@@ -1921,6 +1917,8 @@ TekCopy(TekWidget tw)
 
 	tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False);
 	if (tekcopyfd >= 0) {
+	    char initbuf[5];
+
 	    sprintf(initbuf, "%c%c%c%c",
 		    ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
 		    ANSI_ESC, (char) (tekscr->page.linetype + '`'));

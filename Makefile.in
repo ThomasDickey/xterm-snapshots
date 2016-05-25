@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.234 2015/02/12 09:31:30 tom Exp $
+## $XTermId: Makefile.in,v 1.235 2016/05/15 16:45:53 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2014,2015 by Thomas E. Dickey
+# Copyright 1997-2015,2016 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -52,6 +52,7 @@ ETAGS		= @ETAGS@
 LN_S		= @LN_S@
 RM              = rm -f
 LINT		= @LINT@
+LINT_OPTS	= @LINT_OPTS@
 
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
@@ -563,8 +564,8 @@ koi8rxterm.ps : koi8rxterm.$(manext)
 koi8rxterm.txt : koi8rxterm.$(manext)
 ################################################################################
 lint :
-	$(LINT) $(CPPFLAGS) $(SRCS1)
-	$(LINT) $(CPPFLAGS) $(SRCS2)
+	$(LINT) $(LINT_OPTS) $(CPPFLAGS) $(SRCS1)
+	$(LINT) $(LINT_OPTS) $(CPPFLAGS) $(SRCS2)
 
 tags :
 	$(CTAGS) $(SRCS) $(HDRS)
