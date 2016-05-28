@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.158 2015/08/10 23:38:32 tom Exp $
+-- $XTermId: INSTALL,v 1.159 2016/05/28 18:39:26 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2014,2015 by Thomas E. Dickey
+-- Copyright 1997-2015,2016 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -776,6 +776,13 @@ The options (in alphabetic order):
 
 	Activate the --disable-leaks option, and ensure that "-g" is added to
 	CFLAGS.
+
+  --without-xinerama      do not use Xinerama extension for multiple screens
+
+	Xinerama is an X server extension that allows multiple physical
+	screens to behave as a single screen.  If you do not need the feature
+	(or do not want the extra library dependency), use this option to
+	suppress it.
 
   --with-xpm=DIR          use Xpm library for colored icon, may specify path
 
