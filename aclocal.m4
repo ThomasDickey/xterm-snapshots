@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.411 2016/05/22 19:37:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.412 2016/05/28 18:42:52 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3782,6 +3782,21 @@ AC_DEFUN([CF_WITH_VALGRIND],[
 CF_NO_LEAKS_OPTION(valgrind,
 	[  --with-valgrind         test: use valgrind],
 	[USE_VALGRIND])
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_XINERAMA version: 1 updated: 2016/05/28 14:41:12
+dnl ----------------
+AC_DEFUN([CF_WITH_XINERAMA],
+[
+AC_MSG_CHECKING(if you want to use the Xinerama extension)
+AC_ARG_WITH(xinerama,
+[  --without-xinerama      do not use Xinerama extension for multiscreen support],
+	[cf_with_xinerama="$withval"],
+	[cf_with_xinerama=yes])
+AC_MSG_RESULT($cf_with_xinerama)
+if test "$cf_with_xinerama" = yes; then
+	CF_XINERAMA
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_XPM version: 3 updated: 2012/10/04 06:57:36
