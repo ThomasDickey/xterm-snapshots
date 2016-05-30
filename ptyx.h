@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.827 2016/01/28 02:15:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.829 2016/05/29 20:32:48 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -323,6 +323,8 @@ typedef Char *UString;
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 #define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
+
+#define CASETYPE(name) case name: result = #name; break
 
 #define CharOf(n) ((Char)(n))
 
@@ -2541,6 +2543,8 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
     , ebLast
 } ebMetaModeTypes;
 
+#define NAME_OLD_KT " legacy"
+
 #if OPT_HP_FUNC_KEYS
 #define NAME_HP_KT " hp"
 #else
@@ -2579,9 +2583,7 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
 #define TRACE_RC(code,func) func
 #endif
 
-#if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);
-#endif
 
 typedef struct
 {

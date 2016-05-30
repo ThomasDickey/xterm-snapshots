@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1418 2016/05/15 22:13:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1419 2016/05/29 20:22:27 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -7621,14 +7621,6 @@ trimSizeFromFace(char *face_name, float *face_size)
 }
 #endif
 
-static void
-initializeKeyboardType(XtermWidget xw)
-{
-    xw->keyboard.type = TScreenOf(xw)->old_fkeys
-	? keyboardIsLegacy
-	: keyboardIsDefault;
-}
-
 #define InitCursorShape(target, source) \
     target->cursor_shape = source->cursor_underline \
 	? CURSOR_UNDERLINE \
@@ -7880,9 +7872,11 @@ VTInitialize(Widget wrequest,
 
     init_Bres(screen.old_fkeys);
     wnew->screen.old_fkeys0 = wnew->screen.old_fkeys;
+    wnew->keyboard.type = TScreenOf(wnew)->old_fkeys
+	? keyboardIsLegacy
+	: keyboardIsDefault;
 
     init_Mres(screen.delete_is_del);
-    initializeKeyboardType(wnew);
 #ifdef ALLOWLOGGING
     init_Bres(misc.logInhibit);
     init_Bres(misc.log_on);
@@ -10693,8 +10687,10 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	TabReset(xw->tabs);
 	xw->keyboard.flags = MODE_SRM;
 
+	guard_keyboard_type = False;
 	screen->old_fkeys = screen->old_fkeys0;
-	initializeKeyboardType(xw);
+	decode_keyboard_type(xw, &resource);
+	update_keyboard_type();
 
 #if OPT_INITIAL_ERASE
 	if (xw->keyboard.reset_DECBKM == 1)

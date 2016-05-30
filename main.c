@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.779 2016/05/22 19:05:49 tom Exp $ */
+/* $XTermId: main.c,v 1.780 2016/05/29 16:24:39 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -323,6 +323,13 @@ ttyslot(void)
 
 #if defined(USE_UTEMPTER)
 #include <utempter.h>
+#endif
+
+#if defined(I_FIND) && defined(I_PUSH)
+#define PUSH_FAILS(fd,name) ioctl(fd, I_FIND, name) == 0 \
+			 && ioctl(fd, I_PUSH, name) < 0
+#else
+#define PUSH_FAILS(fd,name) ioctl(fd, I_PUSH, name) < 0
 #endif
 
 #if defined(UTMPX_FOR_UTMP)
@@ -3756,20 +3763,20 @@ spawnXTerm(XtermWidget xw)
 		SysError(ERROR_OPPTSNAME);
 	    }
 #ifdef I_PUSH
-	    else if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
+	    else if (PUSH_FAILS(ptyfd, "ptem")) {
 		SysError(ERROR_PTEM);
 	    }
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
 	    else if (!x_getenv("CONSEM")
-		     && ioctl(ptyfd, I_PUSH, "consem") < 0) {
+		     && PUSH_FAILS(ptyfd, "consem")) {
 		SysError(ERROR_CONSEM);
 	    }
 #endif /* !SVR4 */
-	    else if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
+	    else if (PUSH_FAILS(ptyfd, "ldterm")) {
 		SysError(ERROR_LDTERM);
 	    }
 #ifdef SVR4			/* from Sony */
-	    else if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
+	    else if (PUSH_FAILS(ptyfd, "ttcompat")) {
 		SysError(ERROR_TTCOMPAT);
 	    }
 #endif /* SVR4 */

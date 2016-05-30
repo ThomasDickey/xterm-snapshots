@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.683 2016/05/17 09:50:29 tom Exp $ */
+/* $XTermId: util.c,v 1.686 2016/05/29 20:47:46 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4543,7 +4543,7 @@ unsigned
 getXtermCombining(TScreen *screen, int row, int col, int off)
 {
     CLineData *ld = getLineData(screen, row);
-    return ld->combData[off][col];
+    return (ld->combSize ? ld->combData[off][col] : 0);
 }
 #endif
 
@@ -4598,22 +4598,41 @@ toggle_keyboard_type(XtermWidget xw, xtermKeyboardType type)
     }
 }
 
-void
+const char *
+visibleKeyboardType(xtermKeyboardType type)
+{
+    const char *result = "?";
+    switch (type) {
+	CASETYPE(keyboardIsLegacy);	/* bogus vt220 codes for F1-F4, etc. */
+	CASETYPE(keyboardIsDefault);
+	CASETYPE(keyboardIsHP);
+	CASETYPE(keyboardIsSCO);
+	CASETYPE(keyboardIsSun);
+	CASETYPE(keyboardIsTermcap);
+	CASETYPE(keyboardIsVT220);
+    }
+    return result;
+}
+
+static void
 init_keyboard_type(XtermWidget xw, xtermKeyboardType type, Bool set)
 {
-    static Bool wasSet = False;
-
     TRACE(("init_keyboard_type(%s, %s) currently %s\n",
 	   visibleKeyboardType(type),
 	   BtoS(set),
 	   visibleKeyboardType(xw->keyboard.type)));
     if (set) {
-	if (wasSet) {
-	    xtermWarning("Conflicting keyboard type option (%u/%u)\n",
-			 xw->keyboard.type, type);
+	/*
+	 * Check for conflicts, e.g., if someone asked for both Sun and HP
+	 * function keys.
+	 */
+	if (guard_keyboard_type) {
+	    xtermWarning("Conflicting keyboard type option (%s/%s)\n",
+			 visibleKeyboardType(xw->keyboard.type),
+			 visibleKeyboardType(type));
 	}
 	xw->keyboard.type = type;
-	wasSet = True;
+	guard_keyboard_type = True;
 	update_keyboard_type();
     }
 }
@@ -4632,8 +4651,9 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 	xtermKeyboardType type;
 	unsigned offset;
     } table[] = {
+	DATA(NAME_OLD_KT, keyboardIsLegacy, oldKeyboard),
 #if OPT_HP_FUNC_KEYS
-	DATA(NAME_HP_KT, keyboardIsHP, hpFunctionKeys),
+	    DATA(NAME_HP_KT, keyboardIsHP, hpFunctionKeys),
 #endif
 #if OPT_SCO_FUNC_KEYS
 	    DATA(NAME_SCO_KT, keyboardIsSCO, scoFunctionKeys),
@@ -4649,6 +4669,7 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 #endif
     };
     Cardinal n;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("decode_keyboard_type(%s)\n", rp->keyboardType));
     if (!x_strcasecmp(rp->keyboardType, "unknown")) {
@@ -4666,6 +4687,15 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 	    init_keyboard_type(xw, table[n].type, False);
     } else {
 	Bool found = False;
+
+	/*
+	 * Special case: oldXtermFKeys should have been like the others.
+	 */
+	if (!x_strcasecmp(rp->keyboardType, NAME_OLD_KT)) {
+	    TRACE(("special case, setting oldXtermFKeys\n"));
+	    screen->old_fkeys = True;
+	    screen->old_fkeys0 = True;
+	}
 
 	/*
 	 * Choose an individual keyboard type.

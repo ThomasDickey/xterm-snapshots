@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.163 2016/05/25 00:54:25 tom Exp $ */
+/* $XTermId: trace.c,v 1.164 2016/05/29 20:31:57 tom Exp $ */
 
 /*
  * Copyright 1997-2015,2016 by Thomas E. Dickey
@@ -349,24 +349,6 @@ visibleUChar(unsigned chr)
     IChar buf[1];
     buf[0] = chr;
     return visibleIChars(buf, 1);
-}
-
-#define CASETYPE(name) case name: result = #name; break
-
-const char *
-visibleKeyboardType(xtermKeyboardType type)
-{
-    const char *result = "?";
-    switch (type) {
-	CASETYPE(keyboardIsLegacy);	/* bogus vt220 codes for F1-F4, etc. */
-	CASETYPE(keyboardIsDefault);
-	CASETYPE(keyboardIsHP);
-	CASETYPE(keyboardIsSCO);
-	CASETYPE(keyboardIsSun);
-	CASETYPE(keyboardIsTermcap);
-	CASETYPE(keyboardIsVT220);
-    }
-    return result;
 }
 
 const char *

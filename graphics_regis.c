@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.79 2016/05/17 10:21:31 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.80 2016/05/29 16:20:42 tom Exp $ */
 
 /*
  * Copyright 2014-2015,2016 by Ross Combs
@@ -295,7 +295,7 @@ static unsigned get_shade_character_pixel(unsigned char const *pixels,
 					  unsigned smaxf, unsigned scale,
 					  int slant_dx, int px, int py);
 static void get_bitmap_of_character(RegisGraphicsContext const *context,
-				    char ch, unsigned maxw, unsigned maxh,
+				    int ch, unsigned maxw, unsigned maxh,
 				    unsigned char *pixels,
 				    unsigned *w, unsigned *h,
 				    unsigned max_pixels);
@@ -785,7 +785,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
     /* FIXME: The four pixels at the cardinal directions are double-drawn. */
     points = 0;
     for (iterations = 0U; iterations < 8U; iterations++) {
-	int quad = iterations & 0x3;
+	int q2 = iterations & 0x3;
 
 	rx = -ra;
 	ry = 0;
@@ -796,10 +796,10 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	do {
 #ifdef DEBUG_ARC_POINTS
 	    double rad = atan2(
-				  (double) (quadmap[quad].dyx * rx +
-					    quadmap[quad].dyy * ry),
-				  (double) (quadmap[quad].dxx * rx +
-					    quadmap[quad].dxy * ry));
+				  (double) (quadmap[q2].dyx * rx +
+					    quadmap[q2].dyy * ry),
+				  (double) (quadmap[q2].dxx * rx +
+					    quadmap[q2].dxy * ry));
 	    double deg = (360.0 * rad / (2.0 * M_PI));
 	    if (deg < 0.0)
 		deg += 360.0;
@@ -807,11 +807,11 @@ draw_patterned_arc(RegisGraphicsContext *context,
 
 	    if (points >= points_start && points <= points_stop) {
 		x = (int) (cx +
-			   quadmap[quad].dxx * rx +
-			   quadmap[quad].dxy * ry);
+			   quadmap[q2].dxx * rx +
+			   quadmap[q2].dxy * ry);
 		y = (int) (cy +
-			   quadmap[quad].dyx * rx +
-			   quadmap[quad].dyy * ry);
+			   quadmap[q2].dyx * rx +
+			   quadmap[q2].dyy * ry);
 #ifdef DEBUG_ARC_POINTS
 		TRACE(("drawing point %u at %d,%d (%.5g deg)\n",
 		       points, x, y, deg));
@@ -823,8 +823,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
 		    *ey_final = y;
 	    } else {
 #ifdef DEBUG_ARC_POINTS
-		x = (int) (cx + quadmap[quad].dxx * rx + quadmap[quad].dxy * ry);
-		y = (int) (cy + quadmap[quad].dyx * rx + quadmap[quad].dyy * ry);
+		x = (int) (cx + quadmap[q2].dxx * rx + quadmap[q2].dxy * ry);
+		y = (int) (cy + quadmap[q2].dyx * rx + quadmap[q2].dyy * ry);
 		TRACE(("skipping point %u at %d,%d which is outside of range (%.5g deg)\n",
 		       points, x, y, deg));
 #endif
@@ -1927,7 +1927,7 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 
 static int
 get_xft_bitmap_of_character(RegisGraphicsContext const *context,
-			    char const *fontname, char ch,
+			    char const *fontname, int ch,
 			    unsigned maxw, unsigned maxh, unsigned char *pixels,
 			    unsigned max_pixels, unsigned *w, unsigned *h)
 {
@@ -2025,7 +2025,7 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 
 static int
 get_user_bitmap_of_character(RegisGraphicsContext const *context,
-			     char ch,
+			     int ch,
 			     unsigned alphabet_index,
 			     unsigned char *pixels)
 {
@@ -2097,7 +2097,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
  *
  */
 static void
-get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
+get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 			unsigned maxw, unsigned maxh, unsigned char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
@@ -2201,7 +2201,7 @@ get_shade_character_pixel(unsigned char const *pixels, unsigned w, unsigned h,
 }
 
 static void
-draw_character(RegisGraphicsContext *context, char ch,
+draw_character(RegisGraphicsContext *context, int ch,
 	       int slant_dx, int rot_shear_x,
 	       int rot_shear_y, int x_sign_x, int x_sign_y,
 	       int y_sign_x, int y_sign_y)
@@ -7101,7 +7101,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		need_refresh = 1;
 	    } else if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
 		X_GETTIMEOFDAY(&curr_tv);
-		if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
+		if ((Time) curr_tv.tv_sec > (Time) prev_tv.tv_sec + 1UL) {
 		    need_refresh = 1;
 		} else {
 #define DiffTime(TV) (TV.tv_sec * 1000L + TV.tv_usec / 1000L)
