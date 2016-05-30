@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.623 2016/03/06 16:07:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.626 2016/05/29 21:22:45 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -393,14 +393,19 @@ This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to \*(``true\*(''.
 .TP 8
 .B \-aw
-This option indicates that auto-wraparound should be allowed.
-This
+This option indicates that auto-wraparound should be allowed,
+and is equivalent to setting the \fIvt100\fP resource
+\fBautoWrap\fP to \*(``false\*(''.
+.IP
+Auto-wraparound
 allows the cursor to automatically wrap to the beginning of the next
 line when it is at the rightmost position of a line and text is
 output.
 .TP 8
 .B +aw
-This option indicates that auto-wraparound should not be allowed.
+This option indicates that auto-wraparound should not be allowed,
+and is equivalent to setting the \fIvt100\fP resource
+\fBautoWrap\fP to \*(``false\*(''.
 .TP 8
 .BI \-b " number"
 This option specifies the size of the inner border (the distance between
@@ -733,6 +738,7 @@ This option sets the \fBkeyboardType\fP resource.
 Possible values include:
 \*(``unknown\*('',
 \*(``default\*('',
+\*(``legacy\*('',
 \*(``hp\*('',
 \*(``sco\*('',
 \*(``sun\*('',
@@ -746,8 +752,9 @@ The value \*(``default\*('',
 suppresses the associated resources
 .BR hpFunctionKeys ,
 .BR scoFunctionKeys ,
-.BR sunFunctionKeys,
-.BR tcapFunctionKeys
+.BR sunFunctionKeys ,
+.BR tcapFunctionKeys ,
+.BR oldXtermFKeys
 and
 .BR sunKeyboard ,
 using the Sun/PC keyboard layout.
@@ -1548,14 +1555,17 @@ Enables one (or none) of the various keyboard-type resources:
 \fBhpFunctionKeys\fP,
 \fBscoFunctionKeys\fP,
 \fBsunFunctionKeys\fP,
-\fBtcapFunctionKeys\fP and
+\fBtcapFunctionKeys\fP,
+\fBoldXtermFKeys\fP and
 \fBsunKeyboard\fP.
+.IP
 The resource's value should be one of the corresponding strings
 \*(``hp\*('',
 \*(``sco\*('',
 \*(``sun\*('',
-\*(``tcap\*('' or
-\*(``vt220\*(''.
+\*(``tcap\*('',
+\*(``legacy\*('' or
+\*(``vt220\*('', respectively.
 The individual resources are provided for legacy support;
 this resource is simpler to use.
 .IP
@@ -2487,7 +2497,7 @@ The default is \*(``false\*(''.
 .B "combiningChars (\fPclass\fB CombiningChars)"
 Specifies the number of wide-characters which can be stored in a cell
 to overstrike (combine) with the base character of the cell.
-This can be set to values in the range 0 to 4.
+This can be set to values in the range 0 to 5.
 The default is \*(``2\*(''.
 .TP 8
 .B "ctrlFKeys (\fPclass\fB CtrlFKeys)"

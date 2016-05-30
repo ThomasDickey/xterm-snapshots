@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1660 2016/05/28 18:07:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.1664 2016/05/29 23:58:28 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -938,6 +938,23 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify terminfo entries for 16-, 88- and 256-color to reset
+    palette with <code>rs1</code> capability.</li>
+
+    <li>accept <code>legacy</code> value of <code>-kt</code> as
+    synonym for the <code>oldXtermFKeys</code> resource, and extend
+    the full-reset logic to use the keyboard type set via
+    <code>-kt</code>.</li>
+
+    <li>modify <code>ioctl</code> calls for <code>I_PUSH</code> to
+    first check if the module has been added, using
+    <code>I_FIND</code>. This is needed for newer Solaris libraries
+    with c11 support (adapted from patch by Alan Coopersmith).</li>
+
+    <li>add check in <code>getXtermCombining</code> to ensure that
+    combining characters were allocated (report by Tor
+    Andersson).</li>
+
     <li>add configure option <code>--without-xinerama</code> to
     allow suppressing the extension (Gentoo #580936).</li>
 

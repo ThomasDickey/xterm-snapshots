@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.764 2016/03/06 19:11:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.765 2016/05/29 18:34:09 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1391,7 +1391,6 @@ extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mo
 extern void do_erase_line (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_ti_xtra_scroll (XtermWidget /* xw */);
 extern void getXtermSizeHints (XtermWidget /* xw */);
-extern void init_keyboard_type (XtermWidget /* xw */, xtermKeyboardType /* type */, Bool  /* set */);
 extern void recolor_cursor (TScreen * /* screen */, Cursor  /* cursor */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern void resetXtermGC (XtermWidget /* xw */, unsigned  /* flags */, Bool  /* hilite */);
 extern void scrolling_copy_area (XtermWidget /* xw */, int  /* firstline */, int  /* nlines */, int  /* amount */);
