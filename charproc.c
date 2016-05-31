@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1419 2016/05/29 20:22:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1420 2016/05/30 19:31:33 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4924,7 +4924,7 @@ dotext(XtermWidget xw,
     Cardinal chars_chomped = 1;
     int next_col = screen->cur_col;
 #else
-    int next_col, last_col, this_col;	/* must be signed */
+    int next_col, this_col;	/* must be signed */
 #endif
     Cardinal offset;
     int right = ScrnRightMargin(xw);
@@ -5046,7 +5046,7 @@ dotext(XtermWidget xw,
 	CLineData *ld = getLineData(screen, screen->cur_row);
 #endif
 
-	last_col = LineMaxCol(screen, ld);
+	int last_col = LineMaxCol(screen, ld);
 	if (last_col > (right + 1))
 	    last_col = right + 1;
 	this_col = last_col - screen->cur_col + 1;

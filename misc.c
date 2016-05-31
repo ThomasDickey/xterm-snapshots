@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.738 2016/05/22 21:04:33 tom Exp $ */
+/* $XTermId: misc.c,v 1.740 2016/05/30 20:10:19 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -2753,7 +2753,7 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 	while (!IsEmpty(buf)) {
 	    char *next;
 
-	    color = (int) strtol(buf, &next, 10);
+	    color = (int) (strtol) (buf, &next, 10);
 	    if ((next == buf) || (color < 0))
 		break;		/* no number at all */
 	    if (next != 0) {
@@ -3752,13 +3752,15 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	 * Warning, enabling this feature allows people to overwrite
 	 * arbitrary files accessible to the person running xterm.
 	 */
-	if (strcmp(buf, "?")
-	    && (cp = CastMallocN(char, strlen(buf)) != NULL)) {
-	    strcpy(cp, buf);
-	    if (screen->logfile)
-		free(screen->logfile);
-	    screen->logfile = cp;
-	    break;
+	if (strcmp(buf, "?")) {
+	    char *bp;
+	    if ((bp = CastMallocN(char, strlen(buf))) != NULL) {
+		strcpy(bp, buf);
+		if (screen->logfile)
+		    free(screen->logfile);
+		screen->logfile = bp;
+		break;
+	    }
 	}
 #endif
 	Bell(xw, XkbBI_Info, 0);
