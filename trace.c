@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.164 2016/05/29 20:31:57 tom Exp $ */
+/* $XTermId: trace.c,v 1.165 2016/05/31 00:48:42 tom Exp $ */
 
 /*
  * Copyright 1997-2015,2016 by Thomas E. Dickey
@@ -55,6 +55,7 @@
 #include <X11/Xmu/Atoms.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
+#include <X11/ConvertI.h>
 #include <X11/TranslateI.h>
 #else
 #ifdef __cplusplus

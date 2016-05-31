@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.211 2016/01/29 01:03:45 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.212 2016/05/30 20:42:13 tom Exp $ */
 
 /*
  * Copyright 1997-2015,2016 by Thomas E. Dickey
@@ -34,6 +34,22 @@
 #define included_xtermcfg_h 1
 
 /* This is a template for <xtermcfg.h> */
+
+/*
+ * There are no configure options for these features:
+ * ALLOWLOGFILECHANGES
+ * ALLOWLOGFILEONOFF
+ * CANT_OPEN_DEV_TTY
+ * DEBUG* (any debug-option)
+ * DUMP_BITMAP
+ * DUMP_COLORS
+ * HAS_LTCHARS
+ * HAVE_SYS_PTEM_H
+ * HAVE_X11_TRANSLATEI_H
+ * PUCC_PTYD
+ * USE_LOGIN_DASH_P
+ * USE_X11TERM
+ */
 
 #undef ALLOWLOGFILEEXEC		/* CF_ARG_ENABLE(enable-logfile-exec) */
 #undef ALLOWLOGGING		/* CF_ARG_ENABLE(enable-logging) */
@@ -77,6 +93,7 @@
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
+#undef HAVE_STDINT_H		/* AC_PROG_CC_STDC */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */

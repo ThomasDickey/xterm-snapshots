@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.502 2016/05/16 00:47:28 tom Exp $ */
+/* $XTermId: button.c,v 1.505 2016/05/30 19:42:44 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1847,11 +1847,10 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
 {
     int gsetL = screen->gsets[screen->curgl];
     int gsetR = screen->gsets[screen->curgr];
-    unsigned chr, out, gl, gr;
-    Char *p;
 
 #if OPT_WIDE_CHARS
     if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
+	Char *p;
 	PtyData *data = TypeXtMallocX(PtyData, *length);
 
 	memset(data, 0, sizeof(*data));
@@ -1860,6 +1859,8 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
 	memcpy(data->buffer, buffer, (size_t) *length);
 	p = buffer;
 	while (data->next < data->last) {
+	    unsigned chr, out, gl, gr;
+
 	    if (!decodeUtf8(screen, data)) {
 		data->utf_size = 1;
 		data->utf_data = data->next[0];
@@ -1879,9 +1880,12 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
     } else
 #endif
     {
+	Char *p;
+
 	for (p = buffer; (int) (p - buffer) < (int) *length; ++p) {
-	    chr = *p;
-	    out = chr;
+	    unsigned gl, gr;
+	    unsigned chr = *p;
+	    unsigned out = chr;
 	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
 		out = gl;
 	    } else if ((gr = xtermCharSetIn(screen, chr, gsetR)) != chr) {
@@ -1985,7 +1989,9 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
     /* Doing this one line at a time may no longer be necessary
        because v_write has been re-written. */
 
+#if OPT_PASTE64
     TScreen *screen = TScreenOf(xw);
+#endif
     Char *lag, *end;
 
     /* in the VMS version, if tt_pasting isn't set to True then qio
@@ -2105,7 +2111,7 @@ SelectionReceived(Widget w,
 		  int *format)
 {
     char **text_list = NULL;
-    int text_list_count;
+    int text_list_count = 0;
     XTextProperty text_prop;
     TScreen *screen;
     Display *dpy;
@@ -5096,10 +5102,10 @@ expandFormat(XtermWidget xw,
 static void
 executeCommand(pid_t pid, char **argv)
 {
-    char *child_cwd = ProcGetCWD(pid);
-
     (void) pid;
     if (argv != 0 && argv[0] != 0) {
+	char *child_cwd = ProcGetCWD(pid);
+
 	if (fork() == 0) {
 	    if (child_cwd) {
 		IGNORE_RC(chdir(child_cwd));	/* We don't care if this fails */
