@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.740 2016/05/30 20:10:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.741 2016/06/01 09:21:56 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -539,8 +539,10 @@ xtermAppPending(void)
 {
     XtInputMask result = XtAppPending(app_con);
     XEvent this_event;
+    Boolean found = False;
 
     while (result && XtAppPeekEvent(app_con, &this_event)) {
+	found = True;
 	if (this_event.type == Expose) {
 	    result = mergeExposeEvents(&this_event);
 	    TRACE(("got merged expose events\n"));
@@ -551,6 +553,15 @@ xtermAppPending(void)
 	    TRACE(("pending %s\n", visibleEventType(this_event.type)));
 	    break;
 	}
+    }
+
+    /*
+     * With NetBSD, closing a shell results in closing the X input event
+     * stream, which interferes with the "-hold" option.  Wait a short time in
+     * this case, to avoid max'ing the CPU.
+     */
+    if (hold_screen && caught_intr && !found) {
+	Sleep(10);
     }
     return result;
 }
