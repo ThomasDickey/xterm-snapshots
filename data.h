@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.126 2016/05/29 20:21:55 tom Exp $ */
+/* $XTermId: data.h,v 1.127 2016/06/01 09:13:59 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2016 by Thomas E. Dickey
@@ -109,6 +109,7 @@ extern int ice_fd;
 extern XtermWidget term;
 
 extern SIG_ATOMIC_T need_cleanup;
+extern SIG_ATOMIC_T caught_intr;
 
 #if defined(HAVE_XKB_BELL_EXT)
 #include <X11/XKBlib.h>		/* has the prototype */

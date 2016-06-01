@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.780 2016/05/29 16:24:39 tom Exp $ */
+/* $XTermId: main.c,v 1.781 2016/06/01 09:13:46 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -5220,7 +5220,9 @@ reapchild(int n GCC_UNUSED)
     do {
 	if (pid == TScreenOf(term)->pid) {
 	    DEBUG_MSG("Exiting\n");
-	    if (!hold_screen)
+	    if (hold_screen)
+		caught_intr = True;
+	    else
 		need_cleanup = True;
 	}
     } while ((pid = nonblocking_wait()) > 0);

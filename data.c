@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.95 2016/05/29 20:21:45 tom Exp $ */
+/* $XTermId: data.c,v 1.96 2016/06/01 09:14:11 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2016 by Thomas E. Dickey
@@ -94,6 +94,7 @@ XtermWidget term;		/* master data structure for client */
 
 int hold_screen;
 SIG_ATOMIC_T need_cleanup = False;
+SIG_ATOMIC_T caught_intr = False;
 
 int am_slave = -1;		/* set to file-descriptor if we're a slave process */
 int max_plus1;
