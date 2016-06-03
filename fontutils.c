@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.452 2016/05/17 09:17:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.453 2016/06/03 08:56:53 tom Exp $ */
 
 /*
  * Copyright 1998-2015,2016 by Thomas E. Dickey
@@ -2601,7 +2601,8 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 #endif
 
     if (pc == 0 || CI_NONEXISTCHAR(pc)) {
-	TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	TRACE(("xtermMissingChar %#04x (!exists), %d cells\n",
+	       ch, my_wcwidth(ch)));
 	result = True;
     }
     if (ch < KNOWN_MISSING) {

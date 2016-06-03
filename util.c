@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.687 2016/05/30 19:13:25 tom Exp $ */
+/* $XTermId: util.c,v 1.688 2016/06/03 08:58:37 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3825,11 +3825,8 @@ drawXtermText(XtermWidget xw,
 				      (unsigned) (last - first), on_wide);
 		}
 #if OPT_WIDE_CHARS
-		/*
-		 * One way or another, we will draw at least one cell.
-		 */
-		if (ch_width <= 0)
-		    ch_width = 1;
+		if (ch_width <= 0 && ch < 32)
+		    ch_width = 1;	/* special case for line-drawing */
 		if (!ucs_workaround(xw, ch,
 				    attr_flags,
 				    draw_flags,
