@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.626 2016/05/29 21:22:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.637 2016/06/05 20:51:19 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -639,12 +639,12 @@ See also the discussion of the \fBximFont\fP resource.
 (see \fB\-selbg\fP).
 .TP 8
 .BI \-hf
-This option indicates that HP Function Key escape codes should be generated
+This option indicates that HP function key escape codes should be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to \*(``true\*(''.
 .TP 8
 .BI +hf
-This option indicates that HP Function Key escape codes should not be generated
+This option indicates that HP function key escape codes should not be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to \*(``false\*(''.
 .TP 8
@@ -985,7 +985,7 @@ If not specified, reverse video is used.
 See the discussion of the \fBhighlightTextColor\fP resource.
 .TP 8
 .B \-sf
-This option indicates that Sun Function Key escape codes should be generated
+This option indicates that Sun function key escape codes should be generated
 for function keys.
 .TP 8
 .B +sf
@@ -1481,10 +1481,12 @@ Resizing the display will lose data, however, since this involves interaction
 with the shell which is no longer running.
 .TP 8
 .B "hpFunctionKeys (\fPclass\fB HpFunctionKeys)"
-Specifies whether or not HP Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not HP function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "iconGeometry (\fPclass\fB IconGeometry)"
 Specifies the preferred size and position of the application when iconified.
@@ -1566,8 +1568,11 @@ The resource's value should be one of the corresponding strings
 \*(``tcap\*('',
 \*(``legacy\*('' or
 \*(``vt220\*('', respectively.
+.IP
 The individual resources are provided for legacy support;
 this resource is simpler to use.
+\fI\*N\fP will use only one keyboard-type,
+but if multiple resources are set, it warns and uses the last one it checks.
 .IP
 The default is
 \*(``unknown\*('', i.e., none of the associated resources are set
@@ -1696,10 +1701,12 @@ by the next row.
 See \fBuseClipping\fP for a related resource.
 .TP 8
 .B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
-Specifies whether or not SCO Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not SCO function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "sessionMgt (\fPclass\fB SessionMgt)"
 If the value of this resource is \*(``true\*('',
@@ -1708,13 +1715,19 @@ for \fBXtNdieCallback\fR and \fBXtNsaveCallback\fR.
 The default is \*(``true\*(''.
 .TP 8
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
-Specifies whether or not Sun Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
+Specifies whether or not Sun function key escape codes should be generated for
+function keys.
+The default is
+\*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "sunKeyboard (\fPclass\fB SunKeyboard)"
-Specifies whether or not Sun/PC keyboard layout should be assumed rather
+\fI\*N\fP translates certain key symbols based on its assumptions about
+your keyboard.
+This resource
+specifies whether or not Sun/PC keyboard layout (i.e., the PC keyboard's
+numeric keypad together with 12 function keys) should be assumed rather
 than DEC VT220.
 This causes the keypad \*(``+\*('' to be mapped to \*(``,\*(''.
 and
@@ -1736,12 +1749,14 @@ See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "tcapFunctionKeys (\fPclass\fB TcapFunctionKeys)"
 Specifies whether or not function key escape codes read from the
-termcap/terminfo entry should be generated for
-function keys instead of standard escape sequences.
+termcap/terminfo entry corresponding to the \fBTERM\fP environment variable
+should be generated for
+function keys instead of those configured
+using \fBsunKeyboard\fP and \fBkeyboardType\fP.
 The default is
 \*(``false\*('', i.e., this feature is disabled.
 .IP
-See also the \fBkeyboardType\fP resource.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -3401,7 +3416,7 @@ The default is \*(``2\*('':
 disables the feature.
 .TP 5
 0
-uses the old/obsolete behavior.
+uses the old/obsolete behavior, i.e., the modifier is the first parameter.
 .TP 5
 1
 prefixes modified sequences with CSI.
@@ -3427,7 +3442,7 @@ permits the user to use shift- and control-modifiers
 to construct function-key strings using the normal encoding scheme.
 .TP 5
 0
-uses the old/obsolete behavior.
+uses the old/obsolete behavior, i.e., the modifier is the first parameter.
 .TP 5
 1
 prefixes modified sequences with CSI.
@@ -3532,11 +3547,18 @@ modifier associated with the left and right Alt keys.
 The default is \*(``true\*(''.
 .TP 8
 .B "oldXtermFKeys (\fPclass\fB OldXtermFKeys)"
-If \*(``true\*('', \fI\*n\fR will use old-style control sequences for function keys F1 to F4,
+If \*(``true\*('', \fI\*n\fR will use old-style (X11R5) escape sequences
+for function keys F1 to F4,
 for compatibility with X Consortium \fI\*n\fR.
-Otherwise, it uses the VT100-style
-codes for PF1 to PF4.
+Otherwise, it uses the VT100 codes for PF1 to PF4.
 The default is \*(``false\*(''.
+.IP
+Setting this resource has the same effect as setting the \fBkeyboardType\fP
+to \fBlegacy\fP.
+The \fBkeyboardType\fP resource is the preferred mechanism for selecting this mode.
+.IP
+The old-style escape sequences resemble VT220 keys,
+but appear to have been invented for \fI\*n\fP in X11R4. 
 .TP 8
 .B "on2Clicks (\fPclass\fB On2Clicks)"
 .TP

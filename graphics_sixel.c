@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.17 2016/05/22 21:23:15 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.18 2016/06/05 20:04:01 tom Exp $ */
 
 /*
  * Copyright 2014,2016 by Ross Combs
@@ -282,7 +282,7 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
     graphic->dirty = 1;
     refresh_modified_displayed_graphics(xw);
 
-    TRACE(("DONE successfully parsed sixel data\n"));
+    TRACE(("DONE parsed sixel data\n"));
     dump_graphic(graphic);
     return 0;
 }
