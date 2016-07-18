@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.688 2016/06/03 08:58:37 tom Exp $ */
+/* $XTermId: util.c,v 1.689 2016/07/18 02:21:41 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3827,6 +3827,8 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
 		if (ch_width <= 0 && ch < 32)
 		    ch_width = 1;	/* special case for line-drawing */
+		else if (ch_width < 0)
+		    ch_width = 1;	/* special case for combining char */
 		if (!ucs_workaround(xw, ch,
 				    attr_flags,
 				    draw_flags,
