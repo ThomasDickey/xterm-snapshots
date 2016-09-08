@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.689 2016/07/18 02:21:41 tom Exp $ */
+/* $XTermId: util.c,v 1.690 2016/09/08 08:59:02 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3309,6 +3309,10 @@ fixupItalics(XtermWidget xw,
 }
 #endif
 
+#define SetMissing() \
+	TRACE(("%s@%d: missing %d\n", __FILE__, __LINE__, missing)); \
+	missing = 1
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -3538,7 +3542,7 @@ drawXtermText(XtermWidget xw,
 		     */
 		    if (screen->force_box_chars
 			|| xtermXftMissing(xw, currFont, dec2ucs(ch))) {
-			missing = 1;
+			SetMissing();
 		    } else {
 			ch = dec2ucs(ch);
 			replace = True;
@@ -3555,7 +3559,7 @@ drawXtermText(XtermWidget xw,
 			    if (screen->force_box_chars
 				|| xtermXftMissing(xw, currFont, ch)) {
 				ch = part;
-				missing = True;
+				SetMissing();
 			    }
 			} else if (xtermXftMissing(xw, currFont, ch)) {
 			    XftFont *test = pickXftFont(needed, font0, wfont0);
@@ -3567,6 +3571,8 @@ drawXtermText(XtermWidget xw,
 				filler = needed - 1;
 				ch = part;
 				replace = True;
+			    } else {
+				SetMissing();
 			    }
 			}
 		    });
@@ -3582,7 +3588,7 @@ drawXtermText(XtermWidget xw,
 		     * box-characters.
 		     */
 		    if (xtermXftMissing(xw, currFont, ch)) {
-			missing = 1;
+			SetMissing();
 		    }
 		}
 #endif
@@ -3756,10 +3762,11 @@ drawXtermText(XtermWidget xw,
 	&& (!screen->fnt_boxes
 	    || (FontIsIncomplete(curFont) && !screen->assume_all_chars)
 	    || screen->force_box_chars)) {
-	/* Fill in missing box-characters.
-	   Find regions without missing characters, and draw
-	   them calling ourselves recursively.  Draw missing
-	   characters via xtermDrawBoxChar(). */
+	/*
+	 * Fill in missing box-characters.  Find regions without missing
+	 * characters, and draw them calling ourselves recursively.  Draw
+	 * missing characters via xtermDrawBoxChar().
+	 */
 	int last, first = 0;
 	Bool drewBoxes = False;
 
