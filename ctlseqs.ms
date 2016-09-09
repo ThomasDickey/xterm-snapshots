@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.330 2016/02/22 00:44:10 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.331 2016/09/08 09:16:28 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #323
-.ds RF 2016/02/21
+.ds LF Patch #326
+.ds RF 2016/09/08
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -498,10 +498,13 @@ Default response is an empty string, but may be overridden
 by a resource \fBanswerbackString\fP.
 .
 .IP \\*(Ff
-Form Feed or New Page (NP).  Ctrl-L is treated the same as LF.
+Form Feed or New Page (NP).
+(\*(Ff is Ctrl-L).
+\*(Ff is treated the same as \*(Lf.
 .
 .IP \\*(Lf
-Line Feed or New Line (NL).  (LF is Ctrl-J).
+Line Feed or New Line (NL).
+(\*(Lf is Ctrl-J).
 .
 .IP \\*(Si
 Shift In (Ctrl-O) \(-> Switch to Standard Character Set.  This invokes the
