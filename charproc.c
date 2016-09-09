@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1420 2016/05/30 19:31:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1421 2016/09/08 22:55:11 Ben.Wiley.Sittler Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1144,7 +1144,7 @@ resetCharsets(TScreen *screen)
 
 #if OPT_VT52_MODE
     if (screen->vtXX_level == 0)
-	screen->gsets[1] = '0';	/* Graphics             */
+	screen->gsets[1] = nrc_DEC_Spec_Graphic;	/* Graphics */
 #endif
 }
 
