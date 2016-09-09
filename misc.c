@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.741 2016/06/01 09:21:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.742 2016/09/08 23:39:58 Joe.Peterson Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -657,6 +657,7 @@ xevents(void)
 		case ButtonRelease:
 		    /* also these... */
 		case Expose:
+		case GraphicsExpose:
 		case NoExpose:
 		case PropertyNotify:
 		case ClientMessage:
