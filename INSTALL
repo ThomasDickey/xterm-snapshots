@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.159 2016/05/28 18:39:26 tom Exp $
+-- $XTermId: INSTALL,v 1.160 2016/09/09 22:56:18 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2015,2016 by Thomas E. Dickey
 --
@@ -458,7 +458,8 @@ The options (in alphabetic order):
   	Compile-in code that allows logging.
 
 	Logging was disabled in X11R5 xterm because of security problems.
-	They were addressed in X11R6, but the feature was not reinstated.
+	They were addressed in X11R6, but the feature was not reinstated
+	because of concerns (long past) about xterm running as root-setuid.
 
   --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
 
