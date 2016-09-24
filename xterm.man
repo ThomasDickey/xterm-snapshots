@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.677 2016/09/23 14:16:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.687 2016/09/24 00:41:51 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -73,7 +73,7 @@
 ..
 .de NE
 .fi
-.ft P
+.ft R
 .in -4
 ..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -86,13 +86,18 @@
 .TH XTERM 1 "__app_date__" "__app_version__" "X Window System"
 .SH NAME
 xterm \- terminal emulator for X
+.if n .hy 0
+.if n .nh
+.if n .na
 .SH SYNOPSIS
 .B \*n
 [\-\fItoolkitoption\fP ...] [\-\fIoption\fP ...] [\fIshell\fP]
 .SH DESCRIPTION
+.hy 0
+.nh
 The \fI\*n\fP program is a terminal emulator for the X Window System.
 It provides DEC VT102/VT220 and selected features from higher-level
-terminals such as VT320/VT420/VT520 (VTxxx).
+terminals such as VT320/VT420/VT520 (VT\fIxxx\fP).
 It also provides Tektronix 4014 emulation
 for programs that cannot use the window system directly.
 If the underlying operating system supports
@@ -101,7 +106,7 @@ derived from 4.3BSD), \fI\*n\fP will use the facilities to notify programs
 running in the window whenever it is resized.
 .
 .PP
-The VTxxx and Tektronix 4014 terminals each have their own window so that you
+The VT\fIxxx\fP and Tektronix 4014 terminals each have their own window so that you
 can edit text in one and look at graphics in the other at the same time.
 To maintain the correct aspect ratio (height/width), Tektronix graphics will
 be restricted to the largest box with a 4014's aspect ratio that will fit in
@@ -114,8 +119,8 @@ considered the \*(``active\*('' window for receiving keyboard input and terminal
 output.
 This is the window that contains the text cursor.
 The active window can be chosen through escape sequences,
-the \*(``VT Options\*('' menu in the VTxxx window, and the \*(``Tek Options\*(''
-menu in the 4014 window.
+the \fBVT Options\fP menu in the VT\fIxxx\fP window,
+and the \fBTek Options\fP menu in the 4014 window.
 .
 .SH EMULATIONS
 The VT102 emulation is fairly complete, but does not support
@@ -167,9 +172,10 @@ The Tektronix text and graphics commands are recorded internally by
 and may be written to a file by sending the COPY escape sequence (or through
 the \fBTektronix\fP menu; see below).
 The name of the file will be
-.RS
+.NS
 \*(``COPY\fIyyyy\fR\-\fIMM\fR\-\fIdd\fR.\fIhh\fR:\fImm\fR:\fIss\fR\*(''
-.RE
+.NE
+.PP
 where
 .IR yyyy ,
 .IR MM ,
@@ -715,7 +721,7 @@ Its use is
 strongly recommended since it makes \fI\*n\fP much faster when scanning
 through large amounts of text.
 The VT100 escape sequences for enabling and
-disabling smooth scroll as well as the \*(``VT Options\*(''
+disabling smooth scroll as well as the \fBVT Options\fP
 menu can be used to turn this
 feature on or off.
 .TP 8
@@ -785,13 +791,15 @@ Unless overridden by the \fB\-lf\fP option or the \fBlogFile\fP resource:
 The logfile is written to the directory from which \fI\*n\fP is invoked.
 .bP
 The filename is generated, of the form
-.sp
-	XtermLog.\fIXXXXXX\fR
-.sp
+.NS
+XtermLog.\fIXXXXXX\fR
+.NE
+.IP
 or
-.sp
-	Xterm.log.\fIhostname.yyyy.mm.dd.hh.mm.ss.XXXXXX\fR
-.sp
+.NS
+Xterm.log.\fIhostname.yyyy.mm.dd.hh.mm.ss.XXXXXX\fR
+.NE
+.IP
 depending on how \fI\*n\fP was built.
 .RE
 .TP 8
@@ -958,7 +966,7 @@ column of the previous line.
 This is very useful for editing long shell
 command lines and is encouraged.
 This option can be turned on and off from
-the \*(``VT Options\*('' menu.
+the \fBVT Options\fP menu.
 .TP 8
 .B +rw
 This option indicates that reverse-wraparound should not be allowed.
@@ -989,8 +997,7 @@ Always send title and icon name change requests.
 This option indicates that some number of lines that are scrolled off the top
 of the window should be saved and that a scrollbar should be displayed so that
 those lines can be viewed.
-This option may be turned on and off from the
-\*(``VT Options\*('' menu.
+This option may be turned on and off from the \fBVT Options\fP menu.
 .TP 8
 .B +sb
 This option indicates that a scrollbar should not be displayed.
@@ -1020,7 +1027,7 @@ See the discussion of the \fBscaleHeight\fP resource.
 .B \-si
 This option indicates that output to a window should not automatically
 reposition the screen to the bottom of the scrolling region.
-This option can be turned on and off from the \*(``VT Options\*('' menu.
+This option can be turned on and off from the \fBVT Options\fP menu.
 .TP 8
 .B +si
 This option indicates that output to a window should cause it to
@@ -1093,7 +1100,7 @@ This option, corresponding to the \fBtoolBar\fR resource,
 indicates that \fI\*n\fR should display a toolbar (or menubar)
 at the top of its window.
 The buttons in the toolbar correspond to
-the popup menus, e.g., control/left/mouse for \*(``Main Options\*(''.
+the popup menus, e.g., control/left/mouse for \fBMain Options\fP.
 .TP 8
 .B +tb
 This option indicates that \fI\*n\fR should
@@ -1107,7 +1114,7 @@ used to determine the type of response to a DA control sequence.
 Valid values include vt52, vt100, vt101, vt102, vt220, and vt240
 (the \*(``vt\*('' is optional).
 The default is \*(``vt__default_termid__\*(''.
-The term_id argument specifies the terminal ID to use.
+The \fIterm_id\fP argument specifies the terminal ID to use.
 (This is the same as the \fBdecTerminalID\fP resource).
 .TP 8
 .BI \-tm " string"
@@ -1326,7 +1333,7 @@ See the \fB\-b\fP option, which controls the inner border of the \fI\*n\fP
 window.
 .TP 8
 .B \-display \fIdisplay\fP
-This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
+This option specifies the X server to contact; see X(__miscmansuffix__).
 .TP 8
 .B \-fg \fIcolor\fP
 This option specifies the color to use for displaying text.
@@ -1344,7 +1351,7 @@ This is the same as \fB\-fn\fP.
 .TP 8
 .B \-geometry \fIgeometry\fP
 This option specifies the preferred size and position of the VT102 window;
-see \fIX(__miscmansuffix__)\fP.
+see X(__miscmansuffix__).
 .IP
 The normal geometry specification can be suffixed with \fB@\fP followed by a
 Xinerama screen specification; it can be either \fBg\fP for the global
@@ -1389,7 +1396,7 @@ Application specific resources (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*(
 .SS Application Resources
 .TP 8
 .B "backarrowKeyIsErase\fP (class\fB BackarrowKeyIsErase\fP)"
-Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
+Tie the VT\fIxxx\fP \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
 together by setting the DECBKM state according to whether
 the \fIinitial erase\fP character is a backspace (8) or delete (127) character.
 A \*(``false\*('' value disables this feature.
@@ -1653,7 +1660,7 @@ which may be abbreviated:
 but omitting that will make the program unusable
 unless you provide a similar definition in your resource settings.
 .TP 8
-.B "ptyHandshake\fP (class\fB PtyHandshake\fP)
+.B ptyHandshake\fP (class\fB PtyHandshake\fP)
 If \*(``true\*('', \fI\*n\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fIutmp\fP
 and \fIstty\fP state.
@@ -1664,7 +1671,7 @@ and \fBptySttySize\fP which resets the screen size after other terminal
 initialization is complete.
 The default is \*(``true\*(''.
 .TP 8
-.B "ptyInitialErase\fP (class\fB PtyInitialErase\fP)"
+.B ptyInitialErase\fP (class\fB PtyInitialErase\fP)
 If \*(``true\*('', \fI\*n\fP will use the pseudo-terminal's sense of the \fIstty\fP erase
 value.
 If \*(``false\*('', \fI\*n\fP will set the \fIstty\fP erase value to match its own
@@ -1676,7 +1683,7 @@ which \fI\*n\fP sets.
 See also the \fBttyModes\fP resource, which may override this.
 The default is \*(``__initial_erase__\*(''.
 .TP 8
-.B "ptySttySize\fP (class\fB PtySttySize\fP)
+.B ptySttySize\fP (class\fB PtySttySize\fP)
 If \*(``true\*('', \fI\*n\fP will reset the screen size after
 terminal initialization is complete.
 This is needed for some systems whose pseudo-terminals cannot
@@ -2653,9 +2660,9 @@ set via ANSI-style controls).
 Specify which features will be disabled if \fBallowFontOps\fP is false.
 This is a comma-separated list of names.
 The default value is
-.RS
+.NS
 SetFont,GetFont
-.RE
+.NE
 .IP
 The names are listed below.
 \fI\*N\fP ignores capitalization, but
@@ -2673,9 +2680,9 @@ Report the specified font.
 Specify which features will be disabled if \fBallowTcapOps\fP is false.
 This is a comma-separated list of names.
 The default value is
-.RS
+.NS
 SetTcap,GetTcap
-.RE
+.NE
 .IP
 The names are listed below.
 \fI\*N\fP ignores capitalization, but
@@ -2694,9 +2701,9 @@ Specify which features will be disabled if \fBallowWindowOps\fP is false.
 This is a comma-separated list of names, or (for the controls adapted
 from \fIdtterm\fP the operation number).
 The default value is
-.RS
+.NS
 20,21,SetXprop,SetSelection
-.RE
+.NE
 .IP
 The names are listed below.
 \fI\*N\fP ignores capitalization, but
@@ -3129,16 +3136,16 @@ The following table shows the interaction of the highlighting
 resources, abbreviated as shown to fit in this page:
 .RS
 .TP 3
-HCM
+.I HCM
 highlightColorMode
 .TP 3
-HR
+.I HR
 highlightReverse
 .TP 3
-HBG
+.I HBG
 highlightColor
 .TP 3
-HFG
+.I HFG
 highlightTextColor
 .RE
 .IP
@@ -3707,7 +3714,7 @@ The default is \*(``OverTheSpot,Root\*(''.
 .TP 8
 .B "printAttributes\fP (class\fB PrintAttributes\fP)"
 Specifies whether to print graphic attributes along with the text.
-A real DEC VTxxx terminal will print the underline, highlighting codes
+A real DEC VT\fIxxx\fP terminal will print the underline, highlighting codes
 but your printer may not handle these.
 .RS
 .bP
@@ -3721,7 +3728,7 @@ as VT100-style control sequences.
 .IP
 The default is \*(``1\*(''.
 .TP 8
-.B "printFileImmediate\fP (class \fPPrintFileImmediate\fP)"
+.B "printFileImmediate\fP (class \fBPrintFileImmediate\fP)"
 When the \fBprint-immediate\fP action is invoked,
 \fI\*n\fP prints the screen contents directly to a file.
 Set this resource to the prefix of the filename
@@ -3731,7 +3738,7 @@ The default is an empty string, i.e., \*(``\*('',
 However, when the \fBprint-immediate\fP action is invoked,
 if the string is empty, then \*(``__default_class__\*('' is used.
 .TP 8
-.B "printFileOnXError\fP (class \fPPrintFileOnXError\fP)"
+.B "printFileOnXError\fP (class \fBPrintFileOnXError\fP)"
 If \fI\*n\fP exits with an X error,
 e.g., your connection is broken when the server crashes,
 it can be told to write the contents of the screen to a file.
@@ -3748,7 +3755,7 @@ ERROR_XERROR,
 ERROR_XIOERROR and
 ERROR_ICEERROR.
 .TP 8
-.B "printModeImmediate\fP (class \fPPrintModeImmediate\fP)"
+.B "printModeImmediate\fP (class \fBPrintModeImmediate\fP)"
 When the \fBprint-immediate\fP action is invoked,
 \fI\*n\fP prints the screen contents directly to a file.
 You can use the \fBprintModeImmediate\fP resource to tell it to
@@ -3756,7 +3763,7 @@ use escape sequences to reconstruct the video attributes and colors.
 This uses the same values as the \fBprintAttributes\fP resource.
 The default is \*(``0\*(''.
 .TP 8
-.B "printModeOnXError\fP (class \fPPrintModeOnXError\fP)"
+.B "printModeOnXError\fP (class \fBPrintModeOnXError\fP)"
 \fI\*N\fP implements the \fBprintFileOnXError\fP feature using
 the printer feature, although the output is written directly to a file.
 You can use the \fBprintModeOnXError\fP resource to tell it to
@@ -3764,7 +3771,7 @@ use escape sequences to reconstruct the video attributes and colors.
 This uses the same values as the \fBprintAttributes\fP resource.
 The default is \*(``0\*(''.
 .TP 8
-.B "printOptsImmediate\fP (class \fPPrintOptsImmediate\fP)"
+.B "printOptsImmediate\fP (class \fBPrintOptsImmediate\fP)"
 Specify the range of text which is printed to a file when
 the \fBprint-immediate\fP action is invoked.
 .RS
@@ -3796,7 +3803,7 @@ which can be either the normal or alternate screen.
 The default is \*(``9\*('', which selects the current visible screen
 plus saved lines, with no special case for the alternated screen.
 .TP 8
-.B "printOptsOnXError\fP (class \fPPrintOptsOnXError\fP)"
+.B "printOptsOnXError\fP (class \fBPrintOptsOnXError\fP)"
 Specify the range of text which is printed to a file when
 the \fBprint-on-error\fP action is invoked.
 The resource value is interpreted the same as in \fBprintOptsImmediate\fP.
@@ -4061,7 +4068,7 @@ show a mark on the right inner-border of the window.
 The mark shows which lines have the flag set.
 .TP 8
 .B "signalInhibit\fP (class\fB SignalInhibit\fP)"
-Specifies whether or not the entries in the \*(``Main Options\*('' menu for sending
+Specifies whether or not the entries in the \fBMain Options\fP menu for sending
 signals to \fI\*n\fP should be disallowed.
 The default is \*(``false\*(''.
 .TP 8
@@ -4404,7 +4411,7 @@ As with all X resource-based widgets,
 the labels mentioned are customary defaults for the application.
 .
 .PP
-The \fIMain Options\fP menu (widget name \fImainMenu\fP)
+The \fBMain Options\fP menu (widget name \fImainMenu\fP)
 has the following entries:
 .TP 8
 .B "toolbar\fP (class\fB SmeBSB\fP)"
@@ -4443,7 +4450,7 @@ This entry invokes the \fBdump-svg()\fP action.
 .B "8-bit-control\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-8-bit-control(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "backarrow\ key\fP (\fPclass\fB SmeBSB\fP)"
+.B "backarrow\ key\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-backarrow(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "num-lock\fP (class\fB SmeBSB\fP)"
@@ -4497,7 +4504,7 @@ This entry invokes the \fBsend-signal(\fP\fIkill\fP\fB)\fP action.
 This entry invokes the \fBquit()\fP action.
 .
 .PP
-The \fIVT Options\fP menu (widget name \fIvtMenu\fP)
+The \fBVT Options\fP menu (widget name \fIvtMenu\fP)
 has the following entries:
 .TP 8
 .B "scrollbar\fP (class\fB SmeBSB\fP)"
@@ -4535,6 +4542,12 @@ This entry invokes the \fBset-allow132(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "cursesemul\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-cursesemul(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "keepSelection\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset-keep-selection(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "selectToClipboard\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset-keep-clipboard(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "visualbell\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-visual-bell(\fP\fItoggle\fP\fB)\fP action.
@@ -4581,9 +4594,12 @@ This entry invokes the \fBset-altscreen(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "sixelScrolling\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-sixel-scrolling(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "privateColorRegisters\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset-private-colors(\fP\fItoggle\fP\fB)\fP action.
 .
 .PP
-The \fIVT Fonts\fP menu (widget name \fIfontMenu\fP)
+The \fBVT Fonts\fP menu (widget name \fIfontMenu\fP)
 has the following entries:
 .TP 8
 .B "fontdefault\fP (class\fB SmeBSB\fP)"
@@ -4627,6 +4643,9 @@ This entry invokes the \fBset-vt-font(\fP\fIe\fP\fB)\fP action.
 .B "fontsel\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-vt-font(\fP\fIs\fP\fB)\fP action.
 .TP 8
+.B "allow-bold-fonts\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-bold-fonts(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
 .B "font-linedrawing\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-font-linedrawing(\fP\fIs\fP\fB)\fP action.
 .TP 8
@@ -4647,9 +4666,24 @@ This entry invokes the \fBset-utf8-mode(\fP\fIs\fP\fB)\fP action.
 .TP 8
 .B "utf8-title\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset-utf8-title(\fP\fIs\fP\fB)\fP action.
+.TP 8
+.B "allow-color-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-color-ops(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "allow-font-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-fonts-ops(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "allow-tcap-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-tcap-ops(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "allow-title-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-title-ops(\fP\fItoggle\fP\fB)\fP action.
+.TP 8
+.B "allow-window-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow-window-ops(\fP\fItoggle\fP\fB)\fP action.
 .
 .PP
-The \fITEK Options\fP menu (widget name \fItekMenu\fP)
+The \fBTek Options\fP menu (widget name \fItekMenu\fP)
 has the following entries:
 .TP 8
 .B "tektextlarge\fP (class\fB SmeBSB\fP)"
@@ -4831,7 +4865,7 @@ But cut-buffers handle only ISO-8859-1 data
 (officially \- some clients ignore the rules).
 .
 .SS Clipboard
-When configured to use the clipboard (see resource \fBselectToClipboard\fP),
+When configured to use the clipboard (using the \fBselectToClipboard\fP resource),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
 passed via selection.
@@ -5148,9 +5182,9 @@ This corresponds to the \fBdeleteIsDEL\fP resource.
 .TP
 .B Sun Function-Keys\fP (resource \fBsunFunctionKeys\fP)
 .TP
-VT220 Keyboard (sunKeyboard)
+.B VT220 Keyboard\fP (resource \fBsunKeyboard\fP)
 These act as a radio-button, selecting one style for the keyboard layout.
-It corresponds to more than one resource setting:
+The layout corresponds to more than one resource setting:
 \fBsunKeyboard\fP,
 \fBsunFunctionKeys\fP,
 \fBscoFunctionKeys\fP and
@@ -5192,6 +5226,7 @@ process group of the process running under
 .SS "VT Options"
 .PP
 The
+.I \*n
 .I vtMenu
 sets various modes in the VT102 emulation, and is popped up when the
 \*(``control\*('' key and pointer button two are pressed in the VT102 window.
@@ -5384,17 +5419,17 @@ pops the Tektronix 4014 window up if it is not already visible,
 and switches the input stream to that window.
 When disabled,
 hides the Tektronix 4014 window and
-switches input back to the VTxxx window.
+switches input back to the VT\fIxxx\fP window.
 .
 .TP
 .B Hide VT Window\fP (resource \fBvthide\fP)
 When enabled,
-hides the VTxxx window,
+hides the VT\fIxxx\fP window,
 shows the Tektronix 4014 window if
 it was not already visible
 and switches the input stream to that window.
 When disabled,
-shows the VTxxx window,
+shows the VT\fIxxx\fP window,
 and switches the input stream to that window.
 .
 .TP
@@ -5410,7 +5445,7 @@ the alternate screen does not.
 .
 .SS "VT Fonts"
 .PP
-The \fIfontMenu\fP pops up when
+The \fI\*n\fP \fIfontMenu\fP pops up when
 when the \*(``control\*('' key and pointer button three are pressed in a window.
 It sets the font used in the VT102 window,
 or modifies the way the font is specified or displayed.
@@ -5513,7 +5548,7 @@ and ISO-8859-1 encoded fonts:
 u\*n -class __default_class__
 .NE
 .RE
-.IP
+.PP
 The fourth section allows you to enable or disable special operations
 which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
@@ -5541,11 +5576,10 @@ Enable or disable extended window control sequences (as used in dtterm).
 This corresponds to the \fBallowWindowOps\fP resource.
 .RE
 .
-.SS "TEK Options"
+.SS "Tek Options"
 .PP
-The
-.I tekMenu
-sets various modes in the Tektronix emulation, and is popped up when the
+The \fI\*n\fP \fItekMenu\fP sets various modes in the Tektronix emulation,
+and is popped up when the
 \*(``control\*('' key and pointer button two are pressed in the Tektronix window.
 The current font size is checked in the modes section of the menu.
 .RS
@@ -5642,7 +5676,7 @@ so when you attempt to enable \fBSecure Keyboard\fP it may fail.
 In this case, the bell will sound.
 If the \fBSecure Keyboard\fP succeeds,
 the foreground and background colors will be exchanged (as if you
-selected the \fBReverse Video\fP entry in the \fBModes\fP menu);
+selected the \fBEnable Reverse Video\fP entry in the \fBModes\fP menu);
 they will be exchanged again when you exit secure mode.
 If the colors
 do \fInot\fP switch, then
@@ -5838,7 +5872,7 @@ screen and in the scrollback buffer for words starting with that
 abbreviation.
 Repeating \fBdabbrev-expand()\fP several times in sequence searches for an
 alternative expansion by looking farther back.
-Lack of more matches is signaled by a \fBbeep()\fP.
+Lack of more matches is signaled by a bell.
 Attempts to expand an empty word
 (i.e., when cursor is preceded by a space) yield successively all previous
 words.
@@ -6469,7 +6503,7 @@ working directory of the process which is running in the current \fI\*n\fP.
 .IP
 On systems which have the \*(``exe\*('' process entry, e.g., /proc/12345/exe,
 use this to obtain the actual executable.
-Otherwise, use the $PATH variable to find \fI\*n\fP.
+Otherwise, use the \fB$PATH\fP variable to find \fI\*n\fP.
 .IP
 If parameters are given in the action,
 pass them to the new \fI\*n\fP process.
@@ -6658,13 +6692,13 @@ Toggling the scrollbar on and off causes the \fIvt100\fP widget to resize.
 .PP
 The default bindings for the scrollbar widget use only mouse-button events:
 .NS
-                      <Btn5Down>: StartScroll(Forward) \\n\\\&
-                      <Btn1Down>: StartScroll(Forward) \\n\\\&
-                      <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
-                      <Btn3Down>: StartScroll(Backward) \\n\\\&
-                      <Btn4Down>: StartScroll(Backward) \\n\\\&
-                      <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
-                      <BtnUp>:    NotifyScroll(Proportional) EndScroll()
+   <Btn5Down>: StartScroll(Forward) \\n\\\&
+   <Btn1Down>: StartScroll(Forward) \\n\\\&
+   <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+   <Btn3Down>: StartScroll(Backward) \\n\\\&
+   <Btn4Down>: StartScroll(Backward) \\n\\\&
+   <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
+   <BtnUp>:    NotifyScroll(Proportional) EndScroll()
 .NE
 .PP
 Events which the \fIscrollbar\fP widget does not recognize at all are lost.
@@ -6672,7 +6706,7 @@ Events which the \fIscrollbar\fP widget does not recognize at all are lost.
 However, at startup, \fI\*n\fP augments these translations with the default
 translations used for the \fIvt100\fP widget,
 together with the resource \*(``actions\*('' which those translations use.
-Because the \fIscrollbar\fP (or \fBmenubar\fP) widgets do not recognize these
+Because the \fIscrollbar\fP (or \fImenubar\fP) widgets do not recognize these
 actions (but because it has a corresponding translation),
 they are passed on to the \fIvt100\fP widget.
 .PP
@@ -6697,11 +6731,11 @@ for dragging the scrollbar thumb.
 That can be set up by altering the translations resource, e.g.,
 .NS
 *VT100.scrollbar.translations:  #override \\n\\\&
-        <Btn5Down>:     StartScroll(Forward) \\n\\\&
-        <Btn1Down>:     StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
-        <Btn4Down>:     StartScroll(Backward) \\n\\\&
-        <Btn1Motion>:   MoveThumb() NotifyThumb() \\n\\\&
-        <BtnUp>:        NotifyScroll(Proportional) EndScroll()
+   <Btn5Down>:     StartScroll(Forward) \\n\\\&
+   <Btn1Down>:     StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+   <Btn4Down>:     StartScroll(Backward) \\n\\\&
+   <Btn1Motion>:   MoveThumb() NotifyThumb() \\n\\\&
+   <BtnUp>:        NotifyScroll(Proportional) EndScroll()
 .NE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
 Applications can send sequences of characters to the terminal to change its
@@ -6818,7 +6852,7 @@ because \fBbash\fP lacks flexibility in this area.
 It uses a (less expressive than \fBbash\fP's)
 \fBreadline\fP scripting language for setting up key bindings,
 which relies upon the user to statically enumerate the possible bindings for
-given values of $TERM.
+given values of \fB$TERM\fP.
 .bP
 \fBzsh\fP(1) provides an analogous feature,
 but it accepts runtime expressions,
@@ -6841,7 +6875,7 @@ vi-up-line-or-history
 .PP
 A few shell programs provide the ability for users to add color and other
 video attributes to the shell prompt strings.
-Users can do this by setting $PS1 (the primary prompt string).
+Users can do this by setting \fB$PS1\fP (the primary prompt string).
 Again, \fBbash\fP and \fBzsh\fP have provided features not found in \fBksh\fP.
 There is a problem, however: the prompt's width on the screen will not
 necessarily be the same as the number of characters.
@@ -6861,7 +6895,7 @@ as nonprinting.
 In addition to the difference in syntax,
 the shells provide different methods for obtaining useful escape sequences:
 .bP
-As noted in \fISpecial Keys\fP, \fBzsh\fP initializes the $terminfo array
+As noted in \fBSpecial Keys\fP, \fBzsh\fP initializes the $terminfo array
 with the terminal capabilities.
 .IP
 It also provides a function \fBechoti\fP which works like \fBtput\fP(1)
@@ -6879,11 +6913,12 @@ and cannot be easily moved between different user environments.
 .SH ENVIRONMENT
 \fI\*N\fP sets several environment variables:
 .TP 5
-DISPLAY
+.B DISPLAY
 is the display name,
-pointing to the X server (see \fBDISPLAY NAMES\fP in X(__miscmansuffix__)).
+pointing to the X server (see \fIDISPLAY NAMES\fP in X(__miscmansuffix__)).
 .TP 5
-TERM
+.B TERM
+.br
 is set according to the terminfo (or termcap) entry which it is using as
 a reference.
 .IP
@@ -6892,24 +6927,24 @@ use and \fI\*n\fP are built using libraries with different terminal databases.
 In that situation, \fI\*n\fP may choose a terminal description not known
 to the shell.
 .TP 5
-WINDOWID
+.B WINDOWID
 is set to the X window id number of the \fI\*n\fP window.
 .TP 5
-XTERM_FILTER
+.B XTERM_FILTER
 is set if a locale-filter is used.
 The value is the pathname of the filter.
 .TP 5
-XTERM_LOCALE
+.B XTERM_LOCALE
 shows the locale which was used by \fI\*n\fP on startup.
 Some shell initialization scripts may set a different locale.
 .TP 5
-XTERM_SHELL
+.B XTERM_SHELL
 is set to the pathname of the program which is invoked.
 Usually that is a shell program, e.g., \fI/bin/sh\fP.
 Since it is not necessarily a shell program however,
 it is distinct from \*(``SHELL\*(''.
 .TP 5
-XTERM_VERSION
+.B XTERM_VERSION
 is set to the string displayed by the \fB\-version\fP option.
 That is normally an identifier for the X Window libraries used to
 build \fI\*n\fP, followed by
@@ -6921,19 +6956,20 @@ The patch number is also part of the response to a Secondary Device Attributes
 Depending on your system configuration, \fI\*n\fP may also set the
 following:
 .TP 5
-COLUMNS
+.B COLUMNS
 the width of the \fI\*n\fP in characters (cf: \*(``stty columns\*('').
 .TP 5
-HOME
+.B HOME
+.br
 when \fI\*n\fP is configured to update utmp.
 .TP 5
-LINES
+.B LINES
 the height of the \fI\*n\fP in characters (cf: \*(``stty rows\*('').
 .TP 5
-LOGNAME
+.B LOGNAME
 when \fI\*n\fP is configured to update utmp.
 .TP 5
-SHELL
+.B SHELL
 when \fI\*n\fP is configured to update utmp.
 It is also set if you provide a valid shell name as the optional parameter.
 .IP
@@ -6944,12 +6980,12 @@ If you have set the variable to a relative pathname,
 If you have set this to an pathname which does not correspond to a valid
 shell, \fI\*n\fP may unset it, to avoid confusion.
 .TP 5
-TERMCAP
-the contents of the termcap entry corresponding to $TERM,
+.B TERMCAP
+the contents of the termcap entry corresponding to \fB$TERM\fP,
 with lines and columns values substituted
 for the actual size window you have created.
 .TP 5
-TERMINFO
+.B TERMINFO
 may be defined to a nonstandard location in the configure script.
 .\"
 .
@@ -6989,9 +7025,10 @@ the directory in which \fI\*n\fP's pixmap icon files are installed.
 .
 .SH ERROR MESSAGES
 Most of the fatal error messages from \fI\*n\fP use the following format:
-.RS
-\*n: Error \fIXXX\fP, errno \fIYYY\fP: \fIZZZ\fP
-.RE
+.NS
+\*n: Error \fIXXX\fP, errno \fIYYY\fP: \fIZZZ\fR
+.NE
+.PP
 The \fIXXX\fP codes (which are used by \fI\*n\fP as its exit-code)
 are listed below, with a brief explanation.
 .TP 5
