@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.690 2016/09/08 08:59:02 tom Exp $ */
+/* $XTermId: util.c,v 1.691 2016/09/24 13:39:04 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4848,7 +4848,7 @@ extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 	       || (x_strcasecmp(value, "off") == 0)) {
 	result = False;
     } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
-	if (check >= (long) limit)
+	if (check >= (long) (limit + 2))	/* 2 is past False=0, True=1 */
 	    check = True;
 	result = (int) check;
     } else {
