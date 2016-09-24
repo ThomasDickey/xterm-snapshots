@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1421 2016/09/08 22:55:11 Ben.Wiley.Sittler Exp $ */
+/* $XTermId: charproc.c,v 1.1422 2016/09/23 20:13:11 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -236,6 +236,7 @@ static String _Font_Selected_ = "yes";	/* string is arbitrary */
 static const char *defaultTranslations;
 /* *INDENT-OFF* */
 static XtActionsRec actionsList[] = {
+    { "allow-bold-fonts",	HandleAllowBoldFonts },
     { "allow-send-events",	HandleAllowSends },
     { "bell",			HandleBell },
     { "clear-saved-lines",	HandleClearSavedLines },
