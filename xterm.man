@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.687 2016/09/24 00:41:51 tom Exp $
+.\" $XTermId: xterm.man,v 1.689 2016/09/25 17:25:26 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -123,11 +123,21 @@ the \fBVT Options\fP menu in the VT\fIxxx\fP window,
 and the \fBTek Options\fP menu in the 4014 window.
 .
 .SH EMULATIONS
+\fI\*N\fP provides usable emulations of related DEC terminals:
+.bP
+The VT52 emulation is complete.
+.bP
 The VT102 emulation is fairly complete, but does not support
 autorepeat.
 Double-size characters are displayed properly if your font server supports
 scalable fonts.
+.bP
 The VT220 emulation does not support soft fonts, it is otherwise complete.
+.bP
+The VT420 emulation (the default) supports controls for manipulating rectangles
+of characters as well as left/right margins.
+\fI\*N\fP does not support some other features which
+are not suitable for emulation, e.g., two-sessions.
 .PP
 Terminal database (\fIterminfo\fP (5) or \fItermcap\fP (5))
 entries that work with \fI\*n\fP include
@@ -147,8 +157,39 @@ an optional platform-specific entry (\*(``__default_termname__\*(''),
 \fI\*N\fP automatically searches the
 terminal database in this order for these entries and then
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
-You may also use \*(``vt220\*('',  but must set the terminal emulation level
+The alternatives after \*(``xterm\*('' are very old,
+from the late 1980s.
+.PP
+VT100 and VT102 emulations are commonly equated,
+though they actually differ.
+The VT102 provided controls for inserting and deleting lines.
+.PP
+Similarly,
+\*(``ansi\*('' and
+\*(``vt100\*('' are often equated.
+These are not really the same.
+For instance, they use different controls for scrolling
+(but \fI\*n\fP supports both).
+These features differ in an \*(``ansi\*('' terminal description
+from \fI\*n\fP:
+.TP 8
+.B acsc
+.br
+Pseudo-graphics (line-drawing) uses a different mapping.
+.TP 8
+.B xenl
+.br
+\fI\*N\fP wraps text at the right margin using
+the VT100 \*(``newline glitch\*('' behavior.
+.PP
+Because of the wrapping behavior, you would occasionally have to
+repaint the screen when using a text editor with the \*(``ansi\*('' description.
+.PP
+You may also use descriptions corresponding to the various
+supported emulations such as \*(``vt220\*('' or  \*(``vt420\*('',
+but should set the terminal emulation level
 with the \fBdecTerminalID\fP resource.
+.PP
 On most systems, \fI\*n\fP will use the terminfo database.
 Some older systems use termcap.
 (The \*(``TERMCAP\*('' environment variable is not set if \fI\*n\fP is linked
@@ -159,7 +200,7 @@ by the termcap emulation of terminfo libraries).
 Many of the special
 .I \*n
 features may be modified under program control
-through a set of escape sequences different from the standard VT102 escape
+through a set of escape sequences different from the standard VT\fIxxx\fP escape
 sequences (see \fIXterm Control Sequences\fP).
 .
 .PP
@@ -205,7 +246,7 @@ If the window is the focus window, then the text cursor is
 highlighted no matter where the pointer is.
 .
 .PP
-In VT102 mode, there are escape sequences to activate and deactivate
+In VT\fIxxx\fP mode, there are escape sequences to activate and deactivate
 an alternate screen buffer, which is the same size as the display area
 of the window.
 When activated, the current screen is saved and replaced with the alternate
@@ -220,9 +261,9 @@ A popup menu entry makes it simple to switch between the normal and
 alternate screens for cut and paste.
 .
 .PP
-In either VT102 or Tektronix mode, there are escape sequences to change the
+In either VT\fIxxx\fP or Tektronix mode, there are escape sequences to change the
 name of the windows.
-Additionally, in VT102 mode,
+Additionally, in VT\fIxxx\fP mode,
 \fI\*n\fP implements the window-manipulation control
 sequences from \fIdtterm\fP, such as resizing the window, setting its location
 on the screen.
@@ -1069,7 +1110,7 @@ keypad and function keys.
 .TP 8
 .B \-t
 This option indicates that \fI\*n\fP should start in Tektronix mode, rather
-than in VT102 mode.
+than in VT\fIxxx\fP mode.
 Switching between the two windows is done using the
 \*(``Options\*('' menus.
 .IP
@@ -1093,7 +1134,7 @@ automatically searches the terminal database in this order for these entries and
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
 .TP 8
 .B +t
-This option indicates that \fI\*n\fP should start in VT102 mode.
+This option indicates that \fI\*n\fP should start in VT\fIxxx\fP mode.
 .TP 8
 .B \-tb
 This option, corresponding to the \fBtoolBar\fR resource,
@@ -1350,7 +1391,7 @@ The resource value default is \fIfixed\fP.
 This is the same as \fB\-fn\fP.
 .TP 8
 .B \-geometry \fIgeometry\fP
-This option specifies the preferred size and position of the VT102 window;
+This option specifies the preferred size and position of the VT\fIxxx\fP window;
 see X(__miscmansuffix__).
 .IP
 The normal geometry specification can be suffixed with \fB@\fP followed by a
@@ -3115,7 +3156,7 @@ bold fonts that do not match the size of the normal font.
 The default is \*(``false\*('', which means that the comparison is performed.
 .TP 8
 .B "geometry\fP (class\fB Geometry\fP)"
-Specifies the preferred size and position of the VT102 window.
+Specifies the preferred size and position of the VT\fIxxx\fP window.
 There is no default for this resource.
 .TP 8
 .B "highlightColor\fP (class\fB HighlightColor\fP)"
@@ -4737,7 +4778,7 @@ foreground and background color.
 .SH "POINTER USAGE"
 .
 .PP
-Once the VT102 window is created,
+Once the VT\fIxxx\fP window is created,
 .I \*n
 allows you to select text and copy it within the same or other windows.
 .
@@ -4827,7 +4868,7 @@ that corresponds to the pointer's position in the scrollbar.
 .
 .SS "Tektronix Pointer"
 .PP
-Unlike the VT102 window, the Tektronix window does not allow the copying of
+Unlike the VT\fIxxx\fP window, the Tektronix window does not allow the copying of
 text.
 It does allow Tektronix GIN mode, and in this mode
 the cursor will change from an arrow to a cross.
@@ -4972,7 +5013,7 @@ name in parenthesis.
 .PP
 The \fI\*n\fP \fImainMenu\fP pops up
 when the \*(``control\*('' key and pointer button one are pressed in a window.
-This menu contains items that apply to both the VT102 and Tektronix windows.
+This menu contains items that apply to both the VT\fIxxx\fP and Tektronix windows.
 There are several sections:
 .TP
 Commands for managing X events:
@@ -5228,10 +5269,10 @@ process group of the process running under
 The
 .I \*n
 .I vtMenu
-sets various modes in the VT102 emulation, and is popped up when the
-\*(``control\*('' key and pointer button two are pressed in the VT102 window.
+sets various modes in the VT\fIxxx\fP emulation, and is popped up when the
+\*(``control\*('' key and pointer button two are pressed in the VT\fIxxx\fP window.
 .TP
-VT102/VT220 Modes:
+VT\fIxxx\fP Modes:
 .RS
 .
 .TP
@@ -5375,7 +5416,7 @@ There is no corresponding command-line option.
 .RE
 .
 .TP
-VT102/VT220 Commands:
+VT\fIxxx\fP Commands:
 .RS
 .TP
 .B Do Soft Reset\fP (resource \fBsoftreset\fP)
@@ -5447,7 +5488,7 @@ the alternate screen does not.
 .PP
 The \fI\*n\fP \fIfontMenu\fP pops up when
 when the \*(``control\*('' key and pointer button three are pressed in a window.
-It sets the font used in the VT102 window,
+It sets the font used in the VT\fIxxx\fP window,
 or modifies the way the font is specified or displayed.
 There are several sections.
 .PP
@@ -6460,7 +6501,7 @@ This action sets, unsets or toggles the \fBvisualBell\fP resource.
 It is also invoked by the \fBvisualbell\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
-This action sets the font or fonts currently being used in the VT102 window.
+This action sets the font or fonts currently being used in the VT\fIxxx\fP window.
 The first argument is a single character that specifies the font to be
 used:
 .RS 8
@@ -6568,7 +6609,7 @@ This action sends the indicated graphics input code.
 .
 .SS Default Key Bindings
 .PP
-The default bindings in the VT102 window use the SELECT token,
+The default bindings in the VT\fIxxx\fP window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource.
 These are for the \fIvt100\fP widget:
 .NS
@@ -6788,7 +6829,7 @@ Most of these operations are standardized, from either the DEC or Tektronix
 terminals, or from more widely used standards such as ISO-6429.
 .PP
 A few examples of usage are given in this section.
-.SS Window Titles
+.SS Window and Icon Titles
 .PP
 Some scripts use \fBecho\fP with options \fB\-e\fP and \fB\-n\fP to tell
 the shell to interpret the string \*(``\\e\*('' as the \fIescape\fP character and
@@ -6810,7 +6851,25 @@ The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
 newline from the output.
 .PP
 Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
-at the same time, using a slightly different control sequence.
+at the same time, using a slightly different control sequence:
+.NS
+printf '\\033]0;Hello world!\\033\\'
+printf '\\033]0;Hello world!\\007'
+printf '\\033]0;%s\\033\\' "Hello world!"
+printf '\\033]0;%s\\007' "Hello world!"
+.NE
+.PP
+The difference is the \fIparameter\fP \*(``0\*('' in each command.
+Most window managers will honor either window title or icon title.
+Some will make a distinction and allow you to set just the icon title.
+You can tell \fI\*n\fP to ask for this with a different parameter
+in the control sequence:
+.NS
+printf '\\033]1;Hello world!\\033\\'
+printf '\\033]1;Hello world!\\007'
+printf '\\033]1;%s\\033\\' "Hello world!"
+printf '\\033]1;%s\\007' "Hello world!"
+.NE
 .
 .SS Special Keys
 .PP
