@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.331 2016/09/08 09:16:28 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.333 2016/10/02 23:19:00 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #326
-.ds RF 2016/09/08
+.ds RF 2016/10/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -679,7 +679,7 @@ Invoke the G1 Character Set as GR (LS1R).
 .Ed
 .
 .St
-.Ss Application Program-Control functions
+.Ss Application Program-Command functions
 .IP \\*(AP\\*(Pt\\*s\\*(ST
 None.  \fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
@@ -1633,7 +1633,7 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .Ed
 .
 .St
-.Ss Operating System Controls
+.Ss Operating System Commands
 .
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
