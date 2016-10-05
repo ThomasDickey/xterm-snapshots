@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.691 2016/09/24 13:39:04 tom Exp $ */
+/* $XTermId: util.c,v 1.692 2016/10/04 21:42:21 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3571,7 +3571,7 @@ drawXtermText(XtermWidget xw,
 				filler = needed - 1;
 				ch = part;
 				replace = True;
-			    } else {
+			    } else if (ch != HIDDEN_CHAR) {
 				SetMissing();
 			    }
 			}
