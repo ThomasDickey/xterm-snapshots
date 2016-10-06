@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1687 2016/10/04 21:49:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.1689 2016/10/06 00:35:27 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -942,6 +942,15 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>always generate the <code>CASE_<em>xxx</em></code> symbols
+    in <code>VTparse.h</code> and <code>Tekparse.h</code>, as part
+    of a change to improve debug-logging. This makes the build
+    always depend upon <code>awk</code>.</li>
+
+    <li>modify <code>allowC1Printable</code> to disallow codes
+    160-254 as being equivalent to codes 32-126 when parsing escape
+    sequences (Debian #839220).</li>
+
     <li>amend fix from <a href="#xterm_326">patch #326</a> for
     TrueType fonts to exclude the hidden character used for
     double-width cells (report by Grady Martin).</li>

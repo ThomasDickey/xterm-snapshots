@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.235 2016/05/15 16:45:53 tom Exp $
+## $XTermId: Makefile.in,v 1.238 2016/10/06 00:28:15 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -125,7 +125,7 @@ EXTRAOBJ	= @EXTRAOBJS@
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @MAN2HTML_NOTE@ .html @GROFF_NOTE@ .ps .pdf
+.SUFFIXES : .i .def .cin .hin .$(manext) .ms .man .txt @MAN2HTML_NOTE@ .html @GROFF_NOTE@ .ps .pdf
 
 .c$o :
 	@RULE_CC@
@@ -135,8 +135,11 @@ all :	$(PROGRAMS)
 	@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
+.def.cin :
+	$(AWK) '/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' < $< >$@
+
 .def.hin :
-	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
+	$(AWK) '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 .man.$(manext) :
 	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
@@ -169,6 +172,10 @@ all :	$(PROGRAMS)
 @GROFF_NOTE@.ps.pdf :
 @GROFF_NOTE@	ps2pdf $*.ps
 ################################################################################
+
+VTPARSE_H = VTparse.h VTparse.hin
+TEKPARSE_H = Tekparse.h Tekparse.hin
+
 main$o : main.h
 misc$o : version.h
 
@@ -189,9 +196,18 @@ resize$x : $(OBJS2)
 	-$(RM) $@
 	perl $(srcdir)/88colres.pl > $@
 
-charproc$o : main.h @CHARPROC_DEPS@
+charproc$o : $(VTPARSE_H) main.h @CHARPROC_DEPS@
+graphics_regis$o : $(VTPARSE_H) 
+graphics_sixel$o : $(VTPARSE_H) 
+misc$o : $(VTPARSE_H) 
+VTPrsTbl$o : $(VTPARSE_H) 
+
+TekPrsTbl$o : $(TEKPARSE_H)
+Tekproc$o : $(TEKPARSE_H)
 
 misc$o : builtin_icons.h
+
+trace$o : VTparse.cin Tekparse.cin
 
 # do this to quiet gcc -Wcast-qual warnings 
 builtin_icons.h :
@@ -500,7 +516,7 @@ mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS) builtin_icons.h 
+	-$(RM) $(PROGRAMS) builtin_icons.h *.cin *parse.hin
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
