@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.782 2016/10/06 22:53:15 tom Exp $ */
+/* $XTermId: main.c,v 1.784 2016/10/07 00:40:34 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -445,8 +445,8 @@ extern char *ptsname(int);
 
 #ifndef VMS
 static void reapchild(int /* n */ );
-static int spawnXTerm(XtermWidget /* xw */
-		      , unsigned /* line_speed */ );
+static int spawnXTerm(XtermWidget	/* xw */
+		      ,unsigned /* line_speed */ );
 static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
 static int pty_search(int * /* pty */ );
@@ -1360,9 +1360,10 @@ decode_keyvalue(char **ptr, int termcap)
 	}
 	++string;
     } else if (termcap && (*string == '\\')) {
+	char *s = (string + 1);
 	char *d;
-	int temp = (int) strtol(string + 1, &d, 8);
-	if (temp > 0 && d != string) {
+	int temp = (int) strtol(s, &d, 8);
+	if (PartS2L(s, d) && temp > 0) {
 	    value = temp;
 	    string = d;
 	}
@@ -2074,13 +2075,15 @@ lookup_baudrate(const char *value)
     char *next;
     if (x_toupper(*value) == 'B')
 	value++;
-    check = strtol(value, &next, 10);
-    if (check != 0 && (next == 0 || *next == '\0')) {
-	Cardinal n;
-	for (n = 0; n < XtNumber(speeds); ++n) {
-	    if (speeds[n].actual_speed == (unsigned) check) {
-		result = speeds[n].given_speed;
-		break;
+    if (isdigit(CharOf(*value))) {
+	check = strtol(value, &next, 10);
+	if (FullS2L(value, next) && (check > 0)) {
+	    Cardinal n;
+	    for (n = 0; n < XtNumber(speeds); ++n) {
+		if (speeds[n].actual_speed == (unsigned) check) {
+		    result = speeds[n].given_speed;
+		    break;
+		}
 	    }
 	}
     }
@@ -2204,6 +2207,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    } else if (!strcmp(option_ptr->option, "-into")) {
 		char *endPtr;
 		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
+		if (!FullS2L(option_value, endPtr)) {
+		    Help();
+		    quit = True;
+		}
 	    }
 	}
 	if (quit)
