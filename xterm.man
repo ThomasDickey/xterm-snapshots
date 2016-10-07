@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.689 2016/09/25 17:25:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.690 2016/10/06 22:57:58 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -458,6 +458,12 @@ the outer edge of the characters and the window border) in pixels.
 That is the \fIvt100\fP \fBinternalBorder\fP resource.
 The
 default is \*(``2\*(''.
+.TP 8
+.BI \-baudrate " number"
+Set the line-speed, used to test the behavior of applications that
+use the line-speed when optimizing their output to the screen.
+The
+default is \*(``38400\*(''.
 .TP 8
 .B +bc
 turn off text cursor blinking.
