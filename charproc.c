@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1424 2016/10/06 00:45:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1425 2016/10/07 00:40:09 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -7557,7 +7557,7 @@ set_flags_from_list(char *target,
 	    char *temp;
 
 	    value = (int) strtol(next, &temp, 0);
-	    if (!IsEmpty(temp)) {
+	    if (!FullS2L(next, temp)) {
 		xtermWarning("Expected a number: %s\n", next);
 	    } else {
 		for (n = 0; n < limit; ++n) {

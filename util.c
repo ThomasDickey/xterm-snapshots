@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.692 2016/10/04 21:42:21 tom Exp $ */
+/* $XTermId: util.c,v 1.693 2016/10/07 00:41:38 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4847,7 +4847,7 @@ extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 	       || (x_strcasecmp(value, "no") == 0)
 	       || (x_strcasecmp(value, "off") == 0)) {
 	result = False;
-    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
+    } else if ((check = strtol(value, &next, 0)) >= 0 && FullS2L(value, next)) {
 	if (check >= (long) (limit + 2))	/* 2 is past False=0, True=1 */
 	    check = True;
 	result = (int) check;
@@ -4951,7 +4951,7 @@ parse_xinerama_screen(Display *display, const char *str, struct Xinerama_geometr
 	str++;
     } else {
 	long s = strtol(str, &end, 0);
-	if (end > str && (int) s >= 0) {
+	if (FullS2L(str, end) && ((int) s >= 0)) {
 	    screen = (int) s;
 	    str = end;
 	}
