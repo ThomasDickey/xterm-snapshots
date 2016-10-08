@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1425 2016/10/07 00:40:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1426 2016/10/07 21:14:54 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4994,6 +4994,10 @@ dotext(XtermWidget xw,
 		   && chars_chomped < (len - offset)) {
 		if (!screen->utf8_mode
 		    || (screen->vt100_graphics && charset == '0')) {
+		    last_chomp = 1;
+		} else if (screen->c1_printable &&
+			   buf[chars_chomped + offset] >= 0x80 &&
+			   buf[chars_chomped + offset] <= 0xa0) {
 		    last_chomp = 1;
 		} else {
 		    last_chomp = my_wcwidth((wchar_t) buf[chars_chomped + offset]);
