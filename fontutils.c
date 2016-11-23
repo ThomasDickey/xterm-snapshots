@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.453 2016/06/03 08:56:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.454 2016/11/23 01:54:25 tom Exp $ */
 
 /*
  * Copyright 1998-2015,2016 by Thomas E. Dickey
@@ -2342,8 +2342,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	     */
 #define NormXftPattern \
 	    XFT_FAMILY, XftTypeString, "mono", \
-	    XFT_SIZE, XftTypeDouble, face_size, \
-	    XFT_SPACING, XftTypeInteger, XFT_MONO
+	    XFT_SIZE, XftTypeDouble, face_size
 
 #define BoldXftPattern(norm) \
 	    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD, \

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1696 2016/10/24 22:18:05 tom Exp $
+  $XTermId: xterm.log.html,v 1.1697 2016/11/23 01:43:34 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -53,7 +53,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2013,2014 by <a href=
+  <p>Copyright &copy; 1997-2015,2016 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
@@ -944,6 +944,24 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>omit <code>XFT_SPACING</code> property from call to <code>
+      XftPatternBuild</code>, to work around a bug in
+      <em>fontconfig</em> for handling Google Go fonts, whose names
+      sort in an order not expected by <em>fontconfig</em>, causing
+      the request for a monospaced font to return <em>italics</em>,
+      e.g.,
+
+      <blockquote>
+        <pre>
+$ fc-match 'Go Mono:spacing=monospace'
+Go-Mono-Italic.ttf: "Go Mono" "Italic"
+(report by Giacomo Boffi on <a href=
+"http://unix.stackexchange.com/questions/324941/xterm-displays-an-italic-face-instead-of-regular">Stackoverflow</a>).
+  
+</pre>
+      </blockquote>
+    </li>
+
     <li>modify <code>minstall.in</code> to improve a workaround
     added to the manual page in <a href="#xterm_182">patch #182</a>
     to avoid having the C preprocessor used in the imake
