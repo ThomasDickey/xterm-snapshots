@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.690 2016/10/06 22:57:58 tom Exp $
+.\" $XTermId: xterm.man,v 1.691 2016/11/19 21:31:14 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -66,7 +66,7 @@
 .\" these would be fallbacks for DS/DE,
 .\" but groff changed the meaning of the macros.
 .de NS
-.sp
+.sp .5
 .in +4
 .nf
 .ft C			\" Courier
