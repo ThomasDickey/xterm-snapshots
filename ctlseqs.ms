@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.333 2016/10/02 23:19:00 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.340 2016/12/20 09:42:23 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #326
-.ds RF 2016/10/02
+.ds LF Patch #328
+.ds RF 2016/12/20
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -821,11 +821,11 @@ Scroll up \*(Ps lines (default = 1) (SU).
 .IP \\*(Cs\\*?\\*(Pi\\*;\\*(Pa\\*;\\*(Pv\\*s\\*S
 If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
 \fIxterm\fP accepts a three-parameter control sequence, where \*(Pi,
-\*(Pa and \*(Pv are the \fIitem\fP, \fIaction\fP and \fIvalue\fP.
-  \*(Pi = \*1 \(-> item (color registers)
-  \*(Pa = \*1 \(-> read the number of color registers
-  \*(Pa = \*2 \(-> reset the number of color registers
-  \*(Pa = \*3 \(-> set the number of color registers to the value \*(Pv
+\*(Pa and \*(Pv are the \fIitem\fP, \fIaction\fP and \fIvalue\fP:
+  \*(Pi = \*1 \(-> item (color registers).
+  \*(Pa = \*1 \(-> read the number of color registers.
+  \*(Pa = \*2 \(-> reset the number of color registers.
+  \*(Pa = \*3 \(-> set the number of color registers to the value \*(Pv.
 .br
 The control sequence returns a response using the same form:
 .ID
@@ -833,8 +833,8 @@ The control sequence returns a response using the same form:
 .DE
 .br
 where \*(Ps is the status:
-  \*(Ps = \*0 \(-> success
-  \*(Ps = \*3 \(-> failure
+  \*(Ps = \*0 \(-> success.
+  \*(Ps = \*3 \(-> failure.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*T
 Scroll down \*(Ps lines (default = 1) (SD).
@@ -1291,14 +1291,14 @@ The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 
 \*(Cs\*?\*5\*7\*;\*1\*n Mouse, if compiled-in, or
 \*(Cs\*?\*5\*7\*;\*0\*n Cannot identify, if not.
   \*(Ps = \*6\*2 \(-> Report macro space (DECMSR) as
-\*(Cs\*(Pn\*s\\*\*s\*{
+\*(Cs\*(Pn\*s\\*\*s\*{.
   \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR) as
-\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST
+\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST.
 .br
     \*(Pt is the request id (from an optional parameter to the request).
     The x's are hexadecimal digits 0-9 and A-F.
   \*(Ps = \*7\*5 \(-> Report data integrity as
-\*(Cs\*?\*7\*0\*n (ready, no errors)
+\*(Cs\*?\*7\*0\*n (ready, no errors).
   \*(Ps = \*8\*5 \(-> Report multi-session configuration as
 \*(Cs\*?\*8\*3\*n (not configured for multiple-session operation).
 .
@@ -1316,6 +1316,18 @@ which is \*1.
 .
 .IP \\*(Cs\\*!\\*p
 Soft terminal reset (DECSTR).
+.
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
+Set conformance level (DECSCL).
+Valid values for the first parameter:
+  \*(Ps = \*6\*1 \(-> VT100.
+  \*(Ps = \*6\*2 \(-> VT200.
+  \*(Ps = \*6\*3 \(-> VT300.
+.br
+Valid values for the second parameter:
+  \*(Ps = \*0 \(-> 8-bit controls.
+  \*(Ps = \*1 \(-> 7-bit controls (always set for VT100).
+  \*(Ps = \*2 \(-> 8-bit controls.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*$\\*p
 .br
@@ -1341,18 +1353,6 @@ For VT300 and up, reply is
 .br
 where \*(Ps is the mode number as in DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
-.
-.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
-Set conformance level (DECSCL).
-Valid values for the first parameter:
-  \*(Ps = \*6\*1 \(-> VT100.
-  \*(Ps = \*6\*2 \(-> VT200.
-  \*(Ps = \*6\*3 \(-> VT300.
-.br
-Valid values for the second parameter:
-  \*(Ps = \*0 \(-> 8-bit controls.
-  \*(Ps = \*1 \(-> 7-bit controls (always set for VT100).
-  \*(Ps = \*2 \(-> 8-bit controls.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*q
 Load LEDs (DECLL).
@@ -1394,11 +1394,11 @@ Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 .
-.IP \\*(Cs\\*s\\*(Pl\\*s\\*;\\*(Pr\\*s\\*(cs
-Set left and right margins (DECSLRM), available only when DECLRMM is enabled (VT420 and up).
-.
 .IP \\*(Cs\\*(cs
 Save cursor (ANSI.SYS), available only when DECLRMM is disabled.
+.
+.IP \\*(Cs\\*(Pl\\*;\\*(Pr\\*s\\*(cs
+Set left and right margins (DECSLRM), available only when DECLRMM is enabled (VT420 and up).
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
 Save DEC Private Mode Values.
@@ -1462,11 +1462,6 @@ Result is
   \*(Ps = \*2\*3\*s\*;\*s\*2 \(-> Restore \fIxterm\fP window title from stack.
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP).
 .
-.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t
-Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
-  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
-  \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
-.
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*t
 Set one or more features of the title modes.
 Each parameter enables a single feature.
@@ -1481,6 +1476,11 @@ Set warning-bell volume (DECSWBV, VT520).
   \*(Ps = \*0 or \*1 \(-> off.
   \*(Ps = \*2, \*3 or \*4 \(-> low.
   \*(Ps = \*5, \*6, \*7, or \*8 \(-> high.
+.
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t
+Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+  \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 .
 .IP \\*(Cs\\*u
 Restore cursor (ANSI.SYS).
@@ -1531,6 +1531,11 @@ Select Attribute Change Extent (DECSACE).
   \*(Ps = \*1 \(-> from start to end position, wrapped.
   \*(Ps = \*2 \(-> rectangle (exact).
 .
+.IP \\*(Cs\\*(Pc\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*x
+Fill Rectangular Area (DECFRA), VT420 and up.
+  \*(Pc is the character to use.
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+.
 .IP \\*(Cs\\*(Pi\\*s\\*;\\*(Pg\\*s\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*s\\**\\*y
 Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
 Response is
@@ -1541,11 +1546,6 @@ Response is
   \*(Pg is the page number.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   The x's are hexadecimal digits 0-9 and A-F.
-.
-.IP \\*(Cs\\*(Pc\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*x
-Fill Rectangular Area (DECFRA), VT420 and up.
-  \*(Pc is the character to use.
-  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*(qu\\*z
 Enable Locator Reporting (DECELR).
@@ -1635,8 +1635,8 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .St
 .Ss Operating System Commands
 .
-.IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
+.IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 Set Text Parameters.
 For colors and font,
 if \*(Pt is a "?", the control sequence elicits a response which consists
@@ -2552,7 +2552,7 @@ additional codes:
   \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
   \*(Ps = \*8\*4\*5\*2 \(-> Sixel scrolling leaves cursor to right of graphic.
 .IP \\*(Dc\\*(Pa\\*;\\*(Pb\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
-See
+See:
 .ID
 http://vt100.net/docs/vt3xx-gp/chapter14.html
 .DE
@@ -2583,16 +2583,16 @@ additional codes:
 \fI\*(xt\fP has these additional private Set Mode values:
   \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
 .IP \\*(Dc\\*(Pm\\*s\\*p\\*(Pr..\\*(Pr\fP\\*s\\*(ST
-See
+See:
 .ID
 http://vt100.net/docs/vt3xx-gp/chapter1.html
 .DE
 The ReGIS data device control string has one positional parameter
 with four possible values:
-  \*(Pm = 0 \(-> resume command, use fullscreen mode
-  \*(Pm = 1 \(-> start new command, use fullscreen mode
-  \*(Pm = 2 \(-> resume command, use command display mode
-  \*(Pm = 3 \(-> start new command, use command display mode
+  \*(Pm = 0 \(-> resume command, use fullscreen mode.
+  \*(Pm = 1 \(-> start new command, use fullscreen mode.
+  \*(Pm = 2 \(-> resume command, use command display mode.
+  \*(Pm = 3 \(-> start new command, use command display mode.
 .Ed
 .
 .Sh "Tektronix 4014 Mode"
@@ -2700,6 +2700,12 @@ Each ordinate is encoded in a single character as \fIvalue\fP+32.
 For example, \*! is 1.
 The screen coordinate system is 0-based.
 .St
+.IP \\*(Es\\*<
+Exit VT52 mode (Enter VT100 mode).
+.IP \\*(Es\\*=
+Enter alternate keypad mode.
+.IP \\*(Es\\*>
+Exit alternate keypad mode.
 .IP \\*(Es\\*A
 Cursor up.
 .IP \\*(Es\\*(cB
@@ -2725,12 +2731,6 @@ Move the cursor to given row and column.
 .IP \\*(Es\\*Z
 Identify.
   \(-> \*(Es\*s\*/\*s\*Z (\*(``I am a VT52.\*('').
-.IP \\*(Es\\*=
-Enter alternate keypad mode.
-.IP \\*(Es\\*>
-Exit alternate keypad mode.
-.IP \\*(Es\\*<
-Exit VT52 mode (Enter VT100 mode).
 .Ed
 .
 .if n .pl \n(nlu+1v
