@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.691 2016/11/19 21:31:14 tom Exp $
+.\" $XTermId: xterm.man,v 1.698 2016/12/22 01:21:53 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -61,13 +61,16 @@
 .\"
 .\" Bulleted paragraph
 .de bP
-.IP \(bu 4
+.ie \n(.IP \(bu 4
+.el    .IP \(bu 2
 ..
 .\" these would be fallbacks for DS/DE,
 .\" but groff changed the meaning of the macros.
 .de NS
-.sp .5
-.in +4
+.ie \n(.sp
+.el    .sp .5
+.ie \n(.in +4
+.el    .in +2
 .nf
 .ft C			\" Courier
 ..
@@ -156,7 +159,8 @@ an optional platform-specific entry (\*(``__default_termname__\*(''),
 .PP
 \fI\*N\fP automatically searches the
 terminal database in this order for these entries and then
-sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
+sets the \*(``TERM\*('' variable
+(and the \*(``TERMCAP\*('' environment variable on a few older systems).
 The alternatives after \*(``xterm\*('' are very old,
 from the late 1980s.
 .PP
@@ -1137,7 +1141,8 @@ entries that work with \fI\*n\fR are:
 .IP
 .I \*n
 automatically searches the terminal database in this order for these entries and then
-sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
+sets the \*(``TERM\*('' variable
+(and the \*(``TERMCAP\*('' environment variable, if relevant).
 .TP 8
 .B +t
 This option indicates that \fI\*n\fP should start in VT\fIxxx\fP mode.
@@ -1724,8 +1729,9 @@ value.
 If \*(``false\*('', \fI\*n\fP will set the \fIstty\fP erase value to match its own
 configuration, using the \fBkb\fP string from the termcap entry as
 a reference, if available.
+.IP
 In either case, the result is applied to the TERMCAP variable
-which \fI\*n\fP sets.
+which \fI\*n\fP sets, if the system uses TERMCAP.
 .IP
 See also the \fBttyModes\fP resource, which may override this.
 The default is \*(``__initial_erase__\*(''.
@@ -4082,12 +4088,12 @@ the scrollbar to go to the bottom of the scrolling region.
 The default is \*(``true\*(''.
 .TP
 .B "selectToClipboard\fP (class\fB SelectToClipboard\fP)"
-Tells \fI\*n\fP whether to use the PRIMARY or CLIPBOARD for
-SELECT tokens in the selection mechanism.
+Tells \fI\*n\fP whether to use the \fBPRIMARY\fP or \fBCLIPBOARD\fP for
+\fBSELECT\fP tokens in the selection mechanism.
 The \fBset-select\fP action can change this at runtime,
 allowing the user to work with programs that handle only one of these
 mechanisms.
-The default is \*(``false\*('', which tells it to use PRIMARY.
+The default is \*(``false\*('', which tells it to use \fBPRIMARY\fP.
 .TP 8
 .B "shiftFonts\fP (class\fB ShiftFonts\fP)"
 Specifies whether to enable the actions
@@ -4156,15 +4162,23 @@ would be shown before the application was initialized.
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "titeInhibit\fP (class\fB TiteInhibit\fP)"
-Specifies whether or not \fI\*n\fP should remove \fIti\fP and \fIte\fP
+Originally specified whether or not \fI\*n\fP
+should remove \fIti\fP and \fIte\fP
 termcap entries (used to switch between alternate screens on startup of many
 screen-oriented programs) from the TERMCAP string.
+.IP
+TERMCAP is used rarely now, but \fI\*n\fP supports the feature on modern systems:
+.RS
+.bP
 If set,
 \fI\*n\fP also ignores the escape sequence to switch to the
 alternate screen.
+.bP
 \fI\*N\fP supports terminfo in a different way, supporting composite control
 sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
+.RE
+.IP
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "titleModes\fP (class\fB TitleModes\fP)"
@@ -4786,7 +4800,26 @@ foreground and background color.
 .PP
 Once the VT\fIxxx\fP window is created,
 .I \*n
-allows you to select text and copy it within the same or other windows.
+allows you to select text and copy it within the same or other windows
+using the \fIpointer\fP or the keyboard.
+.
+.PP
+A \*(``pointer\*('' could be a mouse, touchpad or similar device.
+X applications generally do not care,
+since they see only \fIbutton events\fP which have
+.bP
+position and
+.bP
+button up/down state
+.PP
+\fI\*N\fP can see these events as long as it has \fIfocus\fP.
+.PP
+The keyboard also supplies events, but it is less flexible than
+the pointer for selecting/copying text.
+.PP
+\fIEvents\fP are applied to \fIactions\fP using the \fBtranslations\fP resource.
+See \fBActions\fP for a complete list, and \fBDefault Key Bindings\fP
+for the built-in set of \fBtranslations\fP resources.
 .
 .SS "Selection Functions"
 .PP
@@ -4795,14 +4828,24 @@ modifiers, and when they are used with the \*(``shift\*('' key.
 The assignment of the functions described below to keys and buttons may
 be changed through the resource database; see \fBActions\fP below.
 .
-.PP
-Pointer button one (usually left) is used to save text into the cut buffer.
+.TP 5
+Pointer button one (usually left)
+is used to save text into the cut buffer:
+.NS
+~Meta <Btn1Down>:\fBselect-start\fP()
+.NE
+.IP
 Move the cursor to beginning of the text,
 and then hold the button down while moving the cursor to the end of the region
 and releasing the button.
-The selected text is highlighted and is saved in the global cut buffer
-and made the PRIMARY selection when the button is released.
+The selected text is highlighted and is saved in the global \fIcut buffer\fP
+and made the selection when the button is released:
+.NS
+<BtnUp>:\fBselect-end\fP(\fBSELECT\fP, CUT_BUFFER0) \n\
+.NE
+.IP
 Normally (but see the discussion of \fBon2Clicks\fP, etc):
+.RS
 .bP
 Double-clicking selects by words.
 .bP
@@ -4810,7 +4853,8 @@ Triple-clicking
 selects by lines.
 .bP
 Quadruple-clicking goes back to characters, etc.
-.PP
+.RE
+.IP
 Multiple-click is determined by the time from button up to
 button down, so you can change the selection unit in the middle of a selection.
 Logical words and lines selected by double- or triple-clicking may wrap
@@ -4820,14 +4864,22 @@ If the key/button bindings specify that an X selection is to be made,
 \fI\*n\fP will leave the selected text highlighted for as long as it
 is the selection owner.
 .
-.PP
-Pointer button two (usually middle) \*(``types\*('' (pastes) the text from
-the PRIMARY selection, if any, otherwise from
-the cut buffer,
-inserting it as keyboard input.
+.TP 5
+Pointer button two (usually middle)
+\*(``types\*('' (\fIpastes\fP) the text from
+the given selection, if any,
+otherwise from the cut buffer, inserting it as keyboard input:
+.NS
+~Ctrl ~Meta <Btn2Up>:\fB\fBinsert-selection\fP\fP(\fBSELECT\fP, CUT_BUFFER0)
+.NE
 .
-.PP
-Pointer button three (usually right) extends the current selection.
+.TP 5
+Pointer button three (usually right)
+\fIextends\fP the current selection.
+.NS
+~Ctrl ~Meta <Btn3Down>:\fB\fBstart-extend\fP\fP()
+.NE
+.IP
 (Without loss of generality,
 you can swap \*(``right\*('' and \*(``left\*('' everywhere in the rest of this
 paragraph.)  If pressed while closer to
@@ -4894,7 +4946,7 @@ for details).
 .SH SELECT/PASTE
 X clients provide select and paste support by responding to requests conveyed
 by the server.
-.SS Primary
+.SS PRIMARY
 When configured to use the primary selection,
 (the default) \fI\*n\fP can
 provide the selection data in ways which help to retain character
@@ -4911,25 +4963,26 @@ asserted ownership, it relies on cut-buffers to pass the data.
 But cut-buffers handle only ISO-8859-1 data
 (officially \- some clients ignore the rules).
 .
-.SS Clipboard
+.SS CLIPBOARD
 When configured to use the clipboard (using the \fBselectToClipboard\fP resource),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
 passed via selection.
 .PP
-The PRIMARY token is a standard X feature, documented in the ICCCM
+The \fBPRIMARY\fP token is a standard X feature, documented in the ICCCM
 (\fIInter-Client Communication Conventions Manual\fR),
 which states
 .RS
 .PP
-The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism.
+The selection named by the atom \fBPRIMARY\fP is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism.
 .RE
+.SS SELECT
 .PP
-However, many applications use CLIPBOARD in imitation of other windowing
+However, many applications use \fBCLIPBOARD\fP in imitation of other windowing
 systems.
 The \fBselectToClipboard\fP resource (and corresponding menu entry
 \fBSelect to Clipboard\fP) introduce the SELECT token (known only
-to \fI\*n\fP) which chooses between the PRIMARY and CLIPBOARD tokens.
+to \fI\*n\fP) which chooses between the \fBPRIMARY\fP and \fBCLIPBOARD\fP tokens.
 .PP
 Without using this feature, one can use workarounds such as the
 \fIxclip\fP program to show the contents of the X clipboard within an
@@ -4942,7 +4995,7 @@ These are termed \fIselection targets\fP.
 .PP
 When asking for the selection data,
 \fI\*n\fP tries the following types in this order:
-.RS
+.RS 5
 .TP 5
 UTF8_STRING
 This is an XFree86 extension, which denotes that the data is encoded in UTF-8.
@@ -4992,6 +5045,28 @@ utf8,i18n,string
 u,i,s
 .fi
 .RE
+.
+.SS Mouse Protocol
+.PP
+Applications can send escape sequences to \fI\*n\fP to cause it to send
+escape sequences back to the computer when you press a pointer button,
+or even (depending on which escape sequence) send escape sequences back
+to the computer as you move the pointer.
+.PP
+These escape sequences and the responses, called the \fImouse protocol\fP,
+are documented in \fIXTerm Control Sequences\fP.
+They do not appear in the \fIactions\fP invoked by the \fBtranslations\fP
+resource because the resource does not change while you run \fI\*n\fP,
+whereas applications can change the mouse prototol
+(i.e., enable, disable, use different modes).
+.PP
+However, the mouse protocol is interpreted within the \fIactions\fP
+that are usually associated with the pointer buttons.
+\fI\*N\fP ignores the mouse protocol in the \fBinsert-selection\fP action
+if the shift-key is pressed at the same time.
+It also modifies a few other actions if the shift-key is pressed,
+e.g., suppressing the response with the pointer position,
+though not eliminating changes to the selected text.
 .
 .SH MENUS
 .
@@ -5354,8 +5429,8 @@ There is no corresponding command-line option.
 .
 .TP
 .B Select to Clipboard\fP (resource \fBselectToClipboard\fP)
-Tell \fI\*n\fP whether to use the PRIMARY or CLIPBOARD
-for SELECT tokens in the \fBtranslations\fP resource which
+Tell \fI\*n\fP whether to use the \fBPRIMARY\fP or \fBCLIPBOARD\fP
+for \fBSELECT\fP tokens in the \fBtranslations\fP resource which
 maps keyboard and mouse actions to select/paste actions.
 This corresponds to the \fBselectToClipboard\fP resource.
 There is no corresponding command-line option.
@@ -5528,7 +5603,7 @@ Font escape sequence (see \fI\*N Control Sequences\fP).
 .TP
 .B Selection\fP (resource \fBfontsel\fP)
 This allows you to set the font specified
-the current selection as a font name (if the PRIMARY selection is owned).
+the current selection as a font name (if the \fBPRIMARY\fP selection is owned).
 .RE
 .PP
 The second section allows you to modify the way it is displayed:
@@ -5930,7 +6005,7 @@ of \*(``dynamic abbreviation\*('' expansion in Emacs (bound there to M\-/).
 Here is a resource setting for \fI\*n\fP which will do the same thing:
 .NS
 *VT100*translations:    #override \\n\\\&
-        Meta <KeyPress> /:dabbrev-expand()
+        Meta <KeyPress> /:\fBdabbrev-expand\fP()
 .NE
 .TP 8
 .B "deiconify()"
@@ -6007,7 +6082,7 @@ to view a file whose name is selected while holding the shift key down.
 The new process is started when the mouse button is released:
 .NS
 *VT100*translations: #override Shift \\
-    <Btn1Up>: exec-formatted("xterm -e view '%t'", SELECT)
+    <Btn1Up>:\fBexec-formatted\fP("xterm -e view '%t'", \fBSELECT\fP)
 .NE
 .TP 8
 .B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
@@ -6615,75 +6690,79 @@ This action sends the indicated graphics input code.
 .
 .SS Default Key Bindings
 .PP
-The default bindings in the VT\fIxxx\fP window use the SELECT token,
+The default bindings in the VT\fIxxx\fP window use the \fBSELECT\fP token,
 which is set by the \fBselectToClipboard\fP resource.
 These are for the \fIvt100\fP widget:
 .NS
-          Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
-           Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
-         Shift <KeyPress> Select:select-cursor-start() \\\&
-                                 select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
-         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
-                 Alt <Key>Return:fullscreen() \\n\\\&
-        <KeyRelease> Scroll_Lock:scroll-lock() \\n\\\&
-    Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
-    Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
-    Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&
-                ~Meta <KeyPress>:insert-seven-bit() \\n\\\&
-                 Meta <KeyPress>:insert-eight-bit() \\n\\\&
-                !Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
-           !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
-                ~Meta <Btn1Down>:select-start() \\n\\\&
-              ~Meta <Btn1Motion>:select-extend() \\n\\\&
-                !Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
-           !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
-          ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\\&
-                 Meta <Btn2Down>:clear-saved-lines() \\n\\\&
-            ~Ctrl ~Meta <Btn2Up>:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
-                !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
-           !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
-          ~Ctrl ~Meta <Btn3Down>:start-extend() \\n\\\&
-              ~Meta <Btn3Motion>:select-extend() \\n\\\&
-                 Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
-            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
-  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
-       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
-                      <Btn4Down>:scroll-back(5,line,m)     \\n\\\&
-                 Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
-            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
-  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
-       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
-                      <Btn5Down>:scroll-forw(5,line,m)     \\n\\\&
-                         <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
-                       <BtnDown>:ignore()
+          Shift <KeyPress> Prior:\fBscroll-back\fP(1,halfpage) \\n\\\&
+           Shift <KeyPress> Next:\fBscroll-forw\fP(1,halfpage) \\n\\\&
+         Shift <KeyPress> Select:\fBselect-cursor-start\fP() \\\&
+                                 \fBselect-cursor-end\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+         Shift <KeyPress> Insert:\fBinsert-selection\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+                 Alt <Key>Return:\fBfullscreen\fP() \\n\\\&
+        <KeyRelease> Scroll_Lock:\fBscroll-lock\fP() \\n\\\&
+    Shift~Ctrl <KeyPress> KP_Add:\fBlarger-vt-font\fP() \\n\\\&
+    Shift Ctrl <KeyPress> KP_Add:\fBsmaller-vt-font\fP() \\n\\\&
+    Shift <KeyPress> KP_Subtract:\fBsmaller-vt-font\fP() \\n\\\&
+                ~Meta <KeyPress>:\fBinsert-seven-bit\fP() \\n\\\&
+                 Meta <KeyPress>:\fBinsert-eight-bit\fP() \\n\\\&
+                !Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
+                ~Meta <Btn1Down>:\fBselect-start\fP() \\n\\\&
+              ~Meta <Btn1Motion>:\fBselect-extend\fP() \\n\\\&
+                !Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
+          ~Ctrl ~Meta <Btn2Down>:\fBignore\fP() \\n\\\&
+                 Meta <Btn2Down>:\fBclear-saved-lines\fP() \\n\\\&
+            ~Ctrl ~Meta <Btn2Up>:\fBinsert-selection\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+                !Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
+           !Lock Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
+          ~Ctrl ~Meta <Btn3Down>:\fBstart-extend\fP() \\n\\\&
+              ~Meta <Btn3Motion>:\fBselect-extend\fP() \\n\\\&
+                 Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
+                      <Btn4Down>:\fBscroll-back\fP(5,line,m)     \\n\\\&
+                 Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
+                      <Btn5Down>:\fBscroll-forw\fP(5,line,m)     \\n\\\&
+                         <BtnUp>:\fBselect-end\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+                       <BtnDown>:\fBignore\fP()
 .NE
 .PP
 The default bindings in the Tektronix window are analogous but less extensive.
 These are for the \fItek4014\fP widget:
 .NS
-                 ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
-                  Meta<KeyPress>: insert-eight-bit() \\n\\\&
-                !Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
-           !Lock Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn1Down>: popup-menu(mainMenu) \\n\\\&
-      !Ctrl @Num_Lock <Btn1Down>: popup-menu(mainMenu) \\n\\\&
-                !Ctrl <Btn2Down>: popup-menu(tekMenu) \\n\\\&
-           !Lock Ctrl <Btn2Down>: popup-menu(tekMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn2Down>: popup-menu(tekMenu) \\n\\\&
-      !Ctrl @Num_Lock <Btn2Down>: popup-menu(tekMenu) \\n\\\&
-           Shift ~Meta<Btn1Down>: gin-press(L) \\n\\\&
-                 ~Meta<Btn1Down>: gin-press(l) \\n\\\&
-           Shift ~Meta<Btn2Down>: gin-press(M) \\n\\\&
-                 ~Meta<Btn2Down>: gin-press(m) \\n\\\&
-           Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
-                 ~Meta<Btn3Down>: gin-press(r)
+                 ~Meta<KeyPress>: \fBinsert-seven-bit\fP() \\n\\\&
+                  Meta<KeyPress>: \fBinsert-eight-bit\fP() \\n\\\&
+                !Ctrl <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
+                !Ctrl <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
+           Shift ~Meta<Btn1Down>: \fBgin-press\fP(L) \\n\\\&
+                 ~Meta<Btn1Down>: \fBgin-press\fP(l) \\n\\\&
+           Shift ~Meta<Btn2Down>: \fBgin-press\fP(M) \\n\\\&
+                 ~Meta<Btn2Down>: \fBgin-press\fP(m) \\n\\\&
+           Shift ~Meta<Btn3Down>: \fBgin-press\fP(R) \\n\\\&
+                 ~Meta<Btn3Down>: \fBgin-press\fP(r)
 .NE
+.SS Custom Key Bindings
+.PP
+You can modify the \fBtranslations\fP resource by overriding parts
+of it, or merging your resources with it.
 .PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
@@ -6697,30 +6776,59 @@ When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
 .NS
 *VT100*translations:    #override \\n\\\&
-    ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
-    Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
-    ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
-    Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
+   ~Shift~Ctrl<Btn2Up>: \fBinsert-selection\fP(\fBPRIMARY\fP, CUT_BUFFER0) \\n\\\&
+    Shift~Ctrl<Btn2Up>: \fBinsert-selection\fP(\fBCLIPBOARD\fP, CUT_BUFFER1) \\n\\\&
+   ~Shift     <BtnUp> : \fBselect-end\fP(\fBPRIMARY\fP, CUT_BUFFER0) \\n\\\&
+    Shift     <BtnUp> : \fBselect-end\fP(\fBCLIPBOARD\fP, CUT_BUFFER1)
 .NE
 .PP
 In the example, the class name \fBVT100\fP is used rather than the widget name.
-These are different;
-the class name provides a more-specific match than the widget name.
+These are different; a class name could apply to more than one widget.
 A leading \*(``*\*('' is used because the widget hierarchy above the
 \fIvt100\fP widget depends on
 whether the toolbar support is compiled into \fI\*n\fP.
 .PP
-Below is shown a sample of
+Not everyone finds the three-button mouse bindings easy to use.
+In a wheel mouse, the middle button might be the wheel.
+As an alternative, you could add a binding shifted keys:
+.NS
+*VT100*translations:      #override \\n\\
+    Shift <Key>Home:    \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
+    Shift <Key>Insert:  \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
+    Ctrl Shift <Key>C:  \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
+    Ctrl Shift <Key>V:  \fBinsert-selection\fP(\fBSELECT\fP)
+.NE
+.PP
+You would still use the left- and right-mouse buttons (typically 1 and 3)
+for beginning and extending selections. 
+.PP
+Besides mouse problems, there are also keyboards with inconvenient layouts.
+Some lack a numeric keypad, making it hard to use the shifted keypad plus
+and minus bindings for switching between font sizes.
+You can work around that by assigning the actions to more readily accessed
+keys:
+.NS
+*VT100*translations:      #override \\n\\
+    Ctrl <Key> +:       \fBlarger-vt-font\fP() \\n\\
+    Ctrl <Key> -:       \fBsmaller-vt-font\fP()
+.NE
+.PP
+The keymap feature allows you to switch between sets of translations.
+The sample below shows
 how the \fBkeymap()\fP action may be used to add special
 keys for entering commonly-typed words:
 .NS
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
-        <Key>F14:       keymap(None) \\n\\\&
-        <Key>F17:       string("next") string(0x0d) \\n\\\&
-        <Key>F18:       string("step") string(0x0d) \\n\\\&
-        <Key>F19:       string("continue") string(0x0d) \\n\\\&
-        <Key>F20:       string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
+        <Key>F14:       \fBkeymap\fP(None) \\n\\\&
+        <Key>F17:       \fBstring\fP("next") \\n\\
+                        \fBstring\fP(0x0d) \\n\\\&
+        <Key>F18:       \fBstring\fP("step") \\n\\
+                        \fBstring\fP(0x0d) \\n\\\&
+        <Key>F19:       \fBstring\fP("continue") \\n\\
+                        \fBstring\fP(0x0d) \\n\\\&
+        <Key>F20:       \fBstring\fP("print ") \\n\\
+                        \fBinsert-selection\fP(\fBPRIMARY\fP, CUT_BUFFER0)
 .NE
 .SS Default Scrollbar Bindings
 .PP
@@ -6976,7 +7084,10 @@ and cannot be easily moved between different user environments.
 .
 .
 .SH ENVIRONMENT
-\fI\*N\fP sets several environment variables:
+\fI\*N\fP sets several environment variables.
+.SS System Independent
+.PP
+Some variables are used on every system:
 .TP 5
 .B DISPLAY
 is the display name,
@@ -7017,25 +7128,45 @@ build \fI\*n\fP, followed by
 The patch number is also part of the response to a Secondary Device Attributes
 (DA) control sequence (see \fIXterm Control Sequences\fP).
 .
+.SS System Dependent
+.
 .PP
 Depending on your system configuration, \fI\*n\fP may also set the
 following:
 .TP 5
 .B COLUMNS
 the width of the \fI\*n\fP in characters (cf: \*(``stty columns\*('').
+.IP
+When this variable is set, \fIcurses\fP applications (and most
+terminal programs) will assume that the terminal has this many columns.
+.IP
+\fI\*N\fP would do this for systems which have no ability
+to tell the size of the terminal.
+Those are very rare, none newer than the mid 1990s when SVR4 became prevalent.
 .TP 5
 .B HOME
 .br
-when \fI\*n\fP is configured to update utmp.
+when \fI\*n\fP is configured (at build-time) to update utmp.
 .TP 5
 .B LINES
 the height of the \fI\*n\fP in characters (cf: \*(``stty rows\*('').
+.IP
+When this variable is set, \fIcurses\fP applications (and most
+terminal programs) will assume that the terminal has this many lines (rows).
+.IP
+\fI\*N\fP would do this for systems which have no ability
+to tell the size of the terminal.
+Those are very rare, none newer than the mid 1990s when SVR4 became prevalent.
 .TP 5
 .B LOGNAME
-when \fI\*n\fP is configured to update utmp.
+when \fI\*n\fP is configured (at build-time) to update utmp.
+.IP
+Your configuration may have set \fBLOGNAME\fP; \fI\*n\fP does not modify that.
+If it is unset, \fI\*n\fP will use \fBUSER\fP if it is set.
+Finally, if neither is set, \fI\*n\fP will use the \fBgetlogin\fP(2) function.
 .TP 5
 .B SHELL
-when \fI\*n\fP is configured to update utmp.
+when \fI\*n\fP is configured (at build-time) to update utmp.
 It is also set if you provide a valid shell name as the optional parameter.
 .IP
 \fI\*N\fP sets this to an absolute pathname.
@@ -7049,9 +7180,14 @@ shell, \fI\*n\fP may unset it, to avoid confusion.
 the contents of the termcap entry corresponding to \fB$TERM\fP,
 with lines and columns values substituted
 for the actual size window you have created.
+.IP
+This feature is, like \fBLINES\fP and \fBCOLUMNS\fP, used rarely.
+It addresses the same limitation of a few older systems
+by providing a way for \fItermcap\fP-based applications to get the initial
+screensize.
 .TP 5
 .B TERMINFO
-may be defined to a nonstandard location in the configure script.
+may be defined to a nonstandard location using the configure script.
 .\"
 .
 .
