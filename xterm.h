@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.765 2016/05/29 18:34:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.767 2016/12/22 09:55:53 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -383,6 +383,7 @@ extern char **environ;
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
+#define XtNallowMouseOps	"allowMouseOps"
 #define XtNallowPasteControls	"allowPasteControls"
 #define XtNallowScrollLock	"allowScrollLock"
 #define XtNallowSendEvents	"allowSendEvents"
@@ -438,6 +439,7 @@ extern char **environ;
 #define XtNdeleteIsDEL		"deleteIsDEL"
 #define XtNdisallowedColorOps	"disallowedColorOps"
 #define XtNdisallowedFontOps	"disallowedFontOps"
+#define XtNdisallowedMouseOps	"disallowedMouseOps"
 #define XtNdisallowedTcapOps	"disallowedTcapOps"
 #define XtNdisallowedWindowOps	"disallowedWindowOps"
 #define XtNdynamicColors	"dynamicColors"
@@ -579,6 +581,7 @@ extern char **environ;
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
+#define XtCAllowMouseOps	"AllowMouseOps"
 #define XtCAllowPasteControls	"AllowPasteControls"
 #define XtCAllowScrollLock	"AllowScrollLock"
 #define XtCAllowSendEvents	"AllowSendEvents"
@@ -627,6 +630,7 @@ extern char **environ;
 #define XtCDeleteIsDEL		"DeleteIsDEL"
 #define XtCDisallowedColorOps	"DisallowedColorOps"
 #define XtCDisallowedFontOps	"DisallowedFontOps"
+#define XtCDisallowedMouseOps	"DisallowedMouseOps"
 #define XtCDisallowedTcapOps	"DisallowedTcapOps"
 #define XtCDisallowedWindowOps	"DisallowedWindowOps"
 #define XtCDynamicColors	"DynamicColors"
@@ -812,6 +816,7 @@ extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 	    XSelectInput(XtDisplay((t)), XtWindow((t)), (long) (s)->event_mask); }
 
 extern Bool SendMousePosition (XtermWidget  /* w */, XEvent*  /* event */);
+extern XtermMouseModes okSendMousePos(XtermWidget /* xw */);
 extern void DiredButton                PROTO_XT_ACTIONS_ARGS;
 extern void DisownSelection (XtermWidget  /* termw */);
 extern void UnhiliteSelection (XtermWidget  /* termw */);

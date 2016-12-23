@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1426 2016/10/07 21:14:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1431 2016/12/22 23:50:26 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -307,6 +307,7 @@ static XtActionsRec actionsList[] = {
 #if OPT_ALLOW_XXX_OPS
     { "allow-color-ops",	HandleAllowColorOps },
     { "allow-font-ops",		HandleAllowFontOps },
+    { "allow-mouse-ops",	HandleAllowMouseOps },
     { "allow-tcap-ops",		HandleAllowTcapOps },
     { "allow-title-ops",	HandleAllowTitleOps },
     { "allow-window-ops",	HandleAllowWindowOps },
@@ -411,6 +412,7 @@ static XtResource xterm_resources[] =
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
     Bres(XtNallowColorOps, XtCAllowColorOps, screen.allowColorOp0, DEF_ALLOW_COLOR),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
+    Bres(XtNallowMouseOps, XtCAllowMouseOps, screen.allowMouseOp0, DEF_ALLOW_MOUSE),
     Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, DEF_ALLOW_TCAP),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, DEF_ALLOW_TITLE),
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_WINDOW),
@@ -510,6 +512,8 @@ static XtResource xterm_resources[] =
 	 screen.disallowedColorOps, DEF_DISALLOWED_COLOR),
     Sres(XtNdisallowedFontOps, XtCDisallowedFontOps,
 	 screen.disallowedFontOps, DEF_DISALLOWED_FONT),
+    Sres(XtNdisallowedMouseOps, XtCDisallowedMouseOps,
+	 screen.disallowedMouseOps, DEF_DISALLOWED_MOUSE),
     Sres(XtNdisallowedTcapOps, XtCDisallowedTcapOps,
 	 screen.disallowedTcapOps, DEF_DISALLOWED_TCAP),
     Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
@@ -3888,7 +3892,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_DEC_LOCATOR
 	case CASE_DECEFR:
 	    TRACE(("CASE_DECEFR - Enable Filter Rectangle\n"));
-	    if (screen->send_mouse_pos == DEC_LOCATOR) {
+	    if (okSendMousePos(xw) == DEC_LOCATOR) {
 		MotionOff(screen, xw);
 		if ((screen->loc_filter_top = GetParam(0)) < 1)
 		    screen->loc_filter_top = LOC_FILTER_POS;
@@ -5261,7 +5265,7 @@ really_set_mousemode(XtermWidget xw,
 		     XtermMouseModes mode)
 {
     TScreenOf(xw)->send_mouse_pos = enabled ? mode : MOUSE_OFF;
-    if (TScreenOf(xw)->send_mouse_pos != MOUSE_OFF)
+    if (okSendMousePos(xw) != MOUSE_OFF)
 	xtermShowPointer(xw, True);
 }
 
@@ -7545,8 +7549,7 @@ ParseList(const char **source)
 static void
 set_flags_from_list(char *target,
 		    const char *source,
-		    const FlagList * list,
-		    Cardinal limit)
+		    const FlagList * list)
 {
     Cardinal n;
     int value = -1;
@@ -7564,28 +7567,27 @@ set_flags_from_list(char *target,
 	    if (!FullS2L(next, temp)) {
 		xtermWarning("Expected a number: %s\n", next);
 	    } else {
-		for (n = 0; n < limit; ++n) {
+		for (n = 0; list[n].name != 0; ++n) {
 		    if (list[n].code == value) {
 			target[value] = 1;
 			found = True;
+			TRACE(("...found %s (%d)\n", list[n].name, value));
 			break;
 		    }
 		}
 	    }
 	} else {
-	    for (n = 0; n < limit; ++n) {
-		if (!x_strcasecmp(next, list[n].name)) {
+	    for (n = 0; list[n].name != 0; ++n) {
+		if (!x_wildstrcmp(next, list[n].name)) {
 		    value = list[n].code;
 		    target[value] = 1;
 		    found = True;
-		    break;
+		    TRACE(("...found %s (%d)\n", list[n].name, value));
 		}
 	    }
 	}
 	if (!found) {
 	    xtermWarning("Unrecognized keyword: %s\n", next);
-	} else {
-	    TRACE(("...found %s (%d)\n", next, value));
 	}
 	free(next);
     }
@@ -7647,12 +7649,14 @@ VTInitialize(Widget wrequest,
 #define DftFg(name) isDefaultForeground(Kolor(name))
 #define DftBg(name) isDefaultBackground(Kolor(name))
 
+#define DATA_END   { NULL,  -1       }
 #define DATA(name) { #name, ec##name }
     static const FlagList tblColorOps[] =
     {
 	DATA(SetColor)
 	,DATA(GetColor)
 	,DATA(GetAnsiColor)
+	,DATA_END
     };
 #undef DATA
 
@@ -7661,6 +7665,25 @@ VTInitialize(Widget wrequest,
     {
 	DATA(SetFont)
 	,DATA(GetFont)
+	,DATA_END
+    };
+#undef DATA
+
+#define DATA(name) { #name, em##name }
+    static const FlagList tblMouseOps[] =
+    {
+	DATA(X10)
+	,DATA(Locator)
+	,DATA(VT200Click)
+	,DATA(VT200Hilite)
+	,DATA(AnyButton)
+	,DATA(AnyEvent)
+	,DATA(FocusEvent)
+	,DATA(Extended)
+	,DATA(SGR)
+	,DATA(URXVT)
+	,DATA(AlternateScroll)
+	,DATA_END
     };
 #undef DATA
 
@@ -7669,6 +7692,7 @@ VTInitialize(Widget wrequest,
     {
 	DATA(SetTcap)
 	,DATA(GetTcap)
+	,DATA_END
     };
 #undef DATA
 
@@ -7702,6 +7726,7 @@ VTInitialize(Widget wrequest,
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
+	,DATA_END
     };
 #undef DATA
 
@@ -7710,6 +7735,7 @@ VTInitialize(Widget wrequest,
     static const FlagList tblRenderFont[] =
     {
 	DATA(Default)
+	,DATA_END
     };
 #undef DATA
 #endif
@@ -7720,6 +7746,7 @@ VTInitialize(Widget wrequest,
     {
 	DATA(Always)
 	,DATA(Default)
+	,DATA_END
     };
 #undef DATA
 #endif
@@ -7729,6 +7756,7 @@ VTInitialize(Widget wrequest,
     static const FlagList tblAIconOps[] =
     {
 	DATA(Default)
+	,DATA_END
     };
 #undef DATA
 #endif
@@ -7738,6 +7766,7 @@ VTInitialize(Widget wrequest,
     {
 	DATA(Never)
 	,DATA(Locale)
+	,DATA_END
     };
 #undef DATA
 
@@ -8017,6 +8046,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowSendEvent0);
     init_Bres(screen.allowColorOp0);
     init_Bres(screen.allowFontOp0);
+    init_Bres(screen.allowMouseOp0);
     init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
@@ -8029,29 +8059,31 @@ VTInitialize(Widget wrequest,
 
     set_flags_from_list(TScreenOf(wnew)->disallow_color_ops,
 			TScreenOf(wnew)->disallowedColorOps,
-			tblColorOps,
-			ecLAST);
+			tblColorOps);
 
     init_Sres(screen.disallowedFontOps);
 
     set_flags_from_list(TScreenOf(wnew)->disallow_font_ops,
 			TScreenOf(wnew)->disallowedFontOps,
-			tblFontOps,
-			efLAST);
+			tblFontOps);
+
+    init_Sres(screen.disallowedMouseOps);
+
+    set_flags_from_list(TScreenOf(wnew)->disallow_mouse_ops,
+			TScreenOf(wnew)->disallowedMouseOps,
+			tblMouseOps);
 
     init_Sres(screen.disallowedTcapOps);
 
     set_flags_from_list(TScreenOf(wnew)->disallow_tcap_ops,
 			TScreenOf(wnew)->disallowedTcapOps,
-			tblTcapOps,
-			etLAST);
+			tblTcapOps);
 
     init_Sres(screen.disallowedWinOps);
 
     set_flags_from_list(TScreenOf(wnew)->disallow_win_ops,
 			TScreenOf(wnew)->disallowedWinOps,
-			tblWindowOps,
-			ewLAST);
+			tblWindowOps);
 
     init_Sres(screen.default_string);
     init_Sres(screen.eightbit_select_types);
@@ -8064,6 +8096,7 @@ VTInitialize(Widget wrequest,
     TScreenOf(wnew)->allowSendEvents = TScreenOf(wnew)->allowSendEvent0;
     TScreenOf(wnew)->allowColorOps = TScreenOf(wnew)->allowColorOp0;
     TScreenOf(wnew)->allowFontOps = TScreenOf(wnew)->allowFontOp0;
+    TScreenOf(wnew)->allowMouseOps = TScreenOf(wnew)->allowMouseOp0;
     TScreenOf(wnew)->allowTcapOps = TScreenOf(wnew)->allowTcapOp0;
     TScreenOf(wnew)->allowTitleOps = TScreenOf(wnew)->allowTitleOp0;
     TScreenOf(wnew)->allowWindowOps = TScreenOf(wnew)->allowWindowOp0;
@@ -8870,6 +8903,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->keyboard_dialect);
     TRACE_FREE_LEAK(screen->disallowedColorOps);
     TRACE_FREE_LEAK(screen->disallowedFontOps);
+    TRACE_FREE_LEAK(screen->disallowedMouseOps);
     TRACE_FREE_LEAK(screen->disallowedTcapOps);
     TRACE_FREE_LEAK(screen->disallowedWinOps);
     TRACE_FREE_LEAK(screen->default_string);

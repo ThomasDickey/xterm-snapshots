@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.830 2016/10/07 00:38:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.832 2016/12/22 10:22:51 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1158,6 +1158,21 @@ typedef enum {
 #endif
 
 typedef enum {
+    emX10 = 1
+    , emLocator
+    , emVT200Click
+    , emVT200Hilite
+    , emAnyButton
+    , emAnyEvent
+    , emFocusEvent
+    , emExtended
+    , emSGR
+    , emURXVT
+    , emAlternateScroll
+    , emLAST
+} MouseOps;
+
+typedef enum {
     etSetTcap = 1
     , etGetTcap
     , etLAST
@@ -1993,7 +2008,9 @@ typedef struct {
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
 	int		extend_coords;	/* support large terminals	*/
+#if OPT_FOCUS_EVENT
 	Boolean		send_focus_pos; /* user wants focus in/out info */
+#endif
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
 	Cardinal	base64_paste;	/* set to send paste in base64	*/
@@ -2036,6 +2053,7 @@ typedef struct {
 	Boolean		allowPasteControls; /* PasteControls mode	*/
 	Boolean		allowColorOps;	/* ColorOps mode		*/
 	Boolean		allowFontOps;	/* FontOps mode			*/
+	Boolean		allowMouseOps;	/* MouseOps mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
 	Boolean		allowTcapOps;	/* TcapOps mode			*/
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
@@ -2044,6 +2062,7 @@ typedef struct {
 	Boolean		allowPasteControl0; /* PasteControls mode	*/
 	Boolean		allowColorOp0;	/* initial ColorOps mode	*/
 	Boolean		allowFontOp0;	/* initial FontOps mode		*/
+	Boolean		allowMouseOp0;	/* initial MouseOps mode	*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
 	Boolean		allowTcapOp0;	/* initial TcapOps mode		*/
 	Boolean		allowTitleOp0;	/* initial TitleOps mode	*/
@@ -2054,6 +2073,9 @@ typedef struct {
 
 	String		disallowedFontOps;
 	char		disallow_font_ops[efLAST];
+
+	String		disallowedMouseOps;
+	char		disallow_mouse_ops[emLAST];
 
 	String		disallowedTcapOps;
 	char		disallow_tcap_ops[etLAST];
@@ -3050,6 +3072,9 @@ typedef struct _TekWidgetRec {
 
 #define AllowFontOps(w,name)	(AllowXtermOps(w, allowFontOps) || \
 				 !TScreenOf(w)->disallow_font_ops[name])
+
+#define AllowMouseOps(w,name)	(AllowXtermOps(w, allowMouseOps) || \
+				 !TScreenOf(w)->disallow_mouse_ops[name])
 
 #define AllowTcapOps(w,name)	(AllowXtermOps(w, allowTcapOps) || \
 				 !TScreenOf(w)->disallow_tcap_ops[name])
