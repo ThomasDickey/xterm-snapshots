@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.338 2016/05/30 20:58:39 tom Exp $ */
+/* $XTermId: menu.c,v 1.339 2016/12/22 02:04:22 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -196,6 +196,7 @@ static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 static void enable_allow_xxx_ops (Bool);
 static void do_allowColorOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowFontOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowMouseOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowTcapOps    PROTO_XT_CALLBACK_ARGS;
 static void do_allowTitleOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowWindowOps  PROTO_XT_CALLBACK_ARGS;
@@ -444,6 +445,7 @@ MenuEntry fontMenuEntries[] = {
     { "line3",		NULL,		NULL },
     { "allow-color-ops",do_allowColorOps,NULL },
     { "allow-font-ops",	do_allowFontOps,NULL },
+    { "allow-mouse-ops",do_allowMouseOps,NULL },
     { "allow-tcap-ops",	do_allowTcapOps,NULL },
     { "allow-title-ops",do_allowTitleOps,NULL },
     { "allow-window-ops",do_allowWindowOps,NULL },
@@ -867,6 +869,7 @@ domenu(Widget w,
 #if OPT_ALLOW_XXX_OPS
 	    update_menu_allowColorOps();
 	    update_menu_allowFontOps();
+	    update_menu_allowMouseOps();
 	    update_menu_allowTcapOps();
 	    update_menu_allowTitleOps();
 	    update_menu_allowWindowOps();
@@ -3787,6 +3790,7 @@ static void
 enable_allow_xxx_ops(Bool enable)
 {
     SetItemSensitivity(fontMenuEntries[fontMenu_allowFontOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowMouseOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTcapOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTitleOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowWindowOps].widget, enable);
@@ -3813,6 +3817,18 @@ do_allowFontOps(Widget w,
     if (xw != 0) {
 	ToggleFlag(TScreenOf(xw)->allowFontOps);
 	update_menu_allowFontOps();
+    }
+}
+
+static void
+do_allowMouseOps(Widget w,
+		XtPointer closure GCC_UNUSED,
+		XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(TScreenOf(xw)->allowMouseOps);
+	update_menu_allowMouseOps();
     }
 }
 
@@ -3871,6 +3887,15 @@ HandleAllowFontOps(Widget w,
 }
 
 void
+HandleAllowMouseOps(Widget w,
+		   XEvent *event GCC_UNUSED,
+		   String *params,
+		   Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(allowMouseOps);
+}
+
+void
 HandleAllowTcapOps(Widget w,
 		   XEvent *event GCC_UNUSED,
 		   String *params,
@@ -3913,6 +3938,15 @@ update_menu_allowFontOps(void)
 		   fontMenuEntries,
 		   fontMenu_allowFontOps,
 		   TScreenOf(term)->allowFontOps);
+}
+
+void
+update_menu_allowMouseOps(void)
+{
+    UpdateCheckbox("update_menu_allowMouseOps",
+		   fontMenuEntries,
+		   fontMenu_allowMouseOps,
+		   TScreenOf(term)->allowMouseOps);
 }
 
 void

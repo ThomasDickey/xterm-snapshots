@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.63 2016/05/22 18:28:27 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.65 2016/12/22 23:49:26 tom Exp $ */
 
 /*
  * Copyright 2000-2015,2016 by Thomas E. Dickey
@@ -523,5 +523,43 @@ x_toupper(int ch)
 	result = table[CharOf(ch)];
     }
 
+    return result;
+}
+
+/*
+ * Match strings ignoring case and allowing glob-like '*' and '?'
+ */
+int
+x_wildstrcmp(const char *pattern, const char *actual)
+{
+    int result = 0;
+
+    while (*pattern && *actual) {
+	char c1 = x_toupper(*pattern);
+	char c2 = x_toupper(*actual);
+
+	if (c1 == '*') {
+	    Boolean found = False;
+	    pattern++;
+	    while (*actual != '\0') {
+		if (!x_wildstrcmp(pattern, actual++)) {
+		    found = True;
+		    break;
+		}
+	    }
+	    if (!found) {
+		result = 1;
+		break;
+	    }
+	} else if (c1 == '?') {
+	    ++pattern;
+	    ++actual;
+	} else if ((result = (c1 != c2)) == 0) {
+	    ++pattern;
+	    ++actual;
+	} else {
+	    break;
+	}
+    }
     return result;
 }

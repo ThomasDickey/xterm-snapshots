@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.505 2016/05/30 19:42:44 tom Exp $ */
+/* $XTermId: button.c,v 1.507 2016/12/22 21:28:22 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -251,11 +251,10 @@ EmitMousePositionSeparator(TScreen *screen, Char line[], unsigned count)
 Bool
 SendMousePosition(XtermWidget xw, XEvent *event)
 {
-    TScreen *screen = TScreenOf(xw);
     XButtonEvent *my_event = (XButtonEvent *) event;
     Bool result = False;
 
-    switch (screen->send_mouse_pos) {
+    switch (okSendMousePos(xw)) {
     case MOUSE_OFF:
 	/* If send_mouse_pos mode isn't on, we shouldn't be here */
 	break;
@@ -279,47 +278,48 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 	}
 	break;
 
-    default:
-	/* Make sure the event is an appropriate type */
+    case X10_MOUSE:		/* X10 compatibility sequences */
 	if (IsBtnEvent(event)) {
-	    switch (screen->send_mouse_pos) {
-	    case X10_MOUSE:	/* X10 compatibility sequences */
-
-		if (BtnModifiers(my_event) == 0) {
-		    if (my_event->type == ButtonPress)
-			EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-	    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
-		if (my_event->type == ButtonPress &&
-		    BtnModifiers(my_event) == 0 &&
-		    my_event->button == Button1) {
-		    TrackDown(xw, my_event);
-		    result = True;
-		} else if (BtnModifiers(my_event) == 0
-			   || BtnModifiers(my_event) == ControlMask) {
+	    if (BtnModifiers(my_event) == 0) {
+		if (my_event->type == ButtonPress)
 		    EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-	    case VT200_MOUSE:	/* DEC vt200 compatible */
-		if (BtnModifiers(my_event) == 0
-		    || BtnModifiers(my_event) == ControlMask) {
-		    EditorButton(xw, my_event);
-		    result = True;
-		}
-		break;
-
-#if OPT_DEC_LOCATOR
-	    case DEC_LOCATOR:
-		result = SendLocatorPosition(xw, my_event);
-		break;
-#endif /* OPT_DEC_LOCATOR */
+		result = True;
 	    }
 	}
+	break;
+
+    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
+	if (IsBtnEvent(event)) {
+	    if (my_event->type == ButtonPress &&
+		BtnModifiers(my_event) == 0 &&
+		my_event->button == Button1) {
+		TrackDown(xw, my_event);
+		result = True;
+	    } else if (BtnModifiers(my_event) == 0
+		       || BtnModifiers(my_event) == ControlMask) {
+		EditorButton(xw, my_event);
+		result = True;
+	    }
+	}
+	break;
+
+    case VT200_MOUSE:		/* DEC vt200 compatible */
+	if (IsBtnEvent(event)) {
+	    if (BtnModifiers(my_event) == 0
+		|| BtnModifiers(my_event) == ControlMask) {
+		EditorButton(xw, my_event);
+		result = True;
+	    }
+	}
+	break;
+
+    case DEC_LOCATOR:
+	if (IsBtnEvent(event)) {
+#if OPT_DEC_LOCATOR
+	    result = SendLocatorPosition(xw, my_event);
+#endif /* OPT_DEC_LOCATOR */
+	}
+	break;
     }
     return result;
 }
@@ -430,8 +430,8 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     }
     /*
      * mask:
-     * bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
-     *                                 M4 down left down   middle down   right down
+     * bit7   bit6   bit5   bit4   bit3     bit2       bit1         bit0
+     *                             M4 down  left down  middle down  right down
      *
      * Notice that Button1 (left) and Button3 (right) are swapped in the mask.
      * Also, mask should be the state after the button press/release,
@@ -460,8 +460,9 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     }
 
     /*
-     * DECterm turns the Locator off if a button is pressed while a filter rectangle
-     * is active. This might be a bug, but I don't know, so I'll emulate it anyways.
+     * DECterm turns the Locator off if a button is pressed while a filter
+     * rectangle is active.  This might be a bug, but I don't know, so I'll
+     * emulate it anyway.
      */
     if (screen->loc_filter) {
 	screen->send_mouse_pos = MOUSE_OFF;
@@ -500,8 +501,9 @@ GetLocatorPosition(XtermWidget xw)
     int state;
 
     /*
-     * DECterm turns the Locator off if the position is requested while a filter rectangle
-     * is active.  This might be a bug, but I don't know, so I'll emulate it anyways.
+     * DECterm turns the Locator off if the position is requested while a
+     * filter rectangle is active.  This might be a bug, but I don't know, so
+     * I'll emulate it anyways.
      */
     if (screen->loc_filter) {
 	screen->send_mouse_pos = MOUSE_OFF;
@@ -513,7 +515,7 @@ GetLocatorPosition(XtermWidget xw)
     memset(&reply, 0, sizeof(reply));
     reply.a_type = ANSI_CSI;
 
-    if (screen->send_mouse_pos == DEC_LOCATOR) {
+    if (okSendMousePos(xw) == DEC_LOCATOR) {
 	ret = XQueryPointer(screen->display, VWindow(screen), &root,
 			    &child, &rx, &ry, &x, &y, &mask);
 	if (ret) {
@@ -728,14 +730,15 @@ CheckLocatorPosition(XtermWidget xw, XButtonEvent *event)
 
 #if OPT_READLINE
 static int
-isClick1_clean(TScreen *screen, XButtonEvent *event)
+isClick1_clean(XtermWidget xw, XButtonEvent *event)
 {
+    TScreen *screen = TScreenOf(xw);
     int delta;
 
     if (!IsBtnEvent(event)
     /* Disable on Shift-Click-1, including the application-mouse modes */
 	|| (BtnModifiers(event) & ShiftMask)
-	|| (screen->send_mouse_pos != MOUSE_OFF)	/* Kinda duplicate... */
+	|| (okSendMousePos(xw) != MOUSE_OFF)	/* Kinda duplicate... */
 	||ExtendingSelection)	/* Was moved */
 	return 0;
 
@@ -917,13 +920,14 @@ ReadLineDelete(TScreen *screen, CELL *cell1, CELL *cell2)
 }
 
 static void
-readlineExtend(TScreen *screen, XEvent *event)
+readlineExtend(XtermWidget xw, XEvent *event)
 {
+    TScreen *screen = TScreenOf(xw);
     int ldelta1, ldelta2;
 
     if (IsBtnEvent(event)) {
 	XButtonEvent *my_event = (XButtonEvent *) event;
-	if (isClick1_clean(screen, my_event)
+	if (isClick1_clean(xw, my_event)
 	    && SCREEN_FLAG(screen, click1_moves)
 	    && rowOnCurrentLine(screen, eventRow(screen, event), &ldelta1)) {
 	    ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta1);
@@ -987,7 +991,7 @@ ReadLineButton(Widget w,
 	int line, col, ldelta = 0;
 
 	if (!IsBtnEvent(event)
-	    || (screen->send_mouse_pos != MOUSE_OFF) || ExtendingSelection)
+	    || (okSendMousePos(xw) != MOUSE_OFF) || ExtendingSelection)
 	    goto finish;
 	if (event->type == ButtonRelease) {
 	    int delta;
@@ -1098,8 +1102,8 @@ HandleSelectExtend(Widget w,
 	       character process as a key sequence \E[M... */
 	case NORMAL:
 	    /* will get here if send_mouse_pos != MOUSE_OFF */
-	    if (screen->send_mouse_pos == BTN_EVENT_MOUSE
-		|| screen->send_mouse_pos == ANY_EVENT_MOUSE) {
+	    if (okSendMousePos(xw) == BTN_EVENT_MOUSE
+		|| okSendMousePos(xw) == ANY_EVENT_MOUSE) {
 		(void) SendMousePosition(xw, event);
 	    }
 	    break;
@@ -1142,7 +1146,7 @@ do_select_end(XtermWidget xw,
     case RIGHTEXTENSION:
 	EndExtend(xw, event, params, *num_params, use_cursor_loc);
 #if OPT_READLINE
-	readlineExtend(screen, event);
+	readlineExtend(xw, event);
 #endif /* OPT_READLINE */
 	break;
     }
@@ -2298,7 +2302,7 @@ HandleInsertSelection(Widget w,
 	    if (IsBtnEvent(event)
 	    /* Disable on Shift-mouse, including the application-mouse modes */
 		&& !(KeyModifiers(event) & ShiftMask)
-		&& (screen->send_mouse_pos == MOUSE_OFF)
+		&& (okSendMousePos(xw) == MOUSE_OFF)
 		&& SCREEN_FLAG(screen, paste_moves)
 		&& rowOnCurrentLine(screen, eventRow(screen, event), &ldelta))
 		ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta);
@@ -3659,7 +3663,8 @@ ReHiliteText(XtermWidget xw,
 }
 
 /*
- * Guaranteed that (cellc->row, cellc->col) <= (cell->row, cell->col), and that both points are valid
+ * Guaranteed that (cellc->row, cellc->col) <= (cell->row, cell->col),
+ * and that both points are valid
  * (may have cell->row = screen->max_row+1, cell->col = 0).
  */
 static void
@@ -4472,15 +4477,16 @@ BtnCode(XButtonEvent *event, int button)
 }
 
 static unsigned
-EmitButtonCode(TScreen *screen,
+EmitButtonCode(XtermWidget xw,
 	       Char *line,
 	       unsigned count,
 	       XButtonEvent *event,
 	       int button)
 {
+    TScreen *screen = TScreenOf(xw);
     int value;
 
-    if (screen->send_mouse_pos == X10_MOUSE) {
+    if (okSendMousePos(xw) == X10_MOUSE) {
 	value = CharOf(' ' + button);
     } else {
 	value = BtnCode(event, button);
@@ -4524,7 +4530,7 @@ FirstBitN(int bits)
 
 #define ButtonBit(button) ((button >= 0) ? (1 << (button)) : 0)
 
-#define EMIT_BUTTON(button) EmitButtonCode(screen, line, count, event, button)
+#define EMIT_BUTTON(button) EmitButtonCode(xw, line, count, event, button)
 
 static void
 EditorButton(XtermWidget xw, XButtonEvent *event)
@@ -4594,7 +4600,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     }
 
     /* Add event code to key sequence */
-    if (screen->send_mouse_pos == X10_MOUSE) {
+    if (okSendMousePos(xw) == X10_MOUSE) {
 	count = EMIT_BUTTON(button);
     } else {
 	/* Button-Motion events */
@@ -4665,13 +4671,68 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     return;
 }
 
+/*
+ * Check the current send_mouse_pos against allowed mouse-operations, returning
+ * none if it is disallowed.
+ */
+XtermMouseModes
+okSendMousePos(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    XtermMouseModes result = screen->send_mouse_pos;
+
+    switch (result) {
+    case MOUSE_OFF:
+	break;
+    case X10_MOUSE:
+	if (!AllowMouseOps(xw, emX10))
+	    result = MOUSE_OFF;
+	break;
+    case VT200_MOUSE:
+	if (!AllowMouseOps(xw, emVT200Click))
+	    result = MOUSE_OFF;
+	break;
+    case VT200_HIGHLIGHT_MOUSE:
+	if (!AllowMouseOps(xw, emVT200Hilite))
+	    result = MOUSE_OFF;
+	break;
+    case BTN_EVENT_MOUSE:
+	if (!AllowMouseOps(xw, emAnyButton))
+	    result = MOUSE_OFF;
+	break;
+    case ANY_EVENT_MOUSE:
+	if (!AllowMouseOps(xw, emAnyEvent))
+	    result = MOUSE_OFF;
+	break;
+    case DEC_LOCATOR:
+	if (!AllowMouseOps(xw, emLocator))
+	    result = MOUSE_OFF;
+	break;
+    }
+    return result;
+}
+
 #if OPT_FOCUS_EVENT
+/*
+ * Check the current send_focus_pos against allowed mouse-operations, returning
+ * none if it is disallowed.
+ */
+static int
+okSendFocusPos(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int result = screen->send_focus_pos;
+
+    if (!AllowMouseOps(xw, emFocusEvent)) {
+	result = False;
+    }
+    return result;
+}
+
 void
 SendFocusButton(XtermWidget xw, XFocusChangeEvent *event)
 {
-    TScreen *screen = TScreenOf(xw);
-
-    if (screen->send_focus_pos) {
+    if (okSendFocusPos(xw)) {
 	ANSI reply;
 
 	memset(&reply, 0, sizeof(reply));

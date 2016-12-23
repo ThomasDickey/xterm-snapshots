@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.698 2016/12/22 01:21:53 tom Exp $
+.\" $XTermId: xterm.man,v 1.699 2016/12/23 00:44:15 tom Exp $
 .\"
 .\" Copyright 1996-2015,2016 by Thomas E. Dickey
 .\"
@@ -2010,6 +2010,11 @@ The default is \*(``true\*(''.
 .B "allowFontOps\fP (class\fB AllowFontOps\fP)"
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true\*(''.
+.TP
+.B "allowMouseOps\fP (class\fB AllowMouseOps\fP)"
+Specifies whether control sequences that enable \fI\*n\fP to send
+escape sequences to the host on mouse-clicks and movement.
+The default is \*(``true\*(''.
 .TP 8
 .B "allowPasteControls\fP (class\fB AllowPasteControls\fP)"
 If true, allow control characters such as BEL and CAN to be pasted.
@@ -2727,6 +2732,53 @@ Set the specified font.
 .TP 5
 GetFont
 Report the specified font.
+.RE
+.TP 8
+.B "disallowedMouseOps\fP (class\fB DisallowedMouseOps\fP)"
+Specify which features will be disabled if \fBallowMouseOps\fP is false.
+This is a comma-separated list of names.
+The default value is \*(``*\*('' which matches all names.
+The names are listed below.
+\fI\*N\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+.RS
+.TP 5
+X10
+The original X10 mouse protocol.
+.TP 5
+Locator
+DEC locator mode
+.TP 5
+VT200Click
+X11 mouse-clicks only.
+.TP 5
+VT200Hilite
+X11 mouse-clicks and highlighting.
+.TP 5
+AnyButton
+XFree86 \fI\*n\fP any-button mode sends button-clicks as
+well as motion events while the button is pressed.
+.TP 5
+AnyEvent
+XFree86 \fI\*n\fP any-event mode sends button-clicks as
+well as motion events whether or not a button is pressed.
+.TP 5
+FocusEvent
+Send FocusIn/FocusOut events.
+.TP 5
+Extended
+The first extension beyond X11 mouse protocol, this encodes
+the coordinates in UTF-8.
+It is deprecated in favor of \fISGR\fP, but provided for compatibility.
+.TP 5
+SGR
+This is the recommended extension for mouse-coordinates
+.TP 5
+URXVT
+Like \fIExtended\fP, this is provided for compatibility.
+.TP 5
+AlternateScroll
+This overrides the \fBalternateScroll\fP resource.
 .RE
 .TP 8
 .B "disallowedTcapOps\fP (class\fB DisallowedTcapOps\fP)"
@@ -5684,6 +5736,11 @@ Enable or disable control sequences that set/query the colors.
 This corresponds to the \fBallowFontOps\fP resource.
 Enable or disable control sequences that set/query the font.
 .TP
+.B Allow Mouse Ops\fP (resource \fBallow-mouse-ops\fP)
+Enable or disable control sequences that cause the terminal to
+send escape sequences on pointer-clicks and movement.
+This corresponds to the \fBallowMouseOps\fP resource.
+.TP
 .B Allow Tcap Ops\fP (resource \fBallow-tcap-ops\fP)
 Enable or disable control sequences that query the terminal's
 notion of its function-key strings, as termcap or terminfo capabilities.
@@ -5946,6 +6003,10 @@ invoked by the \fBallow-color-ops\fP entry in \fIfontMenu\fP.
 .B "allow-font-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowFontOps\fP resource and is also
 invoked by the \fBallow-font-ops\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "allow-mouse-ops(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBallowMousepOps\fP resource and is also
+invoked by the \fBallow-mouse-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-send-events(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowSendEvents\fP resource and is also
