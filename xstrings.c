@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.65 2016/12/22 23:49:26 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.66 2016/12/23 14:30:49 tom Exp $ */
 
 /*
  * Copyright 2000-2015,2016 by Thomas E. Dickey
@@ -415,7 +415,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = CastMallocN(char, strlen(s) + 1);
+	char *t = TextAlloc(strlen(s));
 	if (t != 0) {
 	    strcpy(t, s);
 	}

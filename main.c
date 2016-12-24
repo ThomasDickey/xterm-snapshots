@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.784 2016/10/07 00:40:34 tom Exp $ */
+/* $XTermId: main.c,v 1.785 2016/12/23 14:30:49 tom Exp $ */
 
 /*
  * Copyright 2002-2015,2016 by Thomas E. Dickey
@@ -4870,7 +4870,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = CastMallocN(char, strlen(shname) + 2)) != 0) {
+	    if ((shname_minus = TextAlloc(strlen(shname) + 1)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {
