@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.744 2016/12/23 14:33:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.745 2016/12/24 01:30:49 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -2959,9 +2959,12 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 			screen->base64_paste = n;
 			screen->base64_final = final;
 
+			screen->selection_time =
+			    XtLastTimestampProcessed(TScreenOf(xw)->display);
+
 			/* terminator will be written in this call */
 			xtermGetSelection((Widget) xw,
-					  XtLastTimestampProcessed(TScreenOf(xw)->display),
+					  screen->selection_time,
 					  select_args, n,
 					  NULL);
 			/*
@@ -2974,6 +2977,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 		} else {
 		    if (AllowWindowOps(xw, ewSetSelection)) {
 			TRACE(("Setting selection with %s\n", buf));
+			screen->selection_time =
+			    XtLastTimestampProcessed(TScreenOf(xw)->display);
 			ClearSelectionBuffer(screen);
 			while (*buf != '\0')
 			    AppendToSelectionBuffer(screen, CharOf(*buf++));
