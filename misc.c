@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.743 2016/10/07 00:41:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.744 2016/12/23 14:33:51 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -3766,8 +3766,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	 */
 	if (strcmp(buf, "?")) {
 	    char *bp;
-	    if ((bp = CastMallocN(char, strlen(buf))) != NULL) {
-		strcpy(bp, buf);
+	    if ((bp = x_strdup(buf)) != NULL) {
 		if (screen->logfile)
 		    free(screen->logfile);
 		screen->logfile = bp;
@@ -3855,7 +3854,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = CastMallocN(char, strlen(cp) + 2);
+	char *str = TextAlloc(strlen(cp) + 2);
 	unsigned key = 0;
 	int len = 0;
 
@@ -5487,7 +5486,7 @@ xtermSetenv(const char *var, const char *value)
 	    environ = environ;
 	}
 
-	environ[found] = CastMallocN(char, 1 + len + strlen(value));
+	environ[found] = TextAlloc(1 + len + strlen(value));
 	if (environ[found] == 0) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
@@ -5851,10 +5850,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
 			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = CastMallocN(char,
-						      strlen(mesg)
-						      + 1
-						      + strlen(opt_array[j].desc));
+				char *s = TextAlloc(strlen(mesg)
+						    + 1
+						    + strlen(opt_array[j].desc));
 				if (s != 0) {
 				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
 				    opt_array[j].desc = s;
