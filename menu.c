@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.339 2016/12/22 02:04:22 tom Exp $ */
+/* $XTermId: menu.c,v 1.340 2016/12/24 00:50:43 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -1042,16 +1042,6 @@ HandleSecure(Widget w GCC_UNUSED,
 	     String *params GCC_UNUSED,		/* [0] = volume */
 	     Cardinal *param_count GCC_UNUSED)	/* 0 or 1 */
 {
-#if 0
-    Time ev_time = CurrentTime;
-
-    if ((event->xany.type == KeyPress) ||
-	(event->xany.type == KeyRelease))
-	ev_time = event->xkey.time;
-    else if ((event->xany.type == ButtonPress) ||
-	     (event->xany.type == ButtonRelease))
-	ev_time = event->xbutton.time;
-#endif
     do_securekbd(vt_shell[mainMenu].w, (XtPointer) 0, (XtPointer) 0);
 }
 
