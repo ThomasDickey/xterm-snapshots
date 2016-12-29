@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1431 2016/12/22 23:50:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1433 2016/12/29 14:20:36 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -4994,17 +4994,58 @@ dotext(XtermWidget xw,
 		break;
 	    }
 
+	    /*
+	     * Regarding the soft-hyphen aberration, see
+	     * http://archives.miloush.net/michkap/archive/2006/09/02/736881.html
+	     */
 	    while (width_here <= width_available
 		   && chars_chomped < (len - offset)) {
+		Cardinal n = chars_chomped + offset;
 		if (!screen->utf8_mode
 		    || (screen->vt100_graphics && charset == '0')) {
 		    last_chomp = 1;
 		} else if (screen->c1_printable &&
-			   buf[chars_chomped + offset] >= 0x80 &&
-			   buf[chars_chomped + offset] <= 0xa0) {
+			   buf[n] >= 0x80 &&
+			   buf[n] <= 0xa0) {
 		    last_chomp = 1;
 		} else {
-		    last_chomp = my_wcwidth((wchar_t) buf[chars_chomped + offset]);
+		    last_chomp = my_wcwidth((wchar_t) buf[n]);
+		    if (last_chomp <= 0) {
+			IChar ch = buf[n];
+			Bool eat_it = (ch > 127);
+			if (ch == 0xad) {
+			    /*
+			     * Only display soft-hyphen if it happens to be at
+			     * the right-margin.  While that means that only
+			     * the displayed character could be selected for
+			     * pasting, a well-behaved application would never
+			     * send this, anyway...
+			     */
+			    if (width_here < width_available - 1) {
+				eat_it = True;
+			    } else {
+				last_chomp = 1;
+				eat_it = False;
+			    }
+			    TRACE(("...will%s display soft-hyphen\n",
+				   eat_it ? " not" : ""));
+			}
+			/*
+			 * Supposedly we dealt with combining characters and
+			 * control characters in doparse().  Anything left over
+			 * is junk that we will not attempt to display.
+			 */
+			if (eat_it) {
+			    TRACE(("...will not display U+%04X\n", ch));
+			    --len;
+			    while (n < len) {
+				buf[n] = buf[n + 1];
+				++n;
+			    }
+			    last_chomp = 0;
+			    chars_chomped--;
+			}
+		    }
 		}
 		width_here += last_chomp;
 		chars_chomped++;
