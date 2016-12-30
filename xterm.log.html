@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1706 2016/12/29 14:06:46 tom Exp $
+  $XTermId: xterm.log.html,v 1.1707 2016/12/30 21:39:51 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -944,6 +944,19 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>several minor improvements to font utility functions:
+
+      <ul>
+        <li>make the debugging trace for missing glyph less verbose
+        since that interferes with the <code>-report-fonts</code>
+        option.</li>
+
+        <li>refactor <code>xtermLoadFont</code> to make it clearer
+        how some fonts are derived from others, e.g., bold,
+        wide.</li>
+      </ul>
+    </li>
+
     <li>add special case for displaying soft-hyphen if it happens
     to fall at the right margin, and omitting similar case such as
     the BIDI markers, where a zero-width character is neither a
