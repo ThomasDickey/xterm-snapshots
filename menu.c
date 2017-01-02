@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.340 2016/12/24 00:50:43 tom Exp $ */
+/* $XTermId: menu.c,v 1.343 2017/01/02 19:13:52 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -614,7 +614,7 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 	break;
     case vtMenu:
 #ifndef NO_ACTIVE_ICON
-	if (!screen->fnt_icon.fs || !screen->iconVwin.window) {
+	if (!getIconicFont(screen)->fs || !screen->iconVwin.window) {
 	    result[vtMenu_activeicon] = True;
 	}
 #endif /* NO_ACTIVE_ICON */
@@ -3715,7 +3715,7 @@ update_font_renderfont(void)
 		   fontMenu_render_font,
 		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
-		       !IsEmpty(term->misc.face_name));
+		       !IsEmpty(term->misc.default_xft.f_n));
     update_fontmenu(term);
 }
 #endif
@@ -3812,8 +3812,8 @@ do_allowFontOps(Widget w,
 
 static void
 do_allowMouseOps(Widget w,
-		XtPointer closure GCC_UNUSED,
-		XtPointer data GCC_UNUSED)
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
     if (xw != 0) {
@@ -3878,9 +3878,9 @@ HandleAllowFontOps(Widget w,
 
 void
 HandleAllowMouseOps(Widget w,
-		   XEvent *event GCC_UNUSED,
-		   String *params,
-		   Cardinal *param_count)
+		    XEvent *event GCC_UNUSED,
+		    String *params,
+		    Cardinal *param_count)
 {
     HANDLE_VT_TOGGLE(allowMouseOps);
 }

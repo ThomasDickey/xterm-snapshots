@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.745 2016/12/24 01:30:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.746 2017/01/02 00:51:45 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3567,7 +3567,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * Check if the palette changed and there are no more immediate changes
      * that could be deferred to the next repaint.
      */
-    if (xw->misc.palette_changed) {
+    if (xw->work.palette_changed) {
 	switch (mode) {
 	case 3:		/* change X property */
 	case 30:		/* Konsole (unused) */
@@ -3578,7 +3578,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	case 52:		/* selection data */
 #endif
 	    TRACE(("forced repaint after palette changed\n"));
-	    xw->misc.palette_changed = False;
+	    xw->work.palette_changed = False;
 	    xtermRepaint(xw);
 	    break;
 	}
@@ -3657,7 +3657,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	/* FALLTHRU */
     case 4:
 	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
-	    xw->misc.palette_changed = True;
+	    xw->work.palette_changed = True;
 	break;
     case 6:
 	/* FALLTHRU */
@@ -3717,7 +3717,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	/* FALLTHRU */
     case OSC_Reset(4):
 	if (ResetAnsiColorRequest(xw, buf, ansi_colors))
-	    xw->misc.palette_changed = True;
+	    xw->work.palette_changed = True;
 	break;
 #endif
     case OSC_TEXT_FG:

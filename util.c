@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.694 2016/12/23 14:30:49 tom Exp $ */
+/* $XTermId: util.c,v 1.700 2017/01/02 19:21:15 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2721,7 +2721,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
 
 #endif /* OPT_RENDERWIDE */
 
-#define XFT_FONT(name) screen->name.font
+#define XFT_FONT(which) getXftFont(xw, which, fontnum)
 
 #if OPT_ISO_COLORS
 #define UseBoldFont(screen) (!(screen)->colorBDMode || ((screen)->veryBoldColors & BOLD))
@@ -2743,24 +2743,24 @@ getWideXftFont(XtermWidget xw,
 #if OPT_ISO_COLORS
 	&& !screen->colorITMode
 #endif
-	&& XFT_FONT(renderWideItal[fontnum])) {
-	wfont = XFT_FONT(renderWideItal[fontnum]);
+	&& XFT_FONT(fWItal)) {
+	wfont = XFT_FONT(fWItal);
     } else
 #endif
 #if OPT_ISO_COLORS
 	if ((attr_flags & UNDERLINE)
 	    && !screen->colorULMode
 	    && screen->italicULMode
-	    && XFT_FONT(renderWideItal[fontnum])) {
-	wfont = XFT_FONT(renderWideItal[fontnum]);
+	    && XFT_FONT(fWItal)) {
+	wfont = XFT_FONT(fWItal);
     } else
 #endif
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(renderWideBold[fontnum])) {
-	wfont = XFT_FONT(renderWideBold[fontnum]);
+	    && XFT_FONT(fWBold)) {
+	wfont = XFT_FONT(fWBold);
     } else {
-	wfont = XFT_FONT(renderWideNorm[fontnum]);
+	wfont = XFT_FONT(fWide);
     }
     return wfont;
 }
@@ -2780,25 +2780,25 @@ getNormXftFont(XtermWidget xw,
 #if OPT_ISO_COLORS
 	&& !screen->colorITMode
 #endif
-	&& XFT_FONT(renderFontItal[fontnum])) {
-	font = XFT_FONT(renderFontItal[fontnum]);
+	&& XFT_FONT(fItal)) {
+	font = XFT_FONT(fItal);
     } else
 #endif
 #if OPT_ISO_COLORS
 	if ((attr_flags & UNDERLINE)
 	    && !screen->colorULMode
 	    && screen->italicULMode
-	    && XFT_FONT(renderFontItal[fontnum])) {
-	font = XFT_FONT(renderFontItal[fontnum]);
+	    && XFT_FONT(fItal)) {
+	font = XFT_FONT(fItal);
 	*did_ul = True;
     } else
 #endif
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(renderFontBold[fontnum])) {
-	font = XFT_FONT(renderFontBold[fontnum]);
+	    && XFT_FONT(fBold)) {
+	font = XFT_FONT(fBold);
     } else {
-	font = XFT_FONT(renderFontNorm[fontnum]);
+	font = XFT_FONT(fNorm);
     }
     return font;
 }
@@ -3210,11 +3210,11 @@ drawClippedXftString(XtermWidget xw,
 
 #ifndef NO_ACTIVE_ICON
 #define WhichVFontData(screen,name) \
-		(IsIcon(screen) ? &((screen)->fnt_icon) \
-				: &((screen)->name))
+		(IsIcon(screen) ? getIconicFont(screen) \
+				: getNormalFont(screen, name))
 #else
 #define WhichVFontData(screen,name) \
-				(&((screen)->name))
+				getNormalFont(screen, name)
 #endif
 
 static int
@@ -3366,7 +3366,7 @@ drawXtermText(XtermWidget xw,
 	       visibleIChars(text, len)));
 
 	if (gc2 != 0) {		/* draw actual double-sized characters */
-	    XFontStruct *fs = screen->double_fonts[inx].fs;
+	    XFontStruct *fs = getDoubleFont(screen, inx)->fs;
 
 #if OPT_RENDERFONT
 	    if (!UsingRenderFont(xw))
@@ -3694,8 +3694,8 @@ drawXtermText(XtermWidget xw,
     }
 #endif /* OPT_RENDERFONT */
     curFont = ((attr_flags & BOLDATTR(screen))
-	       ? WhichVFontData(screen, fnts[fBold])
-	       : WhichVFontData(screen, fnts[fNorm]));
+	       ? WhichVFontData(screen, fBold)
+	       : WhichVFontData(screen, fNorm));
     /*
      * If we're asked to display a proportional font, do this with a fixed
      * pitch.  Yes, it's ugly.  But we cannot distinguish the use of xterm
@@ -3795,7 +3795,7 @@ drawXtermText(XtermWidget xw,
 		IsXtermMissingChar(screen, ch,
 				   ((on_wide || ch_width > 1)
 				    && okFont(NormalWFont(screen)))
-				   ? WhichVFontData(screen, fnts[fWide])
+				   ? WhichVFontData(screen, fWide)
 				   : curFont);
 #else
 	    isMissing = IsXtermMissingChar(screen, ch, curFont);
@@ -3980,11 +3980,11 @@ drawXtermText(XtermWidget xw,
 	    Bool noBold, noNorm;
 
 	    if (needWide && okFont(BoldWFont(screen))) {
-		norm = WhichVFontData(screen, fnts[fWide]);
-		bold = WhichVFontData(screen, fnts[fWBold]);
+		norm = WhichVFontData(screen, fWide);
+		bold = WhichVFontData(screen, fWBold);
 	    } else if (okFont(BoldFont(screen))) {
-		norm = WhichVFontData(screen, fnts[fNorm]);
-		bold = WhichVFontData(screen, fnts[fBold]);
+		norm = WhichVFontData(screen, fNorm);
+		bold = WhichVFontData(screen, fBold);
 	    } else {
 		useBoldFont = False;
 	    }
@@ -4048,7 +4048,7 @@ drawXtermText(XtermWidget xw,
 					     y, x, font_width, len);
 #endif
 	    if (fntId != fNorm) {
-		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId].fs);
+		XFontStruct *thisFp = WhichVFont(screen, fntId);
 		ascent_adjust = (thisFp->ascent
 				 - NormalFont(screen)->ascent);
 		if (thisFp->max_bounds.width ==
