@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.512 2015/03/22 14:47:02 tom Exp $ */
+/* $XTermId: screen.c,v 1.514 2017/01/02 20:33:18 tom Exp $ */
 
 /*
- * Copyright 1999-2014,2015 by Thomas E. Dickey
+ * Copyright 1999-2015,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1387,13 +1387,11 @@ ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 static unsigned
 refreshFontGCs(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 {
-    TScreen *screen = TScreenOf(xw);
-
     if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
 	xtermLoadItalics(xw);
-	xtermUpdateFontGCs(xw, screen->ifnts);
+	xtermUpdateFontGCs(xw, True);
     } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
-	xtermUpdateFontGCs(xw, screen->fnts);
+	xtermUpdateFontGCs(xw, False);
     }
     return new_attrs;
 }

@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.833 2016/12/23 21:06:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.844 2017/01/02 22:25:48 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -856,9 +856,13 @@ typedef struct {
 typedef enum {
     fNorm = 0			/* normal font */
     , fBold			/* bold font */
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+    , fItal			/* italic font */
+#endif
 #if OPT_WIDE_CHARS
     , fWide			/* double-width font */
     , fWBold			/* double-width bold font */
+    , fWItal			/* double-width italic font */
 #endif
     , fMAX
 } VTFontEnum;
@@ -1879,13 +1883,30 @@ typedef struct {
 } TKwin;
 
 typedef struct {
-    String f_n;			/* the normal font */
-    String f_b;			/* the bold font */
+    char *f_n;			/* the normal font */
+    char *f_b;			/* the bold font */
+#if OPT_WIDE_ATTRS
+    char *f_i;			/* italic font (Xft only) */
+#endif
 #if OPT_WIDE_CHARS
-    String f_w;			/* the normal wide font */
-    String f_wb;		/* the bold wide font */
+    char *f_w;			/* the normal wide font */
+    char *f_wb;			/* the bold wide font */
+    char *f_wi;			/* wide italic font (Xft only) */
 #endif
 } VTFontNames;
+
+typedef struct {
+    char **list_n;		/* the normal font */
+    char **list_b;		/* the bold font */
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+    char **list_i;		/* italic font (Xft only) */
+#endif
+#if OPT_WIDE_CHARS
+    char **list_w;		/* the normal wide font */
+    char **list_wb;		/* the bold wide font */
+    char **list_wi;		/* wide italic font (Xft only) */
+#endif
+} VTFontList;
 
 typedef struct {
     VTFontNames default_font;
@@ -2419,7 +2440,7 @@ typedef struct {
 	 */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	String		initial_font;
-	String		menu_font_names[NMENUFONTS][fMAX];
+	char *		menu_font_names[NMENUFONTS][fMAX];
 #define MenuFontName(n) menu_font_names[n][fNorm]
 #define EscapeFontName() MenuFontName(fontMenu_fontescape)
 #define SelectFontName() MenuFontName(fontMenu_fontsel)
@@ -2666,7 +2687,6 @@ typedef struct _Misc {
     Boolean log_on;
 #endif
     Boolean login_shell;
-    Boolean palette_changed;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
     XtGravity resizeGravity;
@@ -2694,11 +2714,7 @@ typedef struct _Misc {
     char* input_method;
     char* preedit_type;
     Boolean open_im;		/* true if input-method is opened */
-    Boolean cannot_im;		/* true if we cannot use input-method */
     int retry_im;
-    XFontSet xim_fs;		/* fontset for XIM preedit */
-    int xim_fs_ascent;		/* ascent of fs */
-    TInput inputs[NINPUTWIDGETS];
 #endif
     Boolean dynamicColors;
 #ifndef NO_ACTIVE_ICON
@@ -2720,8 +2736,7 @@ typedef struct _Misc {
     Boolean alwaysUseMods;	/* true if we always want f-key modifiers */
 #endif
 #if OPT_RENDERFONT
-    char *face_name;
-    char *face_wide_name;
+    VTFontNames default_xft;
     float face_size[NMENUFONTS];
     char *render_font_s;
 #endif
@@ -2741,6 +2756,12 @@ typedef struct _Work {
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
 #endif /* NO_ACTIVE_ICON */
+#if OPT_INPUT_METHOD
+    Boolean cannot_im;		/* true if we cannot use input-method */
+    XFontSet xim_fs;		/* fontset for XIM preedit */
+    int xim_fs_ascent;		/* ascent of fs */
+    TInput inputs[NINPUTWIDGETS];
+#endif
 #if OPT_MAXIMIZE
 #define MAX_EWMH_MODE 3
 #define MAX_EWMH_DATA (1 + OPT_TEK4014)
@@ -2755,7 +2776,9 @@ typedef struct _Work {
     unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
     unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
 #endif
+    VTFontList x11_fontnames;
 #if OPT_RENDERFONT
+    VTFontList xft_fontnames;
     Boolean render_font;
 #endif
 #if OPT_DABBREV
@@ -2763,6 +2786,7 @@ typedef struct _Work {
     char dabbrev_data[MAX_DABBREV];
 #endif
     ScrnColors *oldColors;
+    Boolean palette_changed;
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
@@ -2994,11 +3018,11 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	((screen)->whichVwin)
 #define WhichTWin(screen)	((screen)->whichTwin)
 
-#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon.fs \
-						: (screen)->name)
-#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->ascent \
+#define WhichVFont(screen,name)	(IsIcon(screen) ? getIconicFont(screen) \
+						: getNormalFont(screen, name))->fs
+#define FontAscent(screen)	(IsIcon(screen) ? getIconicFont(screen)->fs->ascent \
 						: WhichVWin(screen)->f_ascent)
-#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->descent \
+#define FontDescent(screen)	(IsIcon(screen) ? getIconicFont(screen)->fs->descent \
 						: WhichVWin(screen)->f_descent)
 #else /* NO_ACTIVE_ICON */
 
@@ -3007,7 +3031,7 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	(&((screen)->fullVwin))
 #define WhichTWin(screen)	(&((screen)->fullTwin))
 
-#define WhichVFont(screen,name)	((screen)->name)
+#define WhichVFont(screen,name)	getNormalFont(screen, name)->fs
 #define FontAscent(screen)	WhichVWin(screen)->f_ascent
 #define FontDescent(screen)	WhichVWin(screen)->f_descent
 
@@ -3041,12 +3065,12 @@ typedef struct _TekWidgetRec {
 #define FontWidth(screen)	WhichVWin(screen)->f_width
 #define FontHeight(screen)	WhichVWin(screen)->f_height
 
-#define NormalFont(screen)	WhichVFont(screen, fnts[fNorm].fs)
-#define BoldFont(screen)	WhichVFont(screen, fnts[fBold].fs)
+#define NormalFont(screen)	WhichVFont(screen, fNorm)
+#define BoldFont(screen)	WhichVFont(screen, fBold)
 
 #if OPT_WIDE_CHARS
-#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide].fs)
-#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold].fs)
+#define NormalWFont(screen)	WhichVFont(screen, fWide)
+#define BoldWFont(screen)	WhichVFont(screen, fWBold)
 #endif
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
