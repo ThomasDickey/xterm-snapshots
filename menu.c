@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.343 2017/01/02 19:13:52 tom Exp $ */
+/* $XTermId: menu.c,v 1.344 2017/01/02 23:46:03 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3715,7 +3715,7 @@ update_font_renderfont(void)
 		   fontMenu_render_font,
 		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
-		       !IsEmpty(term->misc.default_xft.f_n));
+		       !IsEmpty(CurrentXftFont(term)));
     update_fontmenu(term);
 }
 #endif
