@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1445 2017/01/02 22:31:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1450 2017/01/04 00:01:07 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -7634,44 +7634,6 @@ set_flags_from_list(char *target,
     }
 }
 
-#if OPT_RENDERFONT
-static void
-trimSizeFromFace(char *face_name, float *face_size)
-{
-    char *first = strstr(face_name, ":size=");
-    if (first == 0) {
-	first = face_name;
-    } else {
-	first++;
-    }
-    if (!strncmp(first, "size=", (size_t) 5)) {
-	char *last = strchr(first, ':');
-	char mark;
-	float value;
-	char extra;
-	if (last == 0)
-	    last = first + strlen(first);
-	mark = *last;
-	*last = '\0';
-	if (sscanf(first, "size=%g%c", &value, &extra) == 1) {
-	    TRACE(("...trimmed size from font: %g\n", value));
-	    if (face_size != 0)
-		*face_size = value;
-	}
-	if (mark) {
-	    while ((*first++ = *++last) != '\0') {
-		;
-	    }
-	} else {
-	    if (first != face_name)
-		--first;
-	    *first = '\0';
-	}
-	TRACE(("...after trimming, font = \"%s\"\n", face_name));
-    }
-}
-#endif
-
 #define InitCursorShape(target, source) \
     target->cursor_shape = source->cursor_underline \
 	? CURSOR_UNDERLINE \
@@ -8419,7 +8381,6 @@ VTInitialize(Widget wrequest,
     }
 
     init_Sres(misc.default_xft.f_n);
-    trimSizeFromFace(wnew->misc.default_xft.f_n, &(wnew->misc.face_size[0]));
     allocFontList(wnew,
 		  XtNfaceName,
 		  fNorm,
@@ -8428,7 +8389,6 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_CHARS
     init_Sres(misc.default_xft.f_w);
-    trimSizeFromFace(wnew->misc.default_xft.f_w, (float *) 0);
     allocFontList(wnew,
 		  XtNfaceNameDoublesize,
 		  fWide,
@@ -8441,11 +8401,11 @@ VTInitialize(Widget wrequest,
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,
 				  tblRenderFont, erLast);
     if (wnew->work.render_font == erDefault) {
-	if (IsEmpty(wnew->misc.default_xft.f_n)) {
-	    free((void *) wnew->misc.default_xft.f_n);
-	    wnew->misc.default_xft.f_n = x_strdup(DEFFACENAME_AUTO);
+	if (IsEmpty(CurrentXftFont(wnew))) {
+	    free((void *) CurrentXftFont(wnew));
+	    CurrentXftFont(wnew) = x_strdup(DEFFACENAME_AUTO);
 	    TRACE(("will allow runtime switch to render_font using \"%s\"\n",
-		   wnew->misc.default_xft.f_n));
+		   CurrentXftFont(wnew)));
 	} else {
 	    wnew->work.render_font = erTrue;
 	    TRACE(("initially using TrueType font\n"));
@@ -8453,7 +8413,7 @@ VTInitialize(Widget wrequest,
     }
     /* minor tweak to make debug traces consistent: */
     if (wnew->work.render_font) {
-	if (IsEmpty(wnew->misc.default_xft.f_n)) {
+	if (IsEmpty(CurrentXftFont(wnew))) {
 	    wnew->work.render_font = False;
 	    TRACE(("reset render_font since there is no face_name\n"));
 	}
@@ -8967,6 +8927,8 @@ VTDestroy(Widget w GCC_UNUSED)
 	    xtermCloseXft(screen, getMyXftFont(xw, e, n));
 	}
     }
+    if (screen->renderDraw)
+	XftDrawDestroy(screen->renderDraw);
 #endif
 
     /* free things allocated via init_Sres or Init_Sres2 */
@@ -8989,33 +8951,52 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->disallowedWinOps);
     TRACE_FREE_LEAK(screen->default_string);
     TRACE_FREE_LEAK(screen->eightbit_select_types);
+
 #if OPT_WIDE_CHARS
     TRACE_FREE_LEAK(screen->utf8_select_types);
 #endif
+
 #if 0
     for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; n++) {
 	TRACE_FREE_LEAK(screen->MenuFontName(n));
     }
 #endif
+
     TRACE_FREE_LEAK(screen->initial_font);
+
 #if OPT_LUIT_PROG
     TRACE_FREE_LEAK(xw->misc.locale_str);
     TRACE_FREE_LEAK(xw->misc.localefilter);
 #endif
+
 #if OPT_RENDERFONT
     TRACE_FREE_LEAK(xw->misc.default_xft.f_n);
     TRACE_FREE_LEAK(xw->misc.default_xft.f_w);
     TRACE_FREE_LEAK(xw->misc.render_font_s);
+    freeFontList(&(xw->work.xft_fontnames.list_n));
+    freeFontList(&(xw->work.xft_fontnames.list_w));
 #endif
 
     TRACE_FREE_LEAK(xw->misc.default_font.f_n);
     TRACE_FREE_LEAK(xw->misc.default_font.f_b);
+    freeFontList(&(xw->work.x11_fontnames.list_n));
+    freeFontList(&(xw->work.x11_fontnames.list_b));
+
 #if OPT_WIDE_CHARS
     TRACE_FREE_LEAK(xw->misc.default_font.f_w);
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
+    freeFontList(&(xw->work.x11_fontnames.list_w));
+    freeFontList(&(xw->work.x11_fontnames.list_wb));
 #endif
 
+    xtermFontName(NULL);
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
+    TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_n);
+    TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_b);
+#if OPT_WIDE_CHARS
+    TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_w);
+    TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_wb);
+#endif
     for (n = 0; n < NMENUFONTS; ++n) {
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=

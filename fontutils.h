@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.105 2017/01/02 19:55:31 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.106 2017/01/03 00:01:12 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -60,6 +60,9 @@ extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define getIconicFont(screen) (&((screen)->fnt_icon))
+
+#define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
+#define CurrentXftFont(xw)  ((xw)->work.xft_fontnames.list_n[0])
 
 #if OPT_DEC_CHRSET
 extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
