@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1450 2017/01/04 00:01:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1454 2017/01/05 21:57:11 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -7393,12 +7393,9 @@ VTInitialize_locale(XtermWidget xw)
     } else
 #if OPT_MINI_LUIT
     if (x_strcasecmp(xw->misc.locale_str, "CHECKFONT") == 0) {
-	int fl = (xw->misc.default_font.f_n
-		  ? (int) strlen(xw->misc.default_font.f_n)
-		  : 0);
+	int fl = (int) strlen(DefaultFontN(xw));
 	if (fl > 11
-	    && x_strcasecmp(xw->misc.default_font.f_n + fl - 11,
-			    "-ISO10646-1") == 0) {
+	    && x_strcasecmp(DefaultFontN(xw) + fl - 11, "-ISO10646-1") == 0) {
 	    screen->unicode_font = 1;
 	    /* unicode font, use True */
 #ifdef HAVE_LANGINFO_CODESET
@@ -8136,8 +8133,39 @@ VTInitialize(Widget wrequest,
     }
     init_Ires(misc.fontWarnings);
 
+    initFontLists(wnew);
+
 #define DefaultFontNames screen->menu_font_names[fontMenu_default]
 
+    /*
+     * Process Xft font resources first, since faceName may contain X11 fonts
+     * that should override the "font" resource.
+     */
+#if OPT_RENDERFONT
+    for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
+	init_Dres2(misc.face_size, i);
+    }
+
+    init_Sres(misc.default_xft.f_n);
+    allocFontList(wnew,
+		  XtNfaceName,
+		  fNorm,
+		  wnew->misc.default_xft.f_n,
+		  True);
+
+#if OPT_WIDE_CHARS
+    init_Sres(misc.default_xft.f_w);
+    allocFontList(wnew,
+		  XtNfaceNameDoublesize,
+		  fWide,
+		  wnew->misc.default_xft.f_w,
+		  True);
+#endif
+#endif
+
+    /*
+     * Process X11 (XLFD) font specifications.
+     */
     init_Sres(misc.default_font.f_n);
     allocFontList(wnew,
 		  XtNfont,
@@ -8152,8 +8180,8 @@ VTInitialize(Widget wrequest,
 		  wnew->misc.default_font.f_b,
 		  False);
 
-    DefaultFontNames[fNorm] = x_strdup(wnew->misc.default_font.f_n);
-    DefaultFontNames[fBold] = x_strdup(wnew->misc.default_font.f_b);
+    DefaultFontNames[fNorm] = x_strdup(DefaultFontN(wnew));
+    DefaultFontNames[fBold] = x_strdup(DefaultFontB(wnew));
 
 #if OPT_WIDE_CHARS
     init_Sres(misc.default_font.f_w);
@@ -8170,8 +8198,8 @@ VTInitialize(Widget wrequest,
 		  wnew->misc.default_font.f_wb,
 		  False);
 
-    DefaultFontNames[fWide] = x_strdup(wnew->misc.default_font.f_w);
-    DefaultFontNames[fWBold] = x_strdup(wnew->misc.default_font.f_wb);
+    DefaultFontNames[fWide] = x_strdup(DefaultFontW(wnew));
+    DefaultFontNames[fWBold] = x_strdup(DefaultFontWB(wnew));
 #endif
 
     screen->EscapeFontName() = NULL;
@@ -8376,26 +8404,6 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_RENDERFONT
-    for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
-	init_Dres2(misc.face_size, i);
-    }
-
-    init_Sres(misc.default_xft.f_n);
-    allocFontList(wnew,
-		  XtNfaceName,
-		  fNorm,
-		  wnew->misc.default_xft.f_n,
-		  True);
-
-#if OPT_WIDE_CHARS
-    init_Sres(misc.default_xft.f_w);
-    allocFontList(wnew,
-		  XtNfaceNameDoublesize,
-		  fWide,
-		  wnew->misc.default_xft.f_w,
-		  True);
-#endif
-
     init_Sres(misc.render_font_s);
     wnew->work.render_font =
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,
@@ -8973,20 +8981,19 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.default_xft.f_n);
     TRACE_FREE_LEAK(xw->misc.default_xft.f_w);
     TRACE_FREE_LEAK(xw->misc.render_font_s);
-    freeFontList(&(xw->work.xft_fontnames.list_n));
-    freeFontList(&(xw->work.xft_fontnames.list_w));
 #endif
 
     TRACE_FREE_LEAK(xw->misc.default_font.f_n);
     TRACE_FREE_LEAK(xw->misc.default_font.f_b);
-    freeFontList(&(xw->work.x11_fontnames.list_n));
-    freeFontList(&(xw->work.x11_fontnames.list_b));
 
 #if OPT_WIDE_CHARS
     TRACE_FREE_LEAK(xw->misc.default_font.f_w);
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
-    freeFontList(&(xw->work.x11_fontnames.list_w));
-    freeFontList(&(xw->work.x11_fontnames.list_wb));
+#endif
+
+    freeFontLists(&(xw->work.x11_fontnames));
+#if OPT_RENDERFONT
+    freeFontLists(&(xw->work.xft_fontnames));
 #endif
 
     xtermFontName(NULL);
@@ -9204,7 +9211,7 @@ VTRealize(Widget w,
     TabReset(xw->tabs);
 
     if (screen->menu_font_number == fontMenu_default) {
-	myfont = &(xw->misc.default_font);
+	myfont = xtermFontName(DefaultFontN(xw));
     } else {
 	myfont = xtermFontName(screen->MenuFontName(screen->menu_font_number));
     }
@@ -9956,17 +9963,19 @@ VTSetValues(Widget cur,
 	 T_COLOR(TScreenOf(newvt), TEXT_FG)) ||
 	(TScreenOf(curvt)->MenuFontName(TScreenOf(curvt)->menu_font_number) !=
 	 TScreenOf(newvt)->MenuFontName(TScreenOf(newvt)->menu_font_number)) ||
-	(curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)) {
-	if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
-	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = newvt->misc.default_font.f_n;
+	strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	if (strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = DefaultFontN(newvt);
+	}
 	if (xtermLoadFont(newvt,
 			  xtermFontName(TScreenOf(newvt)->MenuFontName(TScreenOf(curvt)->menu_font_number)),
 			  True, TScreenOf(newvt)->menu_font_number)) {
 	    /* resizing does the redisplay, so don't ask for it here */
 	    refresh_needed = True;
 	    fonts_redone = True;
-	} else if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
-	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = curvt->misc.default_font.f_n;
+	} else if (strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = DefaultFontN(curvt);
+	}
     }
     if (!fonts_redone
 	&& (T_COLOR(TScreenOf(curvt), TEXT_CURSOR) !=

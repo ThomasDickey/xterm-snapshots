@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.106 2017/01/03 00:01:12 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.111 2017/01/05 23:23:35 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -42,13 +42,18 @@ extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
 extern XTermFonts * getItalicFont (TScreen * /* screen */, VTFontEnum /* which */);
 extern XTermFonts * getNormalFont (TScreen * /* screen */, VTFontEnum /* which */);
 extern const VTFontNames * xtermFontName (const char */* normal */);
+extern const char * whichFontEnum (VTFontEnum /* value */);
+extern const char * whichFontList (XtermWidget /* xw */, VTFontList * /* value */);
+extern const char * whichFontList2(XtermWidget /* xw */, char ** /* value */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermGetFont (const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
 extern void allocFontList (XtermWidget /* xw */, const char * /* name */, VTFontEnum /* which */, const char * /* source */, Boolean /* ttf */);
+extern void initFontLists (XtermWidget /* xw */);
 extern void freeFontList (char *** /* targetp */);
+extern void freeFontLists (VTFontList * /* lists */);
 extern void xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);
 extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
@@ -63,6 +68,10 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
 #define CurrentXftFont(xw)  ((xw)->work.xft_fontnames.list_n[0])
+#define DefaultFontN(xw)    ((xw)->work.x11_fontnames.list_n[0])
+#define DefaultFontB(xw)    ((xw)->work.x11_fontnames.list_b[0])
+#define DefaultFontW(xw)    ((xw)->work.x11_fontnames.list_w[0])
+#define DefaultFontWB(xw)   ((xw)->work.x11_fontnames.list_wb[0])
 
 #if OPT_DEC_CHRSET
 extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
