@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.488 2017/01/04 00:44:40 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.499 2017/01/05 23:30:27 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -942,7 +942,7 @@ static void
 reportOneVTFont(const char *tag,
 		XTermFonts * fnt)
 {
-    if (!IsEmpty(fnt->fn)) {
+    if (!IsEmpty(fnt->fn) && fnt->fs != 0) {
 	XFontStruct *fs = fnt->fs;
 	unsigned first_char = 0;
 	unsigned last_char = 0;
@@ -1083,6 +1083,8 @@ loadNormFP(XtermWidget xw,
 {
     Bool status = True;
 
+    TRACE(("loadNormFP (%s)\n", NonNull(*nameOutP)));
+
     if (!xtermOpenFont(xw,
 		       *nameOutP,
 		       infoOut,
@@ -1113,6 +1115,8 @@ loadBoldFP(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     Bool status = True;
 
+    TRACE(("loadBoldFP (%s)\n", NonNull(*nameOutP)));
+
     if (!check_fontname(*nameOutP)) {
 	FontNameProperties *fp;
 	char *normal = x_strdup(nameRef);
@@ -1124,7 +1128,7 @@ loadBoldFP(XtermWidget xw,
 	    if (!xtermOpenFont(xw, *nameOutP, infoOut, fwAlways, False)) {
 		free(*nameOutP);
 		*nameOutP = bold_font_name(fp, -1);
-		xtermOpenFont(xw, *nameOutP, infoRef, fwAlways, False);
+		xtermOpenFont(xw, *nameOutP, infoOut, fwAlways, False);
 	    }
 	    TRACE(("...derived bold '%s'\n", NonNull(*nameOutP)));
 	}
@@ -1184,6 +1188,8 @@ loadWideFP(XtermWidget xw,
     FontNameProperties *fp;
     Bool status = True;
 
+    TRACE(("loadWideFP (%s)\n", NonNull(*nameOutP)));
+
     if (check_fontname(*nameOutP)) {
 	cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
     } else if (screen->utf8_fonts && !is_double_width_font(infoRef->fs)) {
@@ -1199,7 +1205,8 @@ loadWideFP(XtermWidget xw,
     }
 
     if (check_fontname(*nameOutP)) {
-	(void) xtermOpenFont(xw, *nameOutP, infoOut, *warnP, False);
+	if (!xtermOpenFont(xw, *nameOutP, infoOut, *warnP, False))
+	    xtermCopyFontInfo(infoOut, infoRef);
     } else {
 	xtermCopyFontInfo(infoOut, infoRef);
 	*warnP = fwAlways;
@@ -1222,6 +1229,8 @@ loadWBoldFP(XtermWidget xw,
     FontNameProperties *fp;
     char *bold = NULL;
 
+    TRACE(("loadWBoldFP (%s)\n", NonNull(*nameOutP)));
+
     derived = False;
     if (!check_fontname(*nameOutP)) {
 	fp = get_font_name_props(screen->display, boldInfoRef->fs, &bold);
@@ -1234,18 +1243,18 @@ loadWBoldFP(XtermWidget xw,
 
     if (check_fontname(*nameOutP)) {
 
-	xtermOpenFont(xw,
-		      *nameOutP,
-		      infoOut,
-		      (screen->utf8_fonts
-		       ? *warnP
-		       : (fontWarningTypes) (xw->misc.fontWarnings + 1)),
-		      False);
-
-	if (derived
+	if (xtermOpenFont(xw,
+			  *nameOutP,
+			  infoOut,
+			  (screen->utf8_fonts
+			   ? *warnP
+			   : (fontWarningTypes) (xw->misc.fontWarnings + 1)),
+			  False)
+	    && derived
 	    && !compatibleWideCounts(wideInfoRef->fs, infoOut->fs)) {
 	    xtermCloseFont2(xw, infoOut - fWBold, fWBold);
 	}
+
 	if (infoOut->fs == 0) {
 	    if (derived)
 		free(*nameOutP);
@@ -1870,13 +1879,13 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 
 	    FREE_STRING(screen->MenuFontName(fontMenu_default));
 	    FREE_STRING(screen->menu_font_names[0][fBold]);
-	    screen->MenuFontName(fontMenu_default) = x_strdup(xw->misc.default_font.f_n);
-	    screen->menu_font_names[0][fBold] = x_strdup(xw->misc.default_font.f_b);
+	    screen->MenuFontName(fontMenu_default) = x_strdup(DefaultFontN(xw));
+	    screen->menu_font_names[0][fBold] = x_strdup(DefaultFontB(xw));
 #if OPT_WIDE_CHARS
 	    FREE_STRING(screen->menu_font_names[0][fWide]);
 	    FREE_STRING(screen->menu_font_names[0][fWBold]);
-	    screen->menu_font_names[0][fWide] = x_strdup(xw->misc.default_font.f_w);
-	    screen->menu_font_names[0][fWBold] = x_strdup(xw->misc.default_font.f_wb);
+	    screen->menu_font_names[0][fWide] = x_strdup(DefaultFontW(xw));
+	    screen->menu_font_names[0][fWBold] = x_strdup(DefaultFontWB(xw));
 #endif
 	    /*
 	     * And remove our copies of strings.
@@ -2008,10 +2017,18 @@ HandleLoadVTFonts(Widget w,
 		    for (n = 0; n < NMENUFONTS; ++n) {
 			screen->menu_font_sizes[n] = 0;
 		    }
-		    SetVTFont(xw, font_number, True,
-			      ((font_number == fontMenu_default)
-			       ? &(xw->misc.default_font)
-			       : NULL));
+		    if (font_number == fontMenu_default) {
+			VTFontNames myfonts;
+			myfonts.f_n = DefaultFontN(xw);
+			myfonts.f_b = DefaultFontB(xw);
+#if OPT_WIDE_CHARS
+			myfonts.f_w = DefaultFontW(xw);
+			myfonts.f_wb = DefaultFontWB(xw);
+#endif
+			SetVTFont(xw, font_number, True, &myfonts);
+		    } else {
+			SetVTFont(xw, font_number, True, NULL);
+		    }
 		}
 		MyStackFree(myClass, class_buf);
 	    }
@@ -3759,144 +3776,149 @@ save2FontList(XtermWidget xw,
 	      const char *source,
 	      Boolean ttf)
 {
+    char *value;
+    size_t plen;
+    Boolean marked = False;
+    Boolean use_ttf = ttf;
+
     while (isspace(CharOf(*source)))
 	++source;
 
-    if (*source) {
-	/* fontconfig patterns can contain ':' separators, but we'll treat
-	 * a leading prefix specially to denote whether the pattern might be
-	 * XLFD ("x" or "xlfd") versus Xft ("xft").
-	 */
-	char *value;
-	size_t plen;
-	Boolean marked = False;
-	Boolean use_ttf = ttf;
-	for (plen = 0; source[plen] != '\0'; ++plen) {
-	    if (source[plen] == ':') {
-		marked = True;
-		switch (plen) {
-		case 0:
-		    ++plen;	/* trim leading ':' */
-		    break;
-		case 1:
-		    if (!strncmp(source, "x", plen)) {
-			++plen;
-			use_ttf = False;
-		    } else {
-			marked = False;
-		    }
-		    break;
-		case 3:
-		    if (!strncmp(source, "xft", plen)) {
-			++plen;
-			use_ttf = True;
-		    } else {
-			marked = False;
-		    }
-		    break;
-		case 4:
-		    if (!strncmp(source, "xlfd", plen)) {
-			++plen;
-			use_ttf = False;
-		    } else {
-			marked = False;
-		    }
-		    break;
-		default:
+    /* fontconfig patterns can contain ':' separators, but we'll treat
+     * a leading prefix specially to denote whether the pattern might be
+     * XLFD ("x" or "xlfd") versus Xft ("xft").
+     */
+    for (plen = 0; source[plen] != '\0'; ++plen) {
+	if (source[plen] == ':') {
+	    marked = True;
+	    switch (plen) {
+	    case 0:
+		++plen;		/* trim leading ':' */
+		break;
+	    case 1:
+		if (!strncmp(source, "x", plen)) {
+		    ++plen;
+		    use_ttf = False;
+		} else {
 		    marked = False;
-		    plen = 0;
-		    break;
 		}
 		break;
+	    case 3:
+		if (!strncmp(source, "xft", plen)) {
+		    ++plen;
+		    use_ttf = True;
+		} else {
+		    marked = False;
+		}
+		break;
+	    case 4:
+		if (!strncmp(source, "xlfd", plen)) {
+		    ++plen;
+		    use_ttf = False;
+		} else {
+		    marked = False;
+		}
+		break;
+	    default:
+		marked = False;
+		plen = 0;
+		break;
 	    }
+	    break;
 	}
-	if (!marked)
-	    plen = 0;
-	value = x_strtrim(source + plen);
-	if (value != 0) {
-	    VTFontList *target = &(xw->work.x11_fontnames);
-	    Boolean success = False;
+    }
+    if (!marked)
+	plen = 0;
+    value = x_strtrim(source + plen);
+    if (value != 0) {
+	VTFontList *target = &(xw->work.x11_fontnames);
+	Boolean success = False;
 
-	    if (use_ttf) {
+	if (use_ttf) {
 #if OPT_RENDERFONT
-		target = &(xw->work.xft_fontnames);
+	    target = &(xw->work.xft_fontnames);
 #else
-		target = 0;
+	    target = 0;
 #endif
-	    }
-	    if (target != 0) {
-		char ***list = 0;
-		char **next = 0;
-		size_t count = 0;
-		switch (which) {
-		case fNorm:
-		    list = &(target->list_n);
-		    break;
-		case fBold:
-		    list = &(target->list_b);
-		    break;
+	}
+	if (target != 0) {
+	    char ***list = 0;
+	    char **next = 0;
+	    size_t count = 0;
+	    switch (which) {
+	    case fNorm:
+		list = &(target->list_n);
+		break;
+	    case fBold:
+		list = &(target->list_b);
+		break;
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
-		case fItal:
-		    list = &(target->list_i);
-		    break;
+	    case fItal:
+		list = &(target->list_i);
+		break;
 #endif
 #if OPT_WIDE_CHARS
-		case fWide:
-		    list = &(target->list_w);
-		    break;
-		case fWBold:
-		    list = &(target->list_wb);
-		    break;
-		case fWItal:
-		    list = &(target->list_wi);
-		    break;
+	    case fWide:
+		list = &(target->list_w);
+		break;
+	    case fWBold:
+		list = &(target->list_wb);
+		break;
+	    case fWItal:
+		list = &(target->list_wi);
+		break;
 #endif
-		case fMAX:
-		    list = 0;
-		    break;
-		}
-		if (list != 0) {
-		    success = True;
-		    if (*list != 0) {
-			while ((*list)[count] != 0) {
-			    if (!strcmp(value, (*list)[count])) {
-				TRACE(("... duplicate %s\n", value));
-				success = False;
-				break;
-			    }
-			    ++count;
-			}
-		    }
-		    if (success) {
-			next = realloc(*list, sizeof(char *) * (count + 2));
-			if (next != 0) {
-#if OPT_RENDERFONT
-			    if (use_ttf) {
-				trimSizeFromFace(value,
-						 (count == 0 && which == fNorm)
-						 ? &(xw->misc.face_size[0])
-						 : (float *) 0);
-			    }
-#endif
-			    next[count++] = value;
-			    next[count] = 0;
-			    TRACE(("... saved %lu:%s\n",
-				   (unsigned long) count,
-				   value));
-			    *list = next;
-			} else {
-			    fprintf(stderr,
-				    "realloc failure in save2FontList(%s)\n",
-				    name);
-			    freeFontList(list);
+	    case fMAX:
+		list = 0;
+		break;
+	    }
+	    if (list != 0) {
+		success = True;
+		if (*list != 0) {
+		    while ((*list)[count] != 0) {
+			if (IsEmpty((*list)[count])) {
+			    TRACE(("... initial %s\n", value));
+			    free((*list)[count]);
+			    break;
+			} else if (!strcmp(value, (*list)[count])) {
+			    TRACE(("... duplicate %s\n", value));
 			    success = False;
+			    break;
 			}
+			++count;
+		    }
+		}
+		if (success) {
+		    next = realloc(*list, sizeof(char *) * (count + 2));
+		    if (next != 0) {
+#if OPT_RENDERFONT
+			if (use_ttf) {
+			    trimSizeFromFace(value,
+					     (count == 0 && which == fNorm)
+					     ? &(xw->misc.face_size[0])
+					     : (float *) 0);
+			}
+#endif
+			next[count++] = value;
+			next[count] = 0;
+			*list = next;
+			TRACE(("... saved %s %s %lu:%s\n",
+			       whichFontList(xw, target),
+			       whichFontList2(xw, *list),
+			       (unsigned long) count,
+			       value));
+		    } else {
+			fprintf(stderr,
+				"realloc failure in save2FontList(%s)\n",
+				name);
+			freeFontList(list);
+			success = False;
 		    }
 		}
 	    }
-	    if (!success)
-		free(value);
 	}
+	if (!success)
+	    free(value);
     }
 }
 
@@ -3921,7 +3943,7 @@ allocFontList(XtermWidget xw,
 	int pass;
 	char **list = 0;
 
-	TRACE(("allocFontList %d %s '%s'\n", which, name, blob));
+	TRACE(("allocFontList %s %s '%s'\n", whichFontEnum(which), name, blob));
 
 	for (pass = 0; pass < 2; ++pass) {
 	    unsigned count = 0;
@@ -3946,12 +3968,28 @@ allocFontList(XtermWidget xw,
 	}
 	if (list) {
 	    for (n = 0; list[n] != 0; ++n) {
-		save2FontList(xw, name, which, list[n], ttf);
+		if (*list[n]) {
+		    save2FontList(xw, name, which, list[n], ttf);
+		}
 	    }
 	    free(list);
 	}
     }
     free(blob);
+}
+
+void
+initFontLists(XtermWidget xw)
+{
+    int which;
+
+    TRACE(("initFontLists\n"));
+    for (which = 0; which < fMAX; ++which) {
+	save2FontList(xw, "font", which, "", False);
+#if OPT_RENDERFONT
+	save2FontList(xw, "font", which, "", True);
+#endif
+    }
 }
 
 void
@@ -3965,6 +4003,45 @@ freeFontList(char ***targetp)
 	}
 	free(target);
 	*targetp = 0;
+    }
+}
+
+void
+freeFontLists(VTFontList * lists)
+{
+    int which;
+
+    TRACE(("freeFontLists\n"));
+    for (which = 0; which < fMAX; ++which) {
+	char ***target = 0;
+	switch (which) {
+	case fNorm:
+	    target = &(lists->list_n);
+	    break;
+	case fBold:
+	    target = &(lists->list_b);
+	    break;
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	case fItal:
+	    target = &(lists->list_i);
+	    break;
+#endif
+#if OPT_WIDE_CHARS
+	case fWide:
+	    target = &(lists->list_w);
+	    break;
+	case fWBold:
+	    target = &(lists->list_wb);
+	    break;
+	case fWItal:
+	    target = &(lists->list_wi);
+	    break;
+#endif
+	default:
+	    target = 0;
+	    break;
+	}
+	freeFontList(target);
     }
 }
 
@@ -4059,3 +4136,70 @@ getXftFont(XtermWidget xw, VTFontEnum which, int fontnum)
     return result;
 }
 #endif
+
+const char *
+whichFontEnum(VTFontEnum value)
+{
+    const char *result = "?";
+#define DATA(name) case name: result = #name; break
+    switch (value) {
+	DATA(fNorm);
+	DATA(fBold);
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	DATA(fItal);
+#endif
+#if OPT_WIDE_CHARS
+	DATA(fWide);
+	DATA(fWBold);
+	DATA(fWItal);
+#endif
+	DATA(fMAX);
+    }
+#undef DATA
+    return result;
+}
+
+const char *
+whichFontList(XtermWidget xw, VTFontList * value)
+{
+    const char *result = "?";
+    if (value == &(xw->work.x11_fontnames))
+	result = "x11_fontnames";
+#if OPT_RENDERFONT
+    if (value == &(xw->work.xft_fontnames))
+	result = "xft_fontnames";
+#endif
+    return result;
+}
+
+static const char *
+whichFontList2s(VTFontList * list, char **value)
+{
+    const char *result = 0;
+#define DATA(name) if (value == (list->name)) result = #name
+    DATA(list_n);
+    DATA(list_b);
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+    DATA(list_i);
+#endif
+#if OPT_WIDE_CHARS
+    DATA(list_w);
+    DATA(list_wb);
+    DATA(list_wi);
+#endif
+#undef DATA
+    return result;
+}
+
+const char *
+whichFontList2(XtermWidget xw, char **value)
+{
+    const char *result = 0;
+    if ((result = whichFontList2s(&(xw->work.x11_fontnames), value)) == 0) {
+#if OPT_RENDERFONT
+	if ((result = whichFontList2s(&(xw->work.xft_fontnames), value)) == 0)
+#endif
+	    result = "?";
+    }
+    return result;
+}
