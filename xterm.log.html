@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1710 2017/01/02 20:32:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.1711 2017/01/06 12:48:09 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -964,6 +964,10 @@
         <li>refactor <code>xtermLoadFont</code> to make it clearer
         how some fonts are derived from others, e.g., bold,
         wide.</li>
+
+        <li>make the triggering and suppressing of font-warnings
+        more consistent by storing the last state in the
+        widget.</li>
       </ul>
     </li>
 

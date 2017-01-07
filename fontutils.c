@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.499 2017/01/05 23:30:27 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.500 2017/01/07 12:59:46 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -806,7 +806,6 @@ Bool
 xtermOpenFont(XtermWidget xw,
 	      const char *name,
 	      XTermFonts * result,
-	      fontWarningTypes warn,
 	      Bool force)
 {
     Bool code = False;
@@ -822,7 +821,7 @@ xtermOpenFont(XtermWidget xw,
 		result->fn = x_strdup(name);
 	    }
 	} else if (XmuCompareISOLatin1(name, DEFFONT) != 0) {
-	    if (warn <= xw->misc.fontWarnings
+	    if (result->warn <= xw->misc.fontWarnings
 #if OPT_RENDERFONT
 		&& !UsingRenderFont(xw)
 #endif
@@ -843,10 +842,12 @@ xtermOpenFont(XtermWidget xw,
 		TRACE(("xtermOpenFont: cannot load font '%s'\n", name));
 	    }
 	    if (force) {
-		code = xtermOpenFont(xw, DEFFONT, result, fwAlways, True);
+		result->warn = fwAlways;
+		code = xtermOpenFont(xw, DEFFONT, result, True);
 	    }
 	}
     }
+    result->warn = fwAlways;
     return code;
 }
 
@@ -912,6 +913,7 @@ xtermCopyFontInfo(XTermFonts * target, XTermFonts * source)
     target->flags = source->flags;
     target->fn = x_strdup(source->fn);
     target->fs = source->fs;
+    target->warn = source->warn;
 }
 
 void
@@ -1078,7 +1080,6 @@ static Bool
 loadNormFP(XtermWidget xw,
 	   char **nameOutP,
 	   XTermFonts * infoOut,
-	   fontWarningTypes * warnP,
 	   int fontnum)
 {
     Bool status = True;
@@ -1088,7 +1089,6 @@ loadNormFP(XtermWidget xw,
     if (!xtermOpenFont(xw,
 		       *nameOutP,
 		       infoOut,
-		       *warnP,
 		       (fontnum == fontMenu_default))) {
 	/*
 	 * If we are opening the default font, and it happens to be missing,
@@ -1109,7 +1109,6 @@ loadBoldFP(XtermWidget xw,
 	   XTermFonts * infoOut,
 	   const char *nameRef,
 	   XTermFonts * infoRef,
-	   fontWarningTypes * warnP,
 	   int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
@@ -1121,14 +1120,13 @@ loadBoldFP(XtermWidget xw,
 	FontNameProperties *fp;
 	char *normal = x_strdup(nameRef);
 
-	*warnP = fwAlways;
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
 	if (fp != 0) {
 	    *nameOutP = bold_font_name(fp, fp->average_width);
-	    if (!xtermOpenFont(xw, *nameOutP, infoOut, fwAlways, False)) {
+	    if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
 		free(*nameOutP);
 		*nameOutP = bold_font_name(fp, -1);
-		xtermOpenFont(xw, *nameOutP, infoOut, fwAlways, False);
+		xtermOpenFont(xw, *nameOutP, infoOut, False);
 	    }
 	    TRACE(("...derived bold '%s'\n", NonNull(*nameOutP)));
 	}
@@ -1146,9 +1144,8 @@ loadBoldFP(XtermWidget xw,
 	    TRACE(("...did not get a matching bold font\n"));
 	}
 	free(normal);
-    } else if (!xtermOpenFont(xw, *nameOutP, infoOut, *warnP, False)) {
+    } else if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
 	xtermCopyFontInfo(infoOut, infoRef);
-	*warnP = fwAlways;
 	TRACE(("...cannot load bold font '%s'\n", NonNull(*nameOutP)));
     } else {
 	cache_menu_font_name(screen, fontnum, fBold, *nameOutP);
@@ -1181,7 +1178,6 @@ loadWideFP(XtermWidget xw,
 	   XTermFonts * infoOut,
 	   const char *nameRef,
 	   XTermFonts * infoRef,
-	   fontWarningTypes * warnP,
 	   int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
@@ -1197,7 +1193,6 @@ loadWideFP(XtermWidget xw,
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
 	if (fp != 0) {
 	    *nameOutP = wide_font_name(fp);
-	    *warnP = fwAlways;
 	    TRACE(("...derived wide %s\n", NonNull(*nameOutP)));
 	    cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
 	}
@@ -1205,11 +1200,11 @@ loadWideFP(XtermWidget xw,
     }
 
     if (check_fontname(*nameOutP)) {
-	if (!xtermOpenFont(xw, *nameOutP, infoOut, *warnP, False))
+	if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
 	    xtermCopyFontInfo(infoOut, infoRef);
+	}
     } else {
 	xtermCopyFontInfo(infoOut, infoRef);
-	*warnP = fwAlways;
     }
     return status;
 }
@@ -1220,7 +1215,6 @@ loadWBoldFP(XtermWidget xw,
 	    XTermFonts * infoOut,
 	    const char *wideNameRef, XTermFonts * wideInfoRef,
 	    const char *boldNameRef, XTermFonts * boldInfoRef,
-	    fontWarningTypes * warnP,
 	    int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
@@ -1236,20 +1230,13 @@ loadWBoldFP(XtermWidget xw,
 	fp = get_font_name_props(screen->display, boldInfoRef->fs, &bold);
 	if (fp != 0) {
 	    *nameOutP = widebold_font_name(fp);
-	    *warnP = fwAlways;
 	    derived = True;
 	}
     }
 
     if (check_fontname(*nameOutP)) {
 
-	if (xtermOpenFont(xw,
-			  *nameOutP,
-			  infoOut,
-			  (screen->utf8_fonts
-			   ? *warnP
-			   : (fontWarningTypes) (xw->misc.fontWarnings + 1)),
-			  False)
+	if (xtermOpenFont(xw, *nameOutP, infoOut, False)
 	    && derived
 	    && !compatibleWideCounts(wideInfoRef->fs, infoOut->fs)) {
 	    xtermCloseFont2(xw, infoOut - fWBold, fWBold);
@@ -1260,13 +1247,11 @@ loadWBoldFP(XtermWidget xw,
 		free(*nameOutP);
 	    if (IsEmpty(wideNameRef)) {
 		*nameOutP = x_strdup(boldNameRef);
-		*warnP = fwAlways;
 		xtermCopyFontInfo(infoOut, boldInfoRef);
 		TRACE(("...cannot load wide-bold, use bold %s\n",
 		       NonNull(boldNameRef)));
 	    } else {
 		*nameOutP = x_strdup(wideNameRef);
-		*warnP = fwAlways;
 		xtermCopyFontInfo(infoOut, wideInfoRef);
 		TRACE(("...cannot load wide-bold, use wide %s\n",
 		       NonNull(wideNameRef)));
@@ -1279,11 +1264,9 @@ loadWBoldFP(XtermWidget xw,
 	}
     } else if (is_double_width_font(boldInfoRef->fs)) {
 	xtermCopyFontInfo(infoOut, boldInfoRef);
-	*warnP = fwAlways;
 	TRACE(("...bold font is double-width, use it %s\n", NonNull(boldNameRef)));
     } else {
 	xtermCopyFontInfo(infoOut, wideInfoRef);
-	*warnP = fwAlways;
 	TRACE(("...cannot load wide bold font, use wide %s\n", NonNull(wideNameRef)));
     }
 
@@ -1319,8 +1302,6 @@ xtermLoadFont(XtermWidget xw,
     XTermFonts fnts[fMAX];
     char *tmpname = NULL;
     Boolean proportional = False;
-    fontWarningTypes warn[fMAX];
-    int j;
 
     memset(&myfonts, 0, sizeof(myfonts));
     memset(fnts, 0, sizeof(fnts));
@@ -1329,27 +1310,6 @@ xtermLoadFont(XtermWidget xw,
 	myfonts = *fonts;
     if (!check_fontname(myfonts.f_n))
 	return 0;
-
-    /*
-     * Check the font names against the resource values, to see which were
-     * derived in a previous call.  If so, we'll only warn about those if
-     * the warning level is set to "always".
-     */
-    for (j = 0; j < fMAX; ++j) {
-	warn[j] = fwAlways;
-    }
-#define CmpResource(field, index) \
-    if (same_font_name(screen->menu_font_names[fontnum][index], myfonts.field)) \
-	warn[index] = fwResource
-
-    CmpResource(f_n, fNorm);
-    if (fontnum == fontMenu_default) {
-	CmpResource(f_b, fBold);
-#if OPT_WIDE_CHARS
-	CmpResource(f_b, fWide);
-	CmpResource(f_b, fWBold);
-#endif
-    }
 
     if (fontnum == fontMenu_fontescape
 	&& myfonts.f_n != screen->MenuFontName(fontnum)) {
@@ -1363,7 +1323,7 @@ xtermLoadFont(XtermWidget xw,
 #define DbgResource(name, field, index) \
     TRACE(("xtermLoadFont #%d "name" %s%s\n", \
     	   fontnum, \
-	   (warn[index] == fwResource) ? "*" : " ", \
+	   (fnts[index].warn == fwResource) ? "*" : " ", \
 	   NonNull(myfonts.field)))
     DbgResource("normal", f_n, fNorm);
     DbgResource("bold  ", f_b, fBold);
@@ -1375,7 +1335,6 @@ xtermLoadFont(XtermWidget xw,
     if (!loadNormFP(xw,
 		    &myfonts.f_n,
 		    &fnts[fNorm],
-		    &warn[fNorm],
 		    fontnum))
 	goto bad;
 
@@ -1384,7 +1343,6 @@ xtermLoadFont(XtermWidget xw,
 		    &fnts[fBold],
 		    myfonts.f_n,
 		    &fnts[fNorm],
-		    &warn[fBold],
 		    fontnum))
 	goto bad;
 
@@ -1400,7 +1358,6 @@ xtermLoadFont(XtermWidget xw,
 			&fnts[fWide],
 			myfonts.f_n,
 			&fnts[fNorm],
-			&warn[fWide],
 			fontnum))
 	    goto bad;
 
@@ -1411,7 +1368,6 @@ xtermLoadFont(XtermWidget xw,
 			 &fnts[fWide],
 			 myfonts.f_b,
 			 &fnts[fBold],
-			 &warn[fWBold],
 			 fontnum))
 	    goto bad;
 
@@ -1635,11 +1591,12 @@ xtermLoadItalics(XtermWidget xw)
 	screen->ifnts_ok = True;
 	for (n = 0; n < fMAX; ++n) {
 	    FontNameProperties *fp;
+	    XTermFonts *data = getItalicFont(screen, n);
 
 	    /*
 	     * FIXME - need to handle font-leaks
 	     */
-	    getItalicFont(screen, n)->fs = 0;
+	    data->fs = 0;
 	    if (getNormalFont(screen, n)->fs != 0 &&
 		(fp = get_font_name_props(screen->display,
 					  getNormalFont(screen, n)->fs,
@@ -1647,16 +1604,10 @@ xtermLoadItalics(XtermWidget xw)
 		char *name;
 
 		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
-		    TRACE(("xtermLoadItalics #%d %s\n", n, name));
-		    (void) xtermOpenFont(xw,
-					 name,
-					 getItalicFont(screen, n),
-					 fwResource,
-					 False);
+		    TRACE(("xtermLoadItalics %s %s\n", whichFontEnum(n), name));
+		    if (xtermOpenFont(xw, name, data, False)) {
 #if OPT_TRACE
-		    {
-			XFontStruct *fs =
-			getItalicFont(screen, n)->fs;
+			XFontStruct *fs = data->fs;
 			if (fs != 0) {
 			    TRACE(("...actual size %dx%d (ascent %d, descent %d)\n",
 				   fs->ascent +
@@ -1665,8 +1616,14 @@ xtermLoadItalics(XtermWidget xw)
 				   fs->ascent,
 				   fs->descent));
 			}
-		    }
 #endif
+		    } else if (n > 0) {
+			xtermCopyFontInfo(data, getItalicFont(screen, n - 1));
+		    } else {
+			xtermOpenFont(xw,
+				      getNormalFont(screen, n)->fn,
+				      data, False);
+		    }
 		    free(name);
 		}
 	    }
@@ -3233,13 +3190,7 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
 	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
-	if (xtermOpenFont(xw,
-			  screen->MenuFontName(fontnum),
-			  &fnt,
-			  ((fontnum <= fontMenu_lastBuiltin)
-			   ? fwAlways
-			   : fwResource),
-			  True)) {
+	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, True)) {
 	    if (fontnum <= fontMenu_lastBuiltin
 		|| strcmp(fnt.fn, DEFFONT)) {
 		screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.111 2017/01/05 23:23:35 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.112 2017/01/06 12:25:10 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -37,7 +37,7 @@
 /* *INDENT-OFF* */
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
-extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */, Bool /* force */);
+extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, Bool /* force */);
 extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
 extern XTermFonts * getItalicFont (TScreen * /* screen */, VTFontEnum /* which */);
 extern XTermFonts * getNormalFont (TScreen * /* screen */, VTFontEnum /* which */);
