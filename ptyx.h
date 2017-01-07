@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.844 2017/01/02 22:25:48 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.845 2017/01/06 12:24:53 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1638,9 +1638,16 @@ typedef struct {
 
 #define KNOWN_MISSING	256
 
+typedef enum {
+	fwNever = 0,
+	fwResource,
+	fwAlways
+} fontWarningTypes;
+
 typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
+	fontWarningTypes warn;
 	XFontStruct *	fs;
 	char *		fn;
 	FontMap		map;
@@ -2553,12 +2560,6 @@ typedef struct {
     const char *name;
     int code;
 } FlagList;
-
-typedef enum {
-    fwNever = 0,
-    fwResource,
-    fwAlways
-} fontWarningTypes;
 
 typedef enum {
     keyboardIsLegacy,		/* bogus vt220 codes for F1-F4, etc. */

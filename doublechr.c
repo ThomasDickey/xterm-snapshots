@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.91 2017/01/02 20:32:42 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.92 2017/01/07 15:01:50 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -294,8 +294,9 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.fn = name;
 	    temp.chrset = chrset;
 	    temp.flags = (attr_flags & BOLD);
+	    temp.warn = fwResource;
 
-	    if (!xtermOpenFont(xw, name, &temp, fwAlways, False)) {
+	    if (!xtermOpenFont(xw, name, &temp, False)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(xw,
 					       attr_flags,
@@ -304,7 +305,7 @@ xterm_DoubleGC(XtermWidget xw,
 
 		if (nname != 0) {
 		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
-						    fwAlways, False);
+						    False);
 		    free(nname);
 		}
 	    } else {

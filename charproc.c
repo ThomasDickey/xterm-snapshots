@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1454 2017/01/05 21:57:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1456 2017/01/07 15:24:17 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8128,9 +8128,25 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.cdXtraScroll);
     init_Bres(misc.dynamicColors);
+
+#if OPT_DEC_CHRSET
+    for (i = 0; i <= NUM_CHRSET; i++) {
+	screen->double_fonts[i].warn = fwResource;
+    }
+#endif
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
 	init_Sres2(screen.MenuFontName, i);
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	screen->ifnts[i].warn = fwResource;
+#endif
     }
+    for (i = 0; i < fMAX; i++) {
+	screen->fnts[i].warn = fwResource;
+    }
+#ifndef NO_ACTIVE_ICON
+    screen->fnt_icon.warn = fwResource;
+#endif
+
     init_Ires(misc.fontWarnings);
 
     initFontLists(wnew);
