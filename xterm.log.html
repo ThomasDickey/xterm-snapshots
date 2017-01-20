@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1711 2017/01/06 12:48:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.1713 2017/01/20 22:34:14 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -968,8 +968,13 @@
         <li>make the triggering and suppressing of font-warnings
         more consistent by storing the last state in the
         widget.</li>
+
+        <li>reduce font-warnings by checking for repeated
+        warnings.</li>
       </ul>
     </li>
+
+    <li>add <code>vttests/closest-rgb</code>
 
     <li>add special case for displaying soft-hyphen if it happens
     to fall at the right margin, and omitting similar case such as

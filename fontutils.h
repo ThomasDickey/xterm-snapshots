@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.112 2017/01/06 12:25:10 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.114 2017/01/14 00:01:10 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -50,7 +50,8 @@ extern int xtermGetFont (const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
-extern void allocFontList (XtermWidget /* xw */, const char * /* name */, VTFontEnum /* which */, const char * /* source */, Boolean /* ttf */);
+extern void allocFontList (XtermWidget /* xw */, const char * /* name */, VTFontList * /* target */, VTFontEnum /* which */, const char * /* source */, Boolean /* ttf */);
+extern void copyFontList (char *** /* targetp */, char ** /* source */);
 extern void initFontLists (XtermWidget /* xw */);
 extern void freeFontList (char *** /* targetp */);
 extern void freeFontLists (VTFontList * /* lists */);
