@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.238 2016/10/06 00:28:15 tom Exp $
+## $XTermId: Makefile.in,v 1.239 2017/01/14 00:15:11 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2015,2016 by Thomas E. Dickey
+# Copyright 1997-2016,2017 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -119,7 +119,7 @@ EXTRAOBJ	= @EXTRAOBJS@
           OBJS2 = resize$o version$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-           HDRS = VTparse.h data.h error.h main.h menu.h \
+           HDRS = VTparse.h data.h error.h fontutils.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
 

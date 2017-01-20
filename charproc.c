@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1456 2017/01/07 15:24:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1460 2017/01/14 00:13:52 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -6362,7 +6362,7 @@ property_to_string(XtermWidget xw, XTextProperty * text)
 
     TRACE(("property_to_string value %p, encoding %s, format %d, nitems %ld\n",
 	   text->value,
-	   XGetAtomName(dpy, text->encoding),
+	   TraceAtomName(dpy, text->encoding),
 	   text->format,
 	   text->nitems));
 
@@ -8162,61 +8162,52 @@ VTInitialize(Widget wrequest,
 	init_Dres2(misc.face_size, i);
     }
 
-    init_Sres(misc.default_xft.f_n);
-    allocFontList(wnew,
-		  XtNfaceName,
-		  fNorm,
-		  wnew->misc.default_xft.f_n,
-		  True);
+#define ALLOC_FONTLIST(name,which,field) \
+    init_Sres(misc.default_xft.field);\
+    allocFontList(wnew,\
+		  name,\
+		  &(wnew->work.xft_fontnames),\
+		  which,\
+		  wnew->misc.default_xft.field,\
+		  True)
+
+    ALLOC_FONTLIST(XtNfaceName, fNorm, f_n);
 
 #if OPT_WIDE_CHARS
-    init_Sres(misc.default_xft.f_w);
-    allocFontList(wnew,
-		  XtNfaceNameDoublesize,
-		  fWide,
-		  wnew->misc.default_xft.f_w,
-		  True);
+    ALLOC_FONTLIST(XtNfaceNameDoublesize, fWide, f_w);
 #endif
+
+#undef ALLOC_FONTLIST
+
 #endif
 
     /*
      * Process X11 (XLFD) font specifications.
      */
-    init_Sres(misc.default_font.f_n);
-    allocFontList(wnew,
-		  XtNfont,
-		  fNorm,
-		  wnew->misc.default_font.f_n,
-		  False);
+#define ALLOC_FONTLIST(name,which,field) \
+    init_Sres(misc.default_font.field);\
+    allocFontList(wnew,\
+		  name,\
+		  &(wnew->work.x11_fontnames),\
+		  which,\
+		  wnew->misc.default_font.field,\
+		  False)
 
-    init_Sres(misc.default_font.f_b);
-    allocFontList(wnew,
-		  XtNboldFont,
-		  fBold,
-		  wnew->misc.default_font.f_b,
-		  False);
+    ALLOC_FONTLIST(XtNfont, fNorm, f_n);
+    ALLOC_FONTLIST(XtNboldFont, fBold, f_b);
 
     DefaultFontNames[fNorm] = x_strdup(DefaultFontN(wnew));
     DefaultFontNames[fBold] = x_strdup(DefaultFontB(wnew));
 
 #if OPT_WIDE_CHARS
-    init_Sres(misc.default_font.f_w);
-    allocFontList(wnew,
-		  XtNwideFont,
-		  fWide,
-		  wnew->misc.default_font.f_w,
-		  False);
-
-    init_Sres(misc.default_font.f_wb);
-    allocFontList(wnew,
-		  XtNwideBoldFont,
-		  fWBold,
-		  wnew->misc.default_font.f_wb,
-		  False);
+    ALLOC_FONTLIST(XtNwideFont, fWide, f_w);
+    ALLOC_FONTLIST(XtNwideBoldFont, fWBold, f_wb);
 
     DefaultFontNames[fWide] = x_strdup(DefaultFontW(wnew));
     DefaultFontNames[fWBold] = x_strdup(DefaultFontWB(wnew));
 #endif
+
+#undef ALLOC_FONTLIST
 
     screen->EscapeFontName() = NULL;
     screen->SelectFontName() = NULL;
@@ -8867,6 +8858,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(last->windowName);
 	free(last);
     }
+    TRACE_FREE_LEAK(xw->misc.active_icon_s);
 #if OPT_ISO_COLORS
     TRACE_FREE_LEAK(screen->cmap_data);
     for (n = 0; n < MAXCOLORS; n++) {
@@ -9020,6 +9012,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_w);
     TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_wb);
 #endif
+    freeFontLists(&(screen->cacheVTFonts.x11_fontnames));
     for (n = 0; n < NMENUFONTS; ++n) {
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=
@@ -9088,7 +9081,7 @@ getProperty(Display *dpy,
     char *result = 0;
 
     TRACE(("getProperty %s(%s)\n", prop_name,
-	   req_type ? XGetAtomName(dpy, req_type) : "?"));
+	   req_type ? TraceAtomName(dpy, req_type) : "?"));
     property = XInternAtom(dpy, prop_name, False);
 
     if (!xtermGetWinProp(dpy,

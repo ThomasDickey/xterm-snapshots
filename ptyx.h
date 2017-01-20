@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.845 2017/01/06 12:24:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.846 2017/01/10 10:29:20 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1918,6 +1918,7 @@ typedef struct {
 typedef struct {
     VTFontNames default_font;
     String menu_font_names[NMENUFONTS][fMAX];
+    VTFontList x11_fontnames;
 } SubResourceRec;
 
 #if OPT_INPUT_METHOD

@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.507 2016/12/22 21:28:22 tom Exp $ */
+/* $XTermId: button.c,v 1.510 2017/01/20 22:36:12 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1780,9 +1780,7 @@ static void
 GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 {
     Char *cp;
-    char *name;
-
-    name = XGetAtomName(dpy, type);
+    const char *name = TraceAtomName(dpy, type);
 
     TRACE(("Getting %s (type=%ld, length=%ld)\n", name, (long int) type, len));
     for (cp = line; cp < line + len; cp++) {
@@ -2144,7 +2142,7 @@ SelectionReceived(Widget w,
     text_prop.nitems = *length;
 
     TRACE(("SelectionReceived %s %s format %d, nitems %ld\n",
-	   XGetAtomName(screen->display, *selection),
+	   TraceAtomName(screen->display, *selection),
 	   visibleSelectionTarget(dpy, text_prop.encoding),
 	   text_prop.format,
 	   text_prop.nitems));
@@ -4156,7 +4154,7 @@ LoseSelection(Widget w, Atom *selection)
 	return;
 
     screen = TScreenOf(xw);
-    TRACE(("LoseSelection %s\n", XGetAtomName(screen->display, *selection)));
+    TRACE(("LoseSelection %s\n", TraceAtomName(screen->display, *selection)));
 
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {

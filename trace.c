@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.166 2016/10/05 09:16:01 tom Exp $ */
+/* $XTermId: trace.c,v 1.168 2017/01/11 10:26:38 tom Exp $ */
 
 /*
- * Copyright 1997-2015,2016 by Thomas E. Dickey
+ * Copyright 1997-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -576,6 +576,15 @@ LineTstFlag(LineData ld, int flag)
 }
 #endif /* OPT_TRACE_FLAGS */
 
+const char *
+TraceAtomName(Display *dpy, Atom atom)
+{
+    static char *result;
+    free(result);
+    result = XGetAtomName(dpy, atom);
+    return result;
+}
+
 /*
  * Trace the normal or alternate screen, showing color values up to 16, e.g.,
  * for debugging with vttest.
@@ -970,8 +979,10 @@ TraceArgv(const char *tag, char **argv)
     int n = 0;
 
     TRACE(("%s:\n", tag));
-    while (*argv != 0) {
-	TRACE(("  %d:%s\n", n++, *argv++));
+    if (argv != 0) {
+	while (*argv != 0) {
+	    TRACE(("  %d:%s\n", n++, *argv++));
+	}
     }
 }
 
