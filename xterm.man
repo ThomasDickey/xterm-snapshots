@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.699 2016/12/23 00:44:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.701 2017/01/21 01:29:36 tom Exp $
 .\"
-.\" Copyright 1996-2015,2016 by Thomas E. Dickey
+.\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -3450,6 +3450,7 @@ Regardless of your locale and encoding,
 you need an ISO-10646-1 font to display the result.
 Your configuration may not include this font,
 or locale-support by \fI\*n\fP may not be needed.
+.IP
 At startup, \fI\*n\fP uses a mechanism equivalent to
 the \fBload-vt-fonts(utf8Fonts,\ Utf8Fonts)\fP action
 to load font name subresources of the VT100 widget.
@@ -3458,6 +3459,17 @@ resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*('' will be loaded,
 and (if this resource is enabled), override the normal fonts.
 If no subresources are found,
 the normal fonts such as \*(``\fB*vt100.font\fP\*('', etc., are used.
+.IP
+For instance, you could have this in your resource file:
+.NS
+*VT100.font: 12x24
+*VT100.utf8Fonts.font:9x15
+.NE
+.IP
+When started with a UTF-8 locale, \fI\*n\fP would use 9x15, but
+allow you to switch to the 12x24 font
+using the menu entry \*(``\fBUTF-8 Fonts\fP\*(''.
+.IP
 The resource files distributed with \fI\*n\fP use ISO-10646-1 fonts,
 but do not rely on them unless you are using the locale mechanism.
 .TP 8
@@ -4334,7 +4346,7 @@ See the discussion of the \fBlocale\fP resource.
 This specifies whether \fI\*n\fP will use UTF-8 fonts specified via
 resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*(''
 or normal (ISO-8859-1) fonts via patterns such as \*(``\fB*vt100.font\fP\*(''.
-The resource can be set via the menu entry \*(``UTF-8 Fonts\*(''.
+The resource can be set via the menu entry \*(``\fBUTF-8 Fonts\fP\*(''.
 The default is \*(``default\*(''.
 .IP
 \fI\*N\fP accepts either a keyword (ignoring case)
@@ -5700,7 +5712,8 @@ It corresponds to the \fButf8\fP resource.
 This controls whether \fI\*n\fP uses UTF-8 fonts for display.
 It is useful for temporarily switching \fI\*n\fP to display
 text from an application which does not follow the locale settings.
-It combines the \fButf8\fP and \fButf8Fonts\fP resources.
+It combines the \fButf8\fP and \fButf8Fonts\fP resources,
+subject to the \fBlocale\fP resource.
 .TP
 .B UTF-8 Titles\fP (resource \fButf8-title\fP)
 This controls whether \fI\*n\fP accepts UTF-8 encoding for
