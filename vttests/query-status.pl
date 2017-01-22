@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.5 2017/01/22 18:34:06 tom Exp $
+# $XTermId: query-status.pl,v 1.2 2017/01/22 20:25:59 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012-2014,2017 by Thomas E. Dickey
+# Copyright 2017 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -31,10 +31,10 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
-# Test the color-query features of xterm using OSC 4.
-
-# TODO: extend to the OSC 5 colors
-# TODO: show result in #rrggbb format.
+# Test the status features of xterm using DECRQSS.
+#
+# TODO: use Term::ReadKey rather than system/stty
+# TODO: make options work...
 
 use strict;
 use warnings;
@@ -42,15 +42,24 @@ use warnings;
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_s);
-&getopts('s') || die(
-    "Usage: $0 [options] [color1[-color2]]\n
+our ( $opt_8, $opt_s );
+&getopts('8s') || die(
+    "Usage: $0 [options]\n
 Options:\n
+  -8      use 8-bit controls
   -s      use ^G rather than ST
 "
 );
 
-our $ST = $opt_s ? "\007" : "\x1b\\";
+our $ST = $opt_s ? "\007" : ( $opt_8 ? "\x9c" : "\x1b\\");
+
+our %suffixes;
+$suffixes{DECSCA}   = '"q';
+$suffixes{DECSCL}   = '"p';
+$suffixes{DECSTBM}  = 'r';
+$suffixes{DECSLRM}  = 's';
+$suffixes{SGR}      = 'm';
+$suffixes{DECSCUSR} = ' q';
 
 sub no_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -115,24 +124,27 @@ sub visible($) {
     return $result;
 }
 
-sub query_color($) {
-    my $param = $_[0];
+sub query_one($) {
+    my $name   = shift;
+    my $suffix = $suffixes{$name};
+    my $prefix = $opt_8 ? "\x90" : "\x1bP";
     my $reply;
     my $n;
-    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
-    my $op    = 4;
-    my $osc   = qr/\x1b]$op/;
-    my $match = qr/${osc}.*${st}/;
+    my $st    = $opt_s ? qr/\007/ : ( $opt_8 ? "\x9c" : qr/\x1b\\/ );
+    my $DCS   = qr/${prefix}/;
+    my $match = qr/${DCS}.*${st}/;
 
-    $reply = get_reply( "\x1b]$op;" . $param . ";?" . $ST );
+    $reply = get_reply( $prefix . '$q' . $suffix . $ST );
 
-    printf "query{%s}%*s", &visible($param), 3 - length($param), " ";
+    printf "%-10s query{%s}%*s", $name,    #
+      &visible($suffix),                   #
+      4 - length($suffix), " ";
 
     if ( defined $reply ) {
         printf "%2d ", length($reply);
         if ( $reply =~ /${match}/ ) {
 
-            $reply =~ s/^${osc}//;
+            $reply =~ s/^${DCS}//;
             $reply =~ s/^;//;
             $reply =~ s/${st}$//;
         }
@@ -145,27 +157,13 @@ sub query_color($) {
     printf "\n";
 }
 
-sub query_colors($$) {
-    my $lo = $_[0];
-    my $hi = $_[1];
-    my $n;
-    for ( $n = $lo ; $n <= $hi ; ++$n ) {
-        query_color($n);
-    }
-}
-
 if ( $#ARGV >= 0 ) {
     while ( $#ARGV >= 0 ) {
-        if ( $ARGV[0] =~ /-/ ) {
-            my @args = split /-/, $ARGV[0];
-            &query_colors( $args[0], $args[1] );
-        }
-        else {
-            &query_colors( $ARGV[0], $ARGV[0] );
-        }
-        shift @ARGV;
+        &query_one( shift @ARGV );
     }
 }
 else {
-    &query_colors( 0, 7 );
+    for my $key ( sort keys %suffixes ) {
+        &query_one($key);
+    }
 }
