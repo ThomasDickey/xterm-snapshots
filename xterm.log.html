@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1714 2017/01/22 20:25:59 tom Exp $
+  $XTermId: xterm.log.html,v 1.1718 2017/03/13 02:05:41 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -947,6 +947,11 @@
     <li>several minor improvements to font utility functions:
 
       <ul>
+        <li>widen the pattern used for finding related ".desktop"
+        files, including &ldquo;Terminal&rdquo;</li>
+
+        <li>add <code>vttests/query-status.pl</code></li>
+
         <li>parse <code>-fn</code> and <code>-fa</code> similarly,
         using &ldquo;x:&rdquo; and &ldquo;xft:&rdquo; prefixes for
         font name/family strings to distinguish between XLFD and
@@ -1202,7 +1207,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     process receives a <code>STOP</code> signal.</li>
 
     <li>revert change to <code>CF_POSIX_C_SOURCE</code> from
-    <a href="#xterm-323">patch #323</a> (reports by Ashish Shukla,
+    <a href="#xterm_323">patch #323</a> (reports by Ashish Shukla,
     Christian Weisgerber).</li>
   </ul>
 

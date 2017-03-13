@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.340 2016/05/28 16:51:40 tom Exp $
+dnl $XTermId: configure.in,v 1.341 2017/03/07 09:36:25 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2015,2016 by Thomas E. Dickey
+dnl Copyright 1997-2016,2017 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -116,7 +116,7 @@ CF_WITH_ICON_SYMLINK(xterm)
 CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,
-	[*rxvt*|konsole|*-terminal],
+	[*rxvt*|*konsole|*[[Tt]]erminal],
 	[System|TerminalEmulator|Utility|*])
 
 AC_MSG_CHECKING(for install-permissions reference)

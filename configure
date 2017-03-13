@@ -6434,7 +6434,7 @@ echo "${ECHO_T}$cf_desktop_want" >&6
 					test -z "$cf_desktop_path" && break
 					cf_desktop_name=`basename $cf_desktop_path .desktop`
 					case $cf_desktop_name in
-					(xterm|*-xterm|*rxvt*|konsole|*-terminal)
+					(xterm|*-xterm|*rxvt*|*konsole|*[Tt]erminal)
 						test -n "$verbose" && echo "	inspect $cf_desktop_path" 1>&6
 
 echo "${as_me:-configure}:6440: testing inspect $cf_desktop_path ..." 1>&5
