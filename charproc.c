@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1460 2017/01/14 00:13:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1463 2017/05/03 22:52:13 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -767,6 +767,7 @@ static XtResource xterm_resources[] =
     Bres(XtNallowScrollLock, XtCAllowScrollLock, screen.allowScrollLock0, False),
 #endif
 
+    /* these are used only for testing ncurses, not in the manual page */
 #if OPT_XMC_GLITCH
     Bres(XtNxmcInline, XtCXmcInline, screen.xmc_inline, False),
     Bres(XtNxmcMoveSGR, XtCXmcMoveSGR, screen.move_sgr_ok, True),
@@ -8130,18 +8131,18 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.dynamicColors);
 
 #if OPT_DEC_CHRSET
-    for (i = 0; i <= NUM_CHRSET; i++) {
+    for (i = 0; i < NUM_CHRSET; i++) {
 	screen->double_fonts[i].warn = fwResource;
     }
 #endif
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
 	init_Sres2(screen.MenuFontName, i);
-#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
-	screen->ifnts[i].warn = fwResource;
-#endif
     }
     for (i = 0; i < fMAX; i++) {
 	screen->fnts[i].warn = fwResource;
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	screen->ifnts[i].warn = fwResource;
+#endif
     }
 #ifndef NO_ACTIVE_ICON
     screen->fnt_icon.warn = fwResource;
@@ -8595,7 +8596,7 @@ VTInitialize(Widget wrequest,
 	       screen->graphics_regis_default_font));
 
 	init_Sres(screen.graphics_regis_screensize);
-	screen->graphics_regis_def_high = 800;
+	screen->graphics_regis_def_high = 1000;
 	screen->graphics_regis_def_wide = 1000;
 	if (!x_strcasecmp(screen->graphics_regis_screensize, "auto")) {
 	    TRACE(("setting default ReGIS screensize based on terminal_id %d\n",
@@ -8940,7 +8941,7 @@ VTDestroy(Widget w GCC_UNUSED)
     for (n = 0; n < NMENUFONTS; ++n) {
 	int e;
 	for (e = 0; e < fMAX; ++e) {
-	    xtermCloseXft(screen, getMyXftFont(xw, e, n));
+	    xtermCloseXft(screen, getMyXftFont(xw, e, (int) n));
 	}
     }
     if (screen->renderDraw)

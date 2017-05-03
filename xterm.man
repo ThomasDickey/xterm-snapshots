@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.701 2017/01/21 01:29:36 tom Exp $
+.\" $XTermId: xterm.man,v 1.704 2017/05/03 23:26:11 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -1676,6 +1676,13 @@ maximize its layout on startup.
 The default is
 \*(``false\*(''.
 .TP 8
+.B "menuHeight\fP (class\fB MenuHeight\fP)"
+Specifies the height of the toolbar,
+which may be increased by the X toolkit layout widget depending upon
+the fontsize used.
+The default is
+\*(``25\*(''.
+.TP 8
 .B "messages\fP (class\fB Messages\fP)"
 Specifies whether write access to the terminal is allowed initially.
 See \fBmesg\fP(1).
@@ -2648,15 +2655,15 @@ in milliseconds.
 The same timer is used for text blinking.
 The default is \*(``600\*(''.
 .TP 8
+.B "cursorUnderLine\fP (class\fB CursorUnderLine\fP)"
+Specifies whether to make the cursor underlined or a box.
+The default is \*(``false\*(''.
+.TP 8
 .B "cutNewline\fP (class\fB CutNewline\fP)"
 If \*(``false\*('', triple clicking to select a line does not include the Newline
 at the end of the line.
 If \*(``true\*('', the Newline is selected.
 The default is \*(``true\*(''.
-.TP 8
-.B "cursorUnderLine\fP (class\fB CursorUnderLine\fP)"
-Specifies whether to make the cursor underlined or a box.
-The default is \*(``false\*(''.
 .TP 8
 .B "cutToBeginningOfLine\fP (class\fB CutToBeginningOfLine\fP)"
 If \*(``false\*('', triple clicking to select a line selects only from the
@@ -3361,7 +3368,7 @@ Specifies which of the VT100 fonts to use initially.
 Values are the same as for the \fBset-vt-font\fP action.
 The default is \*(``d\*('', i.e., \*(``default\*(''.
 .TP 8
-.B "inputMethod\fP (class\fB XtCInputMethod\fP)"
+.B "inputMethod\fP (class\fB InputMethod\fP)"
 Tells \fI\*n\fP which type of input method to use.
 There is no default method.
 .TP 8
@@ -3499,7 +3506,7 @@ Specifies whether or not the shell to be run in the window should be started
 as a login shell.
 The default is \*(``false\*(''.
 .TP 8
-.B "logFile\fP (class\fB LogFile\fP)"
+.B "logFile\fP (class\fB Logfile\fP)"
 Specify the name for \fI\*n\fP's log-file.
 If no name is specified, \fI\*n\fP will generate a name when
 logging is enabled,
@@ -3511,7 +3518,7 @@ whether by the command-line option \fB\-l\fP,
 or the menu entry \fBLog to File\fP.
 The default is \*(``false\*(''.
 .TP 8
-.B "logging\fP (class\fB logging\fP)"
+.B "logging\fP (class\fB Logging\fP)"
 If \*(``true\*('', (and if \fBlogInhibit\fP is not set)
 enable the logging feature.
 This resource is set/updated by the \fB\-l\fP option and the
@@ -3522,6 +3529,28 @@ The default is \*(``false\*(''.
 Specifies whether or not the bell should be rung when the user types near the
 right margin.
 The default is \*(``false\*(''.
+.TP 8
+.B "maxGraphicSize\fP (class\fB MaxGraphicSize\fP)"
+If \fI\*n\fR is configured to support ReGIS or SIXEL graphics,
+this resource controls the maximum size of a graph which can be displayed.
+.IP
+The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
+.IP
+If the resource is \*(``auto\*('' then \fI\*n\fR will use the 
+\fBdecTerminalID\fP resource:
+.TS
+l l
+_ _
+r r.
+\fBResult\fR	\fBdecTerminalID\fR
+768x400	125
+800x460	240
+800x460	241
+800x480	330
+800x480	340
+860x750	382
+800x480	\fIdefault\fP
+.TE
 .TP 8
 .B "metaSendsEscape\fP (class\fB MetaSendsEscape\fP)"
 If \*(``true\*('', Meta characters
@@ -3701,6 +3730,26 @@ Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is \*(``10\*(''.
 .TP 8
+.B "numColorRegisters\fP (class\fB NumColorRegisters\fP)"
+If \fI\*n\fR is configured to support ReGIS or SIXEL graphics,
+this specifies the number of color-registers which are available.
+.IP
+If this resource is not specified, \fI\*n\fR uses a value determined
+by the \fBdecTerminalID\fP resource:
+.TS
+l l
+_ _
+r r.
+\fBResult\fR	\fBdecTerminalID\fR
+4	125
+4	240
+4	241
+4	330
+16	340
+2	382
+1024	default
+.TE
+.TP 8
 .B "numLock\fP (class\fB NumLock\fP)"
 If \*(``true\*('', \fI\*n\fR checks if NumLock is used as a modifier
 (see \fIxmodmap\fP(__mansuffix__)).
@@ -3776,7 +3825,7 @@ making those inactive.
 On startup, \fI\*n\fP determines the maximum number of clicks
 by the \fBon\fP\fIX\fP\fBClicks\fP resource values which are set.
 .TP 8
-.B "openIm\fP (class\fB XtCOpenIm\fP)"
+.B "openIm\fP (class\fB OpenIm\fP)"
 Tells \fI\*n\fP whether to open the input method at startup.
 The default is \*(``true\*(''.
 .TP 8
@@ -3819,13 +3868,13 @@ If the window is iconified, this has no effect.
 However, the \fBzIconBeep\fP resource provides you with the ability to
 see which iconified windows have sounded a bell.
 .TP 8
-.B "precompose\fP (class\fB XtCPrecompose\fP)"
+.B "precompose\fP (class\fB Precompose\fP)"
 Tells \fI\*n\fP whether to precompose UTF-8 data into Normalization Form C,
 which combines commonly-used accents onto base characters.
 If it does not do this, accents are left as separatate characters.
 The default is \*(``true\*(''.
 .TP 8
-.B "preeditType\fP (class\fB XtCPreeditType\fP)"
+.B "preeditType\fP (class\fB PreeditType\fP)"
 Tells \fI\*n\fP which types of preedit (preconversion) string to display.
 The default is \*(``OverTheSpot,Root\*(''.
 .TP 8
@@ -3967,8 +4016,10 @@ Controls whether a newline is sent to the printer at the end of a print
 page function.
 The default is \*(``true\*(''.
 .TP 8
-.B "privateColorRegisters\fP (class\fB privateColorRegisters\fP)"
-If true, allocate separate color registers for each sixel
+.B "privateColorRegisters\fP (class\fB PrivateColorRegisters\fP)"
+If \fI\*n\fR is configured to support ReGIS or SIXEL graphics,
+this controls whether \fI\*n\fR 
+allocates separate color registers for each sixel
 device control string, e.g., for DECGCI.
 If not true, color registers are allocated only once,
 when the terminal is reset.
@@ -3980,17 +4031,27 @@ when \fINotifyGrab\fP and \fINotifyUngrab\fP
 event types are received during change of focus.
 The default is \*(``false\*(''.
 .TP 8
+.B "regisDefaultFont\fP (class\fB RegisDefaultFont\fP)"
+If \fI\*n\fR is configured to support ReGIS graphics,
+this resource tells \fI\*n\fR which font to use if the ReGIS data does
+not specify one.
+No default value is specified;
+\fI\*n\fR accepts a TrueType font specification
+as in the \fBfaceName\fP resource.
+.IP
+If no value is specified,
+\fI\*n\fR draws a bitmap indicating a missing character.
+.TP 8
 .B "regisScreenSize\fP (class\fB RegisScreenSize\fP)"
 If \fI\*n\fR is configured to support ReGIS graphics,
 this resource tells \fI\*n\fR the maximum size (in pixels) for graphics.
 .IP
+The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
+.IP
 \fI\*N\fR accepts a special resource value \*(``auto\*('',
 which tells \fI\*n\fR to use the \fBdecTerminalID\fP resource to
 set the maximum size based on the hardware terminal's limits.
-Otherwise, \fI\*n\fR expects the size to be given as \fIheight\fPx\fIwidth\fP,
-e.g., \*(``800x1000\*(''.
-.IP
-The default resource value is \*(``800x1000\*(''.
+Those limits are the same as for the \fBmaxGraphicSize\fP resource.
 .TP 8
 .B "renderFont\fP (class\fB RenderFont\fP)"
 If \fI\*n\fR is built with the Xft library,
@@ -4044,7 +4105,7 @@ made taller, additional saved lines will be scrolled down onto the
 screen; if the window is made shorter, lines will be scrolled off the
 top of the screen, and the top saved lines will be dropped.
 .TP 8
-.B "retryInputMethod\fP (class\fB XtCRetryInputMethod\fP)"
+.B "retryInputMethod\fP (class\fB RetryInputMethod\fP)"
 Tells \fI\*n\fP how many times to retry,
 in case the input-method server is not responding.
 This is a different issue than unsupported preedit type, etc.
@@ -4190,8 +4251,17 @@ signals to \fI\*n\fP should be disallowed.
 The default is \*(``false\*(''.
 .TP 8
 .B "sixelScrolling\fP (class\fB SixelScrolling\fP)"
-If true, graphics scroll up one line at a time when sixels would be written
+If \fI\*n\fR is configured to support SIXEL graphics,
+this resource tells it whether to
+scroll up one line at a time when sixels would be written
 past the bottom line on the window.
+The default is \*(``false\*(''.
+.TP 8
+.B "sixelScrollsRight\fP (class\fB SixelScrollsRight\fP)"
+If \fI\*n\fR is configured to support SIXEL graphics,
+this resource tells it whether to
+scroll to the right as needed to keep the current position visible
+rather than truncate the plot on the on the right.
 The default is \*(``false\*(''.
 .TP 8
 .B "tekGeometry\fP (class\fB Geometry\fP)"
@@ -5550,12 +5620,16 @@ There is no corresponding command-line option.
 .
 .TP
 .B Private Color Registers\fP (resource \fBprivateColorRegisters\fP)
+If \fI\*n\fR is configured to support ReGIS graphics,
+this controls whether a private color palette can be used.
+.IP
 When enabled,
 each graphic image uses a separate set of color registers, so that it
 essentially has a private palette (this is the default).  If it is not set,
 all graphics images share a common set of registers which is how sixel and
 ReGIS graphics worked on actual hardware.  The default is likely a more
 useful mode on modern TrueColor hardware.
+.IP
 This corresponds to the \fBprivateColorRegisters\fP resource.
 There is no corresponding command-line option.
 .RE

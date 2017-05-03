@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.767 2016/12/22 09:55:53 tom Exp $ */
+/* $XTermId: xterm.h,v 1.768 2017/05/03 23:39:54 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -104,7 +104,7 @@
 #endif
 
 #ifdef __FreeBSD__
-#if __FreeBSD_version >= 900000	
+#if __FreeBSD_version >= 900000
 #define USE_SYSV_UTMP 1
 #define UTMPX_FOR_UTMP 1
 #define HAVE_UTMP_UT_HOST 1
@@ -459,7 +459,6 @@ extern char **environ;
 #define XtNfont5		"font5"
 #define XtNfont6		"font6"
 #define XtNfontDoublesize	"fontDoublesize"
-#define XtNfontStyle		"fontStyle"
 #define XtNfontWarnings		"fontWarnings"
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNforcePackedFont	"forcePackedFont"
@@ -491,7 +490,7 @@ extern char **environ;
 #define XtNmarginBell		"marginBell"
 #define XtNmaximized		"maximized"
 #define XtNmaxGraphicSize	"maxGraphicSize"
-#define XtNmenuBar		"menuBar"
+#define XtNmenuBar		"menuBar"	/* internal */
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
 #define XtNmkSamplePass		"mkSamplePass"
@@ -537,7 +536,6 @@ extern char **environ;
 #define XtNscrollBarBorder	"scrollBarBorder"
 #define XtNscrollKey		"scrollKey"
 #define XtNscrollLines		"scrollLines"
-#define XtNscrollPos		"scrollPos"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
 #define XtNselectToClipboard	"selectToClipboard"
 #define XtNshiftFonts		"shiftFonts"
@@ -572,10 +570,10 @@ extern char **environ;
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
 #define XtNximFont		"ximFont"
-#define XtNxmcAttributes	"xmcAttributes"
-#define XtNxmcGlitch		"xmcGlitch"
-#define XtNxmcInline		"xmcInline"
-#define XtNxmcMoveSGR		"xmcMoveSGR"
+#define XtNxmcAttributes	"xmcAttributes"	/* ncurses-testing */
+#define XtNxmcGlitch		"xmcGlitch"	/* ncurses-testing */
+#define XtNxmcInline		"xmcInline"	/* ncurses-testing */
+#define XtNxmcMoveSGR		"xmcMoveSGR"	/* ncurses-testing */
 
 #define XtCAllowBoldFonts	"AllowBoldFonts"
 #define XtCAllowC1Printable	"AllowC1Printable"
@@ -650,7 +648,6 @@ extern char **environ;
 #define XtCFont5		"Font5"
 #define XtCFont6		"Font6"
 #define XtCFontDoublesize	"FontDoublesize"
-#define XtCFontStyle		"FontStyle"
 #define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCForcePackedFont	"ForcePackedFont"
@@ -678,7 +675,7 @@ extern char **environ;
 #define XtCMarginBell		"MarginBell"
 #define XtCMaximized		"Maximized"
 #define XtCMaxGraphicSize	"MaxGraphicSize"
-#define XtCMenuBar		"MenuBar"
+#define XtCMenuBar		"MenuBar"	/* internal */
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
 #define XtCMkSamplePass		"MkSamplePass"
@@ -720,7 +717,6 @@ extern char **environ;
 #define XtCScrollBarBorder	"ScrollBarBorder"
 #define XtCScrollCond		"ScrollCond"
 #define XtCScrollLines		"ScrollLines"
-#define XtCScrollPos		"ScrollPos"
 #define XtCSelectToClipboard	"SelectToClipboard"
 #define XtCShiftFonts		"ShiftFonts"
 #define XtCShowBlinkAsBold	"ShowBlinkAsBold"
@@ -753,10 +749,10 @@ extern char **environ;
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
 #define XtCXimFont		"XimFont"
-#define XtCXmcAttributes	"XmcAttributes"
-#define XtCXmcGlitch		"XmcGlitch"
-#define XtCXmcInline		"XmcInline"
-#define XtCXmcMoveSGR		"XmcMoveSGR"
+#define XtCXmcAttributes	"XmcAttributes"	/* ncurses-testing */
+#define XtCXmcGlitch		"XmcGlitch"	/* ncurses-testing */
+#define XtCXmcInline		"XmcInline"	/* ncurses-testing */
+#define XtCXmcMoveSGR		"XmcMoveSGR"	/* ncurses-testing */
 
 #if defined(NO_ACTIVE_ICON) && !defined(XtNgeometry)
 #define XtNgeometry		"geometry"
