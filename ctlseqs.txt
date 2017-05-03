@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2016)
-               updated for XTerm Patch #328 (2016/12/20)
+                    invisible-island.net (2006-2017)
+               updated for XTerm Patch #328 (2017/05/02)
 
 
 
@@ -470,7 +470,8 @@ CSI ? Pm h
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
-            Ps = 1 0 0 7  -> Enable Alternate Scroll Mode.
+            Ps = 1 0 0 7  -> Enable Alternate Scroll Mode, i.e., the
+          alternateScroll resource.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
@@ -570,7 +571,8 @@ CSI ? Pm l
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Disable SGR Mouse Mode.
-            Ps = 1 0 0 7  -> Disable Alternate Scroll Mode.
+            Ps = 1 0 0 7  -> Disable Alternate Scroll Mode, i.e., the
+          alternateScroll resource.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).

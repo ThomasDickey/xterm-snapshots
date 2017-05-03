@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.135 2015/04/10 09:00:41 tom Exp $ */
+/* $XTermId: resize.c,v 1.136 2017/05/02 22:41:48 tom Exp $ */
 
 /*
- * Copyright 2003-2014,2015 by Thomas E. Dickey
+ * Copyright 2003-2015,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -135,7 +135,7 @@ static char *myname;
 static int shell_type = SHELL_UNKNOWN;
 static const char *const getsize[EMULATIONS] =
 {
-    ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
+    ESCAPE("7") ESCAPE("[r") ESCAPE("[9999;9999H") ESCAPE("[6n"),
     ESCAPE("[18t"),
 };
 #if defined(USE_STRUCT_WINSIZE)

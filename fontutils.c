@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.514 2017/01/20 23:29:32 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.515 2017/05/03 01:12:13 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1578,7 +1578,7 @@ xtermLoadFont(XtermWidget xw,
     } else if (x_strcasecmp(myfonts.f_n, DEFFONT)) {
 	int code;
 
-	myfonts.f_n = DEFFONT;
+	myfonts.f_n = x_strdup(DEFFONT);
 	TRACE(("...recovering for TrueType fonts\n"));
 	code = xtermLoadFont(xw, &myfonts, doresize, fontnum);
 	if (code) {
@@ -3666,17 +3666,17 @@ HandleSetFont(Widget w GCC_UNUSED,
 	    switch (*param_count) {	/* assign 'em */
 #if OPT_WIDE_CHARS
 	    case 5:
-		fonts.f_wb = params[4];
+		fonts.f_wb = x_strdup(params[4]);
 		/* FALLTHRU */
 	    case 4:
-		fonts.f_w = params[3];
+		fonts.f_w = x_strdup(params[3]);
 		/* FALLTHRU */
 #endif
 	    case 3:
-		fonts.f_b = params[2];
+		fonts.f_b = x_strdup(params[2]);
 		/* FALLTHRU */
 	    case 2:
-		fonts.f_n = params[1];
+		fonts.f_n = x_strdup(params[1]);
 		break;
 	    }
 	}

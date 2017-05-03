@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.160 2016/09/09 22:56:18 tom Exp $
+-- $XTermId: INSTALL,v 1.161 2017/05/02 22:30:33 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2015,2016 by Thomas E. Dickey
+-- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -614,7 +614,7 @@ The options (in alphabetic order):
 	at existing ".desktop" files for xterm and common terminal
 	emulators, to use those.  If none are found, the script uses this
 	default:
-		System;TerminalEmulator;Utility;
+		System;TerminalEmulator;
 
   --with-freetype-config  configure script to use for FreeType
 

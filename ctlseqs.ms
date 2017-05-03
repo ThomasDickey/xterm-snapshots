@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.340 2016/12/20 09:42:23 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.342 2017/05/03 00:31:38 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2015,2016 by Thomas E. Dickey
+.\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #328
-.ds RF 2016/12/20
+.ds RF 2017/05/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -337,7 +337,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2016)
+invisible-island.net (2006-2017)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -983,7 +983,7 @@ See the section \fBMouse Tracking\fP.  This is the X11 xterm mouse protocol.
   \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode.
   \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode.
-  \*(Ps = \*1\*0\*0\*7 \(-> Enable Alternate Scroll Mode.
+  \*(Ps = \*1\*0\*0\*7 \(-> Enable Alternate Scroll Mode, i.e., the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
@@ -1085,7 +1085,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode.
-  \*(Ps = \*1\*0\*0\*7 \(-> Disable Alternate Scroll Mode.
+  \*(Ps = \*1\*0\*0\*7 \(-> Disable Alternate Scroll Mode, i.e., the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
