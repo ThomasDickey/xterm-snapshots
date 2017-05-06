@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.846 2017/01/10 10:29:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.847 2017/05/06 00:57:20 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1823,6 +1823,7 @@ typedef struct {
 	Char		curgl;
 	Char		curgr;
 	int		gsets[4];
+	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
