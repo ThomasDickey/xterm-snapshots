@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.342 2017/05/02 22:23:59 tom Exp $
+dnl $XTermId: configure.in,v 1.343 2017/05/04 00:47:40 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -374,6 +374,14 @@ if test "$cf_tic_prog" = yes ; then
 	elif test "$TERMINFO_DIR" != none ; then
 		if test -d $TERMINFO_DIR ; then
 			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR",[Define to override default TERMINFO value])
+			AC_MSG_CHECKING(if \$TERMINFO should also be set)
+			AC_ARG_ENABLE(env-terminfo,
+				[  --enable-env-terminfo   setenv $TERMINFO if --with-own-terminfo gives value],
+				[cf_env_terminfo=yes],
+				[cf_env_terminfo=no}])
+			AC_MSG_RESULT($cf_env_terminfo)
+			test $cf_env_terminfo = yes &&
+			AC_DEFINE(OWN_TERMINFO_ENV,1,[Define to 1 to enable setenv of $TERMINFO value])
 		else
 			AC_MSG_WARN(not a directory)
 		fi

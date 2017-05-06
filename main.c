@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.785 2016/12/23 14:30:49 tom Exp $ */
+/* $XTermId: main.c,v 1.787 2017/05/04 00:53:25 tom Exp $ */
 
 /*
- * Copyright 2002-2015,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3551,9 +3551,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	 * defaults.
 	 */
 
-	signal(SIGALRM, hungtty);
-	alarm(2);		/* alarm(1) might return too soon */
 	if (!sigsetjmp(env, 1)) {
+	    signal(SIGALRM, hungtty);
+	    alarm(2);		/* alarm(1) might return too soon */
 	    ttyfd = open("/dev/tty", O_RDWR);
 	    alarm(0);
 	    tty_got_hung = False;
@@ -4742,9 +4742,6 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    xtermSetenv("SHELL", pw.pw_shell);
 	    }
 #endif /* HAVE_UTMP */
-#ifdef OWN_TERMINFO_DIR
-	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
-#endif
 #else /* USE_SYSV_ENVVARS */
 	    if (*(newtc = get_tcap_buffer(xw)) != '\0') {
 		resize_termcap(xw);
@@ -4778,6 +4775,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		}
 	    }
 #endif /* USE_SYSV_ENVVARS */
+#ifdef OWN_TERMINFO_ENV
+	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
+#endif
 
 #if OPT_PTY_HANDSHAKE
 	    /*

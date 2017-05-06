@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.161 2017/05/02 22:30:33 tom Exp $
+-- $XTermId: INSTALL,v 1.162 2017/05/04 00:57:58 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
@@ -518,6 +518,13 @@ The options (in alphabetic order):
   --enable-sun-fkeys      enable support for Sun-style function keys
 
   	Compile-in code to support Sun-style function keys.
+
+  --enable-terminfo-env   enable pulldown menus on toolbar
+
+	Use the custom terminfo directory specified in "--with-own-terminfo"
+	as the $TERMINFO variable for the shells spawned by xterm.  Setting
+	this variable makes most curses (and termcap) applications look in
+	that directory for terminal descriptions.
 
   --enable-toolbar        enable pulldown menus on toolbar
 
