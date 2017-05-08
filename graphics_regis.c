@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.80 2016/05/29 16:20:42 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.82 2017/05/07 23:49:07 tom Exp $ */
 
 /*
- * Copyright 2014-2015,2016 by Ross Combs
+ * Copyright 2014-2016,2017 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -549,7 +549,7 @@ draw_filled_polygon(RegisGraphicsContext *context)
     int old_x, old_y;
     int inside;
     unsigned char pixels[MAX_GLYPH_PIXELS];
-    unsigned w, h;
+    unsigned w = 1, h = 1;
 
     if (context->temporary_write_controls.shading_character != '\0') {
 	char ch = context->temporary_write_controls.shading_character;
@@ -2354,31 +2354,31 @@ draw_text(RegisGraphicsContext *context, char const *str)
     }
     chr_shear_x = (int) (ROT_SHEAR_SCALE * -tan(0.5 * -total_rotation));
     chr_shear_y = (int) (ROT_SHEAR_SCALE * sin(-total_rotation));
+
     /*
      * FIXME: it isn't clear from the docs how slant affects the x positioning.
      * For now the code assumes the upper left is fixed.
      */
-    TRACE(("float version: %.5f\n",
-	   tan(2.0 * M_PI * abs(context->current_text_controls->slant) /
-	       360.0)));
-    if (context->current_text_controls->slant < 0) {
-	slant_dx = (int) +(
-			      tan(2.0 * M_PI * abs(context->current_text_controls->slant)
-				  / 360.0) * ROT_SHEAR_SCALE);
-    } else if (context->current_text_controls->slant > 0) {
-	slant_dx = (int) -(
-			      tan(2.0 * M_PI * abs(context->current_text_controls->slant)
-				  / 360.0) * ROT_SHEAR_SCALE);
-    } else {
-	slant_dx = 0;
+    {
+	const int slant = context->current_text_controls->slant;
+
+	TRACE(("float version: %.5f\n", tan(2.0 * M_PI * abs(slant) / 360.0)));
+	/* The slant is negative for forward-leaning characters. */
+	if (slant > 0) {
+	    slant_dx = (int) +(tan(2.0 * M_PI * abs(slant) / 360.0) * ROT_SHEAR_SCALE);
+	} else if (slant < 0) {
+	    slant_dx = (int) -(tan(2.0 * M_PI * abs(slant) / 360.0) * ROT_SHEAR_SCALE);
+	} else {
+	    slant_dx = 0;
+	}
+	TRACE(("string rotation: %d\n",
+	       context->current_text_controls->string_rotation));
+	TRACE(("character rotation: %d\n",
+	       context->current_text_controls->character_rotation));
+	TRACE(("character slant: %d (%.5f pixels per line)\n",
+	       slant, slant_dx / (double) ROT_SHEAR_SCALE));
     }
-    TRACE(("string rotation: %d\n",
-	   context->current_text_controls->string_rotation));
-    TRACE(("character rotation: %d\n",
-	   context->current_text_controls->character_rotation));
-    TRACE(("character slant: %d (%.5f pixels per line)\n",
-	   context->current_text_controls->slant,
-	   slant_dx / (double) ROT_SHEAR_SCALE));
+
     TRACE(("str_shear: %.5f, %.5f (sign=%d)\n",
 	   str_shear_x / (double) ROT_SHEAR_SCALE,
 	   str_shear_y / (double) ROT_SHEAR_SCALE,
@@ -4541,7 +4541,7 @@ parse_regis_command(RegisParseState *state)
 	 * (D<angle>)  # specify a string or character tilt
 	 * (E)  # end temporary text control
 	 * (H<factor>)  # select a height multiplier (1-256)
-	 * (I<angle>)  # italic/oblique: no slant (0), lean back (-1 though -45), lean forward (+1 through +45)
+	 * (I<angle>)  # italic/oblique: no slant (0), lean forward (-1 though -45), lean back (+1 through +45)
 	 * (M[width factor,height factor])  # select size multipliers (width 1-16) (height 1-256)
 	 * (S<size id>)  # select one of the 17 standard character sizes
 	 * (S[dimensions])  # set a custom display cell size (char with border)
@@ -5909,9 +5909,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 
 		/* For some reason ReGIS reused the "D" option for the text
-		 * command to represent two different attributes.  Character
-		 * tilt can only be modified if a string tilt option has
-		 * already been given.
+		 * command to represent two different attributes.  String tilt
+		 * can only be modified if a second "D" option is given after
+		 * an "S" option following the original "D" option.  In that
+		 * case a second "D" should agree with the first and the overall
+		 * string will be rotated.  If no "S" option or second "D"
+		 * option is given, the "D" option refers to the character tilt.
 		 */
 		/* FIXME: handle character size prameter */
 		if (state->string_rot_set) {

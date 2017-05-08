@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.746 2017/01/02 00:51:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.747 2017/05/08 00:18:36 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3681,7 +3681,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		++buf;
 	    } else {
 		value = strtol(buf, &next, 10);
-		if (!PartS2L(buf, next) || (which < 0))
+		if (!PartS2L(buf, next) || (value < 0))
 		    break;
 		buf = next;
 		if (*buf == ';')

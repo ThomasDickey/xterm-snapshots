@@ -16525,7 +16525,7 @@ if test "${enable_env_terminfo+set}" = set; then
   enableval="$enable_env_terminfo"
   cf_env_terminfo=yes
 else
-  cf_env_terminfo=no}
+  cf_env_terminfo=no
 fi;
 			echo "$as_me:16530: result: $cf_env_terminfo" >&5
 echo "${ECHO_T}$cf_env_terminfo" >&6

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.510 2017/01/20 22:36:12 tom Exp $ */
+/* $XTermId: button.c,v 1.515 2017/05/07 23:54:56 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -482,9 +482,9 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
  * Button1 (left) and Button3 (right) are swapped in the mask relative to X.
  */
 #define	ButtonState(state, mask)	\
-{ (state) = (int) (((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8);	\
+{ int stemp = (int) (((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8);	\
   /* swap Button1 & Button3 */								\
-  (state) = ((state) & ~(4|1)) | (((state)&1)?4:0) | (((state)&4)?1:0);			\
+  (state) = (stemp & ~(4|1)) | ((stemp & 1) ? 4 : 0) | ((stemp & 4) ? 1 : 0);			\
 }
 
 void
@@ -1584,7 +1584,7 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 {
     String *result = params;
 
-    if (num_params > 0) {
+    if (params != 0 && num_params > 0) {
 	Cardinal j;
 	Boolean map = False;
 
@@ -3284,6 +3284,11 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 		    int best_col = -1;
 		    int best_len = -1;
 
+		    startc->row = 0;
+		    startc->col = 0;
+		    endc->row = 0;
+		    endc->col = 0;
+
 		    for (col = 0; indexed[col] < len; ++col) {
 			if (regexec(&preg,
 				    search + indexed[col],
@@ -3294,7 +3299,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
 			    if (start_col <= actual &&
-				actual < finis_col) {
+				actual <= finis_col) {
 				int test = finis_col - start_col;
 				if (best_len < test) {
 				    best_len = test;
@@ -4800,7 +4805,7 @@ doSelectionFormat(XtermWidget xw,
 
 /* obtain data from the screen, passing the endpoints to caller's parameters */
 static char *
-getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
+getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CELL *finish)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4841,10 +4846,22 @@ getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
     screen->selectUnit = screen->selectMap[noClick];
 
     memset(start, 0, sizeof(*start));
-    start->row = screen->cur_row;
-    start->col = screen->cur_col;
-    finish->row = screen->cur_row;
-    finish->col = screen->max_col;
+    if (IsBtnEvent(event)) {
+	XButtonEvent *btn_event = (XButtonEvent *) event;
+	CELL cell;
+	screen->firstValidRow = 0;
+	screen->lastValidRow = screen->max_row;
+	PointToCELL(screen, btn_event->y, btn_event->x, &cell);
+	start->row = cell.row;
+	start->col = cell.col;
+	finish->row = cell.row;
+	finish->col = screen->max_col;
+    } else {
+	start->row = screen->cur_row;
+	start->col = screen->cur_col;
+	finish->row = screen->cur_row;
+	finish->col = screen->max_col;
+    }
 
     ComputeSelect(xw, start, finish, False);
     SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
@@ -5227,7 +5244,7 @@ HandleExecFormatted(Widget w,
 
 void
 HandleExecSelectable(Widget w,
-		     XEvent *event GCC_UNUSED,
+		     XEvent *event,
 		     String *params,	/* selections */
 		     Cardinal *num_params)
 {
@@ -5241,7 +5258,7 @@ HandleExecSelectable(Widget w,
 	    char *data;
 	    char **argv;
 
-	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    data = getDataFromScreen(xw, event, params[1], &start, &finish);
 	    if (data != 0) {
 		if ((argv = tokenizeFormat(params[0])) != 0) {
 		    char *blob = argv[0];
@@ -5293,7 +5310,7 @@ HandleInsertFormatted(Widget w,
 
 void
 HandleInsertSelectable(Widget w,
-		       XEvent *event GCC_UNUSED,
+		       XEvent *event,
 		       String *params,	/* selections */
 		       Cardinal *num_params)
 {
@@ -5307,7 +5324,7 @@ HandleInsertSelectable(Widget w,
 	    char *data;
 	    char *temp = x_strdup(params[0]);
 
-	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    data = getDataFromScreen(xw, event, params[1], &start, &finish);
 	    if (data != 0) {
 		char *exps = expandFormat(xw, temp, data, &start, &finish);
 		if (exps != 0) {
