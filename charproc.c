@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1463 2017/05/03 22:52:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1464 2017/05/07 21:59:06 Joerg.Sommer Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8655,11 +8655,11 @@ VTInitialize(Widget wrequest,
 		    screen->graphics_max_wide = (Dimension) conf_wide;
 		} else {
 		    TRACE(("ignoring invalid maxGraphicSize %s\n",
-			   screen->graphics_regis_screensize));
+			   screen->graphics_max_size));
 		}
 	    } else {
 		TRACE(("ignoring invalid maxGraphicSize %s\n",
-		       screen->graphics_regis_screensize));
+		       screen->graphics_max_size));
 	    }
 	}
 # if OPT_REGIS_GRAPHICS

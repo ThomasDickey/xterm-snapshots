@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.515 2017/05/03 01:12:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.518 2017/05/08 00:17:21 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -632,7 +632,9 @@ comparable_metrics(XFontStruct *normal, XFontStruct *bold)
 #define DATA "comparable_metrics: "
     int result = 0;
 
-    if (normal->all_chars_exist) {
+    if (normal == 0 || bold == 0) {
+	;
+    } else if (normal->all_chars_exist) {
 	if (bold->all_chars_exist) {
 	    result = 1;
 	} else {
@@ -661,17 +663,22 @@ static int
 same_font_size(XtermWidget xw, XFontStruct *nfs, XFontStruct *bfs)
 {
     TScreen *screen = TScreenOf(xw);
-    TRACE(("same_font_size height %d/%d, min %d/%d max %d/%d\n",
-	   nfs->ascent + nfs->descent,
-	   bfs->ascent + bfs->descent,
-	   nfs->min_bounds.width, bfs->min_bounds.width,
-	   nfs->max_bounds.width, bfs->max_bounds.width));
-    return screen->free_bold_box
-	|| ((nfs->ascent + nfs->descent) == (bfs->ascent + bfs->descent)
-	    && (nfs->min_bounds.width == bfs->min_bounds.width
-		|| nfs->min_bounds.width == bfs->min_bounds.width + 1)
-	    && (nfs->max_bounds.width == bfs->max_bounds.width
-		|| nfs->max_bounds.width == bfs->max_bounds.width + 1));
+    int result = 0;
+
+    if (nfs != 0 && bfs != 0) {
+	TRACE(("same_font_size height %d/%d, min %d/%d max %d/%d\n",
+	       nfs->ascent + nfs->descent,
+	       bfs->ascent + bfs->descent,
+	       nfs->min_bounds.width, bfs->min_bounds.width,
+	       nfs->max_bounds.width, bfs->max_bounds.width));
+	result = screen->free_bold_box
+	    || ((nfs->ascent + nfs->descent) == (bfs->ascent + bfs->descent)
+		&& (nfs->min_bounds.width == bfs->min_bounds.width
+		    || nfs->min_bounds.width == bfs->min_bounds.width + 1)
+		&& (nfs->max_bounds.width == bfs->max_bounds.width
+		    || nfs->max_bounds.width == bfs->max_bounds.width + 1));
+    }
+    return result;
 }
 
 /*
@@ -822,10 +829,11 @@ cannotFont(XtermWidget xw, const char *who, const char *what, const char *where)
 		return;
 	    }
 	}
-	list = TypeMalloc(CannotFont);
-	list->where = x_strdup(where);
-	list->next = ignored;
-	ignored = list;
+	if ((list = TypeMalloc(CannotFont)) != 0) {
+	    list->where = x_strdup(where);
+	    list->next = ignored;
+	    ignored = list;
+	}
 	break;
     case fwAlways:
 	break;
@@ -1246,13 +1254,13 @@ loadWBoldFP(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     Bool status = True;
     Boolean derived;
-    FontNameProperties *fp;
     char *bold = NULL;
 
     TRACE(("loadWBoldFP (%s)\n", NonNull(*nameOutP)));
 
     derived = False;
     if (!check_fontname(*nameOutP)) {
+	FontNameProperties *fp;
 	fp = get_font_name_props(screen->display, boldInfoRef->fs, &bold);
 	if (fp != 0) {
 	    *nameOutP = widebold_font_name(fp);
@@ -3879,7 +3887,6 @@ save2FontList(XtermWidget xw,
 	Boolean success = False;
 	char ***list = 0;
 	char **next = 0;
-	size_t count = 0;
 
 	switch (which) {
 	case fNorm:
@@ -3908,7 +3915,10 @@ save2FontList(XtermWidget xw,
 	    list = 0;
 	    break;
 	}
+
 	if (list != 0) {
+	    size_t count = 0;
+
 	    success = True;
 	    if (*list != 0) {
 		while ((*list)[count] != 0) {
@@ -4045,12 +4055,12 @@ initFontLists(XtermWidget xw)
 void
 copyFontList(char ***targetp, char **source)
 {
-    int pass;
-    size_t count;
-
     freeFontList(targetp);
 
     if (source != 0) {
+	int pass;
+	size_t count;
+
 	for (pass = 0; pass < 2; ++pass) {
 	    for (count = 0; source[count] != 0; ++count) {
 		if (pass)
@@ -4081,14 +4091,16 @@ merge_sublist(char ***targetp, char **source)
 void
 freeFontList(char ***targetp)
 {
-    char **target = *targetp;
-    if (target != 0) {
-	int n;
-	for (n = 0; target[n] != 0; ++n) {
-	    free(target[n]);
+    if (targetp != 0) {
+	char **target = *targetp;
+	if (target != 0) {
+	    int n;
+	    for (n = 0; target[n] != 0; ++n) {
+		free(target[n]);
+	    }
+	    free(target);
+	    *targetp = 0;
 	}
-	free(target);
-	*targetp = 0;
     }
 }
 

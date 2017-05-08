@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.168 2017/01/11 10:26:38 tom Exp $ */
+/* $XTermId: trace.c,v 1.169 2017/05/07 23:33:35 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -976,10 +976,10 @@ TraceXtermResources(void)
 void
 TraceArgv(const char *tag, char **argv)
 {
-    int n = 0;
-
     TRACE(("%s:\n", tag));
     if (argv != 0) {
+	int n = 0;
+
 	while (*argv != 0) {
 	    TRACE(("  %d:%s\n", n++, *argv++));
 	}

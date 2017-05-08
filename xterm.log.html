@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1726 2017/05/06 01:11:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.1729 2017/05/07 23:22:17 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -944,6 +944,43 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix the direction of ReGIS slanted text so that negative
+    values produce oblique output (Ross Combs).</li>
+
+    <li>update terminfo to better match corresponding entries in
+    ncurses, e.g., <code>u8</code> pattern to match the VT220,
+    VT420, etc., primary responses, as well as adding
+    <code>smxx</code> and <code>rmxx</code>.</li>
+
+    <li>fixes from J&ouml;rg Sommer:
+
+      <ul>
+        <li>corrected a trace-message regarding maximum
+        graphics-size; it used the similar ReGIS maximum size which
+        might not be configured.</li>
+
+        <li>in <code>do_select_regex</code>, clear selection if
+        there is no match. If the regex does not match anything
+        around the cursor, the selection returned must be empty,
+        otherwise the whole line is treated as a match. This way
+        the command defined by <code>exec-selectable</code> will
+        not be executed if there is no match.</li>
+
+        <li>modify limit in <code>do_select_regex</code> to include
+        the character at the cursor in the match, making it easier
+        to type something and then hit the key to trigger
+        <code>exec-selectable</code>.</li>
+
+        <li>If <code>exec-selectable</code> or
+        <code>insert-selection</code> is triggered by a mouse
+        button click, the position of the mouse pointer should be
+        used. This makes it easier to address any position on the
+        window and it makes it possible to use the mouse, e.g., for
+        applications such as mutt where you cannot move the
+        cursor.</li>
+      </ul>
+    </li>
+
     <li>modify <code>DECRC</code> to save/restore xterm's
     last-column flag used to control wrapping behavior rather than
     manipulating <code>DECAWM</code> (report/analysis by Mattias
@@ -1222,12 +1259,12 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>add <code>cppcheck</code> to lint-like programs in
     configure script and makefile.</li>
 
+    <li>fix some const correctness issues and point out an array
+    lifetime issue (Ross Combs).</li>
+
     <li>updates for SIXEL and ReGIS (Ross Combs):
 
       <ul>
-        <li>Fixes some const correctness issues and points out an
-        array lifetime issue</li>
-
         <li>Sixel drawing should still happen after an error if
         some commands have been processed</li>
 
