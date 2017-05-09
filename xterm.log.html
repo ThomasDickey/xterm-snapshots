@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1729 2017/05/07 23:22:17 tom Exp $
+  $XTermId: xterm.log.html,v 1.1730 2017/05/08 08:40:26 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -1025,12 +1025,16 @@
     <li>drop <code>Utility</code> from default value of
     <code>--with-desktop-category</code> (Debian #780176).</li>
 
-    <li>widen the pattern used for finding related ".desktop"
-    files, including &ldquo;Terminal&rdquo;</li>
+    <li>widen the configure script pattern used for finding related
+    ".desktop" files, including &ldquo;Terminal&rdquo;</li>
 
     <li>several minor improvements to font utility functions:
 
       <ul>
+        <li>provide for later modification to implement font-sets
+        by parsing the font resources as comma-separated
+        lists.</li>
+
         <li>parse <code>-fn</code> and <code>-fa</code> similarly,
         using &ldquo;x:&rdquo; and &ldquo;xft:&rdquo; prefixes for
         font name/family strings to distinguish between XLFD and

@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.155 2016/05/22 16:31:59 tom Exp $ */
+/* $XTermId: print.c,v 1.157 2017/05/09 08:14:02 tom Exp $ */
 
 /*
- * Copyright 1997-2014,2016 by Thomas E. Dickey
+ * Copyright 1997-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -492,6 +492,8 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 			DEBUG_MSG("charToPrinter: calling pclose\n");
 			pclose(SPS.fp);
+			if (input)
+			    fclose(input);
 		    }
 		    exit(0);
 		} else {

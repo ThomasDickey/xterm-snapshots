@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.704 2017/05/03 23:26:11 tom Exp $
+.\" $XTermId: xterm.man,v 1.707 2017/05/09 01:19:51 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -128,17 +128,19 @@ and the \fBTek Options\fP menu in the 4014 window.
 .SH EMULATIONS
 \fI\*N\fP provides usable emulations of related DEC terminals:
 .bP
-The VT52 emulation is complete.
+VT52 emulation is complete.
 .bP
-The VT102 emulation is fairly complete, but does not support
-autorepeat.
+VT102 emulation is fairly complete, but does not support autorepeat
+(because that would affect the keyboard used by other X clients).
+.IP
 Double-size characters are displayed properly if your font server supports
 scalable fonts.
 .bP
-The VT220 emulation does not support soft fonts, it is otherwise complete.
+VT220 emulation does not support soft fonts, it is otherwise complete.
 .bP
-The VT420 emulation (the default) supports controls for manipulating rectangles
+VT420 emulation (the default) supports controls for manipulating rectangles
 of characters as well as left/right margins.
+.IP
 \fI\*N\fP does not support some other features which
 are not suitable for emulation, e.g., two-sessions.
 .PP
@@ -280,15 +282,34 @@ See \fIXterm Control Sequences\fP for details.
 .
 .\" ***************************************************************************
 .SH OPTIONS
-The \fI\*n\fP terminal emulator
-accepts the standard X Toolkit command line options as well as
-many application-specific options.
-If the option begins with a
-.RB ` + '
+Because \fI\*n\fP uses the X Toolkit library,
+it accepts the standard X Toolkit command line options.
+\fI\*N\fP also accepts many application-specific options.
+.PP
+By convention, if an option begins with a
+.RB \*(`` + \*(''
 instead of a
-.RB ` \- ',
+.RB \*(`` \- \*('',
 the option is restored to its default value.
 .\" ***************************************************************************
+.PP
+Most of the \fI\*n\fP options are actually parsed by the X Toolkit,
+which sets resource values, and
+overrides corresponding resource-settings in your X resource files.
+\fI\*N\fP provides the X Toolkit with a table of options.
+A few of these are marked, telling the X Toolkit to ignore them
+(\fB\-help\fP,
+\fB\-version\fP,
+\fB\-class\fP,
+\fB\-e\fP, and
+\fB\-into\fP).
+After the X Toolkit has parsed the command-line parameters,
+it removes those which it handles,
+leaving the specially-marked parameters for \fI\*n\fP to handle.
+.\" ***************************************************************************
+.PP
+These options do not set a resource value,
+and are handled specially:
 .TP 8
 .B \-version
 This causes \fI\*n\fP to print a version number to the standard output,
@@ -312,20 +333,6 @@ when an unknown option is used, e.g.,
 If the logic for a particular option such as logging is not compiled
 into \fI\*n\fP, the help text for that option also is not displayed
 by the \fB\-help\fP option.
-.\" ***************************************************************************
-.PP
-Most of the \fI\*n\fP options are actually parsed by the X Toolkit,
-which sets resource values.
-\fI\*N\fP provides the X Toolkit with a table of options.
-A few of these are marked, telling the X Toolkit to ignore them
-(\fB\-help\fP,
-\fB\-version\fP,
-\fB\-class\fP,
-\fB\-e\fP, and
-\fB\-into\fP).
-After the X Toolkit has parsed the command-line parameters,
-it removes those which it handles,
-leaving the specially-marked parameters for \fI\*n\fP to handle.
 .PP
 The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fI\*n\fP
 cannot open the display, and are useful for testing and configuration scripts.
@@ -612,6 +619,9 @@ This corresponds to the \fBfaceName\fP resource.
 When a CJK
 double-width font is specified, you also need to turn
 on the \fBcjkWidth\fP resource.
+.IP
+If you specify both \fB\-fa\fP and the X Toolkit option \fB\-fn\fP,
+the \fB\-fa\fP setting overrides the latter.
 .IP
 See also the \fBrenderFont\fP resource,
 which combines with this to determine whether FreeType fonts are
@@ -1440,6 +1450,17 @@ name.
 This option specifies a resource string to be used.
 This is especially
 useful for setting resources that do not have separate command line options.
+.PP
+X Toolkit accepts alternate names for a few of these options, e.g.,
+.bP
+\*(``\fB\-background\fP\*('' for \*(``\fB\-bg\fP\*(''
+.bP
+\*(``\fB\-font\fP\*('' for \*(``\fB\-fn\fP\*(''
+.bP
+\*(``\fB\-foreground\fP\*('' for \*(``\fB\-fg\fP\*(''
+.PP
+Abbreviated options also are supported, e.g.,
+\*(``\fB\-v\fP\*('' for \*(``\fB\-verbose\fP.\*(''
 .
 .
 .SH RESOURCES
@@ -3015,9 +3036,19 @@ Specify the pattern for scalable fonts selected from the FreeType
 library if support for that library was compiled into \fI\*n\fR.
 There is no default value.
 .IP
-If not specified,
-or if there is no match for both normal and bold fonts,
-\fI\*n\fR uses the bitmap \fBfont\fP and related resources.
+One or more fonts can be specified, separated by commas.
+If prefixed with \*(``x:\*('' or \*(``x11:\*('' the specification
+applies to the XLFD \fBfont\fP resource.
+A \*(``xft:\*('' prefix is accepted but unnecessary since
+a missing prefix for \fBfaceName\fP means that it will be used for TrueType.
+For example,
+.NS
+XTerm*faceName: x:fixed,xft:Bitstream Vera Sans Mono
+.NE
+.IP
+If no \fBfaceName\fP resource is specified,
+or if there is no match for both TrueType normal and bold fonts,
+\fI\*n\fR uses the XLFD (bitmap) \fBfont\fP and related resources.
 .IP
 It is possible to select suitable bitmap fonts using a script such as this:
 .NS
@@ -3041,6 +3072,9 @@ which may be used for the \fBfaceName\fP resource value.
 Specify a double-width scalable font for cases where an application requires
 this, e.g., in CJK applications.
 There is no default value.
+.IP
+Like the \fBfaceName\fP resource, this allows one or more comma-separated
+font specifications to be applied to the \fIwide\fP TrueType or XLFD fonts.
 .IP
 If the application uses double-wide characters and this resource is not given,
 \fI\*n\fP will use a scaled version of the font given by \fBfaceName\fP.

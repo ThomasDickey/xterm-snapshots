@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.700 2017/01/02 19:21:15 tom Exp $ */
+/* $XTermId: util.c,v 1.701 2017/05/09 22:19:03 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3338,7 +3338,7 @@ drawXtermText(XtermWidget xw,
     int font_width = ((draw_flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
     Bool did_ul = False;
     XTermFonts *curFont;
-#if OPT_WIDE_ATTRS || OPT_WIDE_CHARS
+#if OPT_WIDE_ATTRS
     int need_clipping = 0;
 #endif
 
