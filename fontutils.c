@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.518 2017/05/08 00:17:21 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.522 2017/05/09 21:09:34 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -121,7 +121,7 @@ typedef struct {
 } FontNameProperties;
 
 static Boolean merge_sublist(char ***, char **);
-static void save2FontList(XtermWidget, const char *, VTFontList *,
+static void save2FontList(XtermWidget, const char *, XtermFontNames *,
 			  VTFontEnum, const char *, Boolean);
 
 #if OPT_RENDERFONT
@@ -1051,7 +1051,11 @@ void
 xtermUpdateFontGCs(XtermWidget xw, Bool italic)
 {
     TScreen *screen = TScreenOf(xw);
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     MyGetFont myfunc = italic ? getItalicFont : getNormalFont;
+#else
+    MyGetFont myfunc = getNormalFont;
+#endif
     VTwin *win = WhichVWin(screen);
     Pixel new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
     Pixel new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
@@ -1678,10 +1682,10 @@ xtermLoadItalics(XtermWidget xw)
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " found \"%s\"\n", NonNull(dst.name))); \
 	}
 #define MERGE_SUBLIST(dst,src,name) \
-	if (merge_sublist(&(dst.x11_fontnames.name), src.x11_fontnames.name)) { \
-	    TRACE(("MERGE_SUBLIST " #dst "." #name " merge \"%s\"\n", src.x11_fontnames.name[0])); \
+	if (merge_sublist(&(dst.fonts.x11.name), src.fonts.x11.name)) { \
+	    TRACE(("MERGE_SUBLIST " #dst "." #name " merge \"%s\"\n", src.fonts.x11.name[0])); \
 	} else { \
-	    TRACE(("MERGE_SUBLIST " #dst "." #name " found \"%s\"\n", dst.x11_fontnames.name[0])); \
+	    TRACE(("MERGE_SUBLIST " #dst "." #name " found \"%s\"\n", dst.fonts.x11.name[0])); \
 	}
 
 #define INFER_SUBFONT(dst,src,name) \
@@ -1717,7 +1721,7 @@ xtermLoadItalics(XtermWidget xw)
 
 #define COPY_X11_FONTLISTS(target, source) \
 	TRACE(("COPY_X11_FONTLISTS " #source " to " #target "\n")); \
-	xtermCopyFontLists(xw, &target.x11_fontnames, &source.x11_fontnames)
+	xtermCopyFontLists(xw, &target.fonts.x11, &source.fonts.x11)
 
 static void
 xtermCopyVTFontNames(VTFontNames * target, VTFontNames * source)
@@ -1895,7 +1899,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     */
 #define ALLOC_SUBLIST(which,field) \
 	    save2FontList(xw, "cached", \
-			  &(subresourceRec.x11_fontnames), \
+			  &(subresourceRec.fonts), \
 			  which, \
 			  subresourceRec.default_font.field, False)
 
@@ -2424,7 +2428,7 @@ getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 {
 #if OPT_RENDERWIDE
     String result = (wideName
-		     ? FirstItemOf(xw->work.xft_fontnames.list_w)
+		     ? FirstItemOf(xw->work.fonts.xft.list_w)
 		     : CurrentXftFont(xw));
 #else
     String result = CurrentXftFont(xw);
@@ -2580,7 +2584,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	    if (norm != 0 && screen->wide_chars) {
 		int char_width = norm->max_advance_width * 2;
 #ifdef FC_ASPECT
-		double aspect = ((FirstItemOf(xw->work.xft_fontnames.list_w)
+		double aspect = ((FirstItemOf(xw->work.fonts.xft.list_w)
 				  || screen->renderFontNorm[fontnum].map.mixed)
 				 ? 1.0
 				 : 2.0);
@@ -3821,7 +3825,7 @@ trimSizeFromFace(char *face_name, float *face_size)
 static void
 save2FontList(XtermWidget xw,
 	      const char *name,
-	      VTFontList * target,
+	      XtermFontNames * fontnames,
 	      VTFontEnum which,
 	      const char *source,
 	      Boolean ttf)
@@ -3831,7 +3835,6 @@ save2FontList(XtermWidget xw,
     Boolean marked = False;
     Boolean use_ttf = ttf;
 
-    (void) use_ttf;
     if (source == 0)
 	source = "";
     while (isspace(CharOf(*source)))
@@ -3885,9 +3888,18 @@ save2FontList(XtermWidget xw,
     value = x_strtrim(source + plen);
     if (value != 0) {
 	Boolean success = False;
+#if OPT_RENDERFONT
+	VTFontList *target = (use_ttf
+			      ? &(fontnames->xft)
+			      : &(fontnames->x11));
+#else
+	VTFontList *target = &(fontnames->x11);
+#endif
 	char ***list = 0;
 	char **next = 0;
+	size_t count = 0;
 
+	(void) use_ttf;
 	switch (which) {
 	case fNorm:
 	    list = &(target->list_n);
@@ -3917,8 +3929,6 @@ save2FontList(XtermWidget xw,
 	}
 
 	if (list != 0) {
-	    size_t count = 0;
-
 	    success = True;
 	    if (*list != 0) {
 		while ((*list)[count] != 0) {
@@ -3962,8 +3972,19 @@ save2FontList(XtermWidget xw,
 		}
 	    }
 	}
-	if (!success)
+	if (success) {
+	    size_t limit = use_ttf ? MAX_XFT_FONTS : MAX_XLFD_FONTS;
+	    if (count > limit && !IsEmpty(value)) {
+		fprintf(stderr, "%s: too many fonts for %s, ignoring %s\n",
+			ProgramName,
+			whichFontEnum(which),
+			value);
+		free((*list)[limit]);
+		(*list)[limit] = 0;
+	    }
+	} else {
 	    free(value);
+	}
     }
 }
 
@@ -3976,7 +3997,7 @@ save2FontList(XtermWidget xw,
 void
 allocFontList(XtermWidget xw,
 	      const char *name,
-	      VTFontList * target,
+	      XtermFontNames * target,
 	      VTFontEnum which,
 	      const char *source,
 	      Boolean ttf)
@@ -4027,7 +4048,7 @@ allocFontList(XtermWidget xw,
 static void
 initFontList(XtermWidget xw,
 	     const char *name,
-	     VTFontList * target,
+	     XtermFontNames * target,
 	     Boolean ttf)
 {
     int which;
@@ -4042,13 +4063,13 @@ void
 initFontLists(XtermWidget xw)
 {
     TRACE(("initFontLists\n"));
-    initFontList(xw, "x11 font", &(xw->work.x11_fontnames), False);
+    initFontList(xw, "x11 font", &(xw->work.fonts), False);
 #if OPT_RENDERFONT
-    initFontList(xw, "xft font", &(xw->work.xft_fontnames), True);
+    initFontList(xw, "xft font", &(xw->work.fonts), True);
 #endif
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
     initFontList(xw, "cached font",
-		 &(xw->screen.cacheVTFonts.x11_fontnames), False);
+		 &(xw->screen.cacheVTFonts.fonts), False);
 #endif
 }
 
@@ -4261,14 +4282,14 @@ const char *
 whichFontList(XtermWidget xw, VTFontList * value)
 {
     const char *result = "?";
-    if (value == &(xw->work.x11_fontnames))
+    if (value == &(xw->work.fonts.x11))
 	result = "x11_fontnames";
 #if OPT_RENDERFONT
-    else if (value == &(xw->work.xft_fontnames))
+    else if (value == &(xw->work.fonts.xft))
 	result = "xft_fontnames";
 #endif
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
-    else if (value == &(xw->screen.cacheVTFonts.x11_fontnames))
+    else if (value == &(xw->screen.cacheVTFonts.fonts.x11))
 	result = "cached_fontnames";
 #endif
     return result;
@@ -4298,12 +4319,12 @@ whichFontList2(XtermWidget xw, char **value)
 {
     const char *result = 0;
 #define DATA(name) (result = whichFontList2s(&(xw->name), value))
-    if (DATA(work.x11_fontnames) == 0) {
+    if (DATA(work.fonts.x11) == 0) {
 #if OPT_RENDERFONT
-	if (DATA(work.xft_fontnames) == 0)
+	if (DATA(work.fonts.xft) == 0)
 #endif
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
-	    if (DATA(screen.cacheVTFonts.x11_fontnames) == 0)
+	    if (DATA(screen.cacheVTFonts.fonts.x11) == 0)
 #endif
 		result = "?";
     }

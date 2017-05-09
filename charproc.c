@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1464 2017/05/07 21:59:06 Joerg.Sommer Exp $ */
+/* $XTermId: charproc.c,v 1.1467 2017/05/09 22:18:12 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8140,7 +8140,7 @@ VTInitialize(Widget wrequest,
     }
     for (i = 0; i < fMAX; i++) {
 	screen->fnts[i].warn = fwResource;
-#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+#if OPT_WIDE_ATTRS
 	screen->ifnts[i].warn = fwResource;
 #endif
     }
@@ -8167,7 +8167,7 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.default_xft.field);\
     allocFontList(wnew,\
 		  name,\
-		  &(wnew->work.xft_fontnames),\
+		  &(wnew->work.fonts),\
 		  which,\
 		  wnew->misc.default_xft.field,\
 		  True)
@@ -8189,7 +8189,7 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.default_font.field);\
     allocFontList(wnew,\
 		  name,\
-		  &(wnew->work.x11_fontnames),\
+		  &(wnew->work.fonts),\
 		  which,\
 		  wnew->misc.default_font.field,\
 		  False)
@@ -9000,9 +9000,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
 #endif
 
-    freeFontLists(&(xw->work.x11_fontnames));
+    freeFontLists(&(xw->work.fonts.x11));
 #if OPT_RENDERFONT
-    freeFontLists(&(xw->work.xft_fontnames));
+    freeFontLists(&(xw->work.fonts.xft));
 #endif
 
     xtermFontName(NULL);
@@ -9013,7 +9013,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_w);
     TRACE_FREE_LEAK(screen->cacheVTFonts.default_font.f_wb);
 #endif
-    freeFontLists(&(screen->cacheVTFonts.x11_fontnames));
+    freeFontLists(&(screen->cacheVTFonts.fonts.x11));
     for (n = 0; n < NMENUFONTS; ++n) {
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=

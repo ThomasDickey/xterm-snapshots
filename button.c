@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.515 2017/05/07 23:54:56 tom Exp $ */
+/* $XTermId: button.c,v 1.516 2017/05/09 08:09:32 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -5189,6 +5189,7 @@ executeCommand(pid_t pid, char **argv)
 	    execvp(argv[0], argv);
 	    exit(EXIT_FAILURE);
 	}
+	free(child_cwd);
     }
 }
 

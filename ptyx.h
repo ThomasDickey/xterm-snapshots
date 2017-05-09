@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.847 2017/05/06 00:57:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.850 2017/05/09 21:07:50 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -397,7 +397,9 @@ typedef struct {
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 
-#define NMENUFONTS 9			/* font entries in fontMenu */
+#define MAX_XLFD_FONTS	1
+#define MAX_XFT_FONTS	1
+#define NMENUFONTS	9		/* font entries in fontMenu */
 
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	30			/* Max. parameters		*/
@@ -1757,12 +1759,12 @@ typedef enum {
 
 	/* index into vt_shell[] or tek_shell[] */
 typedef enum {
-	noMenu = -1,
-	mainMenu,
-	vtMenu,
-	fontMenu,
+	noMenu = -1
+	,mainMenu
+	,vtMenu
+	,fontMenu
 #if OPT_TEK4014
-	tekMenu
+	,tekMenu
 #endif
 } MenuIndex;
 
@@ -1917,9 +1919,16 @@ typedef struct {
 } VTFontList;
 
 typedef struct {
+    VTFontList x11;
+#if OPT_RENDERFONT
+    VTFontList xft;
+#endif
+} XtermFontNames;
+
+typedef struct {
     VTFontNames default_font;
     String menu_font_names[NMENUFONTS][fMAX];
-    VTFontList x11_fontnames;
+    XtermFontNames fonts;
 } SubResourceRec;
 
 #if OPT_INPUT_METHOD
@@ -2779,9 +2788,8 @@ typedef struct _Work {
     unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
     unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
 #endif
-    VTFontList x11_fontnames;
+    XtermFontNames fonts;
 #if OPT_RENDERFONT
-    VTFontList xft_fontnames;
     Boolean render_font;
 #endif
 #if OPT_DABBREV

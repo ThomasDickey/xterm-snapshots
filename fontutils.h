@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.114 2017/01/14 00:01:10 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.116 2017/05/08 22:55:13 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -50,7 +50,7 @@ extern int xtermGetFont (const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
-extern void allocFontList (XtermWidget /* xw */, const char * /* name */, VTFontList * /* target */, VTFontEnum /* which */, const char * /* source */, Boolean /* ttf */);
+extern void allocFontList (XtermWidget /* xw */, const char * /* name */, XtermFontNames * /* target */, VTFontEnum /* which */, const char * /* source */, Boolean /* ttf */);
 extern void copyFontList (char *** /* targetp */, char ** /* source */);
 extern void initFontLists (XtermWidget /* xw */);
 extern void freeFontList (char *** /* targetp */);
@@ -68,11 +68,11 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 #define getIconicFont(screen) (&((screen)->fnt_icon))
 
 #define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
-#define CurrentXftFont(xw)  ((xw)->work.xft_fontnames.list_n[0])
-#define DefaultFontN(xw)    ((xw)->work.x11_fontnames.list_n[0])
-#define DefaultFontB(xw)    ((xw)->work.x11_fontnames.list_b[0])
-#define DefaultFontW(xw)    ((xw)->work.x11_fontnames.list_w[0])
-#define DefaultFontWB(xw)   ((xw)->work.x11_fontnames.list_wb[0])
+#define CurrentXftFont(xw)  ((xw)->work.fonts.xft.list_n[0])
+#define DefaultFontN(xw)    ((xw)->work.fonts.x11.list_n[0])
+#define DefaultFontB(xw)    ((xw)->work.fonts.x11.list_b[0])
+#define DefaultFontW(xw)    ((xw)->work.fonts.x11.list_w[0])
+#define DefaultFontWB(xw)   ((xw)->work.fonts.x11.list_wb[0])
 
 #if OPT_DEC_CHRSET
 extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
