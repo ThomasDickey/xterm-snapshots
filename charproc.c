@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1467 2017/05/09 22:18:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1468 2017/05/13 00:44:42 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -10213,7 +10213,8 @@ ShowCursor(void)
 		}
 	    }
 	}
-	if (T_COLOR(screen, TEXT_CURSOR) == (reversed
+	if (T_COLOR(screen, TEXT_CURSOR) == bg_pix ||
+	    T_COLOR(screen, TEXT_CURSOR) == (reversed
 					     ? xw->dft_background
 					     : xw->dft_foreground)) {
 	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
@@ -10292,7 +10293,8 @@ ShowCursor(void)
 	     * Set up a new request.
 	     */
 	    if (filled) {
-		if (T_COLOR(screen, TEXT_CURSOR) == (reversed
+		if (T_COLOR(screen, TEXT_CURSOR) == bg_pix ||
+		    T_COLOR(screen, TEXT_CURSOR) == (reversed
 						     ? xw->dft_background
 						     : xw->dft_foreground)) {
 		    setCgsBack(xw, currentWin, currentCgs, fg_pix);
