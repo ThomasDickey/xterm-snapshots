@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.701 2017/05/09 22:19:03 tom Exp $ */
+/* $XTermId: util.c,v 1.706 2017/05/16 09:05:18 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4251,11 +4251,12 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
     Pixel fg_pix = getXtermForeground(xw, attr_flags, (int) my_fg);
     Pixel bg_pix = getXtermBackground(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
+    Boolean reverse2 = ((attr_flags & INVERSE) && hilite);
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
     Boolean always = screen->hilite_color;
-    Boolean use_selbg = (Boolean) (always ||
+    Boolean use_selbg = (Boolean) (always &&
 				   isNotForeground(xw, fg_pix, bg_pix, selbg_pix));
     Boolean use_selfg = (Boolean) (always &&
 				   isNotBackground(xw, fg_pix, bg_pix, selfg_pix));
@@ -4299,14 +4300,60 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
 	    }
 	}
 #endif
+    } else if ((attr_flags & INVERSE) && hilite) {
+#if OPT_HIGHLIGHT_COLOR
+	if (!screen->hilite_color) {
+	    if (selbg_pix != T_COLOR(screen, TEXT_FG)
+		&& selbg_pix != fg_pix
+		&& selbg_pix != bg_pix
+		&& selbg_pix != xw->dft_foreground) {
+		bg_pix = fg_pix;
+		fg_pix = selbg_pix;
+	    }
+	}
+#endif
+	/* double-reverse... EXCHANGE(fg_pix, bg_pix, xx_pix); */
+#if OPT_HIGHLIGHT_COLOR
+	if (screen->hilite_color) {
+	    if (screen->hilite_reverse) {
+		if (use_selbg) {
+		    if (use_selfg ^ reverse2) {
+			bg_pix = fg_pix;
+		    } else {
+			fg_pix = bg_pix;
+		    }
+		}
+		if (use_selbg) {
+		    if (reverse2)
+			fg_pix = selbg_pix;
+		    else
+			bg_pix = selbg_pix;
+		}
+		if (use_selfg) {
+		    if (reverse2)
+			bg_pix = selfg_pix;
+		    else
+			fg_pix = selfg_pix;
+		}
+	    }
+	}
+#endif
     }
 #if OPT_HIGHLIGHT_COLOR
     if (!screen->hilite_color || !screen->hilite_reverse) {
 	if (hilite && !screen->hilite_reverse) {
-	    if (use_selbg)
-		bg_pix = selbg_pix;
-	    if (use_selfg)
-		fg_pix = selfg_pix;
+	    if (use_selbg) {
+		if (reverse2)
+		    fg_pix = selbg_pix;
+		else
+		    bg_pix = selbg_pix;
+	    }
+	    if (use_selfg) {
+		if (reverse2)
+		    bg_pix = selfg_pix;
+		else
+		    fg_pix = selfg_pix;
+	    }
 	}
     }
 #endif
