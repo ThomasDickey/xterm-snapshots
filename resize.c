@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.136 2017/05/02 22:41:48 tom Exp $ */
+/* $XTermId: resize.c,v 1.138 2017/05/18 20:09:01 tom Exp $ */
 
 /*
  * Copyright 2003-2015,2017 by Thomas E. Dickey
@@ -510,20 +510,17 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr, "%s: Can't get window size\r\n", myname);
 	    onintr(0);
 	}
-	TTYSIZE_ROWS(ts) = (ttySize_t) rows;
-	TTYSIZE_COLS(ts) = (ttySize_t) cols;
+	setup_winsize(ts, rows, cols, 0, 0);
 	SET_TTYSIZE(tty, ts);
     } else if (ioctl(tty, TIOCGWINSZ, &ts) != -1) {
 	/* we don't have any way of directly finding out
 	   the current height & width of the window in pixels.  We try
 	   our best by computing the font height and width from the "old"
 	   window-size values, and multiplying by these ratios... */
-	if (TTYSIZE_COLS(ts) != 0)
-	    ts.ws_xpixel = (ttySize_t) (cols * (ts.ws_xpixel / TTYSIZE_COLS(ts)));
-	if (TTYSIZE_ROWS(ts) != 0)
-	    ts.ws_ypixel = (ttySize_t) (rows * (ts.ws_ypixel / TTYSIZE_ROWS(ts)));
-	TTYSIZE_ROWS(ts) = (ttySize_t) rows;
-	TTYSIZE_COLS(ts) = (ttySize_t) cols;
+#define scaled(old,new,len) (old)?((new)*(len)/(old)):(len)
+	setup_winsize(ts, rows, cols,
+		      scaled(TTYSIZE_ROWS(ts), rows, ts.ws_ypixel),
+		      scaled(TTYSIZE_COLS(ts), cols, ts.ws_xpixel));
 	SET_TTYSIZE(tty, ts);
     }
 #endif /* USE_STRUCT_WINSIZE */

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.514 2017/01/02 20:33:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.516 2017/05/17 00:30:05 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -1775,14 +1775,8 @@ ScrnRefresh(XtermWidget xw,
 
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
-	TTYSIZE_STRUCT ts;
-
 	first_time = 0;
-	TTYSIZE_ROWS(ts) = nrows;
-	TTYSIZE_COLS(ts) = ncols;
-	ts.ws_xpixel = xw->core.width;
-	ts.ws_ypixel = xw->core.height;
-	SET_TTYSIZE(screen->respond, ts);
+	update_winsize(screen->respond, nrows, ncols, xw->core.height, xw->core.width);
     }
 #endif
     recurse--;
@@ -1866,12 +1860,9 @@ ScreenResize(XtermWidget xw,
 	     unsigned *flags)
 {
     TScreen *screen = TScreenOf(xw);
-    int code, rows, cols;
+    int rows, cols;
     const int border = 2 * screen->border;
     int move_down_by = 0;
-#ifdef TTYSIZE_STRUCT
-    TTYSIZE_STRUCT ts;
-#endif
 
     TRACE(("ScreenResize %dx%d border %d font %dx%d\n",
 	   height, width, border,
@@ -2240,16 +2231,7 @@ ScreenResize(XtermWidget xw,
 #endif /* NO_ACTIVE_ICON */
 
 #ifdef TTYSIZE_STRUCT
-    /* Set tty's idea of window size */
-    TTYSIZE_ROWS(ts) = (ttySize_t) rows;
-    TTYSIZE_COLS(ts) = (ttySize_t) cols;
-#ifdef USE_STRUCT_WINSIZE
-    ts.ws_xpixel = (ttySize_t) width;
-    ts.ws_ypixel = (ttySize_t) height;
-#endif
-    code = SET_TTYSIZE(screen->respond, ts);
-    TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
-    (void) code;
+    update_winsize(screen->respond, rows, cols, height, width);
 
 #if defined(SIGWINCH) && defined(TIOCGPGRP)
     if (screen->pid > 1) {
