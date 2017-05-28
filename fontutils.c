@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.522 2017/05/09 21:09:34 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.523 2017/05/27 12:16:13 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1572,6 +1572,7 @@ xtermLoadFont(XtermWidget xw,
     free(fnts[fWide].fn);
     free(fnts[fWBold].fn);
 #endif
+    xtermSetWinSize(xw);
     return 1;
 
   bad:

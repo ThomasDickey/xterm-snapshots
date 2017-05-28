@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1468 2017/05/13 00:44:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1469 2017/05/27 12:08:55 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -9196,7 +9196,7 @@ VTRealize(Widget w,
     Atom pid_atom;
     int i;
 
-    TRACE(("VTRealize\n"));
+    TRACE(("VTRealize {{\n"));
 
 #if OPT_TOOLBAR
     /*
@@ -9594,7 +9594,8 @@ VTRealize(Widget w,
 	ScrollBarOn(xw, False);
     }
 
-    return;
+    xtermSetWinSize(xw);
+    TRACE(("}} VTRealize\n"));
 }
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD

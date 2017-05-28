@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.747 2017/05/08 00:18:36 tom Exp $ */
+/* $XTermId: misc.c,v 1.755 2017/05/27 12:03:11 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -55,6 +55,7 @@
 #include <version.h>
 #include <main.h>
 #include <xterm.h>
+#include <xterm_io.h>
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -5681,6 +5682,8 @@ end_tek_mode(void)
 
     if (TEK4014_ACTIVE(xw)) {
 	FlushLog(xw);
+	TEK4014_ACTIVE(xw) = False;
+	xtermSetWinSize(xw);
 	longjmp(Tekend, 1);
     }
     return;
@@ -5694,6 +5697,7 @@ end_vt_mode(void)
     if (!TEK4014_ACTIVE(xw)) {
 	FlushLog(xw);
 	TEK4014_ACTIVE(xw) = True;
+	TekSetWinSize(tekWidget);
 	longjmp(VTend, 1);
     }
     return;
@@ -6178,4 +6182,46 @@ void
 free_string(String value)
 {
     free((void *) value);
+}
+
+/* Set tty's idea of window size, using the given file descriptor 'fd'. */
+void
+update_winsize(int fd, int rows, int cols, int height, int width)
+{
+#ifdef TTYSIZE_STRUCT
+    TTYSIZE_STRUCT ts;
+    int code;
+
+    setup_winsize(ts, rows, cols, height, width);
+    TRACE_RC(code, SET_TTYSIZE(fd, ts));
+    trace_winsize(ts, "from SET_TTYSIZE");
+    (void) code;
+#endif
+
+    (void) rows;
+    (void) cols;
+    (void) height;
+    (void) width;
+}
+
+/*
+ * Update stty settings to match the values returned by dtterm window
+ * manipulation 18 and 19.
+ */
+void
+xtermSetWinSize(XtermWidget xw)
+{
+#if OPT_TEK4014
+    if (!TEK4014_ACTIVE(xw))
+#endif
+	if (XtIsRealized((Widget) xw)) {
+	    TScreen *screen = TScreenOf(xw);
+
+	    TRACE(("xtermSetWinSize\n"));
+	    update_winsize(screen->respond,
+			   MaxRows(screen),
+			   MaxCols(screen),
+			   Height(screen),
+			   Width(screen));
+	}
 }

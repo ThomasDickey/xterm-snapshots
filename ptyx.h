@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.850 2017/05/09 21:07:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.852 2017/05/27 12:51:22 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2869,6 +2869,7 @@ typedef struct _XtermWidgetRec {
 #if OPT_TEK4014
 typedef struct _TekWidgetRec {
     CorePart	core;
+    XtermWidget vt;		/* main widget has border, etc. */
     TekPart	tek;		/* contains resources */
     TekScreen	screen;		/* contains working data (no resources) */
     Bool	init_menu;
@@ -3096,6 +3097,10 @@ typedef struct _TekWidgetRec {
 #define TFullWidth(screen)	WhichTWin(screen)->fullwidth
 #define TFullHeight(screen)	WhichTWin(screen)->fullheight
 #define TekScale(screen)	WhichTWin(screen)->tekscale
+
+/* use these before tek4014 is realized, good enough for default "9x15" font */
+#define TDefaultRows		37
+#define TDefaultCols		75
 
 #define BorderWidth(w)		((w)->core.border_width)
 #define BorderPixel(w)		((w)->core.border_pixel)

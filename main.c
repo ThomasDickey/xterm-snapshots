@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.787 2017/05/04 00:53:25 tom Exp $ */
+/* $XTermId: main.c,v 1.796 2017/05/28 18:55:24 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -3203,16 +3203,16 @@ void
 first_map_occurred(void)
 {
     if (resource.wait_for_map) {
-	handshake_t handshake;
-	TScreen *screen = TScreenOf(term);
-
-	memset(&handshake, 0, sizeof(handshake));
-	handshake.status = PTY_EXEC;
-	handshake.rows = screen->max_row;
-	handshake.cols = screen->max_col;
-
 	if (pc_pipe[1] >= 0) {
-	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	    handshake_t handshake;
+	    TScreen *screen = TScreenOf(term);
+
+	    memset(&handshake, 0, sizeof(handshake));
+	    handshake.status = PTY_EXEC;
+	    handshake.rows = screen->max_row;
+	    handshake.cols = screen->max_col;
+
+	    TRACE(("first_map_occurred: %dx%d\n", MaxRows(screen), MaxCols(screen)));
 	    TRACE_HANDSHAKE("writing", &handshake);
 	    IGNORE_RC(write(pc_pipe[1],
 			    (const char *) &handshake,
@@ -3680,7 +3680,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 	    SysError(ERROR_PTYS);
 	}
-	TRACE_TTYSIZE(screen->respond, "after get_pty");
+	TRACE_GET_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
 #ifdef TERMIO_STRUCT
@@ -3811,21 +3811,14 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     /* tell tty how big window is */
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(xw)) {
-	TTYSIZE_ROWS(ts) = 38;
-	TTYSIZE_COLS(ts) = 81;
-#if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
-	ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
-#endif
+	setup_winsize(ts, TDefaultRows, TDefaultCols,
+		      TFullHeight(TekScreenOf(tekWidget)),
+		      TFullWidth(TekScreenOf(tekWidget)));
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-	TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-	ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+	setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+		      FullHeight(screen), FullWidth(screen));
     }
     TRACE_RC(i, SET_TTYSIZE(screen->respond, ts));
     TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
@@ -3843,7 +3836,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif
 #if !defined(USE_USG_PTYS) && defined(HAVE_POSIX_OPENPT)
     unlockpt(screen->respond);
-    TRACE_TTYSIZE(screen->respond, "after unlockpt");
+    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
 #endif
 #endif /* !USE_OPENPTY */
 
@@ -3893,7 +3886,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		setpgrp();
 #endif
 	    unlockpt(screen->respond);
-	    TRACE_TTYSIZE(screen->respond, "after unlockpt");
+	    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
 	    if ((pty_name = ptsname(screen->respond)) == 0) {
 		SysError(ERROR_PTSNAME);
 	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
@@ -3927,22 +3920,16 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    /* tell tty how big window is */
 #if OPT_TEK4014
 	    if (TEK4014_ACTIVE(xw)) {
-		TTYSIZE_ROWS(ts) = 24;
-		TTYSIZE_COLS(ts) = 80;
-#ifdef USE_STRUCT_WINSIZE
-		ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
-		ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
-#endif
+		setup_winsize(ts, TDefaultRows, TDefaultCols,
+			      TFullHeight(TekScreenOf(tekWidget)),
+			      TFullWidth(TekScreenOf(tekWidget)));
 	    } else
 #endif /* OPT_TEK4014 */
 	    {
-		TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-		TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#ifdef USE_STRUCT_WINSIZE
-		ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-		ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+		setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+			      FullHeight(screen), FullWidth(screen));
 	    }
+	    trace_winsize(ts, "initial tty size");
 #endif /* TTYSIZE_STRUCT */
 
 #endif /* USE_USG_PTYS */
@@ -4018,9 +4005,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    IGNORE_RC(revoke(ttydev));
 #endif
 		    if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
-			TRACE_TTYSIZE(ttyfd, "after open");
+			TRACE_GET_TTYSIZE(ttyfd, "after open");
 			TRACE_RC(i, SET_TTYSIZE(ttyfd, ts));
-			TRACE_TTYSIZE(ttyfd, "after fixup");
+			TRACE_GET_TTYSIZE(ttyfd, "after SET_TTYSIZE fixup");
 #if defined(CRAY) && defined(TCSETCTTY)
 			/* make /dev/tty work */
 			ioctl(ttyfd, TCSETCTTY, 0);
@@ -4708,18 +4695,15 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			exit(ERROR_PTY_EXEC);
 		    }
 		    if (handshake.rows > 0 && handshake.cols > 0) {
-			TRACE(("handshake ttysize: %dx%d\n",
+			TRACE(("handshake read ttysize: %dx%d\n",
 			       handshake.rows, handshake.cols));
 			set_max_row(screen, handshake.rows);
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
 			got_handshake_size = True;
-			TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-			TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
-#if defined(USE_STRUCT_WINSIZE)
-			ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-			ts.ws_ypixel = (ttySize_t) FullHeight(screen);
-#endif
+			setup_winsize(ts, MaxRows(screen), MaxCols(screen),
+				      FullHeight(screen), FullWidth(screen));
+			trace_winsize(ts, "got handshake");
 #endif /* TTYSIZE_STRUCT */
 		    }
 		}
@@ -4786,14 +4770,17 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	     * If we expect the waitForMap logic to set the handshake-size,
 	     * use that to prevent races.
 	     */
+	    TRACE(("should we reset screensize after pty-handshake?\n"));
+	    TRACE(("... ptyHandshake      :%d\n", resource.ptyHandshake));
+	    TRACE(("... ptySttySize       :%d\n", resource.ptySttySize));
+	    TRACE(("... got_handshake_size:%d\n", got_handshake_size));
+	    TRACE(("... wait_for_map0     :%d\n", resource.wait_for_map0));
 	    if (resource.ptyHandshake
 		&& resource.ptySttySize
 		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
 		TRACE_RC(i, SET_TTYSIZE(0, ts));
-		TRACE(("ptyHandshake SET_TTYSIZE %dx%d return %d\n",
-		       TTYSIZE_ROWS(ts),
-		       TTYSIZE_COLS(ts), i));
+		trace_winsize(ts, "ptyHandshake SET_TTYSIZE");
 #endif /* TTYSIZE_STRUCT */
 	    }
 #endif /* OPT_PTY_HANDSHAKE */

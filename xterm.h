@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.768 2017/05/03 23:39:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.773 2017/05/27 11:51:50 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -784,7 +784,6 @@ struct XTERM_RESOURCE;
 extern TekWidget getTekWidget(Widget /* w */);
 extern int TekGetFontSize (const char * /* param */);
 extern int TekInit (void);
-extern int TekPtyData(void);
 extern void ChangeTekColors (TekWidget /* tw */, TScreen * /* screen */, ScrnColors * /* pNew */);
 extern void HandleGINInput             PROTO_XT_ACTIONS_ARGS;
 extern void TCursorToggle (TekWidget /* tw */, int /* toggle */);
@@ -797,6 +796,7 @@ extern void TekRepaint (TekWidget /* xw */);
 extern void TekReverseVideo (TekWidget /* tw */);
 extern void TekRun (void);
 extern void TekSetFontSize (TekWidget /* tw */, Bool /* fromMenu */, int  /* newitem */);
+extern void TekSetWinSize (TekWidget /* tw */);
 extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 #endif
 
@@ -1010,7 +1010,7 @@ extern void first_map_occurred (void);
 #define first_map_occurred() /* nothing */
 #endif
 
-extern void Exit (int  /* n */) GCC_NORETURN;
+extern void Exit (int /* n */) GCC_NORETURN;
 
 #ifndef SIG_ATOMIC_T
 #define SIG_ATOMIC_T int
@@ -1024,7 +1024,7 @@ extern int (*my_wcwidth)(wchar_t);
 /* menu.c */
 extern void do_hangup          PROTO_XT_CALLBACK_ARGS;
 extern void repairSizeHints    (void);
-extern void show_8bit_control  (Bool  /* value */);
+extern void show_8bit_control  (Bool /* value */);
 
 /* misc.c */
 
@@ -1033,7 +1033,7 @@ extern void show_8bit_control  (Bool  /* value */);
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *, Bool);
 extern Boolean xtermGetWinAttrs(Display * /* dpy */, Window /* win */, XWindowAttributes * /* attrs */);
 extern Boolean xtermGetWinProp(Display * /* dpy */, Window /* win */, Atom /* property */, long /* long_offset */, long /* long_length */, Atom /* req_type */, Atom * /* actual_type_return */, int * /* actual_format_return */, unsigned long * /* nitems_return */, unsigned long * /* bytes_after_return */, unsigned char ** /* prop_return */);
-extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
+extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long /* fg */, unsigned long /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern String xtermEnvLocale (void);
 extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, String */* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
@@ -1043,22 +1043,22 @@ extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
-extern char *xtermFindShell (char * /* leaf */, Bool  /* warning */);
+extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern Boolean allocateBestRGB(XtermWidget /* xw */, XColor * /* def */);
 extern Boolean validProgram(const char * /* pathname */);
 extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
-extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);
+extern int creat_as (uid_t /* uid */, gid_t /* gid */, Bool /* append */, char * /* pathname */, unsigned /* mode */);
 extern int getVisualDepth (XtermWidget /* xw */);
 extern int getVisualInfo (XtermWidget /* xw */);
-extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
+extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermClosestColor (XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
-extern int xtermResetIds (TScreen *  /* screen */);
-extern void Bell (XtermWidget /* xw */, int  /* which */, int  /* percent */);
+extern int xtermResetIds (TScreen * /* screen */);
+extern void Bell (XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char * /* value */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
@@ -1074,16 +1074,16 @@ extern void HandleLeaveWindow          PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void NormalExit (void);
-extern void Panic (const char * /* s */, int  /* a */);
+extern void Panic (const char * /* s */, int /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (XtermWidget /* xw */);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);
-extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
-extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
-extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */, int  /* final */);
-extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
+extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t /* len */);
+extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
+extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t /* len */, int /* final */);
+extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);
@@ -1093,12 +1093,13 @@ extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
 extern void init_colored_cursor (Display * /* dpy */);
 extern void reset_decudk (XtermWidget /* xw */);
-extern void set_tek_visibility (Bool  /* on */);
-extern void set_vt_visibility (Bool  /* on */);
-extern void switch_modes (Bool  /* tovt */);
+extern void set_tek_visibility (Bool /* on */);
+extern void set_vt_visibility (Bool /* on */);
+extern void switch_modes (Bool /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
+extern void update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern void xevents (void);
-extern void xt_error (String  /* message */);
+extern void xt_error (String /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
@@ -1106,6 +1107,7 @@ extern void xtermEmbedWindow (Window /* winToEmbedInfo */);
 extern void xtermLoadIcon (XtermWidget /* xw */);
 extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
+extern void xtermSetWinSize (XtermWidget /* xw */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 extern void xtermUnsetenv (const char * /* var */);
 extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
