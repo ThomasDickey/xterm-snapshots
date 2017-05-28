@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.706 2017/05/16 09:05:18 tom Exp $ */
+/* $XTermId: util.c,v 1.707 2017/05/28 20:18:45 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1876,8 +1876,10 @@ do_erase_display(XtermWidget xw, int param, int mode)
 
     case 3:
 	/* xterm addition - erase saved lines. */
-	screen->savedlines = 0;
-	ScrollBarDrawThumb(screen->scrollWidget);
+	if (screen->eraseSavedLines) {
+	    screen->savedlines = 0;
+	    ScrollBarDrawThumb(screen->scrollWidget);
+	}
 	break;
     }
     screen->protected_mode = saved_mode;

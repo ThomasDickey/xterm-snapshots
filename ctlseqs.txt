@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #328 (2017/05/02)
+               updated for XTerm Patch #328 (2017/05/28)
 
 
 
@@ -312,6 +312,7 @@ CSI ? Ps J
             Ps = 0  -> Selective Erase Below (default).
             Ps = 1  -> Selective Erase Above.
             Ps = 2  -> Selective Erase All.
+            Ps = 3  -> Selective Erase Saved Lines (xterm).
 CSI Ps K  Erase in Line (EL).
             Ps = 0  -> Erase to Right (default).
             Ps = 1  -> Erase to Left.

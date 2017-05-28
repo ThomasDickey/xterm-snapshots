@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.852 2017/05/27 12:51:22 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.853 2017/05/28 19:55:18 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2088,6 +2088,10 @@ typedef struct {
 	Boolean		bellOnReset;	/* bellOnReset			*/
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
+
+	Boolean		eraseSavedLines; /* eraseSavedLines option	*/
+	Boolean		eraseSavedLines0; /* initial eraseSavedLines	*/
+	Boolean		tabCancelsWrap; /* tabCancelsWrap option	*/
 
 	Boolean		allowPasteControls; /* PasteControls mode	*/
 	Boolean		allowColorOps;	/* ColorOps mode		*/

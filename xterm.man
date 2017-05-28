@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.708 2017/05/16 09:19:56 tom Exp $
+.\" $XTermId: xterm.man,v 1.709 2017/05/28 23:01:13 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -1464,7 +1464,7 @@ Abbreviated options also are supported, e.g.,
 .
 .
 .SH RESOURCES
-The program understands all of the core X Toolkit resource names and classes.
+\fI\*N\fP understands all of the core X Toolkit resource names and classes.
 Application specific resources (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*('') follow:
 .SS Application Resources
 .TP 8
@@ -3030,6 +3030,11 @@ Override \fI\*n\fP's default selection target list
 (see \fBSELECT/PASTE\fP) for selections in normal (ISO-8859-1) mode.
 The default is an empty string, i.e., \*(``\*('',
 which does not override anything.
+.TP 8
+.B "eraseSavedLines\fP (class\fB EraseSavedLines\fP)"
+Specifies whether or not to allow
+\fI\*n\fP extended ED/DECSED control sequences to erase the saved-line buffer.
+The default is \*(``true\*(''.
 .TP 8
 .B "faceName\fP (class\fB FaceName\fP)"
 Specify the pattern for scalable fonts selected from the FreeType
