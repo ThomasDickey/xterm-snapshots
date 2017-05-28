@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1469 2017/05/27 12:08:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1471 2017/05/28 23:00:56 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -443,6 +443,7 @@ static XtResource xterm_resources[] =
     Bres(XtNeightBitControl, XtCEightBitControl, screen.control_eight_bits, False),
     Bres(XtNeightBitInput, XtCEightBitInput, screen.input_eight_bits, True),
     Bres(XtNeightBitOutput, XtCEightBitOutput, screen.output_eight_bits, True),
+    Bres(XtNeraseSavedLines, XtCEraseSavedLines, screen.eraseSavedLines0, True),
     Bres(XtNhighlightSelection, XtCHighlightSelection,
 	 screen.highlight_selection, False),
     Bres(XtNshowWrapMarks, XtCShowWrapMarks, screen.show_wrap_marks, False),
@@ -7969,6 +7970,10 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.flash_line);
     init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
+
+    init_Bres(screen.eraseSavedLines0);
+    screen->eraseSavedLines = screen->eraseSavedLines0;
+
     init_Ires(misc.limit_resize);
 
 #if OPT_NUM_LOCK

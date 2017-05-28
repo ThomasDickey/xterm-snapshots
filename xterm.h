@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.773 2017/05/27 11:51:50 tom Exp $ */
+/* $XTermId: xterm.h,v 1.775 2017/05/28 23:01:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -448,6 +448,7 @@ extern char **environ;
 #define XtNeightBitMeta		"eightBitMeta"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNeightBitSelectTypes	"eightBitSelectTypes"
+#define XtNeraseSavedLines	"eraseSavedLines"
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
@@ -637,6 +638,7 @@ extern char **environ;
 #define XtCEightBitMeta		"EightBitMeta"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCEightBitSelectTypes	"EightBitSelectTypes"
+#define XtCEraseSavedLines	"EraseSavedLines"
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
