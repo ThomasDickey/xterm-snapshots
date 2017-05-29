@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.169 2017/05/07 23:33:35 tom Exp $ */
+/* $XTermId: trace.c,v 1.170 2017/05/29 00:50:16 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -951,6 +951,9 @@ TraceXtermResources(void)
     XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
     XRES_B(ptySttySize);
+#endif
+#if OPT_REPORT_CCLASS
+    XRES_B(reportCClass);
 #endif
 #if OPT_REPORT_COLORS
     XRES_B(reportColors);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.516 2017/05/17 00:30:05 tom Exp $ */
+/* $XTermId: screen.c,v 1.517 2017/05/29 19:59:05 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -710,6 +710,8 @@ ChangeToWide(XtermWidget xw)
 void
 CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 {
+    (void) screen;
+
     if (len > 0) {
 	int n;
 	int last = col + len;

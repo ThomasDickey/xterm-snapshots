@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.853 2017/05/28 19:55:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.854 2017/05/29 00:49:11 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -689,6 +689,10 @@ typedef struct {
 #else
 #define OPT_RENDERWIDE 0
 #endif
+#endif
+
+#ifndef OPT_REPORT_CCLASS
+#define OPT_REPORT_CCLASS  1 /* provide "-report-charclass" option */
 #endif
 
 #ifndef OPT_REPORT_COLORS

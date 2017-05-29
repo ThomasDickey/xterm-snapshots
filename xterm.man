@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.709 2017/05/28 23:01:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.712 2017/05/29 19:50:20 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -999,6 +999,10 @@ Control-G is received.
 .B +pob
 This option indicates that the window should not be raised whenever a
 Control-G is received.
+.TP 8
+.B \-report\-charclass
+Print a report to the standard output showing information about the
+character-classes which can be altered using the \fBcharClass\fP resource.
 .TP 8
 .B \-report\-colors
 Print a report to the standard output showing information about colors
@@ -2438,7 +2442,7 @@ The default for this resource is \*(``false\*(''.
 .TP 8
 .B "charClass\fP (class\fB CharClass\fP)"
 Specifies comma-separated lists of character class bindings of the form
-[\fIlow\fP-]\fIhigh\fP:\fIvalue\fP.
+\fIlow\fP[-\fIhigh]\fP[:\fIvalue\fP].
 These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
 See the \fBCHARACTER CLASSES\fP section.
@@ -6018,14 +6022,16 @@ of the \fBcharClass\fP (class \fICharClass\fP) resource.
 This resource is a
 series of comma-separated
 \fIrange\fP:\fIvalue\fP pairs.
+.bP
 The
 \fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
 to 65535, corresponding to the code for the character or characters to be
 set.
-The \fIvalue\fP is arbitrary, although the default table uses the
+.bP
+The \fIvalue\fP is arbitrary.  For example, the default table uses the
 character number of the first character occurring in the set.
 When not in
-UTF-8 mode, only the first 256 bytes of this table will be used.
+UTF-8 mode, only the first 256 entries of this table will be used.
 .
 .PP
 The default table starts as follows \-
@@ -6090,7 +6096,7 @@ static int charClass[256] = {
     48,  48,  48,  48,  48,  48,  48,  48,
 /\(**  a`   a\*(AQ   a^   a~   a:   ao   ae   c, */
     48,  48,  48,  48,  48,  48,  48,  48,
-/\(**  e`   e\*(AQ   e^   e:    i`  i\*(AQ   i^   i: */
+/\(**  e`   e\*(AQ   e^   e:   i`   i\*(AQ   i^   i: */
     48,  48,  48,  48,  48,  48,  48,  48,
 /\(**   d   n~   o`   o\*(AQ   o^   o~   o:   \-: */
     48,  48,  48,  48,  48,  48,  48, 247,

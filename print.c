@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.157 2017/05/09 08:14:02 tom Exp $ */
+/* $XTermId: print.c,v 1.158 2017/05/29 19:59:42 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -133,8 +133,12 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
 #define ColorOf(ld,col) (ld->color[col])
 #endif
-    unsigned fg = NO_COLOR, last_fg = NO_COLOR;
-    unsigned bg = NO_COLOR, last_bg = NO_COLOR;
+    unsigned fg = NO_COLOR;
+    unsigned bg = NO_COLOR;
+#if OPT_PRINT_COLORS
+    unsigned last_fg = NO_COLOR;
+    unsigned last_bg = NO_COLOR;
+#endif
 
     ld = getLineData(screen, inx);
     if (ld == 0)
