@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.775 2017/05/28 23:01:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.778 2017/05/29 23:19:51 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -795,7 +795,7 @@ extern void TekExpose (Widget  /* w */, XEvent * /* event */, Region  /* region 
 extern void TekGINoff (TekWidget /* tw */);
 extern void TekRefresh (TekWidget /* tw */);
 extern void TekRepaint (TekWidget /* xw */);
-extern void TekReverseVideo (TekWidget /* tw */);
+extern void TekReverseVideo (XtermWidget /* xw */, TekWidget /* tw */);
 extern void TekRun (void);
 extern void TekSetFontSize (TekWidget /* tw */, Bool /* fromMenu */, int  /* newitem */);
 extern void TekSetWinSize (TekWidget /* tw */);
@@ -856,6 +856,10 @@ extern void xtermGetSelection (Widget  /* w */, Time  /* ev_time */, String * /*
 
 #if OPT_READLINE
 extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
+#endif
+
+#if OPT_REPORT_CCLASS
+extern void report_char_class(XtermWidget);
 #endif
 
 #if OPT_WIDE_CHARS

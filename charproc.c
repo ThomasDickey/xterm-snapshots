@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1471 2017/05/28 23:00:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1478 2017/05/29 20:27:17 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8724,6 +8724,10 @@ VTInitialize(Widget wrequest,
     screen->bellInProgress = False;
 
     set_character_class(screen->charClass);
+#if OPT_REPORT_CCLASS
+    if (resource.reportCClass)
+	report_char_class(wnew);
+#endif
 
     /* create it, but don't realize it */
     ScrollBarOn(wnew, True);
@@ -10953,10 +10957,19 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
     longjmp(vtjmpbuf, 1);	/* force ground state in parser */
 }
 
+typedef enum {
+    ccLO,
+    ccDASH,
+    ccHI,
+    ccCOLON,
+    ccID,
+    ccCOMMA
+} CCLASS;
+
 /*
  * set_character_class - takes a string of the form
  *
- *   low[-high]:val[,low[-high]:val[...]]
+ *   low[-high][:id][,low[-high][:id][...]]
  *
  * and sets the indicated ranges to the indicated values.
  */
@@ -10964,95 +10977,102 @@ static int
 set_character_class(char *s)
 {
 #define FMT "%s in range string \"%s\" (position %d)\n"
-    int i;			/* iterator, index into s */
-    int len;			/* length of s */
-    int acc;			/* accumulator */
-    int low, high;		/* bounds of range [0..127] */
-    int base;			/* 8, 10, 16 (octal, decimal, hex) */
-    int numbers;		/* count of numbers per range */
-    int digits;			/* count of digits in a number */
 
-    if (!s || !s[0])
+    TRACE(("set_character_class(%s) {{\n", NonNull(s)));
+    if (IsEmpty(s)) {
 	return -1;
+    } else {
+	CCLASS state = ccLO;
+	int arg[3];
+	int i;
+	int len = (int) strlen(s);
 
-    base = 10;			/* in case we ever add octal, hex */
-    low = high = -1;		/* out of range */
+	arg[0] =
+	    arg[1] =
+	    arg[2] = -1;
 
-    for (i = 0, len = (int) strlen(s), acc = 0, numbers = digits = 0;
-	 i < len; i++) {
-	Char c = CharOf(s[i]);
+	for (i = 0; i < len; ++i) {
+	    int ch = CharOf(s[i]);
+	    char *t = 0;
+	    long value = 0;
 
-	if (isspace(c)) {
-	    continue;
-	} else if (isdigit(c)) {
-	    acc = acc * base + (c - '0');
-	    digits++;
-	    continue;
-	} else if (c == '-') {
-	    low = acc;
-	    acc = 0;
-	    if (digits == 0) {
-		xtermWarning(FMT, "missing number", s, i);
-		return (-1);
+	    if (isspace(ch))
+		continue;
+
+	    switch (state) {
+	    case ccLO:
+	    case ccHI:
+	    case ccID:
+		if (!isdigit(ch)) {
+		    xtermWarning(FMT, "missing number", s, i);
+		    return (-1);
+		}
+		value = strtol(s + i, &t, 0);
+		i = (int) (t - s - 1);
+		break;
+	    case ccDASH:
+	    case ccCOLON:
+	    case ccCOMMA:
+		break;
 	    }
-	    digits = 0;
-	    numbers++;
-	    continue;
-	} else if (c == ':') {
-	    if (numbers == 0)
-		low = acc;
-	    else if (numbers == 1)
-		high = acc;
-	    else {
-		xtermWarning(FMT, "too many numbers", s, i);
-		return (-1);
-	    }
-	    digits = 0;
-	    numbers++;
-	    acc = 0;
-	    continue;
-	} else if (c == ',') {
-	    /*
-	     * now, process it
-	     */
 
-	    if (high < 0) {
-		high = low;
-		numbers++;
+	    switch (state) {
+	    case ccLO:
+		arg[0] =
+		    arg[1] = (int) value;
+		arg[2] = -1;
+		state = ccDASH;
+		break;
+
+	    case ccDASH:
+		if (ch == '-') {
+		    state = ccHI;
+		} else {
+		    goto parse_class;
+		}
+		break;
+
+	    case ccHI:
+		arg[1] = (int) value;
+		state = ccCOLON;
+		break;
+
+	      parse_class:
+	    case ccCOLON:
+		if (ch == ':') {
+		    state = ccID;
+		} else if (ch == ',') {
+		    goto apply_class;
+		} else {
+		    xtermWarning(FMT, "unexpected character", s, i);
+		    return (-1);
+		}
+		break;
+
+	    case ccID:
+		arg[2] = (int) value;
+		state = ccCOMMA;
+		break;
+
+	      apply_class:
+	    case ccCOMMA:
+		if (SetCharacterClassRange(arg[0], arg[1], arg[2]) != 0) {
+		    xtermWarning(FMT, "bad range", s, i);
+		    return -1;
+		}
+		state = ccLO;
+		break;
 	    }
-	    if (numbers != 2) {
-		xtermWarning(FMT, "bad value number", s, i);
-	    } else if (SetCharacterClassRange(low, high, acc) != 0) {
+	}
+	if (state >= ccDASH) {
+	    if (SetCharacterClassRange(arg[0], arg[1], arg[2]) != 0) {
 		xtermWarning(FMT, "bad range", s, i);
+		return -1;
 	    }
-
-	    low = high = -1;
-	    acc = 0;
-	    digits = 0;
-	    numbers = 0;
-	    continue;
-	} else {
-	    xtermWarning(FMT, "bad character", s, i);
-	    return (-1);
-	}			/* end if else if ... else */
-
+	}
     }
 
-    if (low < 0 && high < 0)
-	return (0);
-
-    /*
-     * now, process it
-     */
-
-    if (high < 0)
-	high = low;
-    if (numbers < 1 || numbers > 2) {
-	xtermWarning(FMT, "bad value number", s, i);
-    } else if (SetCharacterClassRange(low, high, acc) != 0) {
-	xtermWarning(FMT, "bad range", s, i);
-    }
-
+    TRACE(("}} set_character_class\n"));
     return (0);
 #undef FMT
 }

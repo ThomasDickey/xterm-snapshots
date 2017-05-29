@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.796 2017/05/28 18:55:24 tom Exp $ */
+/* $XTermId: main.c,v 1.799 2017/05/29 21:14:08 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -883,6 +883,9 @@ static XtResource application_resources[] =
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
     Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
+#if OPT_REPORT_CCLASS
+    Bres("reportCClass", "ReportCClass", reportCClass, False),
+#endif
 #if OPT_REPORT_COLORS
     Bres("reportColors", "ReportColors", reportColors, False),
 #endif
@@ -1027,6 +1030,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(XPointer) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "off"},
+#if OPT_REPORT_CCLASS
+{"-report-charclass","*reportCClass", XrmoptionNoArg,	(XPointer) "on"},
+#endif
 #if OPT_REPORT_COLORS
 {"-report-colors","*reportColors", XrmoptionNoArg,	(XPointer) "on"},
 #endif
@@ -1221,6 +1227,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_CCLASS
+{"-report-charclass",      "report \"charClass\" after initialization"},
+#endif
 #if OPT_REPORT_COLORS
 { "-report-colors",        "report colors as they are allocated" },
 #endif

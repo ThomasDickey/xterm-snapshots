@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1737 2017/05/28 23:55:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.1738 2017/05/29 19:46:04 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -944,6 +944,22 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>revise parser for <code>charClass</code> resource, making
+    these improvements:
+
+      <ul>
+        <li>accept octal and hexadecimal values</li>
+
+        <li>allow embedded whitespace</li>
+
+        <li>allow the class after colon to be optional, e.g., to
+        clear class settings for a range of characters.</li>
+      </ul>
+    </li>
+
+    <li>add command-line option
+    <code>-report-charclass</code>.</li>
+
     <li>fix most lintian warnings about test-package</li>
 
     <li>add <code>eraseSavedLines</code> resource.</li>

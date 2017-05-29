@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.523 2017/05/27 12:16:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.524 2017/05/29 19:56:31 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -120,7 +120,10 @@ typedef struct {
     char *end;
 } FontNameProperties;
 
+#if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 static Boolean merge_sublist(char ***, char **);
+#endif
+
 static void save2FontList(XtermWidget, const char *, XtermFontNames *,
 			  VTFontEnum, const char *, Boolean);
 
@@ -1059,6 +1062,8 @@ xtermUpdateFontGCs(XtermWidget xw, Bool italic)
     VTwin *win = WhichVWin(screen);
     Pixel new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
     Pixel new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
+
+    (void) italic;
 
     setCgsFore(xw, win, gcNorm, new_normal);
     setCgsBack(xw, win, gcNorm, new_revers);
@@ -3836,6 +3841,8 @@ save2FontList(XtermWidget xw,
     Boolean marked = False;
     Boolean use_ttf = ttf;
 
+    (void) xw;
+
     if (source == 0)
 	source = "";
     while (isspace(CharOf(*source)))
@@ -4099,6 +4106,7 @@ copyFontList(char ***targetp, char **source)
     }
 }
 
+#if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 static Boolean
 merge_sublist(char ***targetp, char **source)
 {
@@ -4109,6 +4117,7 @@ merge_sublist(char ***targetp, char **source)
     }
     return result;
 }
+#endif
 
 void
 freeFontList(char ***targetp)

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.755 2017/05/27 12:03:11 tom Exp $ */
+/* $XTermId: misc.c,v 1.756 2017/05/29 20:00:36 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3281,6 +3281,9 @@ ResetColorsRequest(XtermWidget xw,
 		   int code)
 {
     Bool result = False;
+
+    (void) xw;
+    (void) code;
 
     TRACE(("ResetColorsRequest code=%d\n", code));
 

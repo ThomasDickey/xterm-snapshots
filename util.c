@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.707 2017/05/28 20:18:45 tom Exp $ */
+/* $XTermId: util.c,v 1.709 2017/05/29 23:19:13 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2599,7 +2599,7 @@ ReverseVideo(XtermWidget xw)
 	set_background(xw, -1);
     }
 #if OPT_TEK4014
-    TekReverseVideo(tekWidget);
+    TekReverseVideo(xw, tekWidget);
 #endif
     if (XtIsRealized((Widget) xw)) {
 	xtermRepaint(xw);
@@ -4253,8 +4253,8 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
     Pixel fg_pix = getXtermForeground(xw, attr_flags, (int) my_fg);
     Pixel bg_pix = getXtermBackground(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
-    Boolean reverse2 = ((attr_flags & INVERSE) && hilite);
 #if OPT_HIGHLIGHT_COLOR
+    Boolean reverse2 = ((attr_flags & INVERSE) && hilite);
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
     Boolean always = screen->hilite_color;
@@ -4498,6 +4498,10 @@ Pixel
 getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
+
+    (void) attr_flags;
+    (void) color;
+
 #if OPT_ISO_COLORS
     if ((attr_flags & BG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
@@ -4510,6 +4514,10 @@ Pixel
 getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
+
+    (void) attr_flags;
+    (void) color;
+
 #if OPT_ISO_COLORS
     if ((attr_flags & FG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);

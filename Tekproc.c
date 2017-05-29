@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.227 2017/05/27 14:06:16 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.228 2017/05/29 23:19:34 tom Exp $ */
 
 /*
  * Copyright 2001-2016,2017 by Thomas E. Dickey
@@ -1863,9 +1863,9 @@ ChangeTekColors(TekWidget tw, TScreen *screen, ScrnColors * pNew)
 }
 
 void
-TekReverseVideo(TekWidget tw)
+TekReverseVideo(XtermWidget xw, TekWidget tw)
 {
-    TScreen *screen = TScreenOf(tw->vt);
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
     Pixel tmp;
     XGCValues gcv;
