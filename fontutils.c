@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.524 2017/05/29 19:56:31 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.525 2017/05/30 09:03:06 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -3987,8 +3987,10 @@ save2FontList(XtermWidget xw,
 			ProgramName,
 			whichFontEnum(which),
 			value);
-		free((*list)[limit]);
-		(*list)[limit] = 0;
+		if (list && *list) {
+		    free((*list)[limit]);
+		    (*list)[limit] = 0;
+		}
 	    }
 	} else {
 	    free(value);

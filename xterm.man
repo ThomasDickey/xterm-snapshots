@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.712 2017/05/29 19:50:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.714 2017/05/30 22:57:12 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -2442,7 +2442,10 @@ The default for this resource is \*(``false\*(''.
 .TP 8
 .B "charClass\fP (class\fB CharClass\fP)"
 Specifies comma-separated lists of character class bindings of the form
+.NS
 \fIlow\fP[-\fIhigh]\fP[:\fIvalue\fP].
+.NE
+.IP
 These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
 See the \fBCHARACTER CLASSES\fP section.
@@ -3592,7 +3595,7 @@ r r.
 800x480	330
 800x480	340
 860x750	382
-800x480	\fIdefault\fP
+800x480	\fIother\fP
 .TE
 .TP 8
 .B "metaSendsEscape\fP (class\fB MetaSendsEscape\fP)"
@@ -3790,7 +3793,7 @@ r r.
 4	330
 16	340
 2	382
-1024	default
+1024	\fIother\fP
 .TE
 .TP 8
 .B "numLock\fP (class\fB NumLock\fP)"
@@ -4065,7 +4068,8 @@ this controls whether \fI\*n\fR
 allocates separate color registers for each sixel
 device control string, e.g., for DECGCI.
 If not true, color registers are allocated only once,
-when the terminal is reset.
+when the terminal is reset,
+and color changes  in  any  graphic  affect all graphics.
 The default is \*(``true\*(''.
 .TP 8
 .B "quietGrab\fP (class\fB QuietGrab\fP)"
@@ -4087,13 +4091,19 @@ If no value is specified,
 .TP 8
 .B "regisScreenSize\fP (class\fB RegisScreenSize\fP)"
 If \fI\*n\fR is configured to support ReGIS graphics,
-this resource tells \fI\*n\fR the maximum size (in pixels) for graphics.
+this resource tells \fI\*n\fR the default size (in pixels) for these graphics,
+which also sets the default coordinate space
+to [0,0] (upper-left) and [\fIwidth\fP,\fIheight\fP] (lower-right).
+.IP
+The application using ReGIS may use the \*(``A\*('' option of
+the \*(``S\*('' command to adjust the coordinate space or change the
+addressable portion of the screen.
 .IP
 The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
 .IP
 \fI\*N\fR accepts a special resource value \*(``auto\*('',
 which tells \fI\*n\fR to use the \fBdecTerminalID\fP resource to
-set the maximum size based on the hardware terminal's limits.
+set the default size based on the hardware terminal's limits.
 Those limits are the same as for the \fBmaxGraphicSize\fP resource.
 .TP 8
 .B "renderFont\fP (class\fB RenderFont\fP)"

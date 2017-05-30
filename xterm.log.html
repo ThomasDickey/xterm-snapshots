@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1738 2017/05/29 19:46:04 tom Exp $
+  $XTermId: xterm.log.html,v 1.1741 2017/05/30 23:27:21 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -981,8 +981,24 @@
     non-colored cursor would be invisible against reverse-video
     (see <a href="#xterm_311">patch #311</a>).</li>
 
-    <li>fix the direction of ReGIS slanted text so that negative
-    values produce oblique output (Ross Combs).</li>
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>the "H" option of the "T" command should multiply by
+        10, not 20.</li>
+
+        <li>display unknown glyphs as a solid block.</li>
+
+        <li>given a succession of text-direction options, use the
+        last.</li>
+
+        <li>fix the direction of ReGIS slanted text so that
+        negative values produce oblique output .</li>
+
+        <li>fix the ReGIS text direction option to only rotate
+        characters when no following size option is used.</li>
+      </ul>
+    </li>
 
     <li>update terminfo to better match corresponding entries in
     ncurses, e.g., <code>u8</code> pattern to match the VT220,
