@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.523 2017/05/29 19:55:11 tom Exp $ */
+/* $XTermId: button.c,v 1.524 2017/05/30 08:58:29 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3100,8 +3100,7 @@ report_char_class(XtermWidget xw)
     "  d\0" " n~\0" " o`\0" " o'\0" " o^\0" " o~\0" " o:\0" " -:\0"
     " o/\0" " u`\0" " u'\0" " u^\0" " u:\0" " y'\0" "  P\0" " y:\0";
     int ch, dh;
-    int class_p, class_c;
-    int final;
+    int class_p;
 
     (void) xw;
 
@@ -3124,8 +3123,8 @@ report_char_class(XtermWidget xw)
     printf("\n");
     printf("The table is equivalent to this \"charClass\" resource:\n");
     class_p = CharacterClass(dh = 0);
-    for (ch = final = 0; ch < 256; ++ch) {
-	class_c = CharacterClass(ch);
+    for (ch = 0; ch < 256; ++ch) {
+	int class_c = CharacterClass(ch);
 	if (class_c != class_p) {
 	    if (show_cclass_range(dh, ch - 1)) {
 		dh = ch;

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.82 2017/05/07 23:49:07 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.86 2017/05/30 23:26:31 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -214,8 +214,13 @@ typedef struct RegisParseState {
     unsigned load_glyph;
     unsigned load_row;
     /* text options */
-    int string_rot_set;		/* flag to distinguish string vs. character rotation */
+    unsigned text_tilt_state;
 } RegisParseState;
+
+#define TEXT_TILT_STATE_READY    0U
+#define TEXT_TILT_STATE_GOT_D    1U
+#define TEXT_TILT_STATE_GOT_DS   2U
+#define TEXT_TILT_STATE_GOT_DSD  3U
 
 typedef struct RegisGraphicsContext {
     Graphic *destination_graphic;
@@ -2164,7 +2169,10 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
     TRACE(("unable to load any bitmap for character '%c' in alphabet number %u at %ux%u\n",
 	   ch, context->current_text_controls->alphabet_num, maxw, maxh));
 
-    /* FIXME: this should probably produce an "unknown character" symbol */
+    /*
+     * The VT3x0 series (and probably earlier ReGIS implementations) use a solid
+     * block glyph for unknown glyphs.
+     */
     {
 	unsigned xx, yy;
 
@@ -2172,7 +2180,7 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 	*h = MIN2(10U, maxw);
 	for (yy = 0U; yy < *h; yy++)
 	    for (xx = 0U; xx < *w; xx++)
-		pixels[yy * *w + xx] = '\0';
+		pixels[yy * *w + xx] = '\1';
     }
 }
 
@@ -2397,7 +2405,6 @@ draw_text(RegisGraphicsContext *context, char const *str)
 	    rx = 0;
 	    break;
 	case '\n':
-	    /* FIXME: verify */
 	    ry += (int) context->current_text_controls->character_display_h;
 	    break;
 	case '\b':
@@ -3500,6 +3507,27 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
 }
 
 static int
+load_regis_mult_extent(char const *extent, int *w, int *h)
+{
+    int relx, rely;
+    int px, py;
+
+    if (!load_regis_raw_extent(extent, &relx, &rely, &px, &py, 1)) {
+	TRACE(("invalid coordinates in extent %s\n", extent));
+	return 0;
+    }
+    if (relx | rely) {
+	TRACE(("invalid relative value in multiplier extent %s\n", extent));
+	return 0;
+    }
+
+    *w = px;
+    *h = py;
+
+    return 1;
+}
+
+static int
 load_regis_pixel_extent(char const *extent, int origx, int origy,
 			int *xloc, int *yloc)
 {
@@ -4502,7 +4530,7 @@ parse_regis_command(RegisParseState *state)
 	/* Screen
 
 	 * S
-	 * (A[<upper left>][<lower right>])
+	 * (A[<upper left>][<lower right>])  # adjust screen cordinates
 	 * (C<setting>  # 0 (cursor output off), 1 (cursor output on)
 	 * (E)  # erase to background color, resets shades, curves, and stacks
 	 * (F)  # print the graphic and erase the screen (DECprint extension)
@@ -4520,7 +4548,11 @@ parse_regis_command(RegisParseState *state)
 	 * (M<color index to set>(AH<hue>L<lightness>S<saturation>)...)  # 0..360, 0..100, 0..100 (sets color registers only)
 	 * (M<color index to set>(L<mono level>)...)  # level is 0 ... 100 (sets grayscale registers only)
 	 * (P<graphics page number>)  # 0 (default) or 1
-	 * (T(<time delay ticks>)  # 60 ticks per second, up to 32767 ticks
+	 * (S(<scale>)  # scale screen output by scale (default 1, VT125:max=2, VT3x0:unsupported) FIXME
+	 * (S(X<scale>)  # scale screen output horizontally by scale (default 1, VT125:max=2, VT3x0:unsupported) FIXME
+	 * (S(Y<scale>)  # scale screen output vertically by scale (default 1, VT125:max=2, VT3x0:unsupported) FIXME
+	 * (T(<time delay ticks>)  # delay (60 ticks is one second, up to 32767 ticks)
+	 * (N<setting>)  # 0 == normal video, 1 == negative/reverse video (not supported on VT3x0)
 	 * (W(M<factor>)  # PV multiplier
 	 * <PV scroll offset>  # scroll data so given coordinate is at the upper-left
 	 * [scroll offset]  # scroll data so given coordinate is at the upper-left
@@ -4533,28 +4565,30 @@ parse_regis_command(RegisParseState *state)
 	/* Text
 
 	 * T
-	 * (A)  # specify which alphabet to select character sets from (0==builtin)
+	 * (A)  # specify which alphabet/font to select glyphs from (0==builtin)
 	 * (A0L"<designator>"))  # specify a built-in set for GL via two-char designator
 	 * (A0R"<designator>"))  # specify a built-in set for GR via two-char or three-char designator
 	 * (A<num>R"<designator>"))  # specify a user-loaded (1-3) set for GR via two-char or three-char designator
 	 * (B)  # begin temporary text control
-	 * (D<angle>)  # specify a string or character tilt
+	 * (D<char angle>)  # specify a character tilt
+	 * (D<str angle>S<size id>)  # specify a string tilt
+	 * (D<str angle>S<size id>D<char angle>)  # specify a string and character tilt
 	 * (E)  # end temporary text control
-	 * (H<factor>)  # select a height multiplier (1-256)
+	 * (H<factor>)  # select a height multiplier (GIGI:1-16, VT340:1-256)
 	 * (I<angle>)  # italic/oblique: no slant (0), lean forward (-1 though -45), lean back (+1 through +45)
 	 * (M[width factor,height factor])  # select size multipliers (width 1-16) (height 1-256)
 	 * (S<size id>)  # select one of the 17 standard character sizes
 	 * (S[dimensions])  # set a custom display cell size (char with border)
 	 * (U[dimensions])  # set a custom unit cell size (char size)
 	 * (W<write command>)  # temporary write options (see write command)
-	 * [<char offset>]  # optional offset between characters
-	 * <PV spacing>  # for subscripts and superscripts
+	 * [<char offset>]  # optional manual offset between characters
+	 * <PV spacing>  # move half-increments for subscripts and superscripts
 	 * '<text>'  # optional
 	 * "<text>"  # optional
 	 */
 	TRACE(("found ReGIS command \"%c\" (text)\n", ch));
 	state->command = 't';
-	state->string_rot_set = 0;
+	state->text_tilt_state = TEXT_TILT_STATE_READY;
 	break;
     case 'V':
     case 'v':
@@ -4577,6 +4611,7 @@ parse_regis_command(RegisParseState *state)
 	/* Write
 
 	 * W
+	 * (A<setting>)  # 0 == disable alternate, 1 == enable alternate/blink FIXME
 	 * (C)  # complement writing mode
 	 * (E)  # erase writing mode
 	 * (F<plane>)  # set the foreground intensity to a specific register
@@ -4585,16 +4620,16 @@ parse_regis_command(RegisParseState *state)
 	 * (I(R<r>G<g>B<b>))  # set the foreground to the register closest to an RGB triplet (RLogin extension)
 	 * (I(H<h>L<l>S<s>))  # set the foreground to the register closest to an HLS triplet
 	 * (I(L<l>))  # set the foreground to the register closest to a grayscale value
-	 * (L<width>)  # set the line width (RLogin extension)
+	 * (L<width>)  # set the line width (RLogin extension) FIXME
 	 * (M<pixel vector multiplier>)  # set the multiplication factor
 	 * (N<setting>)  # 0 == negative patterns disabled, 1 == negative patterns enabled
 	 * (P<pattern number>)  # 0..9: 0 == none, 1 == solid, 2 == 50% dash, 3 == dash-dot
 	 * (P<pattern bits>)  # 2 to 8 bits represented as a 0/1 sequence
-	 * (P<(M<pattern multiplier>))
+	 * (P<(M<pattern multiplier>))  # set the pattern multiplier
 	 * (R)  # replacement writing mode
 	 * (S'<character>')  # set shading character
-	 * (S<setting>)  # 0 == disable shding, 1 == enable shading
-	 * (S[reference point])  # set a horizontal reference line including this point
+	 * (S<setting>)  # 0 == disable shading, 1 == enable shading
+	 * (S[reference point])  # set a horizontal reference line including this point (X ignored)
 	 * (S(X)[reference point])  # set a vertical reference line including this point
 	 * (V)  # overlay writing mode
 	 */
@@ -5061,10 +5096,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    unsigned size;
 
 		    TRACE(("glyph size: %s\n", fragment_to_tempstr(&sizearg)));
-		    /* FIXME: verify this is in pixels, not user coordinates */
-		    if (!load_regis_pixel_extent(fragment_to_tempstr(&sizearg),
-						 0, 0,
-						 &w, &h)) {
+		    /* FIXME: verify that relative values don't work */
+		    if (!load_regis_mult_extent(fragment_to_tempstr(&sizearg),
+						&w, &h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in glyph size option: \"%s\"\n",
 			       fragment_to_tempstr(&sizearg)));
 			break;
@@ -5910,24 +5944,41 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		/* For some reason ReGIS reused the "D" option for the text
 		 * command to represent two different attributes.  String tilt
-		 * can only be modified if a second "D" option is given after
-		 * an "S" option following the original "D" option.  In that
-		 * case a second "D" should agree with the first and the overall
-		 * string will be rotated.  If no "S" option or second "D"
-		 * option is given, the "D" option refers to the character tilt.
+		 * can only be modified if an "S" option is given after the
+		 * "D" option.  In that case a second "D" option changes the
+		 * character tilt.  But complicating things further, if no "S"
+		 * or second "D" option is given, the "D" option refers to the
+		 * character tilt.
 		 */
-		/* FIXME: handle character size prameter */
-		if (state->string_rot_set) {
-		    TRACE(("using character rotation (tilt): %d\n", rotation));
-		    context->current_text_controls->character_rotation =
-			rotation;
-		} else {
-		    TRACE(("using string rotation (tilt): %d\n", rotation));
-		    context->current_text_controls->string_rotation =
-			rotation;
-		    context->current_text_controls->character_rotation =
-			rotation;
-		    state->string_rot_set = 1;
+		switch (state->text_tilt_state) {
+		case TEXT_TILT_STATE_READY:
+		    /* Setting a tilt after a cell size only affects the
+		     * character tilt and not the string tilt.
+		     */
+		    TRACE(("character rotation (direction): %d\n", rotation));
+		    context->current_text_controls->character_rotation = rotation;
+		    state->text_tilt_state = TEXT_TILT_STATE_GOT_D;
+		    break;
+		case TEXT_TILT_STATE_GOT_D:
+		    /* If there are multiple angles with no size only the last
+                     * value is used.
+		     */
+		    TRACE(("character rotation (direction): %d\n", rotation));
+		    context->current_text_controls->character_rotation = rotation;
+		    break;
+		case TEXT_TILT_STATE_GOT_DS:
+		    TRACE(("changing character rotation (direction): %d\n", rotation));
+		    context->current_text_controls->character_rotation = rotation;
+		    state->text_tilt_state = TEXT_TILT_STATE_GOT_DSD;
+		    break;
+		case TEXT_TILT_STATE_GOT_DSD:
+		default:
+		    /* If there are multiple angles with no size only the last
+                     * value is used.
+		     */
+		    TRACE(("changing character rotation (direction): %d\n", rotation));
+		    context->current_text_controls->character_rotation = rotation;
+		    break;
 		}
 
 		skip_regis_whitespace(&optionarg);
@@ -6056,9 +6107,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("size multiplier: %s\n",
 		       fragment_to_tempstr(&sizemultiplierarg)));
-		/* FIXME: verify this is in pixels, not user coordinates */
-		if (!load_regis_pixel_extent(fragment_to_tempstr(&sizemultiplierarg),
-					     0, 0, &ww, &hh)) {
+		/* FIXME: verify that relative values don't work */
+		if (!load_regis_mult_extent(fragment_to_tempstr(&sizemultiplierarg),
+					    &ww, &hh)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
 		    break;
@@ -6109,9 +6160,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("custom display size: %s\n",
 			   fragment_to_tempstr(&displaysizearg)));
-		    /* FIXME: verify this is in pixels, not user coordinates */
-		    if (!load_regis_pixel_extent(fragment_to_tempstr(&displaysizearg),
-						 0, 0, &disp_w, &disp_h)) {
+		    /* FIXME: verify that relative values don't work */
+		    if (!load_regis_mult_extent(fragment_to_tempstr(&displaysizearg),
+						&disp_w, &disp_h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in text display size option: \"%s\"\n",
 			       fragment_to_tempstr(&displaysizearg)));
 			break;
@@ -6169,7 +6220,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		     * example in the VT330/VT340 Programmer Reference Manual vol 2
 		     * appears to say otherwise.  FIXME: verify
 		     */
-		    if (1 || !state->string_rot_set) {	/* forced for now */
+		    if (1) {	/* forced for now */
 			TRACE(("using unit cell size: %u,%u\n", unit_w, unit_h));
 			context->current_text_controls->character_unit_cell_w =
 			    unit_w;
@@ -6177,6 +6228,33 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    unit_h;
 		    }
 
+		    switch (state->text_tilt_state) {
+		    case TEXT_TILT_STATE_READY:
+			/* Nothing to do. */
+			break;
+		    case TEXT_TILT_STATE_GOT_D:
+			TRACE(("upgrading character rotation to string and character rotation: %d\n", context->current_text_controls->character_rotation));
+			context->current_text_controls->string_rotation = context->current_text_controls->character_rotation;
+			state->text_tilt_state = TEXT_TILT_STATE_GOT_DS;
+			break;
+		    case TEXT_TILT_STATE_GOT_DS:
+			/* FIXME: It isn't clear what to do if there are two
+			 * size options in a row after a tilt option.
+			 */
+			TRACE(("DATA_ERROR: unexpected duplicate size option: \"%s\" (state=%d)\n",
+			       fragment_to_tempstr(&displaysizearg),
+			       state->text_tilt_state));
+			break;
+		    case TEXT_TILT_STATE_GOT_DSD:
+		    default:
+			/* FIXME: It isn't clear what to do if there is a size
+			 * option after both types of tilt angle have been set.
+			 */
+			TRACE(("DATA_ERROR: unexpected duplicate size option: \"%s\" (state=%d)\n",
+			       fragment_to_tempstr(&displaysizearg),
+			       state->text_tilt_state));
+			break;
+		    }
 		    continue;
 		}
 
@@ -6209,10 +6287,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("unitsize cell size: %s\n",
 		       fragment_to_tempstr(&unitsizearg)));
-		/* FIXME: verify this is in pixels, not user coordinates */
-		if (!load_regis_pixel_extent(fragment_to_tempstr(&unitsizearg),
-					     0, 0,
-					     &unit_w, &unit_h)) {
+		/* FIXME: verify that relative values don't work */
+		if (!load_regis_mult_extent(fragment_to_tempstr(&unitsizearg),
+					    &unit_w, &unit_h)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&unitsizearg)));
 		    break;
