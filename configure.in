@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.344 2017/05/08 01:06:17 tom Exp $
+dnl $XTermId: configure.in,v 1.345 2017/05/31 08:38:47 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20121002)
+AC_PREREQ(2.52.20170501)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -61,7 +61,7 @@ AC_ARG_PROGRAM
 CF_PROG_LINT
 
 ###	checks for compiler characteristics
-CF_XOPEN_SOURCE
+CF_XOPEN_SOURCE(700)
 CF_SIGWINCH
 
 ###	checks for header files

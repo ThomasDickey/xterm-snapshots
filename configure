@@ -2536,7 +2536,7 @@ done
 
 ###	checks for compiler characteristics
 
-cf_XOPEN_SOURCE=500
+cf_XOPEN_SOURCE=700
 cf_POSIX_C_SOURCE=199506L
 cf_xopen_source=
 

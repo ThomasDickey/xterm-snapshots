@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.799 2017/05/29 21:14:08 tom Exp $ */
+/* $XTermId: main.c,v 1.805 2017/05/31 08:48:40 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -823,7 +823,7 @@ static sigjmp_buf env;
 #  define SetUtmpSysLen(utmp) 			   \
 	{ \
 	    utmp.ut_host[sizeof(utmp.ut_host)-1] = '\0'; \
-	    utmp.ut_syslen = strlen(utmp.ut_host) + 1; \
+	    utmp.ut_syslen = (short) strlen(utmp.ut_host) + 1; \
 	}
 #endif
 
@@ -2932,14 +2932,14 @@ set_pty_permissions(uid_t uid, unsigned gid, unsigned mode)
     struct group *ttygrp;
 
     if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
-	gid = ttygrp->gr_gid;
+	gid = (unsigned) ttygrp->gr_gid;
 	mode &= 0660U;
     }
     endgrent();
 #endif /* USE_TTY_GROUP */
 
     TRACE_IDS;
-    set_owner(ttydev, uid, gid, mode);
+    set_owner(ttydev, (unsigned) uid, gid, mode);
 }
 
 #ifdef get_pty			/* USE_UTMP_SETGID */
@@ -3255,7 +3255,7 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
     TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n",
 	   device, (int) uid, (int) gid, (unsigned) mode));
 
-    if (chown(device, uid, gid) < 0) {
+    if (chown(device, (uid_t) uid, (gid_t) gid) < 0) {
 	why = errno;
 	if (why != ENOENT
 	    && save_ruid == 0) {
@@ -3263,7 +3263,7 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
 			device, (long) uid, (long) gid);
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
-    } else if (chmod(device, mode) < 0) {
+    } else if (chmod(device, (mode_t) mode) < 0) {
 	why = errno;
 	if (why != ENOENT) {
 	    struct stat sb;
@@ -3310,7 +3310,7 @@ static void
 init_utmp(int type, struct UTMP_STR *tofind)
 {
     memset(tofind, 0, sizeof(*tofind));
-    tofind->ut_type = type;
+    tofind->ut_type = (short) type;
     copy_filled(tofind->ut_id, my_utmp_id(ttydev), sizeof(tofind->ut_id));
     copy_filled(tofind->ut_line, my_pty_name(ttydev), sizeof(tofind->ut_line));
 }
@@ -4084,7 +4084,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif /* OPT_PTY_HANDSHAKE -- from near fork */
 
 	    set_pty_permissions(screen->uid,
-				screen->gid,
+				(unsigned) screen->gid,
 				(resource.messages
 				 ? 0622U
 				 : 0600U));
@@ -4204,8 +4204,11 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #ifdef __hpux
 		/* ioctl chokes when the "reserved" process group controls
 		 * are not set to _POSIX_VDISABLE */
-		ltc.t_rprntc = ltc.t_rprntc = ltc.t_flushc =
-		    ltc.t_werasc = ltc.t_lnextc = _POSIX_VDISABLE;
+		ltc.t_rprntc = _POSIX_VDISABLE;
+		ltc.t_rprntc = _POSIX_VDISABLE;
+		ltc.t_flushc = _POSIX_VDISABLE;
+		ltc.t_werasc = _POSIX_VDISABLE;
+		ltc.t_lnextc = _POSIX_VDISABLE;
 #endif /* __hpux */
 		if (ioctl(ttyfd, TIOCSLTC, &ltc) == -1)
 		    HsSysError(ERROR_TIOCSETC);
@@ -4628,7 +4631,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    if (xw->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		size_t size = sizeof(struct lastlog);
-		off_t offset = (off_t) (screen->uid * size);
+		off_t offset = (off_t) ((size_t) screen->uid * size);
 
 		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
