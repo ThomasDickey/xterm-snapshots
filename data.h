@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.129 2017/05/29 20:10:52 tom Exp $ */
+/* $XTermId: data.h,v 1.130 2017/05/31 01:13:01 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -237,7 +237,7 @@ typedef struct XTERM_RESOURCE {
 #endif
 } XTERM_RESOURCE;
 
-Boolean guard_keyboard_type;
+extern Boolean guard_keyboard_type;
 extern XTERM_RESOURCE resource;
 
 #ifdef USE_IGNORE_RC

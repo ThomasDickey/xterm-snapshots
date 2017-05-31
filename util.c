@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.709 2017/05/29 23:19:13 tom Exp $ */
+/* $XTermId: util.c,v 1.712 2017/05/31 09:00:07 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4524,7 +4524,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     }
 #endif
 #if OPT_WIDE_ATTRS
-#define DIM_IT(n) work.n = (unsigned short) ((2 * work.n) / 3)
+#define DIM_IT(n) work.n = (unsigned short) ((2 * (unsigned)work.n) / 3)
     if ((attr_flags & ATR_FAINT)) {
 	static Pixel last_in;
 	static Pixel last_out;
@@ -4608,7 +4608,7 @@ unsigned
 getXtermCombining(TScreen *screen, int row, int col, int off)
 {
     CLineData *ld = getLineData(screen, row);
-    return (ld->combSize ? ld->combData[off][col] : 0);
+    return (ld->combSize ? ld->combData[off][col] : 0U);
 }
 #endif
 
@@ -4876,7 +4876,7 @@ decode_wcwidth(XtermWidget xw)
     }
 
     for (first_widechar = 128; first_widechar < 4500; ++first_widechar) {
-	if (my_wcwidth((int) first_widechar) > 1) {
+	if (my_wcwidth((wchar_t) first_widechar) > 1) {
 	    TRACE(("first_widechar %#x\n", first_widechar));
 	    break;
 	}

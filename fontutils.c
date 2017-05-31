@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.525 2017/05/30 09:03:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.526 2017/05/31 01:10:40 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -125,7 +125,7 @@ static Boolean merge_sublist(char ***, char **);
 #endif
 
 static void save2FontList(XtermWidget, const char *, XtermFontNames *,
-			  VTFontEnum, const char *, Boolean);
+			  VTFontEnum, const char *, Bool);
 
 #if OPT_RENDERFONT
 static void fillInFaceSize(XtermWidget, int);
@@ -3834,12 +3834,12 @@ save2FontList(XtermWidget xw,
 	      XtermFontNames * fontnames,
 	      VTFontEnum which,
 	      const char *source,
-	      Boolean ttf)
+	      Bool ttf)
 {
     char *value;
     size_t plen;
-    Boolean marked = False;
-    Boolean use_ttf = ttf;
+    Bool marked = False;
+    Bool use_ttf = ttf;
 
     (void) xw;
 
@@ -3895,7 +3895,7 @@ save2FontList(XtermWidget xw,
 	plen = 0;
     value = x_strtrim(source + plen);
     if (value != 0) {
-	Boolean success = False;
+	Bool success = False;
 #if OPT_RENDERFONT
 	VTFontList *target = (use_ttf
 			      ? &(fontnames->xft)
@@ -4010,7 +4010,7 @@ allocFontList(XtermWidget xw,
 	      XtermFontNames * target,
 	      VTFontEnum which,
 	      const char *source,
-	      Boolean ttf)
+	      Bool ttf)
 {
     char *blob;
 
@@ -4059,7 +4059,7 @@ static void
 initFontList(XtermWidget xw,
 	     const char *name,
 	     XtermFontNames * target,
-	     Boolean ttf)
+	     Bool ttf)
 {
     int which;
 

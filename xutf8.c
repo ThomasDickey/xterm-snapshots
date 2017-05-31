@@ -1,7 +1,7 @@
-/* $XTermId: xutf8.c,v 1.14 2016/12/23 20:25:50 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.16 2017/05/31 09:05:00 tom Exp $ */
 
 /*
- * Copyright 2002-2012,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  * Copyright (c) 2001 by Juliusz Chroboczek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -95,10 +95,10 @@ utf8insert(char *dest, int c, size_t *len_return)
     }
 }
 
-static int
+static size_t
 l1countUtf8Bytes(char *s, size_t len)
 {
-    int l = 0;
+    size_t l = 0;
     while (len != 0) {
 	if ((*s & 0x80) == 0)
 	    l++;

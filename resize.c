@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.138 2017/05/18 20:09:01 tom Exp $ */
+/* $XTermId: resize.c,v 1.139 2017/05/31 08:58:56 tom Exp $ */
 
 /*
  * Copyright 2003-2015,2017 by Thomas E. Dickey
@@ -517,7 +517,7 @@ main(int argc, char **argv ENVP_ARG)
 	   the current height & width of the window in pixels.  We try
 	   our best by computing the font height and width from the "old"
 	   window-size values, and multiplying by these ratios... */
-#define scaled(old,new,len) (old)?((new)*(len)/(old)):(len)
+#define scaled(old,new,len) (old)?((unsigned)(new)*(len)/(old)):(len)
 	setup_winsize(ts, rows, cols,
 		      scaled(TTYSIZE_ROWS(ts), rows, ts.ws_ypixel),
 		      scaled(TTYSIZE_COLS(ts), cols, ts.ws_xpixel));

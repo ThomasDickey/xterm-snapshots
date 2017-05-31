@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1478 2017/05/29 20:27:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1480 2017/05/31 20:23:39 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1441,9 +1441,16 @@ dump_params(void)
 		    new_string = TypeMallocN(type, new_length); \
 		    if (new_string != 0 \
 		     && area != 0 \
-		     && used != 0) \
+		     && used != 0) { \
 			memcpy(new_string, area, used * sizeof(type)); \
+		     } \
 		}
+#define SafeFree(area, size) \
+		if (area != new_string) { \
+		    free(area); \
+		    area = new_string; \
+		} \
+		size = new_length
 
 #define WriteNow() {						\
 	    unsigned single = 0;				\
@@ -2164,6 +2171,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			     (unsigned long) new_length);
 		continue;
 	    }
+	    SafeFree(sp->print_area, sp->print_size);
 #if OPT_VT52_MODE
 	    /*
 	     * Strip output text to 7-bits for VT52.  We should do this for
@@ -2173,8 +2181,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level < 1)
 		c &= 0x7f;
 #endif
-	    sp->print_area = new_string;
-	    sp->print_size = new_length;
 	    sp->print_area[sp->print_used++] = (IChar) c;
 	    sp->lastchar = thischar = (int) c;
 #if OPT_WIDE_CHARS
@@ -2201,6 +2207,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			     (unsigned long) new_length, sp->string_mode);
 		continue;
 	    }
+	    SafeFree(sp->string_area, sp->string_size);
 #if OPT_WIDE_CHARS
 	    /*
 	     * We cannot display codes above 255, but let's try to
@@ -2212,11 +2219,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		c = '?';
 	    }
 #endif
-	    if (sp->string_area != new_string) {
-		free(sp->string_area);
-	    }
-	    sp->string_area = new_string;
-	    sp->string_size = new_length;
 	    sp->string_area[(sp->string_used)++] = CharOf(c);
 	} else if (sp->parsestate != esc_table) {
 	    /* if we were accumulating, we're not any more */
