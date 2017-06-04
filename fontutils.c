@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.526 2017/05/31 01:10:40 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.527 2017/06/04 20:57:48 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -4063,7 +4063,7 @@ initFontList(XtermWidget xw,
 {
     int which;
 
-    TRACE(("initFontLists\n"));
+    TRACE(("initFontList(%s)\n", name));
     for (which = 0; which < fMAX; ++which) {
 	save2FontList(xw, name, target, which, "", ttf);
     }

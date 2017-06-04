@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.86 2017/05/30 23:26:31 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.88 2017/06/04 22:16:39 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -102,7 +102,8 @@
 
 /* controls for extensions over VT3x0 limitations */
 #define ENABLE_RGB_COLORSPECS
-#define ENABLE_FREE_ROTATION
+#undef ENABLE_FREE_ROTATION
+#undef ENABLE_DISTORTIONLESS_ROTATION
 #define ENABLE_UPLOAD_ALPHABET_FROM_FONT
 #define ENABLE_UPLOAD_ALPHABET_ZERO
 #define ENABLE_USER_FONT_SIZE
@@ -384,6 +385,14 @@ draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
 	    color = context->background;
 	}
 	break;
+    }
+
+    if (context->temporary_write_controls.plane_mask != context->all_planes) {
+	unsigned old_color = READ_PIXEL(context, x, y);
+	if (old_color == COLOR_HOLE)
+	    old_color = context->background;
+	color = (color & context->temporary_write_controls.plane_mask) |
+	    (old_color & ~context->temporary_write_controls.plane_mask);
     }
 
     DRAW_PIXEL(context, x, y, color);
@@ -2285,8 +2294,64 @@ draw_character(RegisGraphicsContext *context, int ch,
 }
 
 static void
+move_text(RegisGraphicsContext *context, int dx, int dy)
+{
+    double total_rotation;
+    int str_invert;
+    int str_shear_x, str_shear_y;
+    int chr_shear_x, chr_shear_y;
+    int ox, oy;
+
+    total_rotation = 2.0 * M_PI *
+	context->current_text_controls->string_rotation / 360.0;
+    while (total_rotation > 1.5 * M_PI) {
+	total_rotation -= 2.0 * M_PI;
+    }
+    if (total_rotation > 0.5 * M_PI) {
+	total_rotation -= M_PI;
+	str_invert = -1;
+    } else {
+	str_invert = 1;
+    }
+    str_shear_x = (int) (ROT_SHEAR_SCALE * -tan(0.5 * -total_rotation));
+    str_shear_y = (int) (ROT_SHEAR_SCALE * sin(-total_rotation));
+
+    total_rotation = 2.0 * M_PI *
+	context->current_text_controls->character_rotation / 360.0;
+    while (total_rotation > 1.5 * M_PI) {
+	total_rotation -= 2.0 * M_PI;
+    }
+    chr_shear_x = (int) (ROT_SHEAR_SCALE * -tan(0.5 * -total_rotation));
+    chr_shear_y = (int) (ROT_SHEAR_SCALE * sin(-total_rotation));
+
+    TRACE(("str_shear: %.5f, %.5f (sign=%d)\n",
+	   str_shear_x / (double) ROT_SHEAR_SCALE,
+	   str_shear_y / (double) ROT_SHEAR_SCALE,
+	   str_invert));
+    TRACE(("chr_shear: %.5f, %.5f\n",
+	   chr_shear_x / (double) ROT_SHEAR_SCALE,
+	   chr_shear_y / (double) ROT_SHEAR_SCALE));
+
+    ox = str_invert * dx + (str_shear_x * dy) / ROT_SHEAR_SCALE;
+    oy = str_invert * dy + (str_shear_y * ox) / ROT_SHEAR_SCALE;
+    ox += (str_shear_x * oy) / ROT_SHEAR_SCALE;
+
+    TRACE(("after pv output updating position %+d,%+d\n", ox, oy));
+    context->graphics_output_cursor_x += ox;
+    context->graphics_output_cursor_y += oy;
+
+    return;
+}
+
+#define UPSCALE_TEXT_DIMENSION(D) do { *(D) = (double)(*(D)) * M_SQRT2; } while (0)
+
+static void
 draw_text(RegisGraphicsContext *context, char const *str)
 {
+#ifndef ENABLE_DISTORTIONLESS_ROTATION
+    RegisTextControls *old_text_controls = NULL;
+    RegisTextControls scratch_text_controls;
+#endif
     double total_rotation;
     size_t ii;
     int str_invert;
@@ -2329,6 +2394,27 @@ draw_text(RegisGraphicsContext *context, char const *str)
     begin_x = context->graphics_output_cursor_x;
     begin_y = context->graphics_output_cursor_y;
 
+#ifndef ENABLE_DISTORTIONLESS_ROTATION
+    if (context->current_text_controls->character_rotation != 0 &&
+	context->current_text_controls->character_rotation != 90 &&
+	context->current_text_controls->character_rotation != 180 &&
+	context->current_text_controls->character_rotation != 270) {
+	old_text_controls = context->current_text_controls;
+	scratch_text_controls = *context->current_text_controls;
+	UPSCALE_TEXT_DIMENSION(&scratch_text_controls.character_display_w);
+	UPSCALE_TEXT_DIMENSION(&scratch_text_controls.character_display_h);
+	/* FIXME: Not sure if this is really scaled.  The increment seems to
+	 * _not_ be scaled.
+	 */
+	UPSCALE_TEXT_DIMENSION(&scratch_text_controls.character_unit_cell_w);
+	UPSCALE_TEXT_DIMENSION(&scratch_text_controls.character_unit_cell_h);
+	context->current_text_controls = &scratch_text_controls;
+	TRACE(("scaled up text to %dx%d\n",
+	       scratch_text_controls.character_display_w,
+	       scratch_text_controls.character_display_h));
+    }
+#endif
+
     total_rotation = 2.0 * M_PI *
 	context->current_text_controls->string_rotation / 360.0;
     while (total_rotation > 1.5 * M_PI) {
@@ -2363,10 +2449,6 @@ draw_text(RegisGraphicsContext *context, char const *str)
     chr_shear_x = (int) (ROT_SHEAR_SCALE * -tan(0.5 * -total_rotation));
     chr_shear_y = (int) (ROT_SHEAR_SCALE * sin(-total_rotation));
 
-    /*
-     * FIXME: it isn't clear from the docs how slant affects the x positioning.
-     * For now the code assumes the upper left is fixed.
-     */
     {
 	const int slant = context->current_text_controls->slant;
 
@@ -2396,6 +2478,8 @@ draw_text(RegisGraphicsContext *context, char const *str)
 	   chr_shear_y / (double) ROT_SHEAR_SCALE,
 	   chr_x_sign_x, chr_x_sign_y,
 	   chr_y_sign_x, chr_y_sign_y));
+    TRACE(("character_inc: %d,%d\n",
+	   context->current_text_controls->character_inc_x, context->current_text_controls->character_inc_y));
 
     rx = 0;
     ry = 0;
@@ -2419,6 +2503,8 @@ draw_text(RegisGraphicsContext *context, char const *str)
 	    ox = str_invert * rx + (str_shear_x * ry) / ROT_SHEAR_SCALE;
 	    oy = str_invert * ry + (str_shear_y * ox) / ROT_SHEAR_SCALE;
 	    ox += (str_shear_x * oy) / ROT_SHEAR_SCALE;
+	    TRACE(("during text output updating position to %d,%d + %+d,%+d for '%c'\n",
+		   begin_x, begin_y, ox, oy, str[ii]));
 	    context->graphics_output_cursor_x = begin_x + ox;
 	    context->graphics_output_cursor_y = begin_y + oy;
 	    draw_character(context, str[ii], slant_dx,
@@ -2430,11 +2516,22 @@ draw_text(RegisGraphicsContext *context, char const *str)
 	}
     }
 
-    ox = rx + (str_shear_x * ry) / ROT_SHEAR_SCALE;
-    oy = ry + (str_shear_y * ox) / ROT_SHEAR_SCALE;
+    ox = str_invert * rx + (str_shear_x * ry) / ROT_SHEAR_SCALE;
+    oy = str_invert * ry + (str_shear_y * ox) / ROT_SHEAR_SCALE;
     ox += (str_shear_x * oy) / ROT_SHEAR_SCALE;
+    TRACE(("after text output updating position to %d,%d + %+d,%+d\n",
+	   begin_x, begin_y, ox, oy));
     context->graphics_output_cursor_x = begin_x + ox;
     context->graphics_output_cursor_y = begin_y + oy;
+
+#ifndef ENABLE_DISTORTIONLESS_ROTATION
+    if (context->current_text_controls->character_rotation != 0 &&
+	context->current_text_controls->character_rotation != 90 &&
+	context->current_text_controls->character_rotation != 180 &&
+	context->current_text_controls->character_rotation != 270) {
+	context->current_text_controls = old_text_controls;
+    }
+#endif
 
     context->destination_graphic->dirty = 1;
     return;
@@ -4614,7 +4711,7 @@ parse_regis_command(RegisParseState *state)
 	 * (A<setting>)  # 0 == disable alternate, 1 == enable alternate/blink FIXME
 	 * (C)  # complement writing mode
 	 * (E)  # erase writing mode
-	 * (F<plane>)  # set the foreground intensity to a specific register
+	 * (F<plane>)  # set the plane mask to control which pixel bits are updated
 	 * (I<color register>)  # set the foreground to a specific register
 	 * (I(<rgbcode>))  # set the foreground to the register closest to an "RGB" color
 	 * (I(R<r>G<g>B<b>))  # set the foreground to the register closest to an RGB triplet (RLogin extension)
@@ -5961,7 +6058,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    break;
 		case TEXT_TILT_STATE_GOT_D:
 		    /* If there are multiple angles with no size only the last
-                     * value is used.
+		     * value is used.
 		     */
 		    TRACE(("character rotation (direction): %d\n", rotation));
 		    context->current_text_controls->character_rotation = rotation;
@@ -5974,7 +6071,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		case TEXT_TILT_STATE_GOT_DSD:
 		default:
 		    /* If there are multiple angles with no size only the last
-                     * value is used.
+		     * value is used.
 		     */
 		    TRACE(("changing character rotation (direction): %d\n", rotation));
 		    context->current_text_controls->character_rotation = rotation;
@@ -6793,9 +6890,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		dy *= (int) (
 				context->current_text_controls->character_display_h
 				>> 1U);
-		TRACE(("adding character offset %d,%d\n", dx, dy));
-		context->graphics_output_cursor_x += dx;
-		context->graphics_output_cursor_y += dy;
+		TRACE(("adding character offset %d,%d\n (ds=%dx%d)", dx, dy,
+		       context->current_text_controls->character_display_w,
+		       context->current_text_controls->character_display_h));
+		move_text(context, dx, dy);
 	    }
 	    break;
 	case 'v':

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1742 2017/06/01 08:21:10 tom Exp $
+  $XTermId: xterm.log.html,v 1.1745 2017/06/04 22:16:59 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_dev">Development</a></li>
+
     <li><a href="#xterm_328">Patch #328 - 2017/06/01</a></li>
 
     <li><a href="#xterm_327">Patch #327 - 2016/10/07</a></li>
@@ -941,6 +943,43 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
+
+  <ul>
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>Fix the output position after printing rotated text (it
+        was missing the the sign before).</li>
+
+        <li>Fix the position change with pixelvectors and rotated
+        text (the rotation transform was not being applied).</li>
+
+        <li>Update the <em>TODO</em> list and remove a verification
+        <em>FIXME</em> (slanted text positioning is correct as
+        is).</li>
+
+        <li>Emulate the approximately 1.4x enlargement for text
+        which isn't rotated at right angles.</li>
+
+        <li>Only update the color planes specified in the plane
+        mask (the <code>W</code> command's <code>F</code>
+        option).</li>
+      </ul>
+    </li>
+
+    <li>fix a bug introduced by the changes to font information in
+    <a href="#xterm-328">patch #328</a>. When processing the
+    "checkfont" option of the <code>locale</code> resource, the
+    program referred to the <em>request</em> data, to an array
+    which was only allocated in the <em>new/result</em> widget
+    (report by H Merijn Brand).</li>
+
+    <li>fix a missing assignment initialization to make the
+    <code>utf8</code> resource control whether escape sequences to
+    enable/disable UTF-8 mode are allowed.</li>
+  </ul>
+
   <h1><a name="xterm_328" id="xterm_328">Patch #328 -
   2017/06/01</a></h1>
 
@@ -1172,7 +1211,7 @@ $ fc-match 'Go Mono:spacing=monospace'
 Go-Mono-Italic.ttf: "Go Mono" "Italic"
 (report by Giacomo Boffi on <a href=
 "http://unix.stackexchange.com/questions/324941/xterm-displays-an-italic-face-instead-of-regular">Stackoverflow</a>).
-  
+
 </pre>
       </blockquote>
     </li>
