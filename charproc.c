@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1480 2017/05/31 20:23:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1481 2017/06/04 21:37:04 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8450,6 +8450,13 @@ VTInitialize(Widget wrequest,
     request->screen.utf8_fonts =
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
 
+    /*
+     * Make a copy in the input/request so that DefaultFontN() works for
+     * the "CHECKFONT" option.
+     */
+    copyFontList(&(request->work.fonts.x11.list_n),
+		 wnew->work.fonts.x11.list_n);
+
     VTInitialize_locale(request);
     init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
@@ -8466,6 +8473,8 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.utf8_mode);
     init_Ires(screen.utf8_fonts);
     init_Ires(screen.max_combining);
+
+    init_Ires(screen.utf8_always);	/* from utf8_mode, used in doparse */
 
     if (screen->max_combining < 0) {
 	screen->max_combining = 0;
@@ -8792,6 +8801,9 @@ VTInitialize(Widget wrequest,
 	wnew->keyboard.flags |= MODE_DECKPAM;
 
     initLineData(wnew);
+#if OPT_WIDE_CHARS
+    freeFontList(&(request->work.fonts.x11.list_n));
+#endif
     return;
 }
 
