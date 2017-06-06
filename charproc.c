@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1481 2017/06/04 21:37:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1482 2017/06/06 23:34:31 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -10041,6 +10041,70 @@ VTSetValues(Widget cur,
     return refresh_needed;
 }
 
+/*
+ * Given a font-slot and information about selection/reverse, find the
+ * corresponding cached-GC slot.
+ */
+static int
+reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
+{
+    TScreen *screen = TScreenOf(xw);
+    CgsEnum result = gcMAX;
+
+    if (ReverseOrHilite(screen, attr_flags, hilite)) {
+	switch (font) {
+	case fNorm:
+	    result = gcNormReverse;
+	    break;
+	case fBold:
+	    result = gcBoldReverse;
+	    break;
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	case fItal:
+	    result = gcNormReverse;	/* FIXME */
+	    break;
+#endif
+#if OPT_WIDE_CHARS
+	case fWide:
+	    result = gcWideReverse;
+	    break;
+	case fWBold:
+	    result = gcWBoldReverse;
+	    break;
+	case fWItal:
+	    result = gcWideReverse;	/* FIXME */
+	    break;
+#endif
+	}
+    } else {
+	switch (font) {
+	case fNorm:
+	    result = gcNorm;
+	    break;
+	case fBold:
+	    result = gcBold;
+	    break;
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	case fItal:
+	    result = gcNorm;	/* FIXME */
+	    break;
+#endif
+#if OPT_WIDE_CHARS
+	case fWide:
+	    result = gcWide;
+	    break;
+	case fWBold:
+	    result = gcWBold;
+	    break;
+	case fWItal:
+	    result = gcWide;	/* FIXME */
+	    break;
+#endif
+	}
+    }
+    return result;
+}
+
 #define setGC(code) set_at = __LINE__, currentCgs = code
 
 #define OutsideSelection(screen,srow,scol)  \
@@ -10456,6 +10520,7 @@ HideCursor(void)
     int cursor_col;
     CLineData *ld = 0;
 #if OPT_WIDE_ATTRS
+    CgsEnum which_Cgs = gcMAX;
     unsigned attr_flags;
     int which_font = fNorm;
 #endif
@@ -10543,11 +10608,15 @@ HideCursor(void)
 		which_font = ((attr_flags & BOLD) ? fWBold : fWide);
 	    }
 	});
-	setCgsFont(xw, WhichVWin(screen),
-		   whichXtermCgs(xw, attr_flags, in_selection),
-		   (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
-		    ? getItalicFont(screen, which_font)
-		    : getNormalFont(screen, which_font)));
+
+	which_Cgs = reverseCgs(xw, attr_flags, in_selection, which_font);
+	if (which_Cgs != gcMAX) {
+	    setCgsFont(xw, WhichVWin(screen),
+		       which_Cgs,
+		       (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
+			? getItalicFont(screen, which_font)
+			: getNormalFont(screen, which_font)));
+	}
     }
 #endif
 
@@ -10585,9 +10654,9 @@ HideCursor(void)
     screen->cursor_state = OFF;
 
 #if OPT_WIDE_ATTRS
-    if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
+    if (which_Cgs != gcMAX) {
 	setCgsFont(xw, WhichVWin(screen),
-		   whichXtermCgs(xw, xw->flags, in_selection),
+		   which_Cgs,
 		   (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
 		    ? getItalicFont(screen, which_font)
 		    : getNormalFont(screen, which_font)));
