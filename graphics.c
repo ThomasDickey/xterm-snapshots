@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.71 2017/06/04 22:16:27 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.72 2017/06/07 00:19:36 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013-2015,2016 by Ross Combs
@@ -53,20 +53,20 @@
  *
  * ReGIS:
  * - ship a default alphabet zero font instead of scaling Xft fonts
- * - input and output cursors
- * - mouse input
+ * - input cursors
+ * - output cursors
+ * - mouse/tablet/arrow-key input
  * - fix graphic pages for ReGIS -- they should also apply to text and sixel graphics
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - non-ASCII alphabets
  * - enter/leave anywhere in a command
  * - locator key definitions (DECLKD)
  * - command display mode
- * - re-rasterization on resize
+ * - re-rasterization on window resize
  * - macros
  * - improved fills for narrow angles (track actual lines not just pixels)
  * - hardcopy/screen-capture support (need dialog of some sort for safety)
  * - error reporting
- * - output cursors
  *
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)

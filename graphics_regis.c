@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.88 2017/06/04 22:16:39 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.90 2017/06/07 00:30:21 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -2299,7 +2299,6 @@ move_text(RegisGraphicsContext *context, int dx, int dy)
     double total_rotation;
     int str_invert;
     int str_shear_x, str_shear_y;
-    int chr_shear_x, chr_shear_y;
     int ox, oy;
 
     total_rotation = 2.0 * M_PI *
@@ -2321,16 +2320,11 @@ move_text(RegisGraphicsContext *context, int dx, int dy)
     while (total_rotation > 1.5 * M_PI) {
 	total_rotation -= 2.0 * M_PI;
     }
-    chr_shear_x = (int) (ROT_SHEAR_SCALE * -tan(0.5 * -total_rotation));
-    chr_shear_y = (int) (ROT_SHEAR_SCALE * sin(-total_rotation));
 
     TRACE(("str_shear: %.5f, %.5f (sign=%d)\n",
 	   str_shear_x / (double) ROT_SHEAR_SCALE,
 	   str_shear_y / (double) ROT_SHEAR_SCALE,
 	   str_invert));
-    TRACE(("chr_shear: %.5f, %.5f\n",
-	   chr_shear_x / (double) ROT_SHEAR_SCALE,
-	   chr_shear_y / (double) ROT_SHEAR_SCALE));
 
     ox = str_invert * dx + (str_shear_x * dy) / ROT_SHEAR_SCALE;
     oy = str_invert * dy + (str_shear_y * ox) / ROT_SHEAR_SCALE;
@@ -2343,7 +2337,9 @@ move_text(RegisGraphicsContext *context, int dx, int dy)
     return;
 }
 
-#define UPSCALE_TEXT_DIMENSION(D) do { *(D) = (double)(*(D)) * M_SQRT2; } while (0)
+#define UPSCALE_TEXT_DIMENSION(D) do { \
+	    *(D) = (unsigned)((double)(*(D)) * M_SQRT2); \
+	} while (0)
 
 static void
 draw_text(RegisGraphicsContext *context, char const *str)
@@ -4572,7 +4568,7 @@ parse_regis_command(RegisParseState *state)
 	/* Load
 
 	 * L
-	 * (A)  # set character set number or name
+	 * (A)  # set alphabet number or name
 	 * (F)"fontname"  # load from font (xterm extension)
 	 * (S)[w,h]  # set glyph size (xterm extension)
 	 * "ascii"xx,xx,xx,xx,xx,xx,xx,xx  # pixel values
@@ -4613,11 +4609,12 @@ parse_regis_command(RegisParseState *state)
 	 * R
 	 * (E)  # parse error
 	 * (I<val>)  # set input mode (0 == one-shot, 1 == multiple) (always returns CR)
-	 * (L)  # character set
+	 * (L)  # current alphabet number and name
 	 * (M(<name>)  # macrograph contents
-	 * (M(=)  # macrograph storage
-	 * (P)  # output cursor position
-	 * (P(I))  # input cursor position (when in one-shot or multiple mode)
+	 * (M(=)  # macrograph storage (free bytes of total bytes)
+	 * (P)  # absolute output cursor position
+	 * (P(I))  # interactive locator mode (in one-shot or multiple mode)
+	 * (P(I[xmul,ymul]))  # interactive locator mode with arrow key movement multiplers
 	 */
 	TRACE(("found ReGIS command \"%c\" (report status)\n", ch));
 	state->command = 'r';
@@ -5379,9 +5376,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		char reply[64];
 
 		TRACE(("got report last error condition\n"));
-		/* FIXME: verify no CSI */
 		/* FIXME: implement after adding error tracking */
-		sprintf(reply, "\"%u, %u\"\r", 0U, 0U);
+		sprintf(reply, "\"%u,%u\"\r", 0U, 0U);
 		unparseputs(context->display_graphic->xw, reply);
 		unparse_end(context->display_graphic->xw);
 	    }
@@ -5438,6 +5434,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 			   state->option, fragment_to_tempstr(&optionarg)));
 		}
+		/* FIXME: buffer commands until report request received */
 	    }
 	    break;
 	case 'L':
@@ -5448,25 +5445,29 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 		break;
-	    }
-	    if (state->load_index == MAX_REGIS_ALPHABETS) {
-		TRACE(("DATA_ERROR: unable to report alphabet name because no alphabet is loading\n"));
-		/* FIXME: how should errors be handled? */
-		unparseputs(context->display_graphic->xw, "\033A''\r");
-		unparse_end(context->display_graphic->xw);
-		break;
-	    }
+	    } {
+		char buffer[32];
 
-	    /* FIXME: also send CSI here? */
-	    unparseputs(context->display_graphic->xw, "\033A'");
-	    unparseputs(context->display_graphic->xw,
-			context->alphabets[state->load_index].name);
-	    unparseputs(context->display_graphic->xw, "'\r");
-	    unparse_end(context->display_graphic->xw);
+		if (state->load_index == MAX_REGIS_ALPHABETS) {
+		    /* If this happens something went wrong elsewhere. */
+		    TRACE(("DATA_ERROR: unable to report current load alphabet\n"));
+		    unparseputs(context->display_graphic->xw, "A0\"\"\r");
+		    unparse_end(context->display_graphic->xw);
+		    break;
+		}
+
+		unparseputs(context->display_graphic->xw, "A");
+		sprintf(buffer, "%d", state->load_alphabet);
+		unparseputs(context->display_graphic->xw, buffer);
+		unparseputs(context->display_graphic->xw, "\"");
+		unparseputs(context->display_graphic->xw, state->load_name);
+		unparseputs(context->display_graphic->xw, "\"\r");
+		unparse_end(context->display_graphic->xw);
+	    }
 	    break;
 	case 'M':
 	case 'm':
-	    TRACE(("found macrograph report \"%s\"\n",
+	    TRACE(("found macrograph report \"%s\" request\n",
 		   fragment_to_tempstr(&optionarg)));
 	    {
 		RegisDataFragment suboptionarg;
@@ -5475,7 +5476,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		if (extract_regis_parenthesized_data(&optionarg,
 						     &suboptionarg)) {
 		    skip_regis_whitespace(&suboptionarg);
-		    TRACE(("got macrograph report character: \"%s\"\n",
+		    TRACE(("got macrograph report character request: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionarg)));
 		    if (fragment_len(&suboptionarg) > 0U) {
 			name = pop_fragment(&suboptionarg);
@@ -5503,19 +5504,17 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		if (name == '=') {
 		    char reply[64];
 
-		    TRACE(("got report macrograph storage\n"));
-		    /* FIXME: verify no CSI */
-		    /* FIXME: implement when macrographs are supported */
-		    sprintf(reply, "\"%u, %u\"\r", 1000U, 1000U);
+		    TRACE(("got report macrograph storage request\n"));
+		    /* FIXME: Implement when macrographs are supported. */
+		    sprintf(reply, "\"%u,%u\"\r", 1000U, 1000U);
 		    unparseputs(context->display_graphic->xw, reply);
 		    unparse_end(context->display_graphic->xw);
 		} else {
-		    TRACE(("got report macrograph name '%c'\n", name));
+		    TRACE(("got report macrograph request for name '%c'\n", name));
 		    /*
 		     * FIXME: Implement when macrographs are supported (and
 		     * allow it to be disabled for security reasons).
 		     */
-		    /* FIXME: also send CSI here? */
 		    unparseputs(context->display_graphic->xw, "@;\r");
 		    unparse_end(context->display_graphic->xw);
 		}
@@ -5537,6 +5536,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    if (fragment_len(&suboptionarg) > 0U) {
 			char suboption;
 
+			/* FIXME: handle cursor movement multipliers */
 			suboption = pop_fragment(&suboptionarg);
 			if (suboption == 'i' || suboption == 'I') {
 			    output = 0;		/* input location report */
@@ -5567,10 +5567,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		if (output == 1) {
 		    char reply[64];
 
-		    /* FIXME: verify no leading char or button sequence */
-		    /* FIXME: should we ever send an eight-bit CSI? */
 		    /* FIXME: verify in absolute, not user, coordinates */
-		    sprintf(reply, "\033[[%d,%d]\r",
+		    sprintf(reply, "[%d,%d]\r",
 			    context->graphics_output_cursor_x,
 			    context->graphics_output_cursor_y);
 		    unparseputs(context->display_graphic->xw, reply);
@@ -5590,7 +5588,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			/* FIXME: verify in absolute, not user, coordinates */
 			TRACE(("sending multi-mode input report at %d,%d\n",
 			       x, y));
-			sprintf(reply, "\033[[%d,%d]\r", x, y);
+			sprintf(reply, "[%d,%d]\r", x, y);
 			unparseputs(context->display_graphic->xw, reply);
 			unparse_end(context->display_graphic->xw);
 			break;
@@ -5610,20 +5608,31 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			/* extra button: CSI247~ */
 			/* FIXME: support DECLBD to change button assignments */
 			/* FIXME: verify no leading char or button sequence */
-			/* FIXME: should we ever send an eight-bit CSI? */
 			TRACE(("sending one-shot input report with %c at %d,%d\n",
 			       ch, x, y));
-			sprintf(reply, "\033[%c[%d,%d]\r", ch, x, y);
+			if (ch == '\r') {
+			    /* Return only reports the location. */
+			    sprintf(reply, "[%d,%d]\r", x, y);
+			} else if (ch == '\177') {
+			    /* DEL exits locator mode reporting nothing. */
+			    sprintf(reply, "\r");
+			} else {
+			    sprintf(reply, "%c[%d,%d]\r", ch, x, y);
+			}
 			unparseputs(context->display_graphic->xw, reply);
 			unparse_end(context->display_graphic->xw);
+			/* FIXME: exit one-shot mode and disable input cursor */
 			break;
 		    }
 		}
 	    }
 	    break;
 	default:
-	    TRACE(("DATA_ERROR: ignoring unknown ReGIS report command option '%c' arg \"%s\"\n",
+	    TRACE(("DATA_ERROR: sending empty report for unknown ReGIS report command option '%c' arg \"%s\"\n",
 		   state->option, fragment_to_tempstr(&optionarg)));
+	    /* Unknown report request types must receive empty reports. */
+	    unparseputs(context->display_graphic->xw, "\r");
+	    unparse_end(context->display_graphic->xw);
 	    break;
 	}
 	break;
@@ -5769,6 +5778,11 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		return 1;
 	    }
 	    DRAW_ALL(context, context->background);
+	    /* FIXME: also set origin to 0,0 (presumably upper-left address, or maybe addressing is reset) */
+	    context->fill_point_count = 0U;
+	    context->fill_mode = 0;
+	    state->num_points = 0U;
+	    state->stack_next = 0U;
 	    context->destination_graphic->dirty = 1;
 	    context->force_refresh = 1;
 	    break;
