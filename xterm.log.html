@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1746 2017/06/06 23:39:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.1747 2017/06/07 00:20:56 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -953,6 +953,18 @@
     <li>updates for ReGIS (Ross Combs):
 
       <ul>
+        <li>Make the <code>S(E)</code> command reset more state
+        than just the screen contents.</li>
+
+        <li>Remove two rotation variables which were only being
+        printed.</li>
+
+        <li>Numerous minor fixes and comment updates in the
+        <code>R</code> command.</li>
+
+        <li>Unknown <code>R</code> command option names trigger an
+        empty response.</li>
+
         <li>Fix the output position after printing rotated text (it
         was missing the the sign before).</li>
 
