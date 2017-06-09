@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.527 2017/06/04 20:57:48 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.528 2017/06/08 23:53:31 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -791,6 +791,20 @@ xtermFontName(const char *normal)
     memset(&data, 0, sizeof(data));
     if (normal)
 	data.f_n = x_strdup(normal);
+    return &data;
+}
+
+const VTFontNames *
+defaultVTFontNames(XtermWidget xw)
+{
+    static VTFontNames data;
+    memset(&data, 0, sizeof(data));
+    data.f_n = DefaultFontN(xw);
+    data.f_b = DefaultFontB(xw);
+#if OPT_WIDE_CHARS
+    data.f_w = DefaultFontW(xw);
+    data.f_wb = DefaultFontWB(xw);
+#endif
     return &data;
 }
 
@@ -2083,14 +2097,7 @@ HandleLoadVTFonts(Widget w,
 			screen->menu_font_sizes[n] = 0;
 		    }
 		    if (font_number == fontMenu_default) {
-			VTFontNames myfonts;
-			myfonts.f_n = DefaultFontN(xw);
-			myfonts.f_b = DefaultFontB(xw);
-#if OPT_WIDE_CHARS
-			myfonts.f_w = DefaultFontW(xw);
-			myfonts.f_wb = DefaultFontWB(xw);
-#endif
-			SetVTFont(xw, font_number, True, &myfonts);
+			SetVTFont(xw, font_number, True, defaultVTFontNames(xw));
 		    } else {
 			SetVTFont(xw, font_number, True, NULL);
 		    }
