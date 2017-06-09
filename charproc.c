@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1482 2017/06/06 23:34:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1483 2017/06/08 23:48:53 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -9244,7 +9244,7 @@ VTRealize(Widget w,
     TabReset(xw->tabs);
 
     if (screen->menu_font_number == fontMenu_default) {
-	myfont = xtermFontName(DefaultFontN(xw));
+	myfont = defaultVTFontNames(xw);
     } else {
 	myfont = xtermFontName(screen->MenuFontName(screen->menu_font_number));
     }
