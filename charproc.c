@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1483 2017/06/08 23:48:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1484 2017/06/11 20:19:08 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -5079,6 +5079,7 @@ dotext(XtermWidget xw,
 	    if (chars_chomped != 0 && next_col <= screen->max_col) {
 		WriteText(xw, buf + offset, chars_chomped);
 	    } else if (!did_wrap
+		       && len > 0
 		       && (xw->flags & WRAPAROUND)
 		       && screen->cur_col > ScrnLeftMargin(xw)) {
 		force_wrap = True;
