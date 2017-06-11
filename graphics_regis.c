@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.90 2017/06/07 00:30:21 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.92 2017/06/11 21:47:52 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -3830,6 +3830,21 @@ load_regis_write_control(RegisParseState *state,
     TRACE(("checking write control option \"%c\" with arg \"%s\"\n",
 	   option, fragment_to_tempstr(arg)));
     switch (option) {
+    case 'A':
+    case 'a':
+	TRACE(("write control alternate display method \"%s\"\n",
+	       fragment_to_tempstr(arg)));
+	{
+	    int val;
+	    if (!regis_num_to_int(arg, &val) || val < 0 || val >= 1) {
+		TRACE(("DATA_ERROR: interpreting out of range value as 0 FIXME\n"));
+		break;
+	    }
+	    if (val == 1) {
+		TRACE(("ERROR: blink display method not supported FIXME\n"));
+	    }
+	}
+	break;
     case 'C':
     case 'c':
 	TRACE(("write control compliment writing mode \"%s\"\n",
@@ -3850,7 +3865,7 @@ load_regis_write_control(RegisParseState *state,
 	    int val;
 	    if (!regis_num_to_int(arg, &val) ||
 		val < 0 || val >= (int) context->destination_graphic->valid_registers) {
-		TRACE(("interpreting out of range value as 0 FIXME\n"));
+		TRACE(("DATA_ERROR: interpreting out of range value as 0 FIXME\n"));
 		out->plane_mask = 0U;
 	    } else {
 		out->plane_mask = (unsigned) val;
@@ -5457,7 +5472,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 
 		unparseputs(context->display_graphic->xw, "A");
-		sprintf(buffer, "%d", state->load_alphabet);
+		sprintf(buffer, "%u", state->load_alphabet);
 		unparseputs(context->display_graphic->xw, buffer);
 		unparseputs(context->display_graphic->xw, "\"");
 		unparseputs(context->display_graphic->xw, state->load_name);
@@ -6204,7 +6219,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'M':
 	case 'm':
-	    TRACE(("found text command size multiplier \"%s\"\n",
+	    TRACE(("found text command unit size multiplier \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    {
 		RegisDataFragment sizemultiplierarg;
@@ -6212,7 +6227,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		int ww, hh;
 
 		if (!extract_regis_extent(&optionarg, &sizemultiplierarg)) {
-		    TRACE(("DATA_ERROR: expected extent in size multiplier option: \"%s\"\n",
+		    TRACE(("DATA_ERROR: expected extent in unit size multiplier option: \"%s\"\n",
 			   fragment_to_tempstr(&optionarg)));
 		    break;
 		}
@@ -6225,6 +6240,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
 		    break;
 		}
+		/* FIXME: support fractional values */
 		if (!regis_num_to_int(&sizemultiplierarg, &sizemultiplier)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in size multiplier option: \"%s\"\n",
 			   fragment_to_tempstr(&sizemultiplierarg)));
@@ -6242,13 +6258,16 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    hh = 16;
 		}
 
-		TRACE(("using size multiplier: %d,%d\n", ww, hh));
+		TRACE(("using unit size multiplier: %d,%d\n", ww, hh));
 
-		/* times the S1 character unit cell dimensions */
+		/* Times the base character unit cell dimensions (the VT3x0
+		 * manual says this is with the height multiplier, but that
+		 * seems to be incorrect).
+		 */
 		context->current_text_controls->character_unit_cell_w =
 		    (unsigned) ww *8U;
 		context->current_text_controls->character_unit_cell_h =
-		    (unsigned) hh *20U;
+		    (unsigned) hh *10U;
 
 		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
@@ -6955,6 +6974,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	case 't':
 	    TRACE(("found string to draw: \"%s\"\n", state->temp));
 	    draw_text(context, state->temp);
+	    break;
+	case '_':
+	    TRACE(("found comment: \"%s\"\n", state->temp));
 	    break;
 	default:
 	    TRACE(("DATA_ERROR: unexpected string argument to \"%c\" command: \"%s\"\n",

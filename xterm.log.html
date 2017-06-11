@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1749 2017/06/11 20:23:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.1750 2017/06/11 20:35:23 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -961,6 +961,15 @@
     <li>updates for ReGIS (Ross Combs):
 
       <ul>
+        <li>Strings specified with no command are used as
+        "comments". Print these in the log when tracing.</li>
+
+        <li>Catch attempts to use "alternate display" mode (AKA
+        "blink") from the GIGI, but do not implement it.</li>
+
+        <li>The <code>T(M)</code> command should only multiply the
+        height by 10, not 20.</li>
+
         <li>Make the <code>S(E)</code> command reset more state
         than just the screen contents.</li>
 
