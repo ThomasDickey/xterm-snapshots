@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.69 2017/05/30 08:59:50 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.70 2017/06/11 21:20:37 tom Exp $ */
 
 /*
  * Copyright 2000-2016,2017 by Thomas E. Dickey
@@ -47,6 +47,14 @@ alloc_pw(struct passwd *target, struct passwd *source)
     target->pw_dir = x_strdup(source->pw_dir);
     target->pw_name = x_strdup(source->pw_name);
     target->pw_shell = x_strdup(source->pw_shell);
+}
+
+static void
+free_pw(struct passwd *source)
+{
+    free(source->pw_dir);
+    free(source->pw_name);
+    free(source->pw_shell);
 }
 
 void
@@ -154,12 +162,14 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
     if (!IsEmpty(login_name)
 	&& strcmp(login_name, in_out->pw_name)) {
 	struct passwd pw2;
+	Boolean ok2;
 
-	if (x_getpwnam(login_name, &pw2)) {
+	if ((ok2 = x_getpwnam(login_name, &pw2))) {
 	    uid_t uid2 = pw2.pw_uid;
 	    struct passwd pw3;
+	    Boolean ok3;
 
-	    if (x_getpwuid(uid, &pw3)
+	    if ((ok3 = x_getpwuid(uid, &pw3))
 		&& ((uid_t) pw3.pw_uid == uid2)) {
 		/* use the other passwd-data including shell */
 		alloc_pw(in_out, &pw2);
@@ -167,6 +177,10 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 		free(login_name);
 		login_name = NULL;
 	    }
+	    if (ok2)
+		free_pw(&pw2);
+	    if (ok3)
+		free_pw(&pw3);
 	}
     }
     return login_name;
