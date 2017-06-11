@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1748 2017/06/09 00:16:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.1749 2017/06/11 20:23:11 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -946,6 +946,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add a workaround for <code>wcwidth</code> returning -1 for
+    characters which should have been printable (FreeBSD
+    #219800).</li>
+
     <li>fix a bug in font initialization from <a href=
     "#xterm_328">patch #328</a> (FreeBSD #219800).</li>
 
