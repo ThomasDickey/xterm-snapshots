@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #328 (2017/05/28)
+               updated for XTerm Patch #329 (2017/06/11)
 
 
 
@@ -330,18 +330,44 @@ CSI ? Pi; Pa; Pv S
           If configured to support either Sixel Graphics or ReGIS Graph-
           ics, xterm accepts a three-parameter control sequence, where
           Pi, Pa and Pv are the item, action and value:
-            Pi = 1  -> item (color registers).
-            Pa = 1  -> read the number of color registers.
-            Pa = 2  -> reset the number of color registers.
-            Pa = 3  -> set the number of color registers to the value
-          Pv.
-          The control sequence returns a response using the same form:
+
+            Pi = 1  -> item is number of color registers.
+            Pi = 2  -> item is Sixel graphics geometry (in pixels).
+            Pi = 3  -> item is ReGIS graphics geometry (in pixels).
+
+            Pa = 1  -> read
+            Pa = 2  -> reset to default
+            Pa = 3  -> set to value in Pv
+            Pa = 4  -> read the maximum allowed value
+
+            Pv can be omitted except when setting (Pa == 3 ).
+            Pv = n <- A single integer is used for color registers.
+            Pv = width; height <- Two integers for graphics geometry.
+
+          xterm replies with a control sequence of the same form:
 
                CSI ? Pi; Ps; Pv S
 
           where Ps is the status:
             Ps = 0  -> success.
+            Ps = 1  -> error in Pi.
+            Ps = 2  -> error in Pa.
             Ps = 3  -> failure.
+
+          On success, Pv represents the value read or set.
+
+          Notes:
+          o The current implementation allows reading the graphics
+            sizes, but disallows modifying those sizes because that is
+            done once, using resource-values.
+          o Graphics geometry is not necessarily the same as "window
+            size" (see the dtterm window manipulation extensions). For
+            example, xterm limits the maximum graphics geometry at com-
+            pile time (1000x1000 as of version 328) although the window
+            size can be larger.
+          o While resizing a window will always change the current
+            graphics geometry, the reverse is not true.  Setting graph-
+            ics geometry does not affect the window size.
 CSI Ps T  Scroll down Ps lines (default = 1) (SD).
 CSI Ps ; Ps ; Ps ; Ps ; Ps T
           Initiate highlight mouse tracking.  Parameters are

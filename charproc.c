@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1484 2017/06/11 20:19:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1487 2017/06/12 01:01:20 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3640,6 +3640,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		} else {
 		    int status = 3;
 		    int result = 0;
+		    int result2 = 0;
 
 		    TRACE(("CASE_GRAPHICS_ATTRIBUTES request: %d, %d, %d\n",
 			   GetParam(0), GetParam(1), GetParam(2)));
@@ -3663,8 +3664,54 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 				result = (int) get_color_register_count(screen);
 			    }
 			    break;
+			case 4:	/* read maximum */
+			    status = 0;
+			    result = MAX_COLOR_REGISTERS;
+			    break;
 			default:
 			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES color register count request with unknown action parameter: %d\n",
+				   GetParam(1)));
+			    status = 2;
+			    break;
+			}
+			break;
+		    case 2:	/* graphics geometry */
+			switch (GetParam(1)) {
+			case 1:	/* read */
+			    status = 0;
+			    result = screen->graphics_max_wide;
+			    result2 = screen->graphics_max_high;
+			    break;
+			case 2:	/* reset */
+			    /* FALLTHRU */
+			case 3:	/* set */
+			    /* FALLTHRU */
+			case 4:	/* read maximum */
+			    /* not implemented */
+			    break;
+			default:
+			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES graphics geometry request with unknown action parameter: %d\n",
+				   GetParam(1)));
+			    status = 2;
+			    break;
+			}
+			break;
+		    case 3:	/* ReGIS geometry */
+			switch (GetParam(1)) {
+			case 1:	/* read */
+			    status = 0;
+			    result = screen->graphics_regis_def_wide;
+			    result2 = screen->graphics_regis_def_high;
+			    break;
+			case 2:	/* reset */
+			    /* FALLTHRU */
+			case 3:	/* set */
+			    /* FALLTHRU */
+			case 4:	/* read maximum */
+			    /* not implemented */
+			    break;
+			default:
+			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES ReGIS geometry request with unknown action parameter: %d\n",
 				   GetParam(1)));
 			    status = 2;
 			    break;
@@ -3679,10 +3726,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		    init_reply(ANSI_CSI);
 		    reply.a_pintro = '?';
-		    reply.a_nparam = 3;
-		    reply.a_param[0] = (ParmType) GetParam(0);
-		    reply.a_param[1] = (ParmType) status;
-		    reply.a_param[2] = (ParmType) result;
+		    count = 0;
+		    reply.a_param[count++] = (ParmType) GetParam(0);
+		    reply.a_param[count++] = (ParmType) status;
+		    reply.a_param[count++] = (ParmType) result;
+		    if (GetParam(0) >= 2)
+			reply.a_param[count++] = (ParmType) result2;
+		    reply.a_nparam = (ParmType) count;
 		    reply.a_inters = 0;
 		    reply.a_final = 'S';
 		    unparseseq(xw, &reply);
