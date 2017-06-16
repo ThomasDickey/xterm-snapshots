@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.713 2017/06/12 23:30:03 tom Exp $ */
+/* $XTermId: util.c,v 1.714 2017/06/16 22:33:38 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4819,21 +4819,11 @@ systemWcwidthOk(int samplesize, int samplepass)
 	int intern_code = mk_wcwidth(n);
 
 	/*
-	 * Since mk_wcwidth() is designed to check for nonspacing characters,
-	 * and has rough range-checks for double-width characters, it will
-	 * generally not detect cases where a code has not been assigned.
-	 *
-	 * Some experimentation with GNU libc suggests that up to 1/4 of the
-	 * codes would differ, simply because the runtime library would have a
-	 * table listing the unassigned codes, and return -1 for those.  If
-	 * mk_wcwidth() has no information about a code, it returns 1.  On the
-	 * other hand, if the runtime returns a positive number, the two should
-	 * agree.
-	 *
-	 * The "up to" is measured for 4k, 8k, 16k of data.  With only 1k, the
-	 * number of differences was only 77.  However, that is only one
-	 * system, and this is only a sanity check to avoid using broken
-	 * libraries.
+	 * When this check was originally implemented, there were few if any
+	 * libraries with full Unicode coverage.  Time passes, and it is
+	 * possible to make a full comparison of the BMP.  There are some
+	 * differences: mk_wcwidth() marks some codes as combining and some
+	 * as single-width, differing from GNU libc.
 	 */
 	if ((system_code < 0 && intern_code >= 1)
 	    || (system_code >= 0 && intern_code != system_code)) {

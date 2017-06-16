@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1489 2017/06/15 21:45:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1490 2017/06/16 23:29:00 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -8561,6 +8561,7 @@ VTInitialize(Widget wrequest,
 	TRACE(("setting utf8_mode to 0\n"));
 	screen->utf8_mode = uFalse;
     }
+    mk_wcwidth_init(screen->utf8_mode);
     TRACE(("initialized UTF-8 mode to %d\n", screen->utf8_mode));
 
 #if OPT_MINI_LUIT
