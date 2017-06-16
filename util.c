@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.712 2017/05/31 09:00:07 tom Exp $ */
+/* $XTermId: util.c,v 1.713 2017/06/12 23:30:03 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4837,6 +4837,8 @@ systemWcwidthOk(int samplesize, int samplepass)
 	 */
 	if ((system_code < 0 && intern_code >= 1)
 	    || (system_code >= 0 && intern_code != system_code)) {
+	    TRACE((".. width(U+%04X) = %d, expected %d\n",
+		   n, system_code, intern_code));
 	    ++oops;
 	}
     }
