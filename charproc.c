@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1488 2017/06/12 22:00:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1489 2017/06/15 21:45:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -10354,10 +10354,16 @@ ShowCursor(void)
 		}
 	    }
 	}
-	if (T_COLOR(screen, TEXT_CURSOR) == bg_pix ||
-	    T_COLOR(screen, TEXT_CURSOR) == (reversed
-					     ? xw->dft_background
-					     : xw->dft_foreground)) {
+
+#define CUR_XX T_COLOR(screen, TEXT_CURSOR)
+#define CGS_FG getCgsFore(xw, currentWin, getCgsGC(xw, currentWin, currentCgs))
+#define CGS_BG getCgsBack(xw, currentWin, getCgsGC(xw, currentWin, currentCgs))
+
+#define FIX_311 (CUR_XX == (reversed ? xw->dft_background : xw->dft_foreground))
+#define FIX_328 (CUR_XX == bg_pix)
+#define FIX_330 (FIX_328 && reversed && in_selection)
+
+	if (FIX_330 || FIX_311) {
 	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 	}
 	setCgsFore(xw, currentWin, currentCgs, bg_pix);
@@ -10434,10 +10440,7 @@ ShowCursor(void)
 	     * Set up a new request.
 	     */
 	    if (filled) {
-		if (T_COLOR(screen, TEXT_CURSOR) == bg_pix ||
-		    T_COLOR(screen, TEXT_CURSOR) == (reversed
-						     ? xw->dft_background
-						     : xw->dft_foreground)) {
+		if (FIX_330 || FIX_311) {
 		    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 		}
 		setCgsFore(xw, currentWin, currentCgs, bg_pix);
