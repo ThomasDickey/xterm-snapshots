@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.805 2017/05/31 08:48:40 tom Exp $ */
+/* $XTermId: main.c,v 1.806 2017/06/19 08:32:26 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -4670,7 +4670,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    TRACE_IDS;
 #ifdef HAVE_INITGROUPS
 	    if (geteuid() == 0 && OkPasswd(&pw)) {
-		if (initgroups(login_name, pw.pw_gid)) {
+		if (initgroups(login_name, (int) pw.pw_gid)) {
 		    perror("initgroups failed");
 		    SysError(ERROR_INIGROUPS);
 		}

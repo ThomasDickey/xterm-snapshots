@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1491 2017/06/18 18:10:34 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1492 2017/06/19 08:34:54 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2874,6 +2874,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			if_OPT_ISO_COLORS(screen, {
 			    break;
 			});
+			/* FALLTHRU */
 		    default:
 			TRACE(("...unexpected subparameter in SGR\n"));
 			op = 9999;
@@ -10577,7 +10578,7 @@ HideCursor(void)
     int cursor_col;
     CLineData *ld = 0;
 #if OPT_WIDE_ATTRS
-    CgsEnum which_Cgs = gcMAX;
+    int which_Cgs = gcMAX;
     unsigned attr_flags;
     int which_font = fNorm;
 #endif
@@ -10669,7 +10670,7 @@ HideCursor(void)
 	which_Cgs = reverseCgs(xw, attr_flags, in_selection, which_font);
 	if (which_Cgs != gcMAX) {
 	    setCgsFont(xw, WhichVWin(screen),
-		       which_Cgs,
+		       (CgsEnum) which_Cgs,
 		       (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
 			? getItalicFont(screen, which_font)
 			: getNormalFont(screen, which_font)));
@@ -10713,7 +10714,7 @@ HideCursor(void)
 #if OPT_WIDE_ATTRS
     if (which_Cgs != gcMAX) {
 	setCgsFont(xw, WhichVWin(screen),
-		   which_Cgs,
+		   (CgsEnum) which_Cgs,
 		   (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
 		    ? getItalicFont(screen, which_font)
 		    : getNormalFont(screen, which_font)));
