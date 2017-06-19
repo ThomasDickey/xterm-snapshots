@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.714 2017/06/16 22:33:38 tom Exp $ */
+/* $XTermId: util.c,v 1.716 2017/06/19 01:04:26 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4829,11 +4829,12 @@ systemWcwidthOk(int samplesize, int samplepass)
 	    || (system_code >= 0 && intern_code != system_code)) {
 	    TRACE((".. width(U+%04X) = %d, expected %d\n",
 		   n, system_code, intern_code));
-	    ++oops;
+	    if (++oops > samplepass)
+		break;
 	}
     }
     TRACE(("systemWcwidthOk: %d/%d mismatches, allowed %d\n",
-	   oops, samplesize, samplepass));
+	   oops, (int) n, samplepass));
     return (oops <= samplepass);
 }
 #endif /* HAVE_WCWIDTH */

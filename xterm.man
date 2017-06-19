@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.714 2017/05/30 22:57:12 tom Exp $
+.\" $XTermId: xterm.man,v 1.715 2017/06/18 18:07:02 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -3616,12 +3616,13 @@ on startup \fI\*n\fP compares its built-in tables to the system's
 wide character width data to decide if it will use the system's data.
 It tests the first \fBmkSampleSize\fP character values,
 and allows up to \fBmkSamplePass\fP mismatches before the test fails.
-The default (for the allowed number of mismatches) is 256.
+The default (for the allowed number of mismatches) is 655
+(one percent of the default value for \fBmkSampleSize\fP).
 .TP 8
 .B "mkSampleSize\fP (class\fB MkSampleSize\fP)"
 With \fBmkSamplePass\fP, this specifies a startup test used for
 initializing wide character width calculations.
-The default (number of characters to check) is 1024.
+The default (number of characters to check) is 65536.
 .TP 8
 .B "mkWidth\fP (class\fB MkWidth\fP)"
 Specifies whether \fI\*n\fP should use a built-in version of the wide
