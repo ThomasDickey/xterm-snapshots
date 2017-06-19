@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.72 2017/06/07 00:19:36 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.73 2017/06/18 18:20:22 tom Exp $ */
 
 /*
- * Copyright 2013-2015,2016 by Ross Combs
+ * Copyright 2013-2016,2017 by Ross Combs
  *
  *                         All Rights Reserved
  *
