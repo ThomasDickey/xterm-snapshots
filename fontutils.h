@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.118 2017/06/08 23:52:08 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.119 2017/06/19 08:31:10 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -39,8 +39,8 @@
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
 extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, Bool /* force */);
 extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
-extern XTermFonts * getItalicFont (TScreen * /* screen */, VTFontEnum /* which */);
-extern XTermFonts * getNormalFont (TScreen * /* screen */, VTFontEnum /* which */);
+extern XTermFonts * getItalicFont (TScreen * /* screen */, int /* which */);
+extern XTermFonts * getNormalFont (TScreen * /* screen */, int /* which */);
 extern const VTFontNames * defaultVTFontNames(XtermWidget /* xw */);
 extern const VTFontNames * xtermFontName (const char */* normal */);
 extern const char * whichFontEnum (VTFontEnum /* value */);
@@ -136,7 +136,7 @@ extern void xtermSaveVTFonts (XtermWidget /* xw */);
 
 #if OPT_RENDERFONT
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
-extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
+extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif

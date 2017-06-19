@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.160 2017/05/30 00:36:31 tom Exp $ */
+/* $XTermId: print.c,v 1.161 2017/06/19 08:11:13 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -814,7 +814,7 @@ xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
     char *my_filename = malloc(TIMESTAMP_LEN + strlen(filename));
 
     if (my_filename != 0) {
-	unsigned save_umask = umask(0177);
+	mode_t save_umask = umask(0177);
 
 	timestamp_filename(my_filename, filename);
 	SPS.fp = 0;

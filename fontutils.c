@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.528 2017/06/08 23:53:31 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.529 2017/06/19 08:37:48 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1062,7 +1062,7 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 }
 #endif
 
-typedef XTermFonts *(*MyGetFont) (TScreen *, VTFontEnum);
+typedef XTermFonts *(*MyGetFont) (TScreen *, int);
 
 void
 xtermUpdateFontGCs(XtermWidget xw, Bool italic)
@@ -1662,7 +1662,8 @@ xtermLoadItalics(XtermWidget xw)
 		char *name;
 
 		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
-		    TRACE(("xtermLoadItalics %s %s\n", whichFontEnum(n), name));
+		    TRACE(("xtermLoadItalics %s %s\n",
+			   whichFontEnum((VTFontEnum) n), name));
 		    if (xtermOpenFont(xw, name, data, False)) {
 #if OPT_TRACE
 			XFontStruct *fs = data->fs;
@@ -2192,7 +2193,7 @@ xtermXftLastChar(XftFont *xft)
 	    break;
 	}
     }
-    return (long) last;
+    return (FcChar32) last;
 }
 
 #if OPT_TRACE > 1
@@ -3695,8 +3696,8 @@ HandleSetFont(Widget w GCC_UNUSED,
 		/* FALLTHRU */
 	    case 4:
 		fonts.f_w = x_strdup(params[3]);
-		/* FALLTHRU */
 #endif
+		/* FALLTHRU */
 	    case 3:
 		fonts.f_b = x_strdup(params[2]);
 		/* FALLTHRU */
@@ -4072,7 +4073,7 @@ initFontList(XtermWidget xw,
 
     TRACE(("initFontList(%s)\n", name));
     for (which = 0; which < fMAX; ++which) {
-	save2FontList(xw, name, target, which, "", ttf);
+	save2FontList(xw, name, target, (VTFontEnum) which, "", ttf);
     }
 }
 
@@ -4188,10 +4189,10 @@ freeFontLists(VTFontList * lists)
  * XXX make this allocate the font on demand.
  */
 XTermFonts *
-getNormalFont(TScreen *screen, VTFontEnum which)
+getNormalFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
-    if ((int) which >= 0 && which < fMAX)
+    if (which >= 0 && which < fMAX)
 	result = &(screen->fnts[which]);
     return result;
 }
@@ -4209,11 +4210,11 @@ getDoubleFont(TScreen *screen, int which)
 
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
 XTermFonts *
-getItalicFont(TScreen *screen, VTFontEnum which)
+getItalicFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
 #if OPT_WIDE_ATTRS
-    if ((int) which >= 0 && which < fMAX)
+    if (which >= 0 && which < fMAX)
 	result = &(screen->ifnts[which]);
 #else
     (void) screen;
@@ -4229,12 +4230,12 @@ getItalicFont(TScreen *screen, VTFontEnum which)
  * XXX make this allocate the font on demand.
  */
 XTermXftFonts *
-getMyXftFont(XtermWidget xw, VTFontEnum which, int fontnum)
+getMyXftFont(XtermWidget xw, int which, int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
     XTermXftFonts *result = 0;
     if (fontnum >= 0 && fontnum < NMENUFONTS) {
-	switch (which) {
+	switch ((VTFontEnum) which) {
 	case fNorm:
 	    result = &(screen->renderFontNorm[fontnum]);
 	    break;

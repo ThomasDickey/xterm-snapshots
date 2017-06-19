@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.716 2017/06/19 01:04:26 tom Exp $ */
+/* $XTermId: util.c,v 1.717 2017/06/19 08:11:47 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4855,13 +4855,14 @@ decode_wcwidth(XtermWidget xw)
 	    TRACE(("using system wcwidth() function\n"));
 	    break;
 	}
-	/* FALLTHRU */
 #endif
+	/* FALLTHRU */
     case 2:
 	my_wcwidth = &mk_wcwidth;
 	TRACE(("using MK wcwidth() function\n"));
 	break;
     case 3:
+	/* FALLTHRU */
     case 4:
 	my_wcwidth = &mk_wcwidth_cjk;
 	TRACE(("using MK-CJK wcwidth() function\n"));
