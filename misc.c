@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.756 2017/05/29 20:00:36 tom Exp $ */
+/* $XTermId: misc.c,v 1.757 2017/06/20 08:52:18 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1310,6 +1310,7 @@ xtermWarning(const char *fmt,...)
     int save_err = errno;
     va_list ap;
 
+    fflush(stdout);
     TRACE(("xtermWarning fmt='%s'\n", fmt));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
@@ -1327,6 +1328,7 @@ xtermPerror(const char *fmt,...)
     char *msg = strerror(errno);
     va_list ap;
 
+    fflush(stdout);
     TRACE(("xtermPerror fmt='%s', msg='%s'\n", fmt, NonNull(msg)));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);

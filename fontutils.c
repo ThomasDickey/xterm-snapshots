@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.529 2017/06/19 08:37:48 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.531 2017/06/20 09:10:19 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -460,11 +460,58 @@ bold_font_name(FontNameProperties *props, int use_average_width)
 
 #if OPT_WIDE_ATTRS
 static char *
-italic_font_name(FontNameProperties *props, int use_average_width)
+italic_font_name(FontNameProperties *props, const char *slant)
 {
     FontNameProperties myprops = *props;
-    myprops.slant = "o";
-    return derive_font_name(&myprops, props->weight, use_average_width, props->end);
+    myprops.slant = slant;
+    return derive_font_name(&myprops, props->weight, myprops.average_width, props->end);
+}
+
+static Boolean
+open_italic_font(XtermWidget xw, int n, FontNameProperties *fp, XTermFonts * data)
+{
+    static const char *slant[] =
+    {
+	"o",
+	"i"
+    };
+    char *name;
+    Cardinal pass;
+    Boolean result = False;
+
+    for (pass = 0; pass < XtNumber(slant); ++pass) {
+	if ((name = italic_font_name(fp, slant[pass])) != 0) {
+	    TRACE(("open_italic_font %s %s\n",
+		   whichFontEnum((VTFontEnum) n), name));
+	    if (xtermOpenFont(xw, name, data, False)) {
+		result = (data->fs != 0);
+#if OPT_REPORT_FONTS
+		if (resource.reportFonts) {
+		    printf("opened italic version of %s:\n\t%s\n",
+			   whichFontEnum(n),
+			   name);
+		}
+#endif
+	    }
+	    free(name);
+	    if (result)
+		break;
+	}
+    }
+#if OPT_TRACE
+    if (result) {
+	XFontStruct *fs = data->fs;
+	if (fs != 0) {
+	    TRACE(("...actual size %dx%d (ascent %d, descent %d)\n",
+		   fs->ascent +
+		   fs->descent,
+		   fs->max_bounds.width,
+		   fs->ascent,
+		   fs->descent));
+	}
+    }
+#endif
+    return result;
 }
 #endif
 
@@ -1645,46 +1692,44 @@ xtermLoadItalics(XtermWidget xw)
 
     if (!screen->ifnts_ok) {
 	int n;
+	FontNameProperties *fp;
+	XTermFonts *data;
 
 	screen->ifnts_ok = True;
 	for (n = 0; n < fMAX; ++n) {
-	    FontNameProperties *fp;
-	    XTermFonts *data = getItalicFont(screen, n);
-
-	    /*
-	     * FIXME - need to handle font-leaks
-	     */
-	    data->fs = 0;
-	    if (getNormalFont(screen, n)->fs != 0 &&
-		(fp = get_font_name_props(screen->display,
-					  getNormalFont(screen, n)->fs,
-					  0)) != 0) {
-		char *name;
-
-		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
-		    TRACE(("xtermLoadItalics %s %s\n",
-			   whichFontEnum((VTFontEnum) n), name));
-		    if (xtermOpenFont(xw, name, data, False)) {
-#if OPT_TRACE
-			XFontStruct *fs = data->fs;
-			if (fs != 0) {
-			    TRACE(("...actual size %dx%d (ascent %d, descent %d)\n",
-				   fs->ascent +
-				   fs->descent,
-				   fs->max_bounds.width,
-				   fs->ascent,
-				   fs->descent));
-			}
+	    switch (n) {
+	    case fNorm:
+		/* FALLTHRU */
+	    case fBold:
+		/* FALLTHRU */
+#if OPT_WIDE_CHARS
+	    case fWide:
+		/* FALLTHRU */
+	    case fWBold:
 #endif
-		    } else if (n > 0) {
-			xtermCopyFontInfo(data, getItalicFont(screen, n - 1));
-		    } else {
-			xtermOpenFont(xw,
-				      getNormalFont(screen, n)->fn,
-				      data, False);
+		/* FALLTHRU */
+		data = getItalicFont(screen, n);
+
+		/*
+		 * FIXME - need to handle font-leaks
+		 */
+		data->fs = 0;
+		if (getNormalFont(screen, n)->fs != 0 &&
+		    (fp = get_font_name_props(screen->display,
+					      getNormalFont(screen, n)->fs,
+					      0)) != 0) {
+		    if (!open_italic_font(xw, n, fp, data)) {
+			if (n > 0) {
+			    xtermCopyFontInfo(data,
+					      getItalicFont(screen, n - 1));
+			} else {
+			    xtermOpenFont(xw,
+					  getNormalFont(screen, n)->fn,
+					  data, False);
+			}
 		    }
-		    free(name);
 		}
+		break;
 	    }
 	}
     }
@@ -2149,6 +2194,7 @@ xtermSetCursorBox(TScreen *screen)
 
 #if OPT_RENDERFONT
 
+#if OPT_REPORT_FONTS
 static FcChar32
 xtermXftFirstChar(XftFont *xft)
 {
@@ -2195,6 +2241,7 @@ xtermXftLastChar(XftFont *xft)
     }
     return (FcChar32) last;
 }
+#endif /* OPT_REPORT_FONTS */
 
 #if OPT_TRACE > 1
 static void
@@ -2265,6 +2312,7 @@ checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
     data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
 }
 
+#if OPT_REPORT_FONTS
 static void
 reportXftFonts(XtermWidget xw,
 	       XftFont *fp,
@@ -2301,6 +2349,9 @@ reportXftFonts(XtermWidget xw,
 	}
     }
 }
+#else
+#define reportXftFonts(xw, result, name, tag, match)	/* empty */
+#endif /* OPT_REPORT_FONTS */
 
 static XftFont *
 xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
