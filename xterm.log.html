@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1763 2017/06/20 20:37:36 tom Exp $
+  $XTermId: xterm.log.html,v 1.1764 2017/06/21 00:01:34 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -948,6 +948,35 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>updates for ReGIS (Ross Combs):
+
+      <ul>
+        <li>remove redundant text command error check which broke
+        <code>T(B)</code> and <code>T(E)</code>.</li>
+
+        <li>retain the loading alphabet number across multiple
+        &ldquo;L&rdquo; commands.</li>
+
+        <li>add <code>S(T)</code> delay handler.</li>
+
+        <li>fix some color handling error messages.</li>
+
+        <li>add stubbed-out macrograph handling.</li>
+
+        <li>use <code>fragment_remaining()</code> and
+        <code>fragment_consumed()</code> instead of manually
+        checking position / length in various places.</li>
+
+        <li>rename some local variables in string / extent / option
+        parsing</li>
+
+        <li>wrap some long lines.</li>
+
+        <li>move macrograph command handling out of the
+        top-level.</li>
+      </ul>
+    </li>
+
     <li>add a summary of the italic fonts loaded to
     <code>-report-fonts</code> option.</li>
 
