@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.92 2017/06/11 21:47:52 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.95 2017/06/20 22:58:05 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -224,6 +224,7 @@ typedef struct RegisParseState {
 #define TEXT_TILT_STATE_GOT_DSD  3U
 
 typedef struct RegisGraphicsContext {
+    XtermWidget current_widget;
     Graphic *destination_graphic;
     Graphic *display_graphic;
     int terminal_id;
@@ -305,6 +306,28 @@ static void get_bitmap_of_character(RegisGraphicsContext const *context,
 				    unsigned char *pixels,
 				    unsigned *w, unsigned *h,
 				    unsigned max_pixels);
+
+static void
+init_regis_load_state(RegisParseState *state)
+{
+    state->load_index = MAX_REGIS_ALPHABETS;
+    state->load_w = 8U;
+    state->load_h = 10U;
+    state->load_alphabet = 1U;	/* FIXME: is this the correct default */
+    state->load_name[0] = '\0';
+    state->load_glyph = (unsigned) (unsigned char) '\0';
+    state->load_row = 0U;
+}
+
+static void
+init_regis_parse_state(RegisParseState *state)
+{
+    state->command = '_';
+    state->option = '_';
+    state->stack_next = 0U;
+    state->load_index = MAX_REGIS_ALPHABETS;
+    init_regis_load_state(state);
+}
 
 static int
 ifloor(double d)
@@ -2118,9 +2141,12 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
     unsigned bestmatch;
     char const *fontname = NULL;
 
-    if (context->current_text_controls->alphabet_num == 0) {
+    assert(context);
+    assert(w);
+    assert(h);
+
+    if (context->current_text_controls->alphabet_num == 0)
 	fontname = context->builtin_font;
-    }
 
     *w = 0U;
     *h = 0U;
@@ -2710,12 +2736,24 @@ get_fragment(RegisDataFragment const *fragment, unsigned pos)
     return '\0';
 }
 
-static size_t
-fragment_len(RegisDataFragment const *fragment)
+#define fragment_length(f) (f)->len
+
+static unsigned
+fragment_remaining(RegisDataFragment const *fragment)
 {
     assert(fragment);
 
+    if (fragment->pos > fragment->len)
+	return 0U;
     return fragment->len - fragment->pos;
+}
+
+static int
+fragment_consumed(RegisDataFragment const *fragment)
+{
+    assert(fragment);
+
+    return fragment->pos >= fragment->len;
 }
 
 static void
@@ -2759,8 +2797,8 @@ skip_regis_whitespace(RegisDataFragment *input)
 
     assert(input);
 
-    for (; input->pos < input->len; input->pos++) {
-	char ch = input->start[input->pos];
+    while (!fragment_consumed(input)) {
+	char ch = peek_fragment(input);
 	if (ch != ',' && !IsSpace(ch)) {
 	    break;
 	}
@@ -2768,6 +2806,7 @@ skip_regis_whitespace(RegisDataFragment *input)
 	    TRACE(("end of input line\n\n"));
 	}
 	skipped = 1;
+	pop_fragment(input);
     }
 
     if (skipped)
@@ -2920,33 +2959,36 @@ extract_regis_command(RegisDataFragment *input, char *command)
 static int
 extract_regis_string(RegisDataFragment *input, char *out, unsigned maxlen)
 {
-    char first_ch;
+    char open_quote_ch;
     char ch;
-    unsigned outlen = 0U;
+    unsigned outlen;
 
     assert(input);
     assert(out);
+    assert(maxlen > 0U);
 
     if (input->pos >= input->len)
 	return 0;
 
-    ch = input->start[input->pos];
+    ch = peek_fragment(input);
     if (ch != '\'' && ch != '"')
 	return 0;
-    first_ch = ch;
-    input->pos++;
+    open_quote_ch = ch;
+    outlen = 0U;
+    pop_fragment(input);
 
     ch = '\0';
-    for (; input->pos < input->len; input->pos++) {
+    while (!fragment_consumed(input)) {
 	char prev_ch = ch;
-	ch = input->start[input->pos];
-	/* ';' (resync) is not recognized in strings */
-	if (prev_ch == first_ch) {
-	    if (ch == first_ch) {
+	ch = peek_fragment(input);
+	/* ';' (resync) and '@' (macrograph) are not recognized in strings */
+	if (prev_ch == open_quote_ch) {
+	    if (ch == open_quote_ch) {
 		if (outlen < maxlen) {
 		    out[outlen] = ch;
 		}
 		outlen++;
+		pop_fragment(input);
 		ch = '\0';
 		continue;
 	    }
@@ -2958,14 +3000,15 @@ extract_regis_string(RegisDataFragment *input, char *out, unsigned maxlen)
 	}
 	if (ch == '\0')
 	    break;
-	if (ch != first_ch) {
-	    if (outlen < maxlen) {
+	if (ch != open_quote_ch) {
+	    if (outlen < maxlen)
 		out[outlen] = ch;
-	    }
 	    outlen++;
 	}
+	pop_fragment(input);
     }
-    if (ch == first_ch) {
+    if (ch == open_quote_ch) {
+	pop_fragment(input);
 	if (outlen < maxlen)
 	    out[outlen] = '\0';
 	else
@@ -2983,7 +3026,7 @@ extract_regis_parenthesized_data(RegisDataFragment *input,
 				 RegisDataFragment *output)
 {
     char ch;
-    char first_ch;
+    char open_quote_ch;
     int nesting;
 
     assert(input);
@@ -3002,25 +3045,25 @@ extract_regis_parenthesized_data(RegisDataFragment *input,
     input->pos++;
     output->start++;
     nesting = 1;
-    first_ch = '\0';
+    open_quote_ch = '\0';
 
     ch = '\0';
     for (; input->pos < input->len; input->pos++, output->len++) {
 	char prev_ch = ch;
 	ch = input->start[input->pos];
 	if (ch == '\'' || ch == '"') {
-	    if (first_ch == '\0') {
-		first_ch = ch;
+	    if (open_quote_ch == '\0') {
+		open_quote_ch = ch;
 	    } else {
-		if (ch == prev_ch && prev_ch == first_ch) {
+		if (ch == prev_ch && prev_ch == open_quote_ch) {
 		    ch = '\0';
-		} else if (ch == first_ch) {
-		    first_ch = '\0';
+		} else if (ch == open_quote_ch) {
+		    open_quote_ch = '\0';
 		}
 	    }
 	    continue;
 	}
-	if (first_ch != '\0')
+	if (open_quote_ch != '\0')
 	    continue;
 
 	if (ch == ';') {
@@ -3051,7 +3094,7 @@ extract_regis_option(RegisDataFragment *input,
 {
     char ch;
     int paren_level, bracket_level;
-    char first_ch;
+    char open_quote_ch;
 
     assert(input);
     assert(option);
@@ -3086,21 +3129,21 @@ extract_regis_option(RegisDataFragment *input,
     paren_level = 0;
     bracket_level = 0;
 
-    first_ch = '\0';
+    open_quote_ch = '\0';
     for (; input->pos < input->len; input->pos++, output->len++) {
 	ch = input->start[input->pos];
 	TRACE(("looking at char '%c' in option '%c'\n", ch, *option));
 	/* FIXME: any special rules for commas? */
 	/* FIXME: handle escaped quotes */
 	if (ch == '\'' || ch == '"') {
-	    if (first_ch == ch) {
-		first_ch = '\0';
+	    if (open_quote_ch == ch) {
+		open_quote_ch = '\0';
 	    } else {
-		first_ch = ch;
+		open_quote_ch = ch;
 	    }
 	    continue;
 	}
-	if (first_ch != '\0')
+	if (open_quote_ch != '\0')
 	    continue;
 	if (ch == '(') {
 	    paren_level++;
@@ -3165,6 +3208,9 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
 {
     char ch;
 
+    assert(input);
+    assert(out);
+
     /* FIXME: handle exponential notation and rounding */
     /* FIXME: check for junk after the number */
     ch = peek_fragment(input);
@@ -3198,15 +3244,21 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     short l = -1;
     int simple;
 
+    assert(context);
+    assert(input);
+    assert(r_out);
+    assert(g_out);
+    assert(b_out);
+
     copy_fragment(&colorspec, input);
     TRACE(("colorspec option: \"%s\"\n", fragment_to_tempstr(&colorspec)));
 
     skip_regis_whitespace(&colorspec);
     simple = 0;
-    if (fragment_len(&colorspec) == 1) {
+    if (fragment_remaining(&colorspec) == 1U) {
 	simple = 1;
-    } else if (fragment_len(&colorspec) > 1) {
-	char after = get_fragment(&colorspec, 1);
+    } else if (fragment_remaining(&colorspec) > 1U) {
+	char after = get_fragment(&colorspec, 1U);
 	if (IsSpace(after))
 	    simple = 1;
     }
@@ -3273,7 +3325,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	    l = 100;
 	    break;
 	default:
-	    TRACE(("unknown RGB color name: \"%c\"\n", ch));
+	    TRACE(("DATA_ERROR: unknown RGB color name: \"%c\"\n", ch));
 	    return 0;
 	}
     } else {
@@ -3283,7 +3335,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	short h = -1;
 	short s = -1;
 
-	while (colorspec.pos < colorspec.len) {
+	while (!fragment_consumed(&colorspec)) {
 	    if (skip_regis_whitespace(&colorspec))
 		continue;
 
@@ -3325,13 +3377,15 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 		break;
 #endif
 	    default:
-		TRACE(("unrecognized character in colorspec: \"%c\"\n", comp));
+		TRACE(("DATA_ERROR: unrecognized component in colorspec: '%c'\n",
+		       comp));
 		return 0;
 	    }
 
 	    skip_regis_whitespace(&colorspec);
 	    if (!extract_regis_num(&colorspec, &num)) {
-		TRACE(("unrecognized character in colorspec: \"%c\"\n", comp));
+		TRACE(("DATA_ERROR: expected int after '%c' component in colorspec: \"%s\"\n",
+		       comp, fragment_to_tempstr(&colorspec)));
 		return 0;
 	    }
 	    if (!regis_num_to_int(&num, &val)) {
@@ -3382,7 +3436,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	    hls2rgb(0, l, 0, &r, &g, &b);
 	    TRACE(("converted to RGB: %hd,%hd,%hd\n", r, g, b));
 	} else {
-	    TRACE(("unrecognized colorspec format\n"));
+	    TRACE(("DATA_ERROR: unrecognized colorspec format\n"));
 	    return 0;
 	}
     }
@@ -3400,7 +3454,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     *b_out = b;
 
     skip_regis_whitespace(&colorspec);
-    if (colorspec.pos < colorspec.len) {
+    if (!fragment_consumed(&colorspec)) {
 	char skip;
 
 	skip = pop_fragment(&colorspec);
@@ -3450,7 +3504,7 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 	*out = (RegisterNum) val;
 
 	skip_regis_whitespace(&colorspec);
-	if (colorspec.pos < colorspec.len) {
+	if (!fragment_consumed(&colorspec)) {
 	    char skip;
 
 	    skip = pop_fragment(&colorspec);
@@ -3757,10 +3811,12 @@ load_regis_coord_pixelvector(RegisGraphicsContext const *context,
 			     int origx, int origy,
 			     int *xloc, int *yloc)
 {
-    const int mul = (int) (context->temporary_write_controls.pv_multiplier * COORD_SCALE);
+    const int mul = (int) (context->temporary_write_controls.pv_multiplier
+			   * COORD_SCALE);
     int found = 0;
     int ux = 0, uy = 0;
     unsigned offset = 0U;
+
     while (load_regis_raw_pixelvector_digit(pixelvector, &offset,
 					    &ux, &uy,
 					    mul))
@@ -3793,7 +3849,8 @@ load_regis_coord_pixelvector_step(RegisGraphicsContext const *context,
 				  int origx, int origy,
 				  int *xloc, int *yloc)
 {
-    const int mul = (int) (context->temporary_write_controls.pv_multiplier * COORD_SCALE);
+    const int mul = (int) (context->temporary_write_controls.pv_multiplier
+			   * COORD_SCALE);
     int found = 0;
     int ux = 0, uy = 0;
     if (load_regis_raw_pixelvector_digit(pixelvector, offset, &ux, &uy, mul))
@@ -3944,7 +4001,7 @@ load_regis_write_control(RegisParseState *state,
 	    RegisDataFragment item;
 	    char suboption;
 
-	    while (arg->pos < arg->len) {
+	    while (!fragment_consumed(arg)) {
 		if (skip_regis_whitespace(arg))
 		    continue;
 
@@ -3953,7 +4010,7 @@ load_regis_write_control(RegisParseState *state,
 		if (extract_regis_parenthesized_data(arg, &suboptionset)) {
 		    TRACE(("got write pattern suboptionset: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionset)));
-		    while (suboptionset.pos < suboptionset.len) {
+		    while (!fragment_consumed(&suboptionset)) {
 			skip_regis_whitespace(&suboptionset);
 			if (extract_regis_option(&suboptionset, &suboption,
 						 &suboptionarg)) {
@@ -3984,7 +4041,7 @@ load_regis_write_control(RegisParseState *state,
 					skip_regis_whitespace(&suboptionarg);
 				    }
 
-				    if (fragment_len(&suboptionarg)) {
+				    if (!fragment_consumed(&suboptionarg)) {
 					TRACE(("DATA_ERROR: unknown content after pattern multiplier \"%s\"\n",
 					       fragment_to_tempstr(&suboptionarg)));
 					return 0;
@@ -4133,7 +4190,7 @@ load_regis_write_control(RegisParseState *state,
 	    int ref_x = cur_x, ref_y = cur_y;
 	    int shading_enabled = 0;
 
-	    while (arg->pos < arg->len) {
+	    while (!fragment_consumed(arg)) {
 		if (skip_regis_whitespace(arg))
 		    continue;
 
@@ -4155,7 +4212,7 @@ load_regis_write_control(RegisParseState *state,
 		    skip_regis_whitespace(&suboptionset);
 		    TRACE(("got shading control suboptionset: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionset)));
-		    while (suboptionset.pos < suboptionset.len) {
+		    while (!fragment_consumed(&suboptionset)) {
 			if (skip_regis_whitespace(&suboptionset))
 			    continue;
 			if (extract_regis_option(&suboptionset, &suboption,
@@ -4168,7 +4225,7 @@ load_regis_write_control(RegisParseState *state,
 			    case 'x':
 				TRACE(("found horizontal shading suboption \"%s\"\n",
 				       fragment_to_tempstr(&suboptionarg)));
-				if (fragment_len(&suboptionarg)) {
+				if (!fragment_consumed(&suboptionarg)) {
 				    TRACE(("DATA_ERROR: unexpected value to horizontal shading suboption FIXME\n"));
 				    return 0;
 				}
@@ -4278,14 +4335,14 @@ load_regis_write_control_set(RegisParseState *state,
     RegisDataFragment arg;
     char option;
 
-    while (controls->pos < controls->len) {
+    while (!fragment_consumed(controls)) {
 	if (skip_regis_whitespace(controls))
 	    continue;
 
 	if (extract_regis_parenthesized_data(controls, &optionset)) {
 	    TRACE(("got write control optionset: \"%s\"\n",
 		   fragment_to_tempstr(&optionset)));
-	    while (optionset.pos < optionset.len) {
+	    while (!fragment_consumed(&optionset)) {
 		skip_regis_whitespace(&optionset);
 		if (extract_regis_option(&optionset, &option, &arg)) {
 		    skip_regis_whitespace(&arg);
@@ -4361,21 +4418,23 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
 	old_display_id = context->display_graphic->id;
     }
 
-    context->destination_graphic = get_new_or_matching_graphic(xw,
-							       charrow, charcol,
-							       context->width,
-							       context->height,
-							       context->destination_page);
+    context->destination_graphic =
+	get_new_or_matching_graphic(xw,
+				    charrow, charcol,
+				    context->width,
+				    context->height,
+				    context->destination_page);
     if (context->destination_graphic) {
 	context->destination_graphic->hidden = 1;
 	context->destination_graphic->valid = 1;
     }
 
-    context->display_graphic = get_new_or_matching_graphic(xw,
-							   charrow, charcol,
-							   context->width,
-							   context->height,
-							   context->display_page);
+    context->display_graphic =
+	get_new_or_matching_graphic(xw,
+				    charrow, charcol,
+				    context->width,
+				    context->height,
+				    context->display_page);
     if (context->display_graphic) {
 	context->display_graphic->hidden = 0;
 	if (old_display_id != context->display_graphic->id) {
@@ -4533,9 +4592,7 @@ init_regis_graphics_context(int terminal_id, int width, int height,
 static int
 parse_regis_command(RegisParseState *state)
 {
-    char ch = peek_fragment(&state->input);
-    if (ch == '\0')
-	return 0;
+    char ch;
 
     if (!extract_regis_command(&state->input, &ch))
 	return 0;
@@ -4590,13 +4647,6 @@ parse_regis_command(RegisParseState *state)
 	 */
 	TRACE(("found ReGIS command \"%c\" (load charset)\n", ch));
 	state->command = 'l';
-	state->load_index = MAX_REGIS_ALPHABETS;
-	state->load_w = 8U;
-	state->load_h = 10U;
-	state->load_alphabet = 1U;	/* FIXME: is this the correct default */
-	state->load_name[0] = '\0';
-	state->load_glyph = (unsigned) (unsigned char) '\0';
-	state->load_row = 0U;
 	break;
     case 'P':
     case 'p':
@@ -4746,55 +4796,13 @@ parse_regis_command(RegisParseState *state)
 	state->command = 'w';
 	break;
     case '@':
-	/* Macrograph */
-	TRACE(("found ReGIS macrograph command\n"));
-	ch = pop_fragment(&state->input);
-	TRACE(("inspecting macrograph character \"%c\"\n", ch));
-	switch (ch) {
-	case '.':
-	    TRACE(("clearing all macrographs FIXME\n"));
-	    /* FIXME: handle */
-	    break;
-	case ':':
-	    TRACE(("defining macrograph\n"));
-	    /* FIXME: what about whitespace before the name? */
-	    if (fragment_len(&state->input) < 1) {
-		TRACE(("DATA_ERROR: macrograph definition without name, ignoring\n"));
-		return 0;
-	    } {
-		char name;
+	/* Macrograph
 
-		name = pop_fragment(&state->input);
-		TRACE(("defining macrgraph for \"%c\"\n", name));
-		(void) name;	/* This will be used in the future. */
-		for (;;) {
-		    char next = peek_fragment(&state->input);
-		    if (next == ';') {
-			/* FIXME: parse, handle  :<name><definition>; */
-			pop_fragment(&state->input);
-			break;
-		    } else if (next == '\0') {
-			TRACE(("DATA_ERROR: macrograph definition ends before semicolon\n"));
-			break;
-		    }
-		    pop_fragment(&state->input);
-		}
-	    }
-	    break;
-	case ';':
-	    TRACE(("DATA_ERROR: found extraneous terminator for macrograph definition\n"));
-	    break;
-	default:
-	    if ((ch > 'A' && ch < 'Z') || (ch > 'a' && ch < 'z')) {
-		TRACE(("expanding macrograph \"%c\" FIXME\n", ch));
-		/* FIXME: handle */
-	    } else {
-		TRACE(("DATA_ERROR: unknown macrograph subcommand \"%c\"\n",
-		       ch));
-	    }
-	    /* FIXME: parse, handle */
-	    break;
-	}
+	 * .  # clear all macrographs
+	 * :<letter> ...@;  # define macrograph for letter
+	 * <letter>  # expand macrograph for letter
+	 */
+	TRACE(("found ReGIS macrograph command\n"));
 	state->command = '@';
 	break;
     default:
@@ -4819,7 +4827,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	return 0;
     skip_regis_whitespace(&optionarg);
 
-    TRACE(("found ReGIS option \"%c\": \"%s\"\n",
+    TRACE(("found ReGIS option '%c', parsing argument \"%s\"\n",
 	   state->option, fragment_to_tempstr(&optionarg)));
 
     switch (state->command) {
@@ -4839,7 +4847,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   fragment_to_tempstr(&optionarg)));
 		    break;
 		}
-		TRACE(("arc length string %s\n", fragment_to_tempstr(&arclen)));
+		TRACE(("arc length string %s\n",
+		       fragment_to_tempstr(&arclen)));
 		if (!regis_num_to_int(&arclen, &state->arclen)) {
 		    TRACE(("DATA_ERROR: unable to parse int in curve arclen option: \"%s\"\n",
 			   fragment_to_tempstr(&arclen)));
@@ -4853,7 +4862,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("using final arc length %d\n", state->arclen));
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in arc length option \"%s\"\n",
 			   fragment_to_tempstr(&optionarg)));
 		    break;
@@ -4864,7 +4873,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'b':
 	    TRACE(("begin closed curve \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid closed curve option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -4881,7 +4890,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'c':
 	    TRACE(("found center position mode \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid center position option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -4891,7 +4900,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'E':
 	case 'e':
 	    TRACE(("found end curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to curve option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -5025,7 +5034,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 's':
 	    TRACE(("begin open curve \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid open curve option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -5098,12 +5107,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    }
 #endif
 
-		    TRACE(("using alphabet: %d\n", alphabet));
+		    TRACE(("setting load alphabet: %d\n", alphabet));
+		    init_regis_load_state(state);
 		    state->load_alphabet = (unsigned) alphabet;
 		} else if (extract_regis_string(&optionarg, state->temp,
 						state->templen)) {
-		    TRACE(("alphabet name: %s\n",
-			   fragment_to_tempstr(&alphabetarg)));
+		    TRACE(("alphabet name: %s\n", state->temp));
 		    if (strlen(state->temp) == 0U ||
 			strlen(state->temp) >= REGIS_ALPHABET_NAME_LEN) {
 			TRACE(("DATA_ERROR: alphabet names must be between 1 and %u characters long: \"%s\" FIXME\n",
@@ -5116,7 +5125,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   state->load_alphabet, state->load_name));
 		} else if (skip_regis_whitespace(&optionarg)) {
 		    ;
-		} else if (!fragment_len(&optionarg)) {
+		} else if (fragment_consumed(&optionarg)) {
 		    break;
 		} else {
 		    TRACE(("DATA_ERROR: expected int or string in load alphabet option: \"%s\"\n",
@@ -5137,7 +5146,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 							     state->load_w,
 							     state->load_h);
 		TRACE(("current alphabet is %u and size is %ux%u; assigning alphabet index %u\n",
-		       state->load_alphabet, state->load_w, state->load_h, state->load_index));
+		       state->load_alphabet, state->load_w,
+		       state->load_h, state->load_index));
 	    }
 
 	    for (;;) {
@@ -5148,7 +5158,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		if (extract_regis_num(&optionarg, &fontarg)) {
 		    int enabled;
 
-		    TRACE(("fontname enabled: %s\n", fragment_to_tempstr(&fontarg)));
+		    TRACE(("fontname enabled: %s\n",
+			   fragment_to_tempstr(&fontarg)));
 		    if (!regis_num_to_int(&fontarg, &enabled)) {
 			TRACE(("DATA_ERROR: unable to parse int in load fontname option: \"%s\"\n",
 			       fragment_to_tempstr(&fontarg)));
@@ -5179,7 +5190,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   context->alphabets[state->load_index].fontname));
 		}
 
-		if (!fragment_len(&optionarg)) {
+		if (fragment_consumed(&optionarg)) {
 		    break;
 		} else {
 		    TRACE(("DATA_ERROR: unexpected text in load fontname option: \"%s\"\n",
@@ -5194,7 +5205,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 's':
 	    TRACE(("found glyph size option \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    while (fragment_len(&optionarg) > 0) {
+	    while (!fragment_consumed(&optionarg)) {
 		RegisDataFragment sizearg;
 
 		if (skip_regis_whitespace(&optionarg))
@@ -5256,7 +5267,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin bounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to position option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -5280,7 +5291,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found end position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to position option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -5338,7 +5349,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin unbounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to end position option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -5383,7 +5394,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found parse error report \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 		break;
@@ -5445,7 +5456,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		unparse_end(context->display_graphic->xw);
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg) > 0U) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 			   state->option, fragment_to_tempstr(&optionarg)));
 		}
@@ -5456,7 +5467,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'l':
 	    TRACE(("found character set load report \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 		break;
@@ -5493,11 +5504,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    skip_regis_whitespace(&suboptionarg);
 		    TRACE(("got macrograph report character request: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionarg)));
-		    if (fragment_len(&suboptionarg) > 0U) {
+		    if (!fragment_consumed(&suboptionarg)) {
 			name = pop_fragment(&suboptionarg);
+			if (islower(name))
+			    name = (char) toupper(name);
 
 			skip_regis_whitespace(&suboptionarg);
-			if (fragment_len(&optionarg) > 0U) {
+			if (!fragment_consumed(&optionarg)) {
 			    TRACE(("DATA_ERROR: unexpected content in ReGIS macrograph report suboptions: \"%s\"\n",
 				   fragment_to_tempstr(&suboptionarg)));
 			    break;
@@ -5505,7 +5518,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    }
 		}
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg) > 0U) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 			   state->option, fragment_to_tempstr(&optionarg)));
 		    break;
@@ -5524,12 +5537,18 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    sprintf(reply, "\"%u,%u\"\r", 1000U, 1000U);
 		    unparseputs(context->display_graphic->xw, reply);
 		    unparse_end(context->display_graphic->xw);
+		} else if (name < 'A' || name > 'Z') {
+		    TRACE(("DATA_ERROR: invalid macrograph name: \"%c\"\n", name));
+		    /* FIXME: what should happen? */
+		    break;
 		} else {
+		    char temp[8];
+
 		    TRACE(("got report macrograph request for name '%c'\n", name));
-		    /*
-		     * FIXME: Implement when macrographs are supported (and
-		     * allow it to be disabled for security reasons).
-		     */
+		    sprintf(temp, "@=%c", name);
+		    unparseputs(context->display_graphic->xw, temp);
+		    /* FIXME: Allow this to be disabled for security reasons. */
+		    /* FIXME: implement when macrographs are supported. */
 		    unparseputs(context->display_graphic->xw, "@;\r");
 		    unparse_end(context->display_graphic->xw);
 		}
@@ -5548,7 +5567,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    skip_regis_whitespace(&suboptionarg);
 		    TRACE(("got cursor position report suboption: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionarg)));
-		    if (fragment_len(&suboptionarg) > 0U) {
+		    if (!fragment_consumed(&suboptionarg)) {
 			char suboption;
 
 			/* FIXME: handle cursor movement multipliers */
@@ -5562,7 +5581,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			}
 
 			skip_regis_whitespace(&suboptionarg);
-			if (fragment_len(&optionarg) > 0U) {
+			if (!fragment_consumed(&optionarg)) {
 			    TRACE(("DATA_ERROR: unexpected content in ReGIS postion report suboptions: \"%s\"\n",
 				   fragment_to_tempstr(&suboptionarg)));
 			    break;
@@ -5570,7 +5589,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    }
 		}
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg) > 0U) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: unexpected arguments to ReGIS report command option '%c' arg \"%s\"\n",
 			   state->option, fragment_to_tempstr(&optionarg)));
 		    break;
@@ -5665,7 +5684,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		int got_lr = 0;
 		int ulx = 0, uly = 0, lrx = 0, lry = 0;
 
-		while (fragment_len(&optionarg)) {
+		while (!fragment_consumed(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
 			continue;
 
@@ -5729,16 +5748,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    height = ch;
 
 		    scale = 1;
-		    while (width * scale < 200 ||
-			   height * scale < 200) {
+		    while (width * scale < 200 || height * scale < 200) {
 			scale++;
 		    }
 		    width *= scale;
 		    height *= scale;
 
 		    scale = 1;
-		    while (width / scale > mw ||
-			   height / scale > mh) {
+		    while (width / scale > mw || height / scale > mh) {
 			scale++;
 		    }
 		    width /= scale;
@@ -5777,7 +5794,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    /* C(H0) == output cursor diamond (default), C(H1) == output cursor diamond, C(H2) == output cursor crosshair */
 	    /* C(I) == input cursor crosshair (default), C(I0) == input cursor crosshair, C(I1) == input cursor diamond, C(I2) == input cursor crosshair, C(I3) == input cursor rubber band line, C(I4) == input cursor rubber band rectangle */
 	    /* C(I[X,Y]"FB")) == set input cursor to F in foreground B in background with hotspot at X,Y (using current text settings, trimmed to 16x24 max) */
-	    if (!fragment_len(&optionarg)) {
+	    if (fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen cursor control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
@@ -5787,7 +5804,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'e':
 	    TRACE(("found erase request \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS erase request \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
@@ -5805,7 +5822,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'f':
 	    TRACE(("found page eject request \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS page eject request \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
@@ -5821,7 +5838,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
 	    /* screen S(H), area to (input?/output?) cursor S(H[X,Y]), or area S(H[X,Y][X,Y]) */
-	    if (!fragment_len(&optionarg)) {
+	    if (fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen hardcopy control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
@@ -5846,7 +5863,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		RegisDataFragment regnum;
 		RegisDataFragment colorspec;
 
-		while (fragment_len(&optionarg)) {
+		while (!fragment_consumed(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
 			continue;
 
@@ -5954,11 +5971,32 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 't':
 	    TRACE(("found time delay \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle (maybe -- might not be worth it, plus it is an easy DoS vector) */
-	    if (!fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen time delay option value \"%s\"\n",
-		       fragment_to_tempstr(&optionarg)));
-		return 1;
+	    {
+		RegisDataFragment delayarg;
+		int delay;
+
+		if (!extract_regis_num(&optionarg, &delayarg)) {
+		    TRACE(("DATA_ERROR: expected int in delay display option: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    break;
+		}
+		TRACE(("delay option arg: %s\n",
+		       fragment_to_tempstr(&delayarg)));
+		if (!regis_num_to_int(&delayarg, &delay)) {
+		    TRACE(("DATA_ERROR: unable to parse int in delay display option: \"%s\"\n",
+			   fragment_to_tempstr(&delayarg)));
+		    break;
+		}
+		if (delay < 0 || delay > 32767) {
+		    TRACE(("DATA_ERROR: delay out of range: \"%d\"\n", delay));
+		    break;
+		}
+		/* FIXME: terminals allow much larger values, but this is an easy DoS vector */
+		if (delay > 60)
+		    delay = 60;
+		TRACE(("using delay for %d ticks\n", delay));
+		refresh_modified_displayed_graphics(context->current_widget);
+		usleep((useconds_t) delay * 10000U);
 	    }
 	    break;
 	case 'W':
@@ -5985,11 +6023,6 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
     case 't':
 	TRACE(("inspecting text option \"%c\" with value \"%s\"\n",
 	       state->option, fragment_to_tempstr(&optionarg)));
-	if (!fragment_len(&optionarg)) {
-	    TRACE(("DATA_ERROR: ignoring malformed ReGIS text command option value \"%s\"\n",
-		   fragment_to_tempstr(&optionarg)));
-	    return 1;
-	}
 	switch (state->option) {
 	case 'A':
 	case 'a':
@@ -6017,10 +6050,11 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 
 		TRACE(("using alphabet number: %d\n", alphabet));
-		context->current_text_controls->alphabet_num = (unsigned) alphabet;
+		context->current_text_controls->alphabet_num =
+		    (unsigned) alphabet;
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text alphabet option \"%s\"\n",
 			   fragment_to_tempstr(&alphabetarg)));
 		    break;
@@ -6082,7 +6116,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		     * character tilt and not the string tilt.
 		     */
 		    TRACE(("character rotation (direction): %d\n", rotation));
-		    context->current_text_controls->character_rotation = rotation;
+		    context->current_text_controls->character_rotation
+			= rotation;
 		    state->text_tilt_state = TEXT_TILT_STATE_GOT_D;
 		    break;
 		case TEXT_TILT_STATE_GOT_D:
@@ -6090,11 +6125,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		     * value is used.
 		     */
 		    TRACE(("character rotation (direction): %d\n", rotation));
-		    context->current_text_controls->character_rotation = rotation;
+		    context->current_text_controls->character_rotation
+			= rotation;
 		    break;
 		case TEXT_TILT_STATE_GOT_DS:
-		    TRACE(("changing character rotation (direction): %d\n", rotation));
-		    context->current_text_controls->character_rotation = rotation;
+		    TRACE(("changing character rotation (direction): %d\n",
+			   rotation));
+		    context->current_text_controls->character_rotation
+			= rotation;
 		    state->text_tilt_state = TEXT_TILT_STATE_GOT_DSD;
 		    break;
 		case TEXT_TILT_STATE_GOT_DSD:
@@ -6102,13 +6140,15 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    /* If there are multiple angles with no size only the last
 		     * value is used.
 		     */
-		    TRACE(("changing character rotation (direction): %d\n", rotation));
-		    context->current_text_controls->character_rotation = rotation;
+		    TRACE(("changing character rotation (direction): %d\n",
+			   rotation));
+		    context->current_text_controls->character_rotation
+			= rotation;
 		    break;
 		}
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text tilt option \"%s\"\n",
 			   fragment_to_tempstr(&rotationarg)));
 		    break;
@@ -6153,11 +6193,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("using height multiplier: %d\n", multiplier));
 		height = (unsigned) multiplier *10U;	/* base character height */
-		context->current_text_controls->character_display_h = height;
-		context->current_text_controls->character_unit_cell_h = height;
+		context->current_text_controls->character_display_h
+		    = height;
+		context->current_text_controls->character_unit_cell_h
+		    = height;
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text multiplier option \"%s\"\n",
 			   fragment_to_tempstr(&multiarg)));
 		    break;
@@ -6210,7 +6252,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		context->current_text_controls->slant = italic;
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text italic option \"%s\"\n",
 			   fragment_to_tempstr(&italicarg)));
 		    break;
@@ -6270,7 +6312,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    (unsigned) hh *10U;
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text unit cell size option \"%s\"\n",
 			   fragment_to_tempstr(&sizemultiplierarg)));
 		    break;
@@ -6327,7 +6369,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			       fragment_to_tempstr(&displaysizearg)));
 			break;
 		    }
-		    if (get_standard_character_size(standard, &disp_w, &disp_h,
+		    if (get_standard_character_size(standard,
+						    &disp_w, &disp_h,
 						    &unit_w, &unit_h,
 						    &off_x, &off_y)) {
 			TRACE(("DATA_ERROR: unrecognized standard cell size: \"%d\"\n",
@@ -6336,8 +6379,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    }
 
 		    TRACE(("using display cell size: %u,%u\n", disp_w, disp_h));
-		    context->current_text_controls->character_display_w = disp_w;
-		    context->current_text_controls->character_display_h = disp_h;
+		    context->current_text_controls->character_display_w
+			= disp_w;
+		    context->current_text_controls->character_display_h
+			= disp_h;
 		    TRACE(("using offset: %d,%d\n", off_x, off_y));
 		    context->current_text_controls->character_inc_x = off_x;
 		    context->current_text_controls->character_inc_y = off_y;
@@ -6347,8 +6392,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		     * affects character spacing after a rotation option ("ReGIS
 		     * uses the spacing value associated with the cell size to
 		     * space the characters in the tilted string").  The 7-13
-		     * example in the VT330/VT340 Programmer Reference Manual vol 2
-		     * appears to say otherwise.  FIXME: verify
+		     * example in the VT330/VT340 Programmer Reference Manual
+		     * vol 2 appears to say otherwise.  FIXME: verify
 		     */
 		    if (1) {	/* forced for now */
 			TRACE(("using unit cell size: %u,%u\n", unit_w, unit_h));
@@ -6364,7 +6409,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			break;
 		    case TEXT_TILT_STATE_GOT_D:
 			TRACE(("upgrading character rotation to string and character rotation: %d\n", context->current_text_controls->character_rotation));
-			context->current_text_controls->string_rotation = context->current_text_controls->character_rotation;
+			context->current_text_controls->string_rotation
+			    = context->current_text_controls->character_rotation;
 			state->text_tilt_state = TEXT_TILT_STATE_GOT_DS;
 			break;
 		    case TEXT_TILT_STATE_GOT_DS:
@@ -6392,7 +6438,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    continue;
 		}
 
-		if (!fragment_len(&optionarg)) {
+		if (fragment_consumed(&optionarg)) {
 		    break;
 		}
 
@@ -6443,7 +6489,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    (unsigned) unit_h;
 
 		skip_regis_whitespace(&optionarg);
-		if (fragment_len(&optionarg)) {
+		if (!fragment_consumed(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text unit cell size option \"%s\"\n",
 			   fragment_to_tempstr(&unitsizearg)));
 		    break;
@@ -6479,7 +6525,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin bounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to vector option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -6503,7 +6549,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found end vector position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to vector option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -6541,7 +6587,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin unbounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (!fragment_consumed(&optionarg) > 0U) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to vector option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
@@ -6600,12 +6646,35 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 }
 
 static int
+expand_macrographs(RegisDataFragment *input, RegisGraphicsContext const *context)
+{
+    char operator;
+    char name;
+
+    (void) context;		/* to be used later */
+    operator = get_fragment(input, 0U);
+    if (operator != '@')
+	return 0;
+    name = get_fragment(input, 1U);
+    if (islower(name))
+	name = (char) toupper(name);
+    if (name < 'A' || name > 'Z')
+	return 0;
+
+    TRACE(("expanding macrograph '%c' with %u characters FIXME\n", name, 0U));
+    pop_fragment(input);
+    pop_fragment(input);
+    /* FIXME: implement */
+    return 1;
+}
+
+static int
 parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 {
     RegisDataFragment *const input = &state->input;
     RegisDataFragment item;
 
-    if (input->pos >= input->len)
+    if (fragment_consumed(input))
 	return 0;
 
     if (extract_regis_extent(input, &item)) {
@@ -6917,12 +6986,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    break;
 		}
 
-		dx *= (int) (
-				context->current_text_controls->character_display_w
-				>> 1U);
-		dy *= (int) (
-				context->current_text_controls->character_display_h
-				>> 1U);
+		dx *= (int) (context->current_text_controls->character_display_w
+			     >> 1U);
+		dy *= (int) (context->current_text_controls->character_display_h
+			     >> 1U);
 		TRACE(("adding character offset %d,%d\n (ds=%dx%d)", dx, dy,
 		       context->current_text_controls->character_display_w,
 		       context->current_text_controls->character_display_h));
@@ -7038,12 +7105,13 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 							     state->load_w,
 							     state->load_h);
 		TRACE(("current alphabet is %u and size is %ux%u; assigning alphabet index %u\n",
-		       state->load_alphabet, state->load_w, state->load_h, state->load_index));
+		       state->load_alphabet, state->load_w,
+		       state->load_h, state->load_index));
 	    }
 
-	    glyph_size = GLYPH_WIDTH_BYTES(
-					      context->alphabets[state->load_index].pixw) *
-		context->alphabets[state->load_index].pixh;
+	    glyph_size =
+		GLYPH_WIDTH_BYTES(context->alphabets[state->load_index].pixw)
+		* context->alphabets[state->load_index].pixh;
 	    if (context->alphabets[state->load_index].bytes == NULL) {
 		if (!(context->alphabets[state->load_index].bytes =
 		      calloc(MAX_GLYPHS * glyph_size, sizeof(unsigned char)))) {
@@ -7069,9 +7137,11 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		for (byte = 0U; byte < bytew; byte++) {
 		    glyph[state->load_row * bytew + byte] =
 			(unsigned char) (((val << unused_bits) >>
-					  ((bytew - (byte + 1U)) << 3U)) & 255U);
+					  ((bytew - (byte + 1U)) << 3U))
+					 & 255U);
 #ifdef DEBUG_LOAD
-		    TRACE(("bytew=%u val=%lx byte=%u output=%x\n", bytew, val,
+		    TRACE(("bytew=%u val=%lx byte=%u output=%x\n",
+			   bytew, val,
 			   byte,
 			   (unsigned) glyph[state->load_row * bytew + byte]));
 #endif
@@ -7087,6 +7157,81 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 		return 1;
 	    }
+	}
+    }
+
+    /* special symbols */
+    if (state->command == '@') {
+	char ch = peek_fragment(input);
+	TRACE(("inspecting macrograph character \"%c\"\n", ch));
+	switch (ch) {
+	case '.':
+	    pop_fragment(input);
+	    TRACE(("clearing all macrographs\n"));
+	    /* FIXME: implement when macrographs are supported. */
+	    return 1;
+	case ':':
+	    pop_fragment(input);
+	    TRACE(("defining macrograph\n"));
+	    /* FIXME: what about whitespace before the name? */
+	    if (fragment_consumed(input)) {
+		TRACE(("DATA_ERROR: macrograph definition without name, ignoring\n"));
+		return 1;
+	    } {
+#define MAX_MACROGRAPH_LEN 1024
+		char temp[MAX_MACROGRAPH_LEN];
+		char name;
+		char prev = '\0';
+		char next;
+		int len = 0;
+
+		name = pop_fragment(input);
+		if (islower(name))
+		    name = (char) toupper(name);
+		TRACE(("defining macrograph for \"%c\"\n", name));
+		if (name < 'A' || name > 'Z') {
+		    TRACE(("DATA_ERROR: invalid macrograph name\n"));
+		    /* FIXME: what should happen? */
+		    return 1;
+		}
+		for (;;) {
+		    next = peek_fragment(input);
+		    if (prev == '@' && next == ';') {
+			/* FIXME: parse, handle  :<name><definition>; */
+			pop_fragment(input);
+			len--;
+			break;
+		    } else if (next == '\0') {
+			TRACE(("DATA_ERROR: macrograph definition ends before semicolon\n"));
+			/* FIXME: what should happen? */
+			return 1;
+		    }
+		    pop_fragment(input);
+		    if (len < MAX_MACROGRAPH_LEN) {
+			temp[len++] = next;
+		    }
+		    prev = next;
+		}
+		if (len == MAX_MACROGRAPH_LEN) {
+		    TRACE(("DATA_ERROR: macrograph definition too long\n"));
+		    /* FIXME: what should happen? */
+		    return 1;
+		}
+		temp[len] = '\0';
+
+		(void) temp;	/* variable needed only if tracing */
+		/* FIXME: implement when macrographs are supported. */
+		TRACE(("ERROR: would have saved macrograph: \"%s\"\n", temp));
+	    }
+	    return 1;
+	case ';':
+	    pop_fragment(input);
+	    TRACE(("DATA_ERROR: found extraneous terminator for macrograph definition\n"));
+	    return 1;
+	default:
+	    pop_fragment(input);
+	    TRACE(("DATA_ERROR: unknown macrograph command '%c'\n", ch));
+	    return 1;
 	}
     }
 
@@ -7106,13 +7251,16 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 
 #ifdef DEBUG_PARSING
-    TRACE(("parsing top level: char %d of %d (next char '%c')\n",
+    TRACE(("parsing top level: char %u of %u (next char '%c')\n",
 	   state->input.pos,
-	   state->input.len,
+	   fragment_length(&state->input),
 	   peek_fragment(&state->input)));
 #endif
     if (skip_regis_whitespace(&state->input))
 	return 0;
+    if (expand_macrographs(&state->input, context))
+	return 0;
+
     /* FIXME: the semicolon terminates the current command even if inside of an optionset or extent */
     if (peek_fragment(&state->input) == ';') {
 	pop_fragment(&state->input);
@@ -7129,7 +7277,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 	if (parse_regis_command(state)) {
 	    /* FIXME: verify that these are the things reset on a new command */
-	    TRACE(("resetting temporary write controls and pattern state\n"));
+	    TRACE(("resetting temporary write controls and pattern state before handling command\n"));
 	    copy_regis_write_controls(&context->persistent_write_controls,
 				      &context->temporary_write_controls);
 	    context->pattern_count = 0U;
@@ -7145,44 +7293,46 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     TRACE(("checking for top level parentheses...\n"));
 #endif
     if (extract_regis_parenthesized_data(&state->input, &parenthesized)) {
-	RegisDataFragment orig_input;
+	RegisDataFragment keep;
 
 	if (state->command == 'f') {	/* Fill */
 	    TRACE(("found commands in fill mode \"%s\"\n",
 		   fragment_to_tempstr(&parenthesized)));
-	    orig_input = state->input;
-	    state->input = parenthesized;
+	    copy_fragment(&keep, &state->input);
+	    copy_fragment(&state->input, &parenthesized);
 	    state->command = '_';
 	    state->option = '_';
 	    context->fill_mode = 1;
 	    context->fill_point_count = 0U;
-	    while (state->input.pos < state->input.len)
+	    while (!fragment_consumed(&state->input))
 		parse_regis_toplevel(state, context);
 	    draw_filled_polygon(context);
 	    context->fill_point_count = 0U;
 	    context->fill_mode = 0;
 	    state->command = 'f';
-	    state->input = orig_input;
+	    copy_fragment(&state->input, &keep);
 	    return 1;
 	} else {
-	    orig_input = state->input;
-	    state->input = parenthesized;
+	    TRACE(("parsing optionset \"%s\"\n",
+		   fragment_to_tempstr(&parenthesized)));
+	    copy_fragment(&keep, &state->input);
+	    copy_fragment(&state->input, &parenthesized);
 	    state->option = '_';
-	    TRACE(("parsing at optionset level: %d of %d\n",
+	    TRACE(("parsing at optionset level (char %u of %u)\n",
 		   state->input.pos,
-		   state->input.len));
+		   fragment_length(&state->input)));
 	    for (;;) {
-		if (state->input.pos >= state->input.len)
+		if (fragment_consumed(&state->input))
 		    break;
-		TRACE(("looking at optionset character: \"%c\"\n",
-		       peek_fragment(&state->input)));
+		TRACE(("looking at optionset character %u: \"%c\"\n",
+		       state->input.pos, peek_fragment(&state->input)));
 		if (skip_regis_whitespace(&state->input))
 		    continue;
 		if (parse_regis_option(state, context))
 		    continue;
 		if (parse_regis_items(state, context))
 		    continue;
-		if (state->input.pos >= state->input.len)
+		if (fragment_consumed(&state->input))
 		    break;
 		{
 		    char skip;
@@ -7195,7 +7345,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 		/* FIXME: suboptions */
 	    }
 	    state->option = '_';
-	    state->input = orig_input;
+	    copy_fragment(&state->input, &keep);
 	    return 1;
 	}
     }
@@ -7226,10 +7376,8 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	if (parse_regis_items(state, context))
 	    return 1;
     }
-    if (state->input.pos >= state->input.len)
-	return 0;
 
-    {
+    if (!fragment_consumed(&state->input)) {
 	char skip;
 
 	skip = pop_fragment(&state->input);
@@ -7237,15 +7385,6 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	TRACE(("DATA_ERROR: skipping unexpected character at top level: \"%c\"\n", ch));
     }
     return 0;
-}
-
-static void
-init_regis_parse_state(RegisParseState *state)
-{
-    state->command = '_';
-    state->option = '_';
-    state->stack_next = 0U;
-    state->load_index = MAX_REGIS_ALPHABETS;
 }
 
 void
@@ -7258,6 +7397,9 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     struct timeval curr_tv;
     unsigned iterations;
     int Pmode;
+
+    assert(params);
+    assert(string);
 
     if (params->a_nparam > 0)
 	Pmode = params->a_param[0];
@@ -7274,6 +7416,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	       state->templen));
 	return;
     }
+
+    context->current_widget = xw;
 
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
@@ -7349,7 +7493,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	    continue;
 	}
 
-	if (state->input.pos >= state->input.len)
+	if (fragment_consumed(&state->input))
 	    break;
     }
 
