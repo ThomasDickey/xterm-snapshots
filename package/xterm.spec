@@ -1,16 +1,16 @@
-# $XTermId: xterm.spec,v 1.96 2017/06/12 21:34:51 tom Exp $
+# $XTermId: xterm.spec,v 1.98 2017/08/08 23:09:38 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 330
+Version: 331
 Release: 1
 License: X11
 Group: User Interface/X
 Source: xterm-%{version}.tgz
-URL: ftp://invisible-island.net/xterm/
+URL: ftp://ftp.invisible-island.net/xterm/
 Provides: x-terminal-emulator
 
 # This part (the build-requires) would be useful if the various distributions
