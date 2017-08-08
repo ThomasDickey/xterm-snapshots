@@ -5,9 +5,9 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	330
+PORTVERSION=	331
 CATEGORIES=	x11
-MASTER_SITES=	ftp://invisible-island.net/xterm/ \
+MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/ \
 		CRITICAL
 PKGNAMESUFFIX=	-dev
 EXTRACT_SUFX=	.tgz
