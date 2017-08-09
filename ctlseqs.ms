@@ -1238,6 +1238,10 @@ These ISO-8613-3 controls are supported:
   \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
   \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps.
 .sp
+If \fIxterm\fP is compiled with the true color support enabled, the RGB
+color selected is not limited to the 256 color palatte, but can be any color
+the screen supports.
+.sP
 .
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*m
 Set or reset resource-values used by \fIxterm\fP to decide whether to

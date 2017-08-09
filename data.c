@@ -119,3 +119,15 @@ int ice_fd = -1;
 #ifdef USE_IGNORE_RC
 int ignore_unused;
 #endif
+
+#if OPT_TRUE_COLORS
+PixelFormatData pixel_formats[] = {
+     { 24, 0xff0000, 0x00ff00, 0x0000ff,  PIXEL_FORMAT_RGB8 }
+    ,{ 16, 0xf800,   0x07e0,   0x001f,    PIXEL_FORMAT_RGB565 }
+    ,{ 0, 0, 0, 0, 0 }
+};
+CellColor Blank_cell_color = { 0, 0, 0, 0 };
+PixelFormat pixel_format = 0;
+#else
+CellColor Blank_cell_color = 0;
+#endif

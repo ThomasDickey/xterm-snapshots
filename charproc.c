@@ -990,7 +990,7 @@ SGR_Foreground(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, FG_COLOR);
     }
-    fg = getXtermForeground(xw, xw->flags, color);
+    fg = getXtermForeground(xw, xw->flags, color, xw->sgr_fg_extended);
     xw->cur_foreground = color;
 
     setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
@@ -1035,7 +1035,7 @@ SGR_Background(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, BG_COLOR);
     }
-    bg = getXtermBackground(xw, xw->flags, color);
+    bg = getXtermBackground(xw, xw->flags, color, xw->sgr_bg_extended);
     xw->cur_background = color;
 
     setCgsBack(xw, WhichVWin(screen), gcNorm, bg);
@@ -1065,7 +1065,7 @@ setExtendedFG(XtermWidget xw)
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
-	&& (!xw->sgr_extended)
+	&& (!xw->sgr_fg_extended)
 	&& (fg >= 0)
 	&& (fg < 8)
 	&& (xw->flags & BOLD))
@@ -1096,7 +1096,7 @@ static void
 reset_SGR_Foreground(XtermWidget xw)
 {
     xw->sgr_foreground = -1;
-    xw->sgr_extended = False;
+    xw->sgr_fg_extended = False;
     setExtendedFG(xw);
 }
 
@@ -1104,6 +1104,7 @@ static void
 reset_SGR_Background(XtermWidget xw)
 {
     xw->sgr_background = -1;
+    xw->sgr_bg_extended = False;
     setExtendedBG(xw);
 }
 
@@ -1666,7 +1667,7 @@ param_has_subparams(int item)
     return result;
 }
 
-#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
+#if OPT_TRUE_COLORS || OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
 /*
  * Given an index into the parameter array, return the corresponding parameter
  * number (starting from zero).
@@ -1737,7 +1738,7 @@ get_subparam(int p, int s)
  */
 #define extended_colors_limit(n) ((n) == 5 ? 1 : ((n) == 2 ? 3 : 0))
 static Boolean
-parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
+parse_extended_colors(XtermWidget xw, int *colorp, int *itemp, Boolean *extended)
 {
     Boolean result = False;
     int item = *itemp;
@@ -1787,13 +1788,21 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
     }
     item = next;
 
+    *extended = False;
     switch (code) {
     case 2:
 	/* direct color in rgb space */
 	if ((values[0] >= 0 && values[0] < 256) &&
 	    (values[1] >= 0 && values[1] < 256) &&
 	    (values[2] >= 0 && values[2] < 256)) {
+#if OPT_TRUE_COLORS
+	    *colorp = getColorPixel(xw, values[0], values[1], values[2]);
+	    result = True;
+#else
 	    *colorp = xtermClosestColor(xw, values[0], values[1], values[2]);
+	    result = (*colorp >= 0 && *colorp < NUM_ANSI_COLORS);
+#endif
+	    *extended = True;
 	} else {
 	    *colorp = -1;
 	}
@@ -1801,13 +1810,13 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
     case 5:
 	/* indexed color */
 	*colorp = values[0];
+	result = (*colorp >= 0 && *colorp < NUM_ANSI_COLORS);
 	break;
     default:
 	*colorp = -1;
 	break;
     }
 
-    result = (*colorp >= 0 && *colorp < NUM_ANSI_COLORS);
     TRACE(("...resulting color %d/%d %s\n",
 	   *colorp, NUM_ANSI_COLORS,
 	   result ? "OK" : "ERR"));
@@ -3013,7 +3022,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
-			xw->sgr_extended = False;
+			xw->sgr_fg_extended = False;
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3022,9 +3031,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     * properly eat all the parameters for unsupported modes.
 		     */
 		    if_OPT_ISO_COLORS(screen, {
-			if (parse_extended_colors(xw, &value, &item)) {
+			if (parse_extended_colors(xw, &value, &item,
+						  &xw->sgr_fg_extended)) {
 			    xw->sgr_foreground = value;
-			    xw->sgr_extended = True;
 			    setExtendedFG(xw);
 			}
 		    });
@@ -3051,12 +3060,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
+			xw->sgr_bg_extended = False;
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 48:
 		    if_OPT_ISO_COLORS(screen, {
-			if (parse_extended_colors(xw, &value, &item)) {
+			if (parse_extended_colors(xw, &value, &item,
+						  &xw->sgr_bg_extended)) {
 			    xw->sgr_background = value;
 			    setExtendedBG(xw);
 			}
@@ -3084,7 +3095,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 97:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_foreground = (op - 90 + 8);
-			xw->sgr_extended = False;
+			xw->sgr_fg_extended = False;
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3111,6 +3122,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 107:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_background = (op - 100 + 8);
+			xw->sgr_bg_extended = False;
 			setExtendedBG(xw);
 		    });
 		    break;
@@ -8399,7 +8411,12 @@ VTInitialize(Widget wrequest,
     }
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
-    wnew->sgr_extended = False;
+    wnew->sgr_fg_extended = False;
+    wnew->sgr_bg_extended = False;
+
+#if OPT_TRUE_COLORS
+    setPixelFormat(wnew);
+#endif
 #endif /* OPT_ISO_COLORS */
 
     /*
@@ -10180,7 +10197,7 @@ ShowCursor(void)
     TScreen *screen = TScreenOf(xw);
     IChar base;
     unsigned flags;
-    CellColor fg_bg = 0;
+    CellColor fg_bg = Blank_cell_color;
     GC currentGC;
     GC outlineGC;
     CgsEnum currentCgs = gcMAX;
@@ -10284,8 +10301,10 @@ ShowCursor(void)
 	fg_bg = ld->color[cursor_col];
     });
 
-    fg_pix = getXtermForeground(xw, flags, (int) extract_fg(xw, fg_bg, flags));
-    bg_pix = getXtermBackground(xw, flags, (int) extract_bg(xw, fg_bg, flags));
+    fg_pix = getXtermForeground(xw, flags, (int) extract_fg(xw, fg_bg, flags),
+				GetCellColorFGExt(fg_bg));
+    bg_pix = getXtermBackground(xw, flags, (int) extract_bg(xw, fg_bg, flags),
+				GetCellColorBGExt(fg_bg));
 
     /*
      * If we happen to have the same foreground/background colors, choose
@@ -10570,7 +10589,7 @@ HideCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-    CellColor fg_bg = 0;
+    CellColor fg_bg = Blank_cell_color;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     int my_col = 0;
@@ -10640,7 +10659,7 @@ HideCursor(void)
 #endif
 #endif
 #if OPT_ISO_COLORS
-    fg_bg = 0;
+    ClearCellColor(fg_bg);
 #endif
 
     /*

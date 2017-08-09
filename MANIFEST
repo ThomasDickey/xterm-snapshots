@@ -206,3 +206,4 @@ vttests/resize.pl               translated resize.sh to perl since it is easy to
 vttests/resize.sh               script to demonstrate resizing
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action
+vttests/true-color.pl		test script for true color
