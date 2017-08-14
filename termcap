@@ -1,4 +1,4 @@
-# $XTermId: termcap,v 1.83 2016/07/09 18:40:00 tom Exp $
+# $XTermId: termcap,v 1.84 2017/08/14 08:55:52 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
@@ -125,6 +125,9 @@ x2|xterm-88color|xterm alias:\
 x3|xterm-256color|xterm alias:\
 	:Co#256:pa#32767:\
 	:AB=\E[48;5;%dm:AF=\E[38;5;%dm:tc=xterm-new:
+
+x4|xterm-direct|xterm alias:\
+	:tc=xterm-256color:
 
 xi|xterm-nrc|xterm alias:\
 	:tc=xterm:
