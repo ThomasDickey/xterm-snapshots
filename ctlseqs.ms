@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.345 2017/06/12 00:34:43 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.346 2017/08/14 08:31:35 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -1163,7 +1163,7 @@ Character Attributes (SGR).
   \*(Ps = \*2 \(-> Faint, decreased intensity (ISO 6429).
   \*(Ps = \*3 \(-> Italicized (ISO 6429).
   \*(Ps = \*4 \(-> Underlined.
-  \*(Ps = \*5 \(-> Blink (appears as Bold).
+  \*(Ps = \*5 \(-> Blink (appears as Bold in X11R6 xterm).
   \*(Ps = \*7 \(-> Inverse.
   \*(Ps = \*8 \(-> Invisible, i.e., hidden (VT300).
   \*(Ps = \*9 \(-> Crossed-out characters (ISO 6429).

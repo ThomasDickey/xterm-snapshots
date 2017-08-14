@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.165 2017/05/07 22:54:33 tom Exp $
+# $XTermId: terminfo,v 1.167 2017/08/14 08:51:33 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -133,6 +133,7 @@ xterm-new|modern xterm terminal emulator,
 	kb2=\EOE,
 	kcbt=\E[Z,
 	kent=\EOM,
+	rep=%p1%c\E[%p2%{1}%-%db,
 	rin=\E[%p1%dT,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
@@ -1691,6 +1692,25 @@ xterm-88color|xterm with 88 colors,
 	colors#88,
 	pairs#7744,
 	use=xterm-256color,
+
+# "direct color" is mentioned without definition in ISO 8613-6 (ITU T.416).
+# This is a particular implementation which assume 8-bit values for red, green,
+# and blue.  Other encodings are possible; none are addressed by that standard.
+xterm+direct|xterm with direct-color indexing,
+	RGB,
+	colors#0x1000000,
+	pairs#0x10000,
+	initc@,
+	oc=\E]104\007,
+	setab=\E[48\:2\:
+		%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%dm,
+	setaf=\E[38\:2\:
+		%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%dm,
+	setb@,
+	setf@,
+xterm-direct|xterm with direct-color indexing,
+	use=xterm+direct,
+	use=xterm,
 #
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above, and the

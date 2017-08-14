@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1767 2017/08/08 23:09:38 tom Exp $
+  $XTermId: xterm.log.html,v 1.1769 2017/08/14 08:54:28 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -948,6 +948,23 @@
   </ul>
 
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
+
+  <ul>
+    <li>add <code>xterm-direct</code> terminal description based on
+    changes introduced in <a href="#xterm_277">patch #277</a>, and
+    relying upon ncurses <code><strong>RGB</strong></code>
+    extension.</li>
+
+    <li>modify <code>xterm-new</code> terminal description to use
+    ECMA-48 <code>REP</code>, reflecting its use in xterm since
+    <a href="#xterm_32">patch #32</a> (1996).</li>
+
+    <li>clarify comment in ctlseqs.ms regarding blink: it has been
+    part of xterm since <a href="#xterm_60">patch #60</a>
+    (1998).</li>
+
+    <li>update ftp URLs in documentation.</li>
+  </ul>
 
   <h1><a name="xterm_330" id="xterm_330">Patch #330 -
   2017/06/20</a></h1>
