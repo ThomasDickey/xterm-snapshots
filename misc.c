@@ -2892,6 +2892,98 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
     return result;
 }
 
+#if OPT_TRUE_COLORS
+/*
+ * Figure out and set pixel_format based on the X visual information in the
+ * Widget xw. Return True if we were able to figure it out.
+ */
+Boolean
+setPixelFormat(XtermWidget xw)
+{
+    int i;
+
+    getVisualInfo(xw);
+    if (xw == NULL || xw->visInfo == NULL)
+    {
+	TRACE(("setPixelFormat widget not setup\n"));
+	return False;
+    }
+
+    for (i = 0; pixel_formats[i].bits; ++i) {
+        if ((pixel_formats[i].bits == xw->visInfo->depth) &&
+	    (pixel_formats[i].red_mask == xw->visInfo->red_mask) &&
+	    (pixel_formats[i].green_mask == xw->visInfo->green_mask) &&
+	    (pixel_formats[i].blue_mask == xw->visInfo->blue_mask)) {
+	    pixel_format = pixel_formats[i].format;
+	    TRACE(("pixel_format = %d\n", pixel_format));
+	    return True;
+	}
+    }
+    TRACE(("pixel_format FAIL\n"));
+    return False;
+}
+
+/*
+ * Return a Pixel in the proper format given the color components.
+ * set_pixel_format should be called before calling this.
+ */
+Pixel
+formatPixel(unsigned int red, unsigned int green, unsigned int blue)
+{
+    Pixel result = 0;
+
+    switch (pixel_format) {
+    case PIXEL_FORMAT_RGB8:
+        result = (red << 16) | (green << 8) | blue;
+        break;
+    case PIXEL_FORMAT_RGB565:
+        /* This is mostly just an example. I don't think it will happen. */
+        result = (((red   >> 3) << 11) & 0x1f) |
+		 (((green >> 2) << 5)  & 0x3f) |
+		  ((blue  >> 3)        & 0x1f);
+        break;
+    case PIXEL_FORMAT_NONE:
+        break;
+    }
+    return result;
+}
+
+Pixel
+getColorPixel(XtermWidget xw,
+	      unsigned int red, unsigned int green, unsigned int blue)
+{
+    if (pixel_format == PIXEL_FORMAT_NONE) {
+        /*
+         * We could use allocateExactRGB, but that seems like it would
+         * be even slower. This is rather slow as it is. If it hits this code
+	 * a new PixelFormat should probably be added.
+	 *
+	 * To add a pixel format, add a case to formatPixel above which pulls
+	 * the components out, then add a row to the pixel_formats[] table which
+	 * identifies the format based on the Visual, and an identifier to the
+	 * PixelFormat enum.
+         */
+        XColor xcolor;
+	Status stat;
+	TRACE(("Using SLOW getColorPixel\n"));
+	xcolor.flags = DoRed | DoBlue | DoGreen;
+	xcolor.red   = red   << 8;
+	xcolor.green = green << 8;
+	xcolor.blue  = blue  << 8;
+	stat = XAllocColor(TScreenOf(xw)->display, xw->core.colormap, &xcolor);
+	if (!stat) {
+	    /* fallback to the old way */
+	    TRACE(("...XAllocColor failed\n"));
+	    return xtermClosestColor(xw, red, green, blue);
+	} else {
+  	    return xcolor.pixel;
+	}
+    } else {
+      return formatPixel(red, green, blue);
+  }
+}
+#endif /* OPT_TRUE_COLORS */
+
 #if OPT_PASTE64
 static void
 ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)

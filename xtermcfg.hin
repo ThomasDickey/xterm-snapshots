@@ -133,6 +133,7 @@
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
 #undef NO_LEAKS			/* CF_ARG_DISABLE(leaks) */
+#undef OPT_TRUE_COLORS		/* CF_ARG_ENABLE(true-color) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */

@@ -720,6 +720,10 @@ CSI Pm m  Character Attributes (SGR).
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Pm = 4 8 ; 5 ; Ps -> Set background color to Ps.
 
+	  If xterm is compiled with the true color support enabled,
+	  the RGB color selected is not limited to the 256 color
+	  palatte, but can be any color the screen supports.
+
 CSI > Ps; Ps m
           Set or reset resource-values used by xterm to decide whether
           to construct escape sequences holding information about the

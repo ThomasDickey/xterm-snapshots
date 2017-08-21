@@ -133,7 +133,7 @@ copyLineData(LineData *dst, CLineData *src)
 	for (col = limit; col < dst->lineSize; ++col) {
 	    dst->attribs[col] = 0;
 #if OPT_ISO_COLORS
-	    dst->color[col] = 0;
+	    ClearCellColor(dst->color[col]);
 #endif
 	    dst->charData[col] = 0;
 #if OPT_WIDE_CHARS

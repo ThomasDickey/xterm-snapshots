@@ -2547,7 +2547,7 @@ main(int argc, char *argv[]ENVP_ARG)
     if (term->misc.tekInhibit)
 	screen->inhibit |= I_TEK;
 #endif
-
+    
     /*
      * We might start by showing the tek4014 window.
      */
@@ -4379,6 +4379,11 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
 	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
+#if OPT_TRUE_COLORS
+	    if (pixel_format != PIXEL_FORMAT_NONE)
+	        xtermSetenv("COLORTERM", "truecolor");
+#endif
+	    
 	    /*
 	     * For debugging only, add environment variables that can be used
 	     * in scripts to selectively kill xterm's parent or child

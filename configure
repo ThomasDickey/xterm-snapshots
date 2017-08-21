@@ -736,6 +736,7 @@ Optional Features:
   --disable-active-icon   disable X11R6.3 active-icon feature
   --disable-ansi-color    disable ANSI color
   --disable-16-color      disable 16-color support
+  --enable-true-color     enable true color support
   --enable-256-color      enable 256-color support
   --enable-88-color       enable 88-color support
   --disable-blink-cursor  disable support for blinking cursor
@@ -16637,6 +16638,31 @@ cat >>confdefs.h <<\EOF
 #define OPT_AIX_COLORS 0
 EOF
 
+echo "$as_me:18401: checking if you want true colors" >&5
+echo $ECHO_N "checking if you want true colors... $ECHO_C" >&6
+
+# Check whether --enable-true-colors or --disable-true-colors was given.
+if test "${enable_true_color+set}" = set; then
+  enableval="$enable_true_color"
+  test "$enableval" != yes && enableval=no
+	if test "$enableval" != "no" ; then
+    enable_true_color=yes
+	else
+		enable_true_color=no
+	fi
+else
+  enableval=no
+	enable_true_color=no
+
+fi;
+echo "$as_me:18418: result: $enable_true_color" >&5
+echo "${ECHO_T}$enable_true_color" >&6
+if test "$enable_true_color" = yes ; then
+
+cat >>confdefs.h <<\EOF
+#define OPT_TRUE_COLORS 1
+EOF
+fi;
 	echo "$as_me:16640: checking if you want 256 colors" >&5
 echo $ECHO_N "checking if you want 256 colors... $ECHO_C" >&6
 

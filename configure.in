@@ -438,6 +438,16 @@ if test "$enable_ansi_color" = yes ; then
 	AC_MSG_RESULT($enable_16_color)
 	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0,[Define to 0 to disable 16-color support])
 
+	AC_MSG_CHECKING(if you want true colors)
+	CF_ARG_ENABLE(true-color,
+		[  --enable-true-color      enable true-color support],
+		[enable_true_color=yes],
+		[enable_true_color=no])
+	AC_MSG_RESULT($enable_true_color)
+	if test "$enable_true_color" = yes ; then
+		AC_DEFINE(OPT_TRUE_COLORS,1,[Define to 1 to enable true color support])
+	fi
+	
 	AC_MSG_CHECKING(if you want 256 colors)
 	CF_ARG_ENABLE(256-color,
 		[  --enable-256-color      enable 256-color support],

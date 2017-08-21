@@ -129,6 +129,22 @@ extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
 extern Atom wm_delete_window;
 
+#if OPT_TRUE_COLORS
+/* Data to match visuals to known pixel formats. */
+typedef struct {
+  unsigned int bits;
+  Pixel red_mask;
+  Pixel green_mask;
+  Pixel blue_mask;
+  unsigned int format;
+} PixelFormatData;
+
+extern PixelFormatData pixel_formats[];
+extern PixelFormat pixel_format;
+#endif /* OPT_TRUE_COLORS */
+
+extern CellColor Blank_cell_color;
+
 #if HANDLE_STRUCT_NOTIFY
 /* Flag icon name with "*** "  on window output when iconified.
  * I'd like to do something like reverse video, but I don't
