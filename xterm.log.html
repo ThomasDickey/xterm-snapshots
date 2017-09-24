@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1769 2017/08/14 08:54:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.1773 2017/09/24 15:07:02 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -950,6 +950,19 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix a misspelled subsection title in ctlseqs.ms and add a
+    note regarding blink which was rendered as bold in X11R6.
+    Blinking text was implemented in <a href="#xterm_60">Patch
+    #60</a>.</li>
+
+    <li>fix typos in <code>xterm.man</code> (patches by Sven
+    Joachim, Larry Hynes).</li>
+
+    <li>fix typography in <code>xterm.man</code> (patch by Bjarni
+    Ingi Gislason, Debian #869248).</li>
+
+    <li>fix typo in <code>INSTALL</code> (Larry Hynes).</li>
+
     <li>add <code>xterm-direct</code> terminal description based on
     changes introduced in <a href="#xterm_277">patch #277</a>, and
     relying upon ncurses <code><strong>RGB</strong></code>

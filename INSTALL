@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.163 2017/05/30 08:32:35 tom Exp $
+-- $XTermId: INSTALL,v 1.165 2017/08/31 21:25:37 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
@@ -613,9 +613,10 @@ The options (in alphabetic order):
 
 	Check for and link with dbmalloc.
 
-  --with-desktop-category=XXX  one or more desktop catgories or auto
+  --with-desktop-category=XXX  one or more desktop categories or auto
 	This is a list of names.  The configure script maps blanks and commas
-	to semicolons (";") which are used by the desktop utils as a separator.
+	to semicolons (";") which are used by the desktop utilities as a
+	separator.
 
 	The default value "auto" tells the configure script to look
 	at existing ".desktop" files for xterm and common terminal
@@ -735,7 +736,7 @@ The options (in alphabetic order):
 
   --with-pcre             use PCRE for regular-expressions
 
-	If regular expressions are not disable (--disable-regex), use PCRE
+	If regular expressions are not disabled (--disable-regex), use PCRE
 	rather than the POSIX regular expressions.
 
   --with-pkg-config{=path} enable/disable use of pkg-config
