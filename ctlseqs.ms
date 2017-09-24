@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.346 2017/08/14 08:31:35 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.350 2017/09/24 15:07:02 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #329
-.ds RF 2017/06/11
+.ds LF Patch #331
+.ds RF 2017/09/24
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2371,7 +2371,7 @@ For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
 This scheme dates back to X10,
 though the normal mouse-tracking (from X11) is more elaborate.
-.Ss X10 compatbility mode
+.Ss X10 compatibility mode
 .lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
