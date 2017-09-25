@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.524 2017/05/30 08:58:29 tom Exp $ */
+/* $XTermId: button.c,v 1.525 2017/07/30 02:57:34 David.Michael Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -79,11 +79,15 @@ button.c	Handles button events in the terminal emulator.
 #include <xstrings.h>
 
 #if OPT_SELECT_REGEX
+#ifdef HAVE_PCRE2POSIX_H
+#include <pcre2posix.h>
+#else
 #ifdef HAVE_PCREPOSIX_H
 #include <pcreposix.h>
 #else /* POSIX regex.h */
 #include <sys/types.h>
 #include <regex.h>
+#endif
 #endif
 #endif
 

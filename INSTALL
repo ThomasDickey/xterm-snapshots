@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.165 2017/08/31 21:25:37 tom Exp $
+-- $XTermId: INSTALL,v 1.167 2017/09/25 23:39:34 David.Michael Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
@@ -156,7 +156,7 @@ The options (in alphabetic order):
 
   --disable-freetype      disable freetype library-support
 
- 	Do not use freetype libraries if they are found.  Normally they will
+	Do not use freetype libraries if they are found.  Normally they will
 	be used automatically.
 
   --disable-full-tgetent  disable check for termcap library
@@ -626,7 +626,7 @@ The options (in alphabetic order):
 
   --with-freetype-config  configure script to use for FreeType
 
- 	Use a specific option value to tell the configure script to try
+	Use a specific option value to tell the configure script to try
 	just one of the variations:
 
 	"pkg*", e.g., pkg-config or pkgconfig uses whatever pkg-config
@@ -739,6 +739,11 @@ The options (in alphabetic order):
 	If regular expressions are not disabled (--disable-regex), use PCRE
 	rather than the POSIX regular expressions.
 
+  --with-pcre2            use PCRE2 for regular-expressions
+
+	If regular expressions are not disabled (--disable-regex), use PCRE2
+	rather than the POSIX regular expressions.
+
   --with-pkg-config{=path} enable/disable use of pkg-config
 
 	The configure script looks for certain libraries which have well
@@ -795,7 +800,7 @@ The options (in alphabetic order):
 
   --with-xpm=DIR          use Xpm library for colored icon, may specify path
 
- 	Use Xpm library to show colored icon in window decoration, e.g.,
+	Use Xpm library to show colored icon in window decoration, e.g.,
 	title area.
 
 	Use --without-xpm to suppress this feature.

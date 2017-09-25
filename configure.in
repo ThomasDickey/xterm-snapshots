@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.345 2017/05/31 08:38:47 tom Exp $
+dnl $XTermId: configure.in,v 1.346 2017/07/30 02:57:34 David.Michael Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -774,11 +774,14 @@ CF_ARG_DISABLE(regex,
 	[enable_regex=yes])
 AC_MSG_RESULT($enable_regex)
 if test "$enable_regex" = yes ; then
-	CF_WITH_PCRE
-	if test "$with_pcre" = no ; then
-		CF_REGEX
-		if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
-			AC_MSG_ERROR(Only POSIX or PCRE regular expressions are supported)
+	CF_WITH_PCRE2
+	if test "$with_pcre2" = no ; then
+		CF_WITH_PCRE
+		if test "$with_pcre" = no ; then
+			CF_REGEX
+			if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
+				AC_MSG_ERROR([Only POSIX, PCRE, or PCRE2 regular expressions are supported])
+			fi
 		fi
 	fi
 	AC_DEFINE(OPT_SELECT_REGEX,1,[Define to 1 to enable regular-expression selections])
