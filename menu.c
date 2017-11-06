@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.344 2017/01/02 23:46:03 tom Exp $ */
+/* $XTermId: menu.c,v 1.345 2017/07/22 03:17:24 Lauri.Tirkkonen Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -788,7 +788,7 @@ domenu(Widget w,
 	    update_keyboard_type();
 #ifdef OPT_PRINT_ON_EXIT
 	    screen->write_error = !IsEmpty(resource.printFileOnXError);
-	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, False);
+	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, True);
 	    SetItemSensitivity(mainMenuEntries[mainMenu_write_error].widget, screen->write_error);
 #endif
 	}

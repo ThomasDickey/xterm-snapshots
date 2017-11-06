@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.239 2017/01/14 00:15:11 tom Exp $
+## $XTermId: Makefile.in,v 1.240 2017/11/06 00:21:44 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -513,7 +513,7 @@ uninstall-full ::
 @desktop_utils@		done'
 ################################################################################
 mostlyclean :
-	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
+	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
 	-$(RM) $(PROGRAMS) builtin_icons.h *.cin *parse.hin
