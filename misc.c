@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.757 2017/06/20 08:52:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.759 2017/11/06 01:06:40 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4177,20 +4177,17 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    code -= 1;
 #endif
 		sprintf(reply, "%d%s", code, cp);
-	    } else
-		okay = False;
-
-	    if (okay) {
-		unparseputc1(xw, ANSI_DCS);
-		unparseputc(xw, '1');
-		unparseputc(xw, '$');
-		unparseputc(xw, 'r');
-		cp = reply;
-		unparseputs(xw, cp);
-		unparseputc1(xw, ANSI_ST);
 	    } else {
-		unparseputc(xw, ANSI_CAN);
+		okay = False;
 	    }
+
+	    unparseputc1(xw, ANSI_DCS);
+	    unparseputc(xw, okay ? '1' : '0');
+	    unparseputc(xw, '$');
+	    unparseputc(xw, 'r');
+	    cp = reply;
+	    unparseputs(xw, cp);
+	    unparseputc1(xw, ANSI_ST);
 	} else {
 	    unparseputc(xw, ANSI_CAN);
 	}
@@ -4477,7 +4474,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->curses);
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    result = MdFlag(xw->flags, NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		result = MdFlag(xw->flags, NATIONAL);
+	    } else {
+		result = 0;
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
@@ -4506,7 +4507,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->keyboard.flags, MODE_DECBKM);
 	    break;
 	case srm_DECLRMM:
-	    result = MdFlag(xw->flags, LEFT_RIGHT);
+	    if (screen->vtXX_level >= 4) {	/* VT420 */
+		result = MdFlag(xw->flags, LEFT_RIGHT);
+	    } else {
+		result = 0;
+	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:
@@ -4514,7 +4519,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case srm_DECNCSM:
-	    result = MdFlag(xw->flags, NOCLEAR_COLM);
+	    if (screen->vtXX_level >= 5) {	/* VT510 */
+		result = MdFlag(xw->flags, NOCLEAR_COLM);
+	    } else {
+		result = 0;
+	    }
 	    break;
 	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
