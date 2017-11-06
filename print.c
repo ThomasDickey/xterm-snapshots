@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.161 2017/06/19 08:11:13 tom Exp $ */
+/* $XTermId: print.c,v 1.163 2017/11/06 00:14:38 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -75,18 +75,21 @@ static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
 
 static void
-closePrinter(XtermWidget xw GCC_UNUSED)
+closePrinter(XtermWidget xw)
 {
-    if (xtermHasPrinter(xw) != 0) {
-	TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
+    if (SPS.fp != 0) {
+	if (SPS.toFile) {
+	    fclose(SPS.fp);
+	    SPS.fp = 0;
+	} else if (xtermHasPrinter(xw) != 0) {
 #ifdef VMS
-	char pcommand[256];
-	(void) sprintf(pcommand, "%s %s;",
-		       SPS.printer_command,
-		       VMS_TEMP_PRINT_FILE);
+	    char pcommand[256];
+	    (void) sprintf(pcommand, "%s %s;",
+			   SPS.printer_command,
+			   VMS_TEMP_PRINT_FILE);
 #endif
 
-	if (SPS.fp != 0) {
 	    DEBUG_MSG("closePrinter\n");
 	    pclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
@@ -427,7 +430,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (!SPS.isOpen && xtermHasPrinter(xw)) {
+    if (!SPS.isOpen && (SPS.toFile || xtermHasPrinter(xw))) {
 	switch (SPS.toFile) {
 	    /*
 	     * write to a pipe.
