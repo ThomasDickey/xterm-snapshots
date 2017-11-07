@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.531 2017/06/20 09:10:19 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.534 2017/11/07 00:20:53 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -50,6 +50,8 @@
 
 #include <stdio.h>
 #include <ctype.h>
+
+#define NoFontWarning(data) (data)->warn = fwAlways
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
 #define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
@@ -479,6 +481,7 @@ open_italic_font(XtermWidget xw, int n, FontNameProperties *fp, XTermFonts * dat
     Cardinal pass;
     Boolean result = False;
 
+    NoFontWarning(data);
     for (pass = 0; pass < XtNumber(slant); ++pass) {
 	if ((name = italic_font_name(fp, slant[pass])) != 0) {
 	    TRACE(("open_italic_font %s %s\n",
@@ -902,7 +905,6 @@ cannotFont(XtermWidget xw, const char *who, const char *what, const char *where)
     case fwAlways:
 	break;
     }
-    TRACE(("OOPS: cannot %s%s%s font \"%s\"\n", who, *what ? " " : "", what, where));
     xtermWarning("cannot %s%s%s font \"%s\"\n", who, *what ? " " : "", what, where);
 }
 
@@ -934,18 +936,17 @@ xtermOpenFont(XtermWidget xw,
 		&& !UsingRenderFont(xw)
 #endif
 		) {
-		TRACE(("OOPS: cannot load font %s\n", name));
 		cannotFont(xw, "load", "", name);
 	    } else {
 		TRACE(("xtermOpenFont: cannot load font '%s'\n", name));
 	    }
 	    if (force) {
-		result->warn = fwAlways;
+		NoFontWarning(result);
 		code = xtermOpenFont(xw, DEFFONT, result, True);
 	    }
 	}
     }
-    result->warn = fwAlways;
+    NoFontWarning(result);
     return code;
 }
 
@@ -1226,6 +1227,7 @@ loadBoldFP(XtermWidget xw,
 
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
 	if (fp != 0) {
+	    NoFontWarning(infoOut);
 	    *nameOutP = bold_font_name(fp, fp->average_width);
 	    if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
 		free(*nameOutP);
@@ -1335,6 +1337,7 @@ loadWBoldFP(XtermWidget xw,
 	if (fp != 0) {
 	    *nameOutP = widebold_font_name(fp);
 	    derived = True;
+	    NoFontWarning(infoOut);
 	}
     }
 
@@ -2372,14 +2375,12 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 		TRACE(("...could did not open %s font\n", tag));
 		XftPatternDestroy(match);
 		if (xw->misc.fontWarnings >= fwAlways) {
-		    TRACE(("OOPS cannot open %s font \"%s\"\n", tag, name));
 		    cannotFont(xw, "open", tag, name);
 		}
 	    }
 	} else {
 	    TRACE(("...did not match %s font\n", tag));
 	    if (xw->misc.fontWarnings >= fwResource) {
-		TRACE(("OOPS: cannot match %s font \"%s\"\n", tag, name));
 		cannotFont(xw, "match", tag, name);
 	    }
 	}

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1777 2017/11/06 01:16:24 tom Exp $
+  $XTermId: xterm.log.html,v 1.1780 2017/11/07 00:44:01 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -950,6 +950,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>quiet a few font-warnings when a derived fontname cannot be
+    opened, overlooked in refactoring of font resources in <a href=
+    "#xterm_328">patch #328</a> (initially reported on <a href=
+    "https://cygwin.com/ml/cygwin/2017-06/msg00255.html">Cygwin
+    mailing list</a>, with <a href=
+    "https://cygwin.com/ml/cygwin/2017-07/msg00216.html">followup</a>).</li>
+
     <li>correct error response for <code>DECRQSS</code> broken in
     cleanup of Coverity reports in <a href="#xterm_288">patch
     #288</a> (reports by Bram Moolenaar and IWAMOTO Kouichi).</li>
