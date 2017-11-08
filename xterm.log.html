@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1780 2017/11/07 00:44:01 tom Exp $
+  $XTermId: xterm.log.html,v 1.1782 2017/11/08 01:43:36 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -950,6 +950,54 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve legacy/NRC character set mapping (patch by Thomas
+    Wolff):
+
+      <ul>
+        <li>enable alternate NRC set designators for French and
+        French Canadian, &lsquo;9&rsquo; and &lsquo;f&rsquo;
+        respectively, as documented in ctlseqs. (&lsquo;9&rsquo; is
+        documented for VT510, &lsquo;f&rsquo; is a Kermit
+        feature).</li>
+
+        <li>correct the Unicode value in the <em>DEC Technical</em>
+        table to show capital delta.</li>
+
+        <li>referring to
+
+          <blockquote>
+            <p><a href=
+            "http://vt100.net/docs/vt220-rm/table2-3b.html">http://vt100.net/docs/vt220-rm/table2-3b.html</a><br>
+
+            <a href=
+            "http://vt100.net/docs/vt320-uu/appendixe.html">http://vt100.net/docs/vt320-uu/appendixe.html</a></p>
+          </blockquote>
+
+          <p>add entries for the <em>DEC Supplemental Graphics</em>
+          table to display 0x28/0xa8 as &curren; and 0x5d/0xdd as
+          &Yuml;.</p>
+        </li>
+
+        <li>referring to
+
+          <blockquote>
+            <p><a href=
+            "http://www.vt100.net/charsets/technical.html">http://www.vt100.net/charsets/technical.html</a></p>
+          </blockquote>
+
+          <p>alter the Unicode values used for 0x2b through 0x2c to
+          use <em>curly braces</em> to work with the
+          &ldquo;middle&rdquo; parts displayed with 0x2f and
+          0x30.</p>
+        </li>
+
+        <li>modify the VT220 &ldquo;Supplemental&rdquo; table,
+        giving a hint that it was probably meant to be
+        &ldquo;Supplemental Graphics&rdquo; and is the same as
+        VT320's table.</li>
+      </ul>
+    </li>
+
     <li>quiet a few font-warnings when a derived fontname cannot be
     opened, overlooked in refactoring of font resources in <a href=
     "#xterm_328">patch #328</a> (initially reported on <a href=
@@ -5860,9 +5908,10 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     for the <code>Xaw</code> popup menus (adapted from patch by
     Dave Coffin).</li>
 
-    <li>modify do_precomposition() function and make-compose.sh to
-    handle 21-bit codes vs the 16-bit codes those were written for,
-    and fix a few mis-sorted codes (patch by Thomas Wolff).</li>
+    <li>modify <code>do_precomposition()</code> function and
+    <code>make-precompose.sh</code> to handle 21-bit codes vs the
+    16-bit codes those were written for, and fix a few mis-sorted
+    codes (patch by Thomas Wolff).</li>
 
     <li>handle special case in <code>-cjk_width</code> which
     unexpectedly caused a character's width to change when a
