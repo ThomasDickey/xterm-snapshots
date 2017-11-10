@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.85 2014/11/13 01:17:59 tom Exp $ */
+/* $XTermId: linedata.c,v 1.86 2017/11/09 01:30:07 tom Exp $ */
 
 /*
- * Copyright 2009-2013,2014 by Thomas E. Dickey
+ * Copyright 2009-2014,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -31,6 +31,7 @@
  */
 
 #include <xterm.h>
+#include <data.h>
 
 #include <assert.h>
 
@@ -133,7 +134,7 @@ copyLineData(LineData *dst, CLineData *src)
 	for (col = limit; col < dst->lineSize; ++col) {
 	    dst->attribs[col] = 0;
 #if OPT_ISO_COLORS
-	    dst->color[col] = 0;
+	    dst->color[col] = initCColor;
 #endif
 	    dst->charData[col] = 0;
 #if OPT_WIDE_CHARS

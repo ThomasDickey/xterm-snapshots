@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.350 2017/09/24 15:07:02 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.351 2017/11/08 10:07:35 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -1238,6 +1238,10 @@ These ISO-8613-3 controls are supported:
   \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
   \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps.
 .sp
+If \fIxterm\fP is compiled with direct-color support,
+rather than choosing the closest match,
+\fIxterm\fP asks the X server to directly render a given color.
+.sP
 .
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*m
 Set or reset resource-values used by \fIxterm\fP to decide whether to

@@ -1,7 +1,7 @@
-/* $XTermId: svg.c,v 1.6 2016/05/22 19:09:17 tom Exp $ */
+/* $XTermId: svg.c,v 1.7 2017/11/09 00:14:56 tom Exp $ */
 
 /*
- * Copyright 2015,2016 Jens Schweikhardt
+ * Copyright 2015-2016,2017 Jens Schweikhardt
  *
  * All Rights Reserved
  *
@@ -156,7 +156,7 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 	/* Count how many consecutive cells have the same color & attributes. */
 	for (sal = 1; col + sal < MaxCols(s); ++sal) {
 #if OPT_ISO_COLORS
-	    if (ld->color[col] != ld->color[col + sal])
+	    if (!isSameCColor(ld->color[col], ld->color[col + sal]))
 		break;
 #endif
 	    if (ld->attribs[col] != ld->attribs[col + sal])

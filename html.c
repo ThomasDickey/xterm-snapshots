@@ -1,7 +1,7 @@
-/* $XTermId: html.c,v 1.6 2017/05/30 09:14:55 tom Exp $ */
+/* $XTermId: html.c,v 1.7 2017/11/10 01:07:34 tom Exp $ */
 
 /*
- * Copyright 2015 Jens Schweikhardt
+ * Copyright 2015,2017 Jens Schweikhardt
  *
  * All Rights Reserved
  *

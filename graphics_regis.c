@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.96 2017/06/21 01:15:19 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.98 2017/11/10 00:30:50 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -6587,7 +6587,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found begin unbounded position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
-	    if (!(fragment_consumed(&optionarg) > 0U)) {
+	    if (!fragment_consumed(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected arguments to vector option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }

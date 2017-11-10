@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.214 2017/07/30 02:57:34 David.Michael Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.215 2017/11/08 02:27:49 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -135,6 +135,7 @@
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
 #undef NO_LEAKS			/* CF_ARG_DISABLE(leaks) */
+#undef OPT_DIRECT_COLOR		/* CF_ARG_ENABLE(direct-color) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */

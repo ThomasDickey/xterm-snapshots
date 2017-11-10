@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.778 2017/05/29 23:19:51 tom Exp $ */
+/* $XTermId: xterm.h,v 1.779 2017/11/09 09:42:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1122,6 +1122,10 @@ extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 #endif
 
+#if OPT_DIRECT_COLOR
+extern Pixel getDirectColor(XtermWidget /* xw */, unsigned /* red */, unsigned /* green */, unsigned /* blue */);
+#endif /* OPT_DIRECT_COLOR */
+
 #if OPT_EXEC_XTERM
 extern char *ProcGetCWD(pid_t /* pid */);
 #else
@@ -1269,7 +1273,7 @@ extern void ScrnInsertCol (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last */, int  /* where */, unsigned  /* n */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
-extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned /* cur_fg_bg */, unsigned  /* length */);
+extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
 extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
@@ -1373,9 +1377,9 @@ extern void TabZonk (Tabs  /* tabs */);
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
 extern CgsEnum whichXtermCgs(XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
-extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned /* fg_bg */, Bool  /* hilite */);
-extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
-extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);  
+extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */, int /* extended */);
+extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */, int /* extended */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
@@ -1428,12 +1432,12 @@ extern int XParseXineramaGeometry(Display * /* display */, char * /* parsestring
 
 #if OPT_ISO_COLORS
 
-extern unsigned extract_fg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern unsigned extract_bg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
+extern Pixel extract_fg (XtermWidget /* xw */, CellColor /* color */, unsigned  /* flags */);
+extern Pixel extract_bg (XtermWidget /* xw */, CellColor /* color */, unsigned  /* flags */);
+extern CellColor makeColorPair (XtermWidget /* xw */);
 extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */, unsigned /* fw */);
 
-#define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
+#define xtermColorPair(xw) makeColorPair(xw)
 
 #if OPT_COLOR_RES
 #define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
@@ -1514,6 +1518,14 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
+
+#if OPT_DIRECT_COLOR
+#define getXtermFG(xw, flags, color, direct) getXtermForeground(xw, flags, color, direct)
+#define getXtermBG(xw, flags, color, direct) getXtermBackground(xw, flags, color, direct)
+#else
+#define getXtermFG(xw, flags, color, direct) getXtermForeground(xw, flags, color, 0)
+#define getXtermBG(xw, flags, color, direct) getXtermBackground(xw, flags, color, 0)
+#endif
 
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);
