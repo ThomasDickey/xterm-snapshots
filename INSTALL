@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.167 2017/09/25 23:39:34 David.Michael Exp $
+-- $XTermId: INSTALL,v 1.168 2017/11/08 10:01:37 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
@@ -373,7 +373,11 @@ The options (in alphabetic order):
 
 	Compile-in code that interprets SGR 38 and 48 for 88-colors.
 
-  --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
+  --enable-direct-color   enable direct color support
+
+  	Compile-in code that interprets SGR 38 and 48 for direct colors.
+
+--enable-alt-sends-esc  set default altSendsEscape resource (default: no)
 
 	This sets the default resource value, which is shown in the manpage.
 

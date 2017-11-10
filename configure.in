@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.346 2017/07/30 02:57:34 David.Michael Exp $
+dnl $XTermId: configure.in,v 1.347 2017/11/09 00:18:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -438,6 +438,16 @@ if test "$enable_ansi_color" = yes ; then
 	AC_MSG_RESULT($enable_16_color)
 	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0,[Define to 0 to disable 16-color support])
 
+	AC_MSG_CHECKING(if you want direct-color support)
+	CF_ARG_ENABLE(direct-color,
+		[  --enable-direct-color   enable direct-color support],
+		[enable_direct_color=yes],
+		[enable_direct_color=no])
+	AC_MSG_RESULT($enable_direct_color)
+	if test "$enable_direct_color" = yes ; then
+		AC_DEFINE(OPT_DIRECT_COLOR,1,[Define to 1 to enable direct-color support])
+	fi
+	
 	AC_MSG_CHECKING(if you want 256 colors)
 	CF_ARG_ENABLE(256-color,
 		[  --enable-256-color      enable 256-color support],

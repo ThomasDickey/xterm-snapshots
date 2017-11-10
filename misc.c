@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.760 2017/11/07 00:18:05 tom Exp $ */
+/* $XTermId: misc.c,v 1.761 2017/11/09 00:58:34 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2209,6 +2209,19 @@ FlushLog(XtermWidget xw)
 
 /***====================================================================***/
 
+static unsigned
+maskToShift(unsigned long mask)
+{
+    unsigned result = 0;
+    if (mask != 0) {
+	while ((mask & 1) == 0) {
+	    mask >>= 1;
+	    ++result;
+	}
+    }
+    return result;
+}
+
 int
 getVisualInfo(XtermWidget xw)
 {
@@ -2238,10 +2251,25 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 
 	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
 	    XVisualInfo *vi = xw->visInfo;
+	    xw->rgb_shifts[0] = maskToShift(vi->red_mask);
+	    xw->rgb_shifts[1] = maskToShift(vi->green_mask);
+	    xw->rgb_shifts[2] = maskToShift(vi->blue_mask);
+
+	    xw->has_rgb = ((vi->red_mask != 0) &&
+			   (vi->green_mask != 0) &&
+			   (vi->blue_mask != 0) &&
+			   ((vi->red_mask & vi->green_mask) == 0) &&
+			   ((vi->green_mask & vi->blue_mask) == 0) &&
+			   ((vi->blue_mask & vi->red_mask) == 0));
+
 	    if (resource.reportColors) {
 		printf(MYFMT, MYARG);
 	    }
 	    TRACE((MYFMT, MYARG));
+	    TRACE(("...shifts %u/%u/%u\n",
+		   xw->rgb_shifts[0],
+		   xw->rgb_shifts[1],
+		   xw->rgb_shifts[2]));
 	}
     }
     return (xw->visInfo != 0) && (xw->numVisuals > 0);
@@ -2905,6 +2933,18 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 #endif
     return result;
 }
+
+#if OPT_DIRECT_COLOR
+Pixel
+getDirectColor(XtermWidget xw,
+	       unsigned r, unsigned g, unsigned b)
+{
+    Pixel result = (((r << xw->rgb_shifts[0]) & xw->visInfo->red_mask)
+		    | ((g << xw->rgb_shifts[1]) & xw->visInfo->green_mask)
+		    | ((b << xw->rgb_shifts[2]) & xw->visInfo->blue_mask));
+    return result;
+}
+#endif /* OPT_DIRECT_COLOR */
 
 #if OPT_PASTE64
 static void

@@ -1,7 +1,7 @@
-/* $XTermId: data.c,v 1.96 2016/06/01 09:14:11 tom Exp $ */
+/* $XTermId: data.c,v 1.97 2017/11/09 01:22:18 tom Exp $ */
 
 /*
- * Copyright 2002-2013,2016 by Thomas E. Dickey
+ * Copyright 2002-2016,2017 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -118,4 +118,10 @@ int ice_fd = -1;
 
 #ifdef USE_IGNORE_RC
 int ignore_unused;
+#endif
+
+#if OPT_DIRECT_COLOR
+CellColor initCColor = {0, 0, 0, 0};
+#else
+CellColor initCColor = 0;
 #endif

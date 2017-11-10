@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.854 2017/05/29 00:49:11 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.855 2017/11/10 00:28:45 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -613,6 +613,10 @@ typedef struct {
 
 #ifndef OPT_ISO_COLORS
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
+#endif
+
+#ifndef OPT_DIRECT_COLOR
+#define OPT_DIRECT_COLOR  0 /* true if xterm is configured with direct-colors */
 #endif
 
 #ifndef OPT_256_COLORS
@@ -1261,6 +1265,8 @@ typedef enum {
 # define NUM_ANSI_COLORS MIN_ANSI_COLORS
 #endif
 
+#define okIndexedColor(n) ((n) >= 0 && (n) < NUM_ANSI_COLORS)
+
 #if NUM_ANSI_COLORS > MIN_ANSI_COLORS
 # define OPT_EXT_COLORS  1
 #else
@@ -1539,23 +1545,54 @@ typedef struct {
 /***====================================================================***/
 
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
+#if OPT_DIRECT_COLOR
+typedef struct {
+    /* This is wasteful, so perhaps we should consider how to steal a bit from
+     * the pixel formats or somewhere.
+     */
+    unsigned int fg_extended : 1;
+    unsigned int bg_extended : 1;
+    Pixel fg;
+    Pixel bg;
+} CellColor;
+
+#define isSameCColor(p,q) (!memcmp(&(p), &(q), sizeof(CellColor)))
+
+#elif OPT_256_COLORS || OPT_88_COLORS
+
 #define COLOR_BITS 8
 typedef unsigned short CellColor;
+
 #else
+
 #define COLOR_BITS 4
 typedef Char CellColor;
+
 #endif
 #else
 typedef unsigned CellColor;
+#endif
+
+#ifndef isSameCColor
+#define isSameCColor(p,q) ((p) == (q))
 #endif
 
 #define BITS2MASK(b)          ((1 << b) - 1)
 
 #define COLOR_MASK            BITS2MASK(COLOR_BITS)
 
+#if OPT_DIRECT_COLOR
+#define GetCellColorFG(src)   ((src).fg)
+#define GetCellColorBG(src)   ((src).bg)
+#define GetCellColorFGExt(src) ((src).fg_extended)
+#define GetCellColorBGExt(src) ((src).bg_extended)
+#else
 #define GetCellColorFG(src)   ((src) & COLOR_MASK)
 #define GetCellColorBG(src)   (((src) >> COLOR_BITS) & COLOR_MASK)
+#define GetCellColorFGExt(src) False
+#define GetCellColorBGExt(src) False
+#endif
+extern CellColor blank_cell_color;
 
 typedef Char RowData;		/* wrap/blink, and DEC single-double chars */
 
@@ -1831,11 +1868,12 @@ typedef struct {
 	int		gsets[4];
 	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
-	int		cur_foreground; /* current foreground color	*/
-	int		cur_background; /* current background color	*/
-	int		sgr_foreground; /* current SGR foreground color */
-	int		sgr_background; /* current SGR background color */
-	Boolean		sgr_extended;	/* SGR set with extended codes? */
+	int		cur_foreground;  /* current foreground color	*/
+	int		cur_background;  /* current background color	*/
+	int		sgr_foreground;  /* current SGR foreground color */
+	int		sgr_background;  /* current SGR background color */
+	Boolean		sgr_fg_extended; /* SGR set with extended codes? */
+	Boolean		sgr_bg_extended; /* SGR set with extended codes? */
 #endif
 } SavedCursor;
 
@@ -2853,6 +2891,8 @@ typedef struct _XtermWidgetRec {
     XSizeHints	hints;
     XVisualInfo *visInfo;
     int		numVisuals;
+    unsigned	rgb_shifts[3];
+    Bool	has_rgb;
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
@@ -2866,7 +2906,8 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
-    Boolean	sgr_extended;	/* SGR set with extended codes? */
+    Boolean	sgr_fg_extended; /* SGR set with extended codes? */
+    Boolean	sgr_bg_extended; /* SGR set with extended codes? */
 #endif
     IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/

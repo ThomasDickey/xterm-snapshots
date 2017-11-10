@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.534 2017/11/07 00:20:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.535 2017/11/09 09:43:26 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1122,8 +1122,8 @@ xtermUpdateFontGCs(XtermWidget xw, Bool italic)
     MyGetFont myfunc = getNormalFont;
 #endif
     VTwin *win = WhichVWin(screen);
-    Pixel new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
-    Pixel new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
+    Pixel new_normal = getXtermFG(xw, xw->flags, xw->cur_foreground, xw->sgr_fg_extended);
+    Pixel new_revers = getXtermBG(xw, xw->flags, xw->cur_background, xw->sgr_bg_extended);
 
     (void) italic;
 

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.517 2017/05/29 19:59:05 tom Exp $ */
+/* $XTermId: screen.c,v 1.518 2017/11/09 01:22:18 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -828,7 +828,7 @@ void
 ScrnWriteText(XtermWidget xw,
 	      IChar *str,
 	      unsigned flags,
-	      unsigned cur_fg_bg,
+	      CellColor cur_fg_bg,
 	      unsigned length)
 {
     TScreen *screen = TScreenOf(xw);
@@ -1445,7 +1445,7 @@ ScrnRefresh(XtermWidget xw,
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 	CellColor *fb = 0;
-#define ColorOf(col) (CellColor) (fb ? fb[col] : 0)
+#define ColorOf(col) (CellColor) (fb ? fb[col] : initCColor)
 #endif
 #if OPT_WIDE_CHARS
 	int wideness = 0;
@@ -1459,7 +1459,7 @@ ScrnRefresh(XtermWidget xw,
 	int lastind;
 	unsigned flags;
 	unsigned test;
-	CellColor fg_bg = 0;
+	CellColor fg_bg = initCColor;
 	unsigned fg = 0, bg = 0;
 	int x;
 	GC gc;
