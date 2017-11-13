@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.718 2017/09/01 18:29:44 Larry.Hynes Exp $
+.\" $XTermId: xterm.man,v 1.722 2017/11/13 00:42:56 Branden.Robinson Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -1249,8 +1249,8 @@ enables the display of characters with underline attribute as
 italics rather than with underlining.
 .TP 8
 .B \-ut
-This option indicates that \fI\*n\fP should not write a record into the
-system \fIutmp\fP log file.
+This option indicates that \fI\*n\fP should not write a record into
+the system \fIutmp\fP log file.
 .TP 8
 .B +ut
 This option indicates that \fI\*n\fP should write a record into
@@ -1325,9 +1325,9 @@ Examples
 (the first two are equivalent
 since the descriptor follows the last \*(``/\*(''):
 .NS 15
--S/dev/pts/123/45
--S123/45
--Sab34
+\-S/dev/pts/123/45
+\-S123/45
+\-Sab34
 .NE
 .IP
 Note that \fI\*n\fP does not close any file descriptor
@@ -1491,7 +1491,8 @@ Here are tables showing how the initial settings for
 \fIstty\fP erase character (^H for backspace, ^?\& for delete)
 .RE
 .IP
-will affect DECBKM.  First, \fI\*n\fP obtains the initial \fIerase\fP character:
+will affect DECBKM.
+First, \fI\*n\fP obtains the initial \fIerase\fP character:
 .RS
 .bP
 \fI\*n\fP's internal value is ^H
@@ -1526,8 +1527,9 @@ if \fBbackarrowKeyIsErase\fP is true, \fI\*n\fP uses the \fIerase\fP
 character for the initial state of \fBDECBKM\fP
 .bP
 if \fBbackarrowKeyIsErase\fP is false, \fI\*n\fP sets \fBDECBKM\fP
-to 2 (internal).  This ties together \fBbackarrowKey\fP
-and the control sequence for \fBDECBKM\fP
+to 2 (internal).
+This ties together \fBbackarrowKey\fP
+and the control sequence for \fBDECBKM\fP.
 .bP
 applications can send a control sequence to set/reset \fBDECBKM\fP control set
 .bP
@@ -1921,7 +1923,7 @@ This is very useful for overriding
 the default terminal settings without having to do an \fIstty\fP every time
 an \fI\*n\fP is started.
 Note, however, that the \fIstty\fP program on a given host may use different
-keywords; \fI\*n\fR's table is built-in.
+keywords; \fI\*n\fR's table is built in.
 .IP
 If the \fBttyModes\fP resource specifies a value for \fBerase\fP,
 that overrides the \fBptyInitialErase\fP resource setting,
@@ -2443,7 +2445,7 @@ The default for this resource is \*(``false\*(''.
 .B "charClass\fP (class\fB CharClass\fP)"
 Specifies comma-separated lists of character class bindings of the form
 .NS
-\fIlow\fP[-\fIhigh]\fP[:\fIvalue\fP].
+\fIlow\fP[\-\fIhigh]\fP[:\fIvalue\fP].
 .NE
 .IP
 These are used in determining which
@@ -3075,7 +3077,7 @@ to denote FreeType fonts),
 \fIxfontsel\fP has not been similarly extended.
 As a workaround, you may try
 .NS
-fc-list :scalable=true:spacing=mono: family
+fc\-list :scalable=true:spacing=mono: family
 .NE
 .IP
 to find a list of scalable fixed-pitch fonts
@@ -3390,7 +3392,8 @@ If false, \fI\*n\fP will not request the targets
 \fBCOMPOUND_TEXT\fP
 or
 \fBTEXT\fP.
-The default is \*(``true\*(''.  It may be set to false in order to work around
+The default is \*(``true\*(''.
+It may be set to false in order to work around
 ICCCM violations by other X clients.
 .TP 8
 .B "iconBorderColor\fP (class\fB BorderColor\fP)"
@@ -3536,7 +3539,7 @@ which depends on your system configuration.
 If the encoding converter requires command-line parameters,
 you can add those after the command, e.g.,
 .NS
-*localeFilter: xterm-filter \-p
+*localeFilter: xterm\-filter \-p
 .NE
 .IP
 Alternatively,
@@ -4166,8 +4169,8 @@ in case the input-method server is not responding.
 This is a different issue than unsupported preedit type, etc.
 You may encounter retries if your X configuration (and its libraries)
 are missing pieces.
-Setting this resource to zero ``0'' will cancel the retrying.
-The default is ``3''.
+Setting this resource to zero \*(``0\*('' will cancel the retrying.
+The default is \*(``3\*(''.
 .TP 8
 .B "reverseVideo\fP (class\fB ReverseVideo\fP)"
 Specifies whether or not reverse video should be simulated.
@@ -5022,7 +5025,7 @@ be changed through the resource database; see \fBActions\fP below.
 Pointer button one (usually left)
 is used to save text into the cut buffer:
 .NS
-~Meta <Btn1Down>:\fBselect-start\fP()
+~Meta <Btn1Down>:\fBselect\-start\fP()
 .NE
 .IP
 Move the cursor to beginning of the text,
@@ -5031,7 +5034,7 @@ and releasing the button.
 The selected text is highlighted and is saved in the global \fIcut buffer\fP
 and made the selection when the button is released:
 .NS
-<BtnUp>:\fBselect-end\fP(\fBSELECT\fP, CUT_BUFFER0) \en
+<BtnUp>:\fBselect\-end\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \en
 .NE
 .IP
 Normally (but see the discussion of \fBon2Clicks\fP, etc):
@@ -5060,14 +5063,14 @@ Pointer button two (usually middle)
 the given selection, if any,
 otherwise from the cut buffer, inserting it as keyboard input:
 .NS
-~Ctrl ~Meta <Btn2Up>:\fB\fBinsert-selection\fP\fP(\fBSELECT\fP, CUT_BUFFER0)
+~Ctrl ~Meta <Btn2Up>:\fB\fBinsert\-selection\fP\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP)
 .NE
 .
 .TP 5
 Pointer button three (usually right)
 \fIextends\fP the current selection.
 .NS
-~Ctrl ~Meta <Btn3Down>:\fB\fBstart-extend\fP\fP()
+~Ctrl ~Meta <Btn3Down>:\fB\fBstart\-extend\fP\fP()
 .NE
 .IP
 (Without loss of generality,
@@ -5164,16 +5167,16 @@ The \fBPRIMARY\fP token is a standard X feature, documented in the ICCCM
 which states
 .RS
 .PP
-The selection named by the atom \fBPRIMARY\fP is used for all commands that
-take only a single argument and is the principal means of communication
-between clients that use the selection mechanism.
+The selection named by the atom \fBPRIMARY\fP is used for all commands
+that take only a single argument and is the principal means of
+communication between clients that use the selection mechanism.
 .RE
 .SS SELECT
 .PP
 However, many applications use \fBCLIPBOARD\fP in imitation of other windowing
 systems.
 The \fBselectToClipboard\fP resource (and corresponding menu entry
-\fBSelect to Clipboard\fP) introduce the SELECT token (known only
+\fBSelect to Clipboard\fP) introduce the \fBSELECT\fP token (known only
 to \fI\*n\fP) which chooses between the \fBPRIMARY\fP and \fBCLIPBOARD\fP tokens.
 .PP
 Without using this feature, one can use workarounds such as the
@@ -5360,7 +5363,8 @@ there is no portable equivalent
 in CSS 2.2.
 .IP
 The font is whatever your browser uses for preformatted (<pre>)
-elements.  The XHTML file references a cascading style sheet (CSS)
+elements.
+The XHTML file references a cascading style sheet (CSS)
 named \*(``\fBxterm.css\fP\*('' that you can create to select a font or
 override properties.
 .RS
@@ -5386,7 +5390,8 @@ In addition you may use
 .RE
 .IP
 Attributes faint, reverse and blink are implemented as \fIstyle\fP attributes
-setting color properties.  All colors are specified as RGB percentages
+setting color properties.
+All colors are specified as RGB percentages
 in order to support displays with 10 bits per RGB.
 .IP
 The name of the file will be
@@ -5411,7 +5416,7 @@ is started in, or the home directory for a login
 The \fBdump-html\fP action can also be triggered using the Media Copy
 control sequence CSI 1 0 i, for example from a shell script with
 .NS
-printf '\\033[10i'
+printf \*(AQ\\033[10i\*(AQ
 .NE
 .sp
 Only the UTF-8 encoding is supported.
@@ -5450,7 +5455,7 @@ is started in, or the home directory for a login
 The \fBdump-svg\fP action can also be triggered using the Media Copy
 control sequence CSI 1 1 i, for example from a shell script with
 .NS
-printf '\\033[11i'
+printf \*(AQ\\033[11i\*(AQ
 .NE
 .sp
 Only the UTF-8 encoding is supported.
@@ -5684,9 +5689,11 @@ this controls whether a private color palette can be used.
 .IP
 When enabled,
 each graphic image uses a separate set of color registers, so that it
-essentially has a private palette (this is the default).  If it is not set,
+essentially has a private palette (this is the default).
+If it is not set,
 all graphics images share a common set of registers which is how sixel and
-ReGIS graphics worked on actual hardware.  The default is likely a more
+ReGIS graphics worked on actual hardware.
+The default is likely a more
 useful mode on modern TrueColor hardware.
 .IP
 This corresponds to the \fBprivateColorRegisters\fP resource.
@@ -6044,7 +6051,8 @@ The
 to 65535, corresponding to the code for the character or characters to be
 set.
 .bP
-The \fIvalue\fP is arbitrary.  For example, the default table uses the
+The \fIvalue\fP is arbitrary.
+For example, the default table uses the
 character number of the first character occurring in the set.
 When not in
 UTF-8 mode, only the first 256 entries of this table will be used.
@@ -6214,7 +6222,7 @@ of \*(``dynamic abbreviation\*('' expansion in Emacs (bound there to M\-/).
 Here is a resource setting for \fI\*n\fP which will do the same thing:
 .NS
 *VT100*translations:    #override \\n\\\&
-        Meta <KeyPress> /:\fBdabbrev-expand\fP()
+        Meta <KeyPress> /:\fBdabbrev\-expand\fP()
 .NE
 .TP 8
 .B "deiconify()"
@@ -6291,7 +6299,7 @@ to view a file whose name is selected while holding the shift key down.
 The new process is started when the mouse button is released:
 .NS
 *VT100*translations: #override Shift \\
-    <Btn1Up>:\fBexec-formatted\fP("xterm \-e view '%t'", \fBSELECT\fP)
+    <Btn1Up>:\fBexec\-formatted\fP("xterm \-e view \*(AQ%t\*(AQ", \fBSELECT\fP)
 .NE
 .TP 8
 .B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
@@ -6367,9 +6375,9 @@ by \fIsourcename\fP.
 Sources are checked in the order given (case is
 significant) until one is found.
 Commonly-used selections include:
-\fIPRIMARY\fP, \fISECONDARY\fP, and \fICLIPBOARD\fP.
+\fBPRIMARY\fP, \fBSECONDARY\fP, and \fBCLIPBOARD\fP.
 Cut buffers are
-typically named \fICUT_BUFFER0\fP through \fICUT_BUFFER7\fP.
+typically named \fBCUT_BUFFER0\fP through \fBCUT_BUFFER7\fP.
 .TP 8
 .B "insert-seven-bit()"
 This action is a synonym for \fBinsert()\fP.
@@ -6429,33 +6437,33 @@ The parameter values are matched ignoring case:
 .TP 5
 noFormFeed
 no form feed will be sent at the end of the last line printed
-(i.e., \fBprinterFormFeed\fP is ``false'').
+(i.e., \fBprinterFormFeed\fP is \*(``false\*('').
 .TP 5
 FormFeed
 a form feed will be sent at the end of the last line printed
-(i.e., \fBprinterFormFeed\fP is ``true'').
+(i.e., \fBprinterFormFeed\fP is \*(``true\*('').
 .TP 5
 noNewLine
 no newline will be sent at the end of the last line printed,
 and wrapped lines will be combined into long lines
-(i.e., \fBprinterNewLine\fP is ``false'').
+(i.e., \fBprinterNewLine\fP is \*(``false\*('').
 .TP 5
 NewLine
 a newline will be sent at the end of the last line printed,
 and each line will be limited (by adding a newline) to the screen width
-(i.e., \fBprinterNewLine\fP is ``true'').
+(i.e., \fBprinterNewLine\fP is \*(``true\*('').
 .TP 5
 noAttrs
 the page is printed without attributes
-(i.e., \fBprintAttributes\fP is ``0'').
+(i.e., \fBprintAttributes\fP is \*(``0\*('').
 .TP 5
 monoAttrs
 the page is printed with monochrome (vt220) attributes
-(i.e., \fBprintAttributes\fP is ``1'').
+(i.e., \fBprintAttributes\fP is \*(``1\*('').
 .TP 5
 colorAttrs
 the page is printed with ANSI color attributes
-(i.e., \fBprintAttributes\fP is ``2'').
+(i.e., \fBprintAttributes\fP is \*(``2\*('').
 .RE
 .TP 8
 .B "print-everything(\fIprinter-flags\fP)"
@@ -6904,70 +6912,70 @@ The default bindings in the VT\fIxxx\fP window use the \fBSELECT\fP token,
 which is set by the \fBselectToClipboard\fP resource.
 These are for the \fIvt100\fP widget:
 .NS
-          Shift <KeyPress> Prior:\fBscroll-back\fP(1,halfpage) \\n\\\&
-           Shift <KeyPress> Next:\fBscroll-forw\fP(1,halfpage) \\n\\\&
-         Shift <KeyPress> Select:\fBselect-cursor-start\fP() \\\&
-                                 \fBselect-cursor-end\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
-         Shift <KeyPress> Insert:\fBinsert-selection\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+          Shift <KeyPress> Prior:\fBscroll\-back\fP(1,halfpage) \\n\\\&
+           Shift <KeyPress> Next:\fBscroll\-forw\fP(1,halfpage) \\n\\\&
+         Shift <KeyPress> Select:\fBselect\-cursor\-start\fP() \\\&
+                                 \fBselect\-cursor\-end\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \\n\\\&
+         Shift <KeyPress> Insert:\fBinsert\-selection\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \\n\\\&
                  Alt <Key>Return:\fBfullscreen\fP() \\n\\\&
-        <KeyRelease> Scroll_Lock:\fBscroll-lock\fP() \\n\\\&
-    Shift~Ctrl <KeyPress> KP_Add:\fBlarger-vt-font\fP() \\n\\\&
-    Shift Ctrl <KeyPress> KP_Add:\fBsmaller-vt-font\fP() \\n\\\&
-    Shift <KeyPress> KP_Subtract:\fBsmaller-vt-font\fP() \\n\\\&
-                ~Meta <KeyPress>:\fBinsert-seven-bit\fP() \\n\\\&
-                 Meta <KeyPress>:\fBinsert-eight-bit\fP() \\n\\\&
-                !Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
-           !Lock Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn1Down>:\fBpopup-menu\fP(mainMenu) \\n\\\&
-                ~Meta <Btn1Down>:\fBselect-start\fP() \\n\\\&
-              ~Meta <Btn1Motion>:\fBselect-extend\fP() \\n\\\&
-                !Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
-           !Lock Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn2Down>:\fBpopup-menu\fP(vtMenu) \\n\\\&
+        <KeyRelease> Scroll_Lock:\fBscroll\-lock\fP() \\n\\\&
+    Shift~Ctrl <KeyPress> KP_Add:\fBlarger\-vt\-font\fP() \\n\\\&
+    Shift Ctrl <KeyPress> KP_Add:\fBsmaller\-vt\-font\fP() \\n\\\&
+    Shift <KeyPress> KP_Subtract:\fBsmaller\-vt\-font\fP() \\n\\\&
+                ~Meta <KeyPress>:\fBinsert\-seven\-bit\fP() \\n\\\&
+                 Meta <KeyPress>:\fBinsert\-eight\-bit\fP() \\n\\\&
+                !Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+                ~Meta <Btn1Down>:\fBselect\-start\fP() \\n\\\&
+              ~Meta <Btn1Motion>:\fBselect\-extend\fP() \\n\\\&
+                !Ctrl <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&
           ~Ctrl ~Meta <Btn2Down>:\fBignore\fP() \\n\\\&
-                 Meta <Btn2Down>:\fBclear-saved-lines\fP() \\n\\\&
-            ~Ctrl ~Meta <Btn2Up>:\fBinsert-selection\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
-                !Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
-           !Lock Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
-     ! @Num_Lock Ctrl <Btn3Down>:\fBpopup-menu\fP(fontMenu) \\n\\\&
-          ~Ctrl ~Meta <Btn3Down>:\fBstart-extend\fP() \\n\\\&
-              ~Meta <Btn3Motion>:\fBselect-extend\fP() \\n\\\&
-                 Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
-            Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
-  Lock @Num_Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
-       @Num_Lock Ctrl <Btn4Down>:\fBscroll-back\fP(1,halfpage,m) \\n\\\&
-                      <Btn4Down>:\fBscroll-back\fP(5,line,m)     \\n\\\&
-                 Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
-            Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
-  Lock @Num_Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
-       @Num_Lock Ctrl <Btn5Down>:\fBscroll-forw\fP(1,halfpage,m) \\n\\\&
-                      <Btn5Down>:\fBscroll-forw\fP(5,line,m)     \\n\\\&
-                         <BtnUp>:\fBselect-end\fP(\fBSELECT\fP, CUT_BUFFER0) \\n\\\&
+                 Meta <Btn2Down>:\fBclear\-saved\-lines\fP() \\n\\\&
+            ~Ctrl ~Meta <Btn2Up>:\fBinsert\-selection\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \\n\\\&
+                !Ctrl <Btn3Down>:\fBpopup\-menu\fP(fontMenu) \\n\\\&
+           !Lock Ctrl <Btn3Down>:\fBpopup\-menu\fP(fontMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn3Down>:\fBpopup\-menu\fP(fontMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn3Down>:\fBpopup\-menu\fP(fontMenu) \\n\\\&
+          ~Ctrl ~Meta <Btn3Down>:\fBstart\-extend\fP() \\n\\\&
+              ~Meta <Btn3Motion>:\fBselect\-extend\fP() \\n\\\&
+                 Ctrl <Btn4Down>:\fBscroll\-back\fP(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn4Down>:\fBscroll\-back\fP(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn4Down>:\fBscroll\-back\fP(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn4Down>:\fBscroll\-back\fP(1,halfpage,m) \\n\\\&
+                      <Btn4Down>:\fBscroll\-back\fP(5,line,m)     \\n\\\&
+                 Ctrl <Btn5Down>:\fBscroll\-forw\fP(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn5Down>:\fBscroll\-forw\fP(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn5Down>:\fBscroll\-forw\fP(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn5Down>:\fBscroll\-forw\fP(1,halfpage,m) \\n\\\&
+                      <Btn5Down>:\fBscroll\-forw\fP(5,line,m)     \\n\\\&
+                         <BtnUp>:\fBselect\-end\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \\n\\\&
                        <BtnDown>:\fBignore\fP()
 .NE
 .PP
 The default bindings in the Tektronix window are analogous but less extensive.
 These are for the \fItek4014\fP widget:
 .NS
-                 ~Meta<KeyPress>: \fBinsert-seven-bit\fP() \\n\\\&
-                  Meta<KeyPress>: \fBinsert-eight-bit\fP() \\n\\\&
-                !Ctrl <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
-           !Lock Ctrl <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
-      !Ctrl @Num_Lock <Btn1Down>: \fBpopup-menu\fP(mainMenu) \\n\\\&
-                !Ctrl <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
-           !Lock Ctrl <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
- !Lock Ctrl @Num_Lock <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
-      !Ctrl @Num_Lock <Btn2Down>: \fBpopup-menu\fP(tekMenu) \\n\\\&
-           Shift ~Meta<Btn1Down>: \fBgin-press\fP(L) \\n\\\&
-                 ~Meta<Btn1Down>: \fBgin-press\fP(l) \\n\\\&
-           Shift ~Meta<Btn2Down>: \fBgin-press\fP(M) \\n\\\&
-                 ~Meta<Btn2Down>: \fBgin-press\fP(m) \\n\\\&
-           Shift ~Meta<Btn3Down>: \fBgin-press\fP(R) \\n\\\&
-                 ~Meta<Btn3Down>: \fBgin-press\fP(r)
+                 ~Meta<KeyPress>: \fBinsert\-seven\-bit\fP() \\n\\\&
+                  Meta<KeyPress>: \fBinsert\-eight\-bit\fP() \\n\\\&
+                !Ctrl <Btn1Down>: \fBpopup\-menu\fP(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>: \fBpopup\-menu\fP(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>: \fBpopup\-menu\fP(mainMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn1Down>: \fBpopup\-menu\fP(mainMenu) \\n\\\&
+                !Ctrl <Btn2Down>: \fBpopup\-menu\fP(tekMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>: \fBpopup\-menu\fP(tekMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>: \fBpopup\-menu\fP(tekMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn2Down>: \fBpopup\-menu\fP(tekMenu) \\n\\\&
+           Shift ~Meta<Btn1Down>: \fBgin\-press\fP(L) \\n\\\&
+                 ~Meta<Btn1Down>: \fBgin\-press\fP(l) \\n\\\&
+           Shift ~Meta<Btn2Down>: \fBgin\-press\fP(M) \\n\\\&
+                 ~Meta<Btn2Down>: \fBgin\-press\fP(m) \\n\\\&
+           Shift ~Meta<Btn3Down>: \fBgin\-press\fP(R) \\n\\\&
+                 ~Meta<Btn3Down>: \fBgin\-press\fP(r)
 .NE
 .SS Custom Key Bindings
 .PP
@@ -6986,10 +6994,10 @@ When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
 .NS
 *VT100*translations:    #override \\n\\\&
-   ~Shift~Ctrl<Btn2Up>: \fBinsert-selection\fP(\fBPRIMARY\fP, CUT_BUFFER0) \\n\\\&
-    Shift~Ctrl<Btn2Up>: \fBinsert-selection\fP(\fBCLIPBOARD\fP, CUT_BUFFER1) \\n\\\&
-   ~Shift     <BtnUp> : \fBselect-end\fP(\fBPRIMARY\fP, CUT_BUFFER0) \\n\\\&
-    Shift     <BtnUp> : \fBselect-end\fP(\fBCLIPBOARD\fP, CUT_BUFFER1)
+   ~Shift~Ctrl<Btn2Up>: \fBinsert\-selection\fP(\fBPRIMARY\fP, \fBCUT_BUFFER0\fP) \\n\\\&
+    Shift~Ctrl<Btn2Up>: \fBinsert\-selection\fP(\fBCLIPBOARD\fP, \fBCUT_BUFFER1\fP) \\n\\\&
+   ~Shift     <BtnUp> : \fBselect\-end\fP(\fBPRIMARY\fP, \fBCUT_BUFFER0\fP) \\n\\\&
+    Shift     <BtnUp> : \fBselect\-end\fP(\fBCLIPBOARD\fP, \fBCUT_BUFFER1\fP)
 .NE
 .PP
 In the example, the class name \fBVT100\fP is used rather than the widget name.
@@ -7003,10 +7011,10 @@ In a wheel mouse, the middle button might be the wheel.
 As an alternative, you could add a binding shifted keys:
 .NS
 *VT100*translations:      #override \\n\\
-    Shift <Key>Home:    \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
-    Shift <Key>Insert:  \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
-    Ctrl Shift <Key>C:  \fBcopy-selection\fP(\fBSELECT\fP) \\n\\
-    Ctrl Shift <Key>V:  \fBinsert-selection\fP(\fBSELECT\fP)
+    Shift <Key>Home:    \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
+    Shift <Key>Insert:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
+    Ctrl Shift <Key>C:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
+    Ctrl Shift <Key>V:  \fBinsert\-selection\fP(\fBSELECT\fP)
 .NE
 .PP
 You would still use the left- and right-mouse buttons (typically 1 and 3)
@@ -7019,8 +7027,8 @@ You can work around that by assigning the actions to more readily accessed
 keys:
 .NS
 *VT100*translations:      #override \\n\\
-    Ctrl <Key> +:       \fBlarger-vt-font\fP() \\n\\
-    Ctrl <Key> -:       \fBsmaller-vt-font\fP()
+    Ctrl <Key> +:       \fBlarger\-vt\-font\fP() \\n\\
+    Ctrl <Key> \-:       \fBsmaller\-vt\-font\fP()
 .NE
 .PP
 The keymap feature allows you to switch between sets of translations.
@@ -7038,7 +7046,7 @@ keys for entering commonly-typed words:
         <Key>F19:       \fBstring\fP("continue") \\n\\
                         \fBstring\fP(0x0d) \\n\\\&
         <Key>F20:       \fBstring\fP("print ") \\n\\
-                        \fBinsert-selection\fP(\fBPRIMARY\fP, CUT_BUFFER0)
+                        \fBinsert\-selection\fP(\fBPRIMARY\fP, \fBCUT_BUFFER0\fP)
 .NE
 .SS Default Scrollbar Bindings
 .PP
@@ -7158,16 +7166,16 @@ A few examples of usage are given in this section.
 Some scripts use \fBecho\fP with options \fB\-e\fP and \fB\-n\fP to tell
 the shell to interpret the string \*(``\\e\*('' as the \fIescape\fP character and
 to suppress a trailing newline on output.
-Those are not portable, not recommended.
+Those are not portable, nor recommended.
 Instead, use \fBprintf\fP (POSIX).
 .PP
 For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
 you could use one of these commands in a script:
 .NS
-printf '\\033]2;Hello world!\\033\\'
-printf '\\033]2;Hello world!\\007'
-printf '\\033]2;%s\\033\\' "Hello world!"
-printf '\\033]2;%s\\007' "Hello world!"
+printf \*(AQ\\033]2;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]2;Hello world!\\007\*(AQ
+printf \*(AQ\\033]2;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]2;%s\\007\*(AQ "Hello world!"
 .NE
 .PP
 The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
@@ -7177,10 +7185,10 @@ newline from the output.
 Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
 at the same time, using a slightly different control sequence:
 .NS
-printf '\\033]0;Hello world!\\033\\'
-printf '\\033]0;Hello world!\\007'
-printf '\\033]0;%s\\033\\' "Hello world!"
-printf '\\033]0;%s\\007' "Hello world!"
+printf \*(AQ\\033]0;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]0;Hello world!\\007\*(AQ
+printf \*(AQ\\033]0;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]0;%s\\007\*(AQ "Hello world!"
 .NE
 .PP
 The difference is the \fIparameter\fP \*(``0\*('' in each command.
@@ -7189,10 +7197,10 @@ Some will make a distinction and allow you to set just the icon title.
 You can tell \fI\*n\fP to ask for this with a different parameter
 in the control sequence:
 .NS
-printf '\\033]1;Hello world!\\033\\'
-printf '\\033]1;Hello world!\\007'
-printf '\\033]1;%s\\033\\' "Hello world!"
-printf '\\033]1;%s\\007' "Hello world!"
+printf \*(AQ\\033]1;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]1;Hello world!\\007\*(AQ
+printf \*(AQ\\033]1;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]1;%s\\007\*(AQ "Hello world!"
 .NE
 .
 .SS Special Keys
@@ -7250,7 +7258,7 @@ Here is an example:
 .NS
 [[ "$terminfo[kcuu1]" == "^[O"* ]] && \\
 bindkey \-M viins "${terminfo[kcuu1]/O/[}" \\
-vi-up-line-or-history
+vi\-up\-line\-or\-history
 .NE
 .
 .
@@ -7687,11 +7695,11 @@ tty(4)
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
 .sp
-http://invisible-island.net/xterm/xterm.html
+http://invisible\-island.net/xterm/xterm.html
 .br
-http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+http://invisible\-island.net/xterm/ctlseqs/ctlseqs.html
 .br
-http://invisible-island.net/xterm/xterm.faq.html
+http://invisible\-island.net/xterm/xterm.faq.html
 .
 .
 .SH AUTHORS

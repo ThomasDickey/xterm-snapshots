@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #331 (2017/09/24)
+               updated for XTerm Patch #331 (2017/11/08)
 
 
 
