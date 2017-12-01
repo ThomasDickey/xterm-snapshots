@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.855 2017/11/10 00:28:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.856 2017/12/01 10:06:23 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1544,6 +1544,13 @@ typedef struct {
 
 /***====================================================================***/
 
+/*
+ * Pixel (and its components) are declared as unsigned long, but even for RGB
+ * we need no more than 32-bits.
+ */
+typedef uint32_t MyPixel;
+typedef int32_t MyColor;
+
 #if OPT_ISO_COLORS
 #if OPT_DIRECT_COLOR
 typedef struct {
@@ -1552,8 +1559,8 @@ typedef struct {
      */
     unsigned int fg_extended : 1;
     unsigned int bg_extended : 1;
-    Pixel fg;
-    Pixel bg;
+    MyColor fg;
+    MyColor bg;
 } CellColor;
 
 #define isSameCColor(p,q) (!memcmp(&(p), &(q), sizeof(CellColor)))

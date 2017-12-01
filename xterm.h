@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.779 2017/11/09 09:42:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.780 2017/12/01 01:57:08 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1123,7 +1123,7 @@ extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_DIRECT_COLOR
-extern Pixel getDirectColor(XtermWidget /* xw */, unsigned /* red */, unsigned /* green */, unsigned /* blue */);
+extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
 #endif /* OPT_DIRECT_COLOR */
 
 #if OPT_EXEC_XTERM

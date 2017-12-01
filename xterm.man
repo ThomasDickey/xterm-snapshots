@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.722 2017/11/13 00:42:56 Branden.Robinson Exp $
+.\" $XTermId: xterm.man,v 1.723 2017/11/30 23:51:05 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -2950,7 +2950,7 @@ but \*(``Alt\*('' keys are common,
 and they are conventionally used for \*(``Meta\*(''.
 If they were synonymous, it would have been reasonable to name this
 resource \*(``\fBaltSendsEscape\fP\*('', reversing its sense.
-For more background on this, see the \fBmeta(3x)\fP function in curses.
+For more background on this, see the \fBmeta\fP(3x) function in curses.
 .IP
 Note that the \fIAlt\fP key is not necessarily the same as the
 \fIMeta\fP modifier.

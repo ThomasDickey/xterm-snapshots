@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.718 2017/11/09 09:45:15 tom Exp $ */
+/* $XTermId: util.c,v 1.720 2017/12/01 10:28:15 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2163,7 +2163,7 @@ static void
 set_background(XtermWidget xw, int color GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
-    Pixel c = getXtermBG(xw, xw->flags, color, False);
+    Pixel c = getXtermBG(xw, xw->flags, color, xw->sgr_bg_extended);
 
     TRACE(("set_background(%d) %#lx\n", color, c));
     XSetWindowBackground(screen->display, VShellWindow(xw), c);
@@ -4519,6 +4519,7 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color, int extended)
 
 #if OPT_ISO_COLORS
     if (extended) {
+	/* OOPS - what if negative? */
 	result = color;
     } else if ((attr_flags & BG_COLOR) &&
 	       (color >= 0 && color < MAXCOLORS)) {
@@ -4539,6 +4540,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color, int extended)
 
 #if OPT_ISO_COLORS
     if (extended) {
+	/* OOPS - what if negative? */
 	result = color;
     } else if ((attr_flags & FG_COLOR) &&
 	       (color >= 0 && color < MAXCOLORS)) {

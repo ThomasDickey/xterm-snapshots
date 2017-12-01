@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.518 2017/11/09 01:22:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.519 2017/12/01 10:20:31 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -936,7 +936,7 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_ISO_COLORS(screen, {
 	unsigned j;
 	for (j = 0; j < real_width; ++j)
-	    ld->color[screen->cur_col + (int) j] = (CellColor) cur_fg_bg;
+	    ld->color[screen->cur_col + (int) j] = cur_fg_bg;
     });
 
 #if OPT_WIDE_CHARS
@@ -1445,7 +1445,7 @@ ScrnRefresh(XtermWidget xw,
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 	CellColor *fb = 0;
-#define ColorOf(col) (CellColor) (fb ? fb[col] : initCColor)
+#define ColorOf(col) (fb ? fb[col] : initCColor)
 #endif
 #if OPT_WIDE_CHARS
 	int wideness = 0;
