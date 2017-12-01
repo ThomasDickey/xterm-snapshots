@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.761 2017/11/09 00:58:34 tom Exp $ */
+/* $XTermId: misc.c,v 1.762 2017/12/01 10:11:01 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2935,14 +2935,14 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 }
 
 #if OPT_DIRECT_COLOR
-Pixel
-getDirectColor(XtermWidget xw,
-	       unsigned r, unsigned g, unsigned b)
+int
+getDirectColor(XtermWidget xw, int red, int green, int blue)
 {
-    Pixel result = (((r << xw->rgb_shifts[0]) & xw->visInfo->red_mask)
-		    | ((g << xw->rgb_shifts[1]) & xw->visInfo->green_mask)
-		    | ((b << xw->rgb_shifts[2]) & xw->visInfo->blue_mask));
-    return result;
+#define nRGB(name,shift) \
+	((unsigned long)(name << xw->rgb_shifts[shift]) \
+		         & xw->visInfo->name ##_mask)
+    MyPixel result = (MyPixel) (nRGB(red, 0) | nRGB(green, 1) | nRGB(blue, 2));
+    return (int) result;
 }
 #endif /* OPT_DIRECT_COLOR */
 

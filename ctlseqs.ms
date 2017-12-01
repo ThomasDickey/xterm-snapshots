@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.352 2017/11/08 10:07:35 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.354 2017/11/20 00:37:54 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #331
-.ds RF 2017/11/08
+.ds RF 2017/11/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -88,7 +88,8 @@
 ..
 .\" Bulleted paragraph
 .de bP
-.IP \(bu 0.2i
+.ie n  .IP \(bu 4
+.el    .IP \(bu 2
 ..
 .\" Normal leading paragraph
 .de lP
@@ -1328,7 +1329,7 @@ The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 
 \*(Cs\*?\*5\*7\*;\*1\*n Mouse, if compiled-in, or
 \*(Cs\*?\*5\*7\*;\*0\*n Cannot identify, if not.
   \*(Ps = \*6\*2 \(-> Report macro space (DECMSR) as
-\*(Cs\*(Pn\*s\\*\*s\*{.
+\*(Cs\*(Pn\*s\**\*s\*{.
   \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR) as
 \*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST.
 .br
