@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.780 2017/12/01 01:57:08 tom Exp $ */
+/* $XTermId: xterm.h,v 1.781 2017/12/07 21:49:51 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -437,6 +437,7 @@ extern char **environ;
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
+#define XtNdirectColor		"directColor"
 #define XtNdisallowedColorOps	"disallowedColorOps"
 #define XtNdisallowedFontOps	"disallowedFontOps"
 #define XtNdisallowedMouseOps	"disallowedMouseOps"
@@ -627,6 +628,7 @@ extern char **environ;
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
+#define XtCDirectColor		"DirectColor"
 #define XtCDisallowedColorOps	"DisallowedColorOps"
 #define XtCDisallowedFontOps	"DisallowedFontOps"
 #define XtCDisallowedMouseOps	"DisallowedMouseOps"

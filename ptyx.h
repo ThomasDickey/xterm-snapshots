@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.856 2017/12/01 10:06:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.857 2017/12/07 21:48:59 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2045,6 +2045,9 @@ typedef struct {
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
 #if OPT_WIDE_ATTRS
 	Boolean		colorITMode;	/* use color for italics?	*/
+#endif
+#if OPT_DIRECT_COLOR
+	Boolean		direct_color;	/* direct-color enabled?	*/
 #endif
 #endif
 #if OPT_DEC_CHRSET
