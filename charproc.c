@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1493 2017/11/10 00:50:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1495 2017/12/08 02:14:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -625,6 +625,9 @@ static XtResource xterm_resources[] =
     Bres(XtNitalicULMode, XtCColorAttrMode, screen.italicULMode, False),
 #if OPT_WIDE_ATTRS
     Bres(XtNcolorITMode, XtCColorAttrMode, screen.colorITMode, False),
+#endif
+#if OPT_DIRECT_COLOR
+    Bres(XtNdirectColor, XtCDirectColor, screen.direct_color, True),
 #endif
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
@@ -1796,7 +1799,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp, Boolean *extended
 	    (values[1] >= 0 && values[1] < 256) &&
 	    (values[2] >= 0 && values[2] < 256)) {
 #if OPT_DIRECT_COLOR
-	    if (xw->has_rgb) {
+	    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
 		*colorp = getDirectColor(xw, values[0], values[1], values[2]);
 		result = True;
 		*extended = True;
@@ -8333,6 +8336,9 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_ATTRS
     init_Bres(screen.colorITMode);
+#endif
+#if OPT_DIRECT_COLOR
+    init_Bres(screen.direct_color);
 #endif
 
 #if OPT_COLOR_RES2
