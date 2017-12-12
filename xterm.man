@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.724 2017/12/07 21:58:38 tom Exp $
+.\" $XTermId: xterm.man,v 1.725 2017/12/12 22:01:19 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -3847,29 +3847,51 @@ action) are interpreted according to the resource values of
 The resource value can be one of these:
 .RS
 .TP 3
-word
+.B word
 Select a \*(``word\*('' as determined by the \fBcharClass\fP resource.
 See the \fBCHARACTER CLASSES\fP section.
 .TP
-line
+.B line
 Select a line (counting wrapping).
 .TP
-group
+.B group
 Select a group of adjacent lines (counting wrapping).
 The selection stops on a blank line,
 and does not extend outside the current page.
 .TP
-page
+.B page
 Select all visible lines, i.e., the page.
 .TP
-all
+.B all
+.br
 Select all lines, i.e., including the saved lines.
 .TP
-regex
-Select a \*(``word\*('' as determined by the regular expression which
-follows in the resource value.
+.B regex
+Select the best match for the POSIX extended regular expression (ERE) which
+follows in the resource value:
+.RS
+.bP
+\fI\*N\fP matches the regular expression against a byte array
+for the entire (possibly wrapped) line.
+That byte array may be UTF-8 or ISO-8859-1,
+depending on the mode in which \fI\*n\fP is running.
+.bP
+\fI\*N\fP steps through each byte-offset in this array,
+keeping track of the best (longest) match.
+If more than one match ties for the longest length, the first is used.
+.IP
+\fI\*N\fP does this to make it convenient to click anywhere in the area of
+interest and cause the regular expression to match the entire word, etc.
+.bP
+The \*(``^\*('' and \*(``$\*('' anchors in a regular expression
+denote the ends of the entire line.
+.bP
+If the regular expression contains backslashes \*(``\\\*('' those
+should be escaped \*(``\\\\\*('' 
+because the X libraries interpret backslashes in resource strings.
+.RE
 .TP
-none
+.B none
 No selection action is associated with this resource.
 \fI\*N\fP interprets it as the end of the list.
 For example, you may use it to disable triple (and higher) clicking
