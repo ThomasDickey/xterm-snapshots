@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1495 2017/12/08 02:14:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1496 2017/12/14 00:39:15 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -9046,6 +9046,13 @@ VTDestroy(Widget w GCC_UNUSED)
     }
     if (screen->renderDraw)
 	XftDrawDestroy(screen->renderDraw);
+    {
+	ListXftFonts *p;
+	while ((p = screen->list_xft_fonts) != 0) {
+	    screen->list_xft_fonts = p->next;
+	    free(p);
+	}
+    }
 #endif
 
     /* free things allocated via init_Sres or Init_Sres2 */

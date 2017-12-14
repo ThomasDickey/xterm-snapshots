@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.857 2017/12/07 21:48:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.859 2017/12/14 01:57:50 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -80,7 +80,7 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_STDINT_H
+#if defined(HAVE_STDINT_H) || !defined(HAVE_CONFIG_H)
 #include <stdint.h>
 #define DECONST(type,s) ((type *)(intptr_t)(const type *)(s))
 #else
@@ -1720,6 +1720,11 @@ typedef struct {
 	XftFont *	font;
 	FontMap		map;
 } XTermXftFonts;
+
+typedef	struct _ListXftFonts {
+	struct _ListXftFonts *next;
+	XftFont *	font;
+} ListXftFonts;
 #endif
 
 typedef struct {
@@ -2533,6 +2538,7 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
+	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
 	XTermXftFonts	renderFontItal[NMENUFONTS];

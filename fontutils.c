@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.535 2017/11/09 09:43:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.538 2017/12/14 01:27:24 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -2311,6 +2311,13 @@ checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
 	    }
 	}
     }
+    /*
+     * Sometimes someone uses a symbol font which has no useful ASCII or
+     * Latin-1 characters.  Allow that, in case they did it intentionally.
+     */
+    if ((width == 0) && (xtermXftLastChar(xft) >= 256)) {
+	width = data->map.max_width;
+    }
     data->map.min_width = width;
     data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
 }
@@ -2356,6 +2363,38 @@ reportXftFonts(XtermWidget xw,
 #define reportXftFonts(xw, result, name, tag, match)	/* empty */
 #endif /* OPT_REPORT_FONTS */
 
+/*
+ * Xft discards the pattern-match during open-pattern if the result happens to
+ * match a currently-open file, but provides no clue to the caller when it does
+ * this.  That is, closing a font-file may leave the data in Xft's cache, while
+ * opening a file may free the data used for the match.
+ *
+ * Because of this problem, we cannot reliably refer to the pattern-match data
+ * if it may have been seen before.
+ */
+Boolean
+maybeXftCache(XtermWidget xw, XftFont *font)
+{
+    Boolean result = False;
+    TScreen *screen = TScreenOf(xw);
+    ListXftFonts *p;
+    for (p = screen->list_xft_fonts; p != 0; p = p->next) {
+	if (p->font == font) {
+	    result = True;
+	    break;
+	}
+    }
+    if (!result) {
+	p = TypeXtMalloc(ListXftFonts);
+	if (p != 0) {
+	    p->font = font;
+	    p->next = screen->list_xft_fonts;
+	    screen->list_xft_fonts = p;
+	}
+    }
+    return result;
+}
+
 static XftFont *
 xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 {
@@ -2370,9 +2409,11 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 	    result = XftFontOpenPattern(dpy, match);
 	    if (result != 0) {
 		TRACE(("...matched %s font\n", tag));
-		reportXftFonts(xw, result, name, tag, match);
+		if (!maybeXftCache(xw, result)) {
+		    reportXftFonts(xw, result, name, tag, match);
+		}
 	    } else {
-		TRACE(("...could did not open %s font\n", tag));
+		TRACE(("...could not open %s font\n", tag));
 		XftPatternDestroy(match);
 		if (xw->misc.fontWarnings >= fwAlways) {
 		    cannotFont(xw, "open", tag, name);

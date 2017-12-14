@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.98 2017/11/10 00:30:50 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.99 2017/12/14 01:34:53 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -41,8 +41,7 @@
 #include <X11/extensions/Xdbe.h>
 #endif
 
-#include <data.h>
-#include <VTparse.h>
+#include <fontutils.h>
 #include <ptyx.h>
 
 #include <assert.h>
@@ -1742,11 +1741,14 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
-find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
+find_best_xft_font_size(XtermWidget xw,
+			char const *fontname,
 			unsigned maxw, unsigned maxh, unsigned max_pixels,
 			unsigned *w, unsigned *h,
 			unsigned *xmin, unsigned *ymin)
 {
+    Display *display = XtDisplay(xw);
+    Screen *screen = XtScreen(xw);
     XftFont *font;
     unsigned targeth;
     unsigned ii, cacheindex;
@@ -1832,6 +1834,7 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 					  XScreenNumberOfScreen(screen),
 					  pat, &status))) {
 		    font = XftFontOpenPattern(display, match);
+		    maybeXftCache(xw, font);
 		}
 	    }
 	}
@@ -1977,12 +1980,12 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      * - resuse the font where possible
      */
 #ifdef XRENDERFONT
-    Display *display = XtDisplay(context->destination_graphic->xw);
-    Screen *screen = XtScreen(context->destination_graphic->xw);
+    XtermWidget xw = context->destination_graphic->xw;
+    Display *display = XtDisplay(xw);
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
-    if (!(font = find_best_xft_font_size(display, screen, fontname, maxw, maxh,
+    if (!(font = find_best_xft_font_size(xw, fontname, maxw, maxh,
 					 max_pixels, w, h, &xmin, &ymin))) {
 	TRACE(("Unable to find suitable Xft font\n"));
 	return 0;
