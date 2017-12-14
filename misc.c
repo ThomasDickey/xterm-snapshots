@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.762 2017/12/01 10:11:01 tom Exp $ */
+/* $XTermId: misc.c,v 1.764 2017/12/14 10:24:22 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4174,49 +4174,47 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    strcat(reply, ";7");
 		if (xw->flags & INVISIBLE)
 		    strcat(reply, ";8");
+#define fg2SGR(n) \
+		(n) >= 8 ? 9 : 3, \
+		(n) >= 8 ? (n) - 8 : (n)
+#define bg2SGR(n) \
+		(n) >= 8 ? 10 : 4, \
+		(n) >= 8 ? (n) - 8 : (n)
 #if OPT_256_COLORS || OPT_88_COLORS
 		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR) {
-			if (xw->cur_foreground >= 16)
+			if (xw->cur_foreground >= 16) {
 			    sprintf(reply + strlen(reply),
-				    ";38;5;%d", xw->cur_foreground);
-			else
+				    ";38:5:%d", xw->cur_foreground);
+			} else {
 			    sprintf(reply + strlen(reply),
 				    ";%d%d",
-				    xw->cur_foreground >= 8 ? 9 : 3,
-				    xw->cur_foreground >= 8 ?
-				    xw->cur_foreground - 8 :
-				    xw->cur_foreground);
+				    fg2SGR(xw->cur_foreground));
+			}
 		    }
 		    if (xw->flags & BG_COLOR) {
-			if (xw->cur_background >= 16)
+			if (xw->cur_background >= 16) {
 			    sprintf(reply + strlen(reply),
-				    ";48;5;%d", xw->cur_foreground);
-			else
+				    ";48:5:%d", xw->cur_background);
+			} else {
 			    sprintf(reply + strlen(reply),
 				    ";%d%d",
-				    xw->cur_background >= 8 ? 10 : 4,
-				    xw->cur_background >= 8 ?
-				    xw->cur_background - 8 :
-				    xw->cur_background);
+				    bg2SGR(xw->cur_background));
+			}
 		    }
 		});
 #elif OPT_ISO_COLORS
 		if_OPT_ISO_COLORS(screen, {
-		    if (xw->flags & FG_COLOR)
+		    if (xw->flags & FG_COLOR) {
 			sprintf(reply + strlen(reply),
 				";%d%d",
-				xw->cur_foreground >= 8 ? 9 : 3,
-				xw->cur_foreground >= 8 ?
-				xw->cur_foreground - 8 :
-				xw->cur_foreground);
-		    if (xw->flags & BG_COLOR)
+				fg2SGR(xw->cur_foreground));
+		    }
+		    if (xw->flags & BG_COLOR) {
 			sprintf(reply + strlen(reply),
 				";%d%d",
-				xw->cur_background >= 8 ? 10 : 4,
-				xw->cur_background >= 8 ?
-				xw->cur_background - 8 :
-				xw->cur_background);
+				bg2SGR(xw->cur_background));
+		    }
 		});
 #endif
 		strcat(reply, "m");
