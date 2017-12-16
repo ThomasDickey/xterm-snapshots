@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.764 2017/12/14 10:24:22 tom Exp $ */
+/* $XTermId: misc.c,v 1.768 2017/12/16 01:57:51 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2944,6 +2944,14 @@ getDirectColor(XtermWidget xw, int red, int green, int blue)
     MyPixel result = (MyPixel) (nRGB(red, 0) | nRGB(green, 1) | nRGB(blue, 2));
     return (int) result;
 }
+
+static void
+formatDirectColor(char *target, XtermWidget xw, unsigned value)
+{
+#define fRGB(name, shift) \
+	(value & xw->visInfo->name ## _mask) >> xw->rgb_shifts[shift]
+    sprintf(target, "%lu:%lu:%lu", fRGB(red, 0), fRGB(green, 1), fRGB(blue, 2));
+}
 #endif /* OPT_DIRECT_COLOR */
 
 #if OPT_PASTE64
@@ -4174,6 +4182,16 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    strcat(reply, ";7");
 		if (xw->flags & INVISIBLE)
 		    strcat(reply, ";8");
+#if OPT_WIDE_ATTRS
+		if (xw->flags & ATR_FAINT)
+		    strcat(reply, ";2");
+		if (xw->flags & ATR_ITALIC)
+		    strcat(reply, ";3");
+		if (xw->flags & ATR_STRIKEOUT)
+		    strcat(reply, ";9");
+		if (xw->flags & ATR_DBL_UNDER)
+		    strcat(reply, ";21");
+#endif
 #define fg2SGR(n) \
 		(n) >= 8 ? 9 : 3, \
 		(n) >= 8 ? (n) - 8 : (n)
@@ -4183,6 +4201,13 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #if OPT_256_COLORS || OPT_88_COLORS
 		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR) {
+#if OPT_DIRECT_COLOR
+			if (screen->direct_color && xw->sgr_fg_extended) {
+			    strcat(reply, ";38:2:");
+			    formatDirectColor(reply + strlen(reply),
+					      xw, xw->cur_foreground);
+			} else
+#endif
 			if (xw->cur_foreground >= 16) {
 			    sprintf(reply + strlen(reply),
 				    ";38:5:%d", xw->cur_foreground);
@@ -4193,6 +4218,13 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			}
 		    }
 		    if (xw->flags & BG_COLOR) {
+#if OPT_DIRECT_COLOR
+			if (screen->direct_color && xw->sgr_bg_extended) {
+			    strcat(reply, ";48:2:");
+			    formatDirectColor(reply + strlen(reply),
+					      xw, xw->cur_background);
+			} else
+#endif
 			if (xw->cur_background >= 16) {
 			    sprintf(reply + strlen(reply),
 				    ";48:5:%d", xw->cur_background);
@@ -4641,7 +4673,7 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	case srm_POP_ON_BELL:
 	    result = MdBool(screen->poponbell);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
 	    break;
 #if OPT_TCAP_FKEYS
@@ -4674,22 +4706,22 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 #endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
-	    result = MdBool(screen->click1_moves);
+	    result = MdBool(SCREEN_FLAG(screen, click1_moves));
 	    break;
 	case srm_BUTTON2_MOVE_POINT:
-	    result = MdBool(screen->paste_moves);
+	    result = MdBool(SCREEN_FLAG(screen, paste_moves));
 	    break;
 	case srm_DBUTTON3_DELETE:
-	    result = MdBool(screen->dclick3_deletes);
+	    result = MdBool(SCREEN_FLAG(screen, dclick3_deletes));
 	    break;
 	case srm_PASTE_IN_BRACKET:
-	    result = MdBool(screen->paste_brackets);
+	    result = MdBool(SCREEN_FLAG(screen, paste_brackets));
 	    break;
 	case srm_PASTE_QUOTE:
-	    result = MdBool(screen->paste_quotes);
+	    result = MdBool(SCREEN_FLAG(screen, paste_quotes));
 	    break;
 	case srm_PASTE_LITERAL_NL:
-	    result = MdBool(screen->paste_literal_nl);
+	    result = MdBool(SCREEN_FLAG(screen, paste_literal_nl));
 	    break;
 #endif /* OPT_READLINE */
 #if OPT_SIXEL_GRAPHICS

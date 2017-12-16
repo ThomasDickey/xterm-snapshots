@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #331 (2017/11/19)
+               updated for XTerm Patch #331 (2017/12/15)
 
 
 
@@ -473,7 +473,7 @@ CSI ? Pm h
             Ps = 3 5  -> Enable font-shifting functions (rxvt).
             Ps = 3 8  -> Enter Tektronix Mode (DECTEK).
             Ps = 4 0  -> Allow 80 -> 132 Mode.
-            Ps = 4 1  -> more(1) fix (see curses resource).
+            Ps = 4 1  -> more(1) fix (see curses(3) resource).
             Ps = 4 2  -> Enable National Replacement Character sets
           (DECNRCM).
             Ps = 4 4  -> Turn On Margin Bell.
@@ -523,6 +523,9 @@ CSI ? Pm h
           is received.  (enables the popOnBell resource).
             Ps = 1 0 4 4  -> Reuse the most recent data copied to CLIP-
           BOARD.  (This enables the keepClipboard resource).
+            Ps = 1 0 4 6  -> Enable switching to/from Alternate Screen
+          Buffer.  This works for terminfo-based systems, updating the
+          titeInhibit resource.
             Ps = 1 0 4 7  -> Use Alternate Screen Buffer.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Save cursor as in DECSC.  (This may be dis-
@@ -536,7 +539,7 @@ CSI ? Pm h
             Ps = 1 0 5 1  -> Set Sun function-key mode.
             Ps = 1 0 5 2  -> Set HP function-key mode.
             Ps = 1 0 5 3  -> Set SCO function-key mode.
-            Ps = 1 0 6 0  -> Set legacy keyboard emulation (X11R6).
+            Ps = 1 0 6 0  -> Set legacy keyboard emulation (i.e, X11R6).
             Ps = 1 0 6 1  -> Set VT220 keyboard emulation.
             Ps = 2 0 0 4  -> Set bracketed paste mode.
 CSI Pm i  Media Copy (MC).
@@ -576,7 +579,7 @@ CSI ? Pm l
             Ps = 3 0  -> Don't show scrollbar (rxvt).
             Ps = 3 5  -> Disable font-shifting functions (rxvt).
             Ps = 4 0  -> Disallow 80 -> 132 Mode.
-            Ps = 4 1  -> No more(1) fix (see curses resource).
+            Ps = 4 1  -> No more(1) fix (see curses(3) resource).
             Ps = 4 2  -> Disable National Replacement Character sets
           (DECNRCM).
             Ps = 4 4  -> Turn Off Margin Bell.
@@ -623,9 +626,13 @@ CSI ? Pm l
           resource).
             Ps = 1 0 4 3  -> Disable raising of the window when Control-
           G is received.  (This disables the popOnBell resource).
+            Ps = 1 0 4 6  -> Disable switching to/from Alternate Screen
+          Buffer.  This works for terminfo-based systems, updating the
+          titeInhibit resource.  If currently using the Alternate Screen
+          Buffer, xterm switches to the Normal Screen Buffer.
             Ps = 1 0 4 7  -> Use Normal Screen Buffer, clearing screen
-          first if in the Alternate Screen.  (This may be disabled by
-          the titeInhibit resource).
+          first if in the Alternate Screen Buffer.  (This may be dis-
+          abled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Restore cursor as in DECRC.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 9  -> Use Normal Screen Buffer and restore cursor
@@ -637,7 +644,8 @@ CSI ? Pm l
             Ps = 1 0 5 1  -> Reset Sun function-key mode.
             Ps = 1 0 5 2  -> Reset HP function-key mode.
             Ps = 1 0 5 3  -> Reset SCO function-key mode.
-            Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
+            Ps = 1 0 6 0  -> Reset legacy keyboard emulation (i.e,
+          X11R6).
             Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
             Ps = 2 0 0 4  -> Reset bracketed paste mode.
 CSI Pm m  Character Attributes (SGR).
@@ -708,11 +716,11 @@ CSI Pm m  Character Attributes (SGR).
           is compiled, the following apply:
           o   All parameters are decimal integers.
           o   RGB values range from zero (0) to 255.
-          o   ISO-8613-3 can be interpreted in more than one way; xterm
+          o   ISO-8613-6 can be interpreted in more than one way; xterm
               allows the semicolons in this control to be replaced by
               colons (but after the first colon, colons must be used).
 
-          These ISO-8613-3 controls are supported:
+          These ISO-8613-6 controls are supported:
             Pm = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps.
@@ -868,8 +876,8 @@ CSI Pt; Pl; Pb; Pr; Ps$ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
-CSI s     Save cursor (ANSI.SYS), available only when DECLRMM is dis-
-          abled.
+CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
+          also ANSI.SYS).
 CSI Pl; Pr s
           Set left and right margins (DECSLRM), available only when
           DECLRMM is enabled (VT420 and up).
@@ -947,7 +955,7 @@ CSI Pt; Pl; Pb; Pr; Ps$ t
           up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
-CSI u     Restore cursor (ANSI.SYS).
+CSI u     Restore cursor (SCORC, also ANSI.SYS).
 CSI Ps SP u
           Set margin-bell volume (DECSMBV, VT520).
             Ps = 1  -> off.
@@ -1530,11 +1538,11 @@ Similarly, xterm can be compiled to support HP keyboards.  See the
 xterm-hp terminfo entry for details.
 
 The Alternate Screen Buffer
-Xterm maintains two screen buffers.  The normal screen buffer allows you
+Xterm maintains two screen buffers.  The Normal Screen Buffer allows you
 to scroll back to view saved lines of output up to the maximum set by
-the saveLines resource.  The alternate screen buffer is exactly as large
-as the display, contains no additional saved lines.  When the alternate
-screen buffer is active, you cannot scroll back to view saved lines.
+the saveLines resource.  The Alternate Screen Buffer is exactly as large
+as the display, contains no additional saved lines.  When the Alternate
+Screen Buffer is active, you cannot scroll back to view saved lines.
 Xterm provides control sequences and menu entries for switching between
 the two.
 
@@ -1547,9 +1555,9 @@ built with terminfo libraries because terminfo does not provide the
 whole text of the termcap data in one piece.  It would not work for ter-
 minfo anyway, since terminfo data is not passed in environment vari-
 ables; setting an environment variable in this manner would have no
-effect on the application's ability to switch between normal and alter-
-nate screen buffers.  Instead, the newer private mode controls (such as
-1 0 4 9 ) for switching between normal and alternate screen buffers sim-
+effect on the application's ability to switch between Normal and Alter-
+nate Screen buffers.  Instead, the newer private mode controls (such as
+1 0 4 9 ) for switching between Normal and Alternate Screen buffers sim-
 ply disable the switching.  They add other features such as clearing the
 display for the same reason: to make the details of switching indepen-
 dent of the application that requests the switch.
@@ -1656,7 +1664,8 @@ o   The next three bits encode the modifiers which were down when the
     unavailable because xterm uses the control modifier with mouse for
     popup menus, and the shift modifier is used in the default transla-
     tions for button events.  The Meta modifier recognized by xterm is
-    the mod1 mask, and is not necessarily the "Meta" key (see xmodmap).
+    the mod1 mask, and is not necessarily the "Meta" key (see
+    xmodmap(1)).
 o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
     in X10 mode.
 Wheel mice
@@ -1668,8 +1677,8 @@ reported.  By default, the wheel mouse events are translated to scroll-
 back and scroll-forw actions.  Those actions normally scroll the whole
 window, as if the scrollbar was used.  However if Alternate Scroll mode
 is set, then cursor up/down controls are sent when the terminal is dis-
-playing the alternate screen.  The initial state of Alternate Scroll
-mode is set using the alternateScroll resource.
+playing the Alternate Screen Buffer.  The initial state of Alternate
+Scroll mode is set using the alternateScroll resource.
 Highlight tracking
 
 Mouse highlight tracking notifies a program of a button press, receives

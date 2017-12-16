@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.859 2017/12/14 01:57:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.862 2017/12/15 23:18:47 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1058,8 +1058,6 @@ typedef enum {
 #ifdef ALLOWLOGGING
     ,srm_ALLOWLOGGING = 46
 #endif
-    ,srm_OPT_ALTBUF_CURSOR = 1049
-    ,srm_OPT_ALTBUF = 1047
     ,srm_ALTBUF = 47
     ,srm_DECNKM = 66
     ,srm_DECBKM = 67
@@ -1095,7 +1093,10 @@ typedef enum {
     ,srm_BELL_IS_URGENT = 1042
     ,srm_POP_ON_BELL = 1043
     ,srm_KEEP_CLIPBOARD = 1044
-    ,srm_TITE_INHIBIT = 1048
+    ,srm_ALLOW_ALTBUF = 1046
+    ,srm_OPT_ALTBUF = 1047
+    ,srm_SAVE_CURSOR = 1048
+    ,srm_OPT_ALTBUF_CURSOR = 1049
 #if OPT_TCAP_FKEYS
     ,srm_TCAP_FKEYS = 1050
 #endif
@@ -1736,6 +1737,7 @@ typedef struct {
 
 	/* indices into save_modes[] */
 typedef enum {
+	DP_ALLOW_ALTBUF,
 	DP_ALTERNATE_SCROLL,
 	DP_ALT_SENDS_ESC,
 	DP_BELL_IS_URGENT,
@@ -1766,7 +1768,7 @@ typedef enum {
 	DP_RXVT_SCROLL_TTY_KEYPRESS,
 	DP_RXVT_SCROLL_TTY_OUTPUT,
 	DP_SELECT_TO_CLIPBOARD,
-	DP_X_ALTSCRN,
+	DP_X_ALTBUF,
 	DP_X_DECCOLM,
 	DP_X_EXT_MOUSE,
 	DP_X_LOGGING,
