@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1496 2017/12/14 00:39:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1498 2017/12/15 23:21:44 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -5738,7 +5738,16 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_bool_mode(screen->keepClipboard);
 	    update_keepClipboard();
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    if (IsSM()) {
+		xw->misc.titeInhibit = False;
+	    } else if (!xw->misc.titeInhibit) {
+		xw->misc.titeInhibit = True;
+		FromAlternate(xw);
+	    }
+	    update_titeInhibit();
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
 		    CursorSave(xw);
@@ -5927,7 +5936,7 @@ savemodes(XtermWidget xw)
 	case srm_OPT_ALTBUF:
 	    /* FALLTHRU */
 	case srm_ALTBUF:	/* alternate buffer             */
-	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
+	    DoSM(DP_X_ALTBUF, screen->whichBuf);
 	    break;
 	case srm_DECNKM:
 	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
@@ -6034,7 +6043,10 @@ savemodes(XtermWidget xw)
 	case srm_LEGACY_FKEYS:
 	    DoSM(DP_KEYBOARD_TYPE, xw->keyboard.type);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    DoSM(DP_ALLOW_ALTBUF, xw->misc.titeInhibit);
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
 	    }
@@ -6233,12 +6245,12 @@ restoremodes(XtermWidget xw)
 	    /* FALLTHRU */
 	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
-		if (screen->save_modes[DP_X_ALTSCRN])
+		if (screen->save_modes[DP_X_ALTBUF])
 		    ToAlternate(xw, False);
 		else
 		    FromAlternate(xw);
 		/* update_altscreen done by ToAlt and FromAlt */
-	    } else if (screen->save_modes[DP_X_ALTSCRN]) {
+	    } else if (screen->save_modes[DP_X_ALTBUF]) {
 		do_ti_xtra_scroll(xw);
 	    }
 	    break;
@@ -6291,7 +6303,13 @@ restoremodes(XtermWidget xw)
 	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case srm_TITE_INHIBIT:
+	case srm_ALLOW_ALTBUF:
+	    DoRM(DP_ALLOW_ALTBUF, xw->misc.titeInhibit);
+	    if (xw->misc.titeInhibit)
+		FromAlternate(xw);
+	    update_titeInhibit();
+	    break;
+	case srm_SAVE_CURSOR:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }

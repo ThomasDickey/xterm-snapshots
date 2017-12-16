@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.354 2017/11/20 00:37:54 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.359 2017/12/16 00:52:57 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #331
-.ds RF 2017/11/19
+.ds RF 2017/12/15
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -508,11 +508,11 @@ Line Feed or New Line (NL).
 (\*(Lf is Ctrl-J).
 .
 .IP \\*(Si
-Shift In (Ctrl-O) \(-> Switch to Standard Character Set.  This invokes the
+Shift In (Ctrl-O) \(-> Switch to \fIStandard Character Set\fP.  This invokes the
 G0 character set (the default).
 .
 .IP \\*(So
-Shift Out (Ctrl-N) \(-> Switch to Alternate Character Set.  This invokes the
+Shift Out (Ctrl-N) \(-> Switch to \fIAlternate Character Set\fP.  This invokes the
 G1 character set.
 .
 .IP \\*(Sp
@@ -997,13 +997,13 @@ See the section \fBMouse Tracking\fP.  This is the X10 xterm mouse protocol.
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK).
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode.
-  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fBcurses\fP resource).
+  \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP(3) resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets (DECNRCM).
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell.
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode.
   \*(Ps = \*4\*6 \(-> Start Logging.
 This is normally disabled by a compile-time option.
-  \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer.
+  \*(Ps = \*4\*7 \(-> Use \fIAlternate Screen Buffer\fP.
 (This may be disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM).
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM).
@@ -1017,7 +1017,7 @@ See the section \fBMouse Tracking\fP.  This is the X11 xterm mouse protocol.
   \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode.
   \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode.
-  \*(Ps = \*1\*0\*0\*7 \(-> Enable Alternate Scroll Mode, i.e., the \fBalternateScroll\fP resource.
+  \*(Ps = \*1\*0\*0\*7 \(-> Enable \fIAlternate Scroll Mode\fP, i.e., the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
@@ -1040,12 +1040,14 @@ See the section \fBMouse Tracking\fP.  This is the X11 xterm mouse protocol.
 (enables the \fBpopOnBell\fP resource).
   \*(Ps = \*1\*0\*4\*4 \(-> Reuse the most recent data copied to CLIPBOARD.
 (This enables the \fBkeepClipboard\fP resource).
-  \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer.  (This may be
+  \*(Ps = \*1\*0\*4\*6 \(-> Enable switching to/from \fIAlternate Screen Buffer\fP.
+This works for terminfo-based systems, updating the \fBtiteInhibit\fP resource.
+  \*(Ps = \*1\*0\*4\*7 \(-> Use \fIAlternate Screen Buffer\fP.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*1\*0\*4\*9 \(-> Save cursor as in DECSC
-and use Alternate Screen Buffer, clearing it first.  (This may be
+and use \fIAlternate Screen Buffer\fP, clearing it first.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
 This combines the effects of the \*1\*0\*4\*7 and \*1\*0\*4\*8 modes.
 Use this with terminfo-based applications rather than the \*4\*7 mode.
@@ -1053,7 +1055,7 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Set SCO function-key mode.
-  \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation (X11R6).
+  \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation (i.e, X11R6).
   \*(Ps = \*1\*0\*6\*1 \(-> Set VT220 keyboard emulation.
   \*(Ps = \*2\*0\*0\*4 \(-> Set bracketed paste mode.
 .
@@ -1099,7 +1101,7 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode.
-  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fBcurses\fP resource).
+  \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP(3) resource).
   \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM).
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell.
   \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode.
@@ -1119,7 +1121,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode.
-  \*(Ps = \*1\*0\*0\*7 \(-> Disable Alternate Scroll Mode, i.e., the \fBalternateScroll\fP resource.
+  \*(Ps = \*1\*0\*0\*7 \(-> Disable \fIAlternate Scroll Mode\fP, i.e., the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
@@ -1140,8 +1142,12 @@ See the section \fBMouse Tracking\fP.
 (This disables the \fBbellIsUrgent\fP resource).
   \*(Ps = \*1\*0\*4\*3 \(-> Disable raising of the window when Control-G is received.
 (This disables the \fBpopOnBell\fP resource).
+  \*(Ps = \*1\*0\*4\*6 \(-> Disable switching to/from \fIAlternate Screen Buffer\fP.
+This works for terminfo-based systems, updating the \fBtiteInhibit\fP resource.
+If currently using the \fIAlternate Screen Buffer\fP,
+\fIxterm\fP switches to the Normal Screen Buffer.
   \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
-first if in the Alternate Screen.  (This may be
+first if in the \fIAlternate Screen Buffer\fP.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*1\*0\*4\*8 \(-> Restore cursor as in DECRC.  (This may be
 disabled by the \fBtiteInhibit\fP resource).
@@ -1153,7 +1159,7 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Reset SCO function-key mode.
-  \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation (X11R6).
+  \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation (i.e, X11R6).
   \*(Ps = \*1\*0\*6\*1 \(-> Reset keyboard emulation to Sun/PC style.
   \*(Ps = \*2\*0\*0\*4 \(-> Reset bracketed paste mode.
 .
@@ -1228,12 +1234,12 @@ All parameters are decimal integers.
 .bP
 RGB values range from zero (0) to 255.
 .bP
-ISO-8613-3 can be interpreted in more than one way;
+ISO-8613-6 can be interpreted in more than one way;
 \fIxterm\fP allows the semicolons in this control to be replaced by colons
 (but after the first colon, colons must be used).
 .RE
 .sP
-These ISO-8613-3 controls are supported:
+These ISO-8613-6 controls are supported:
   \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
   \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to \*(Ps.
   \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
@@ -1433,7 +1439,7 @@ Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 .
 .IP \\*(Cs\\*(cs
-Save cursor (ANSI.SYS), available only when DECLRMM is disabled.
+Save cursor, available only when DECLRMM is disabled (SCOSC, also ANSI.SYS).
 .
 .IP \\*(Cs\\*(Pl\\*;\\*(Pr\\*s\\*(cs
 Set left and right margins (DECSLRM), available only when DECLRMM is enabled (VT420 and up).
@@ -1521,7 +1527,7 @@ Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 .
 .IP \\*(Cs\\*u
-Restore cursor (ANSI.SYS).
+Restore cursor (SCORC, also ANSI.SYS).
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*u
 Set margin-bell volume (DECSMBV, VT520).
@@ -2239,11 +2245,11 @@ See the xterm-hp terminfo entry for details.
 .Sh "The Alternate Screen Buffer"
 .LP
 \fIXterm\fP maintains two screen buffers.
-The normal screen buffer allows you to scroll back to view saved lines
+The Normal Screen Buffer allows you to scroll back to view saved lines
 of output up to the maximum set by the \fBsaveLines\fP resource.
-The alternate screen buffer is exactly as large as the display,
+The \fIAlternate Screen Buffer\fP is exactly as large as the display,
 contains no additional saved lines.
-When the alternate screen buffer is active,
+When the \fIAlternate Screen Buffer\fP is active,
 you cannot scroll back to view saved lines.
 \fIXterm\fP provides control sequences and menu entries
 for switching between the two.
@@ -2259,12 +2265,12 @@ terminfo does not provide the whole text of the termcap data in one piece.
 It would not work for terminfo anyway, since terminfo data is not passed
 in environment variables;
 setting an environment variable in this manner would have no effect on
-the application's ability to switch between normal and alternate screen
-buffers.
+the application's ability to switch
+between \fINormal\fP and \fIAlternate Screen\fP buffers.
 Instead, the newer private mode controls
 (such as \*1\*0\*4\*9)
-for switching between normal
-and alternate screen buffers simply disable the switching.
+for switching between \fINormal\fP
+and \fIAlternate Screen\fP buffers simply disable the switching.
 They add other features such as clearing the display for the same reason:
 to make the details of switching independent of the application that
 requests the switch.
@@ -2406,7 +2412,7 @@ Note however that the shift and control bits are normally unavailable
 because \fIxterm\fP uses the control modifier with mouse for popup menus,
 and the shift modifier is used in the default translations for button events.
 The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
-and is not necessarily the "Meta" key (see \fIxmodmap\fP).
+and is not necessarily the "Meta" key (see \fBxmodmap\fP(1)).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
@@ -2422,10 +2428,10 @@ the wheel mouse events are translated to \fIscroll-back\fP
 and \fIscroll-forw\fP actions.
 Those actions normally scroll the whole window,
 as if the scrollbar was used.
-However if Alternate Scroll mode is set,
+However if \fIAlternate Scroll\fP mode is set,
 then cursor up/down controls are sent when the terminal is displaying
-the alternate screen.
-The initial state of Alternate Scroll mode is set
+the \fIAlternate Screen Buffer\fP.
+The initial state of \fIAlternate Scroll\fP mode is set
 using the \fBalternateScroll\fP resource.
 .Ss Highlight tracking
 .lP

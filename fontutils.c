@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.538 2017/12/14 01:27:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.539 2017/12/15 01:15:40 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -2182,7 +2182,7 @@ xtermSetCursorBox(TScreen *screen)
 }
 
 #define CACHE_XFT(dst,src) if (src != 0) {\
-	    checkXft(xw, &(dst[fontnum]), src);\
+	    failed += checkXft(xw, &(dst[fontnum]), src);\
 	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s\n",\
 		#dst,\
 	    	fontnum,\
@@ -2282,11 +2282,12 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 #define DUMP_XFT(xw, data)	/* nothing */
 #endif
 
-static void
+static int
 checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
 {
     FcChar32 c;
     Dimension width = 0;
+    int failed = 0;
 
     data->font = xft;
     data->map.min_width = 0;
@@ -2315,11 +2316,15 @@ checkXft(XtermWidget xw, XTermXftFonts *data, XftFont *xft)
      * Sometimes someone uses a symbol font which has no useful ASCII or
      * Latin-1 characters.  Allow that, in case they did it intentionally.
      */
-    if ((width == 0) && (xtermXftLastChar(xft) >= 256)) {
-	width = data->map.max_width;
+    if (width == 0) {
+	failed = 1;
+	if (xtermXftLastChar(xft) >= 256) {
+	    width = data->map.max_width;
+	}
     }
     data->map.min_width = width;
     data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
+    return failed;
 }
 
 #if OPT_REPORT_FONTS
@@ -2509,11 +2514,12 @@ setRenderFontsize(TScreen *screen, VTwin *win, XftFont *font, const char *tag)
 #endif
 
 static void
-checkFontInfo(int value, const char *tag)
+checkFontInfo(int value, const char *tag, int failed)
 {
-    if (value == 0) {
+    if (value == 0 || failed) {
 	xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
-	exit(1);
+	if (value == 0)
+	    exit(1);
     }
 }
 
@@ -2584,6 +2590,7 @@ xtermComputeFontInfo(XtermWidget xw,
 #if OPT_RENDERFONT
     int fontnum = screen->menu_font_number;
 #endif
+    int failed = 0;
 
 #if OPT_RENDERFONT
     /*
@@ -2804,8 +2811,8 @@ xtermComputeFontInfo(XtermWidget xw,
 	   win->f_ascent,
 	   win->f_descent));
 
-    checkFontInfo(win->f_height, "height");
-    checkFontInfo(win->f_width, "width");
+    checkFontInfo(win->f_height, "height", failed);
+    checkFontInfo(win->f_width, "width", failed);
 }
 
 /* save this information as a side-effect for double-sized characters */
