@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: query-status.pl,v 1.2 2017/01/22 20:25:59 tom Exp $
+# $XTermId: query-status.pl,v 1.5 2017/12/18 01:42:54 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -34,7 +34,6 @@
 # Test the status features of xterm using DECRQSS.
 #
 # TODO: use Term::ReadKey rather than system/stty
-# TODO: make options work...
 
 use strict;
 use warnings;
@@ -42,16 +41,17 @@ use warnings;
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_8, $opt_s );
-&getopts('8s') || die(
+our ($opt_8);
+&getopts('8') || die(
     "Usage: $0 [options]\n
 Options:\n
   -8      use 8-bit controls
-  -s      use ^G rather than ST
+
+Options which use C1 controls may not work with UTF-8.
 "
 );
 
-our $ST = $opt_s ? "\007" : ( $opt_8 ? "\x9c" : "\x1b\\");
+our $ST = $opt_8 ? "\x9c" : "\x1b\\";
 
 our %suffixes;
 $suffixes{DECSCA}   = '"q';
@@ -130,7 +130,7 @@ sub query_one($) {
     my $prefix = $opt_8 ? "\x90" : "\x1bP";
     my $reply;
     my $n;
-    my $st    = $opt_s ? qr/\007/ : ( $opt_8 ? "\x9c" : qr/\x1b\\/ );
+    my $st    = $opt_8 ? "\x9c" : qr/\x1b\\/;
     my $DCS   = qr/${prefix}/;
     my $match = qr/${DCS}.*${st}/;
 
@@ -157,6 +157,8 @@ sub query_one($) {
     printf "\n";
 }
 
+printf "\x1b G" if ($opt_8);
+
 if ( $#ARGV >= 0 ) {
     while ( $#ARGV >= 0 ) {
         &query_one( shift @ARGV );
@@ -167,3 +169,5 @@ else {
         &query_one($key);
     }
 }
+
+printf "\x1b F" if ($opt_8);

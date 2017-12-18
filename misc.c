@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.768 2017/12/16 01:57:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.770 2017/12/18 01:02:18 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4141,6 +4141,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	cp++;
 	if (*cp++ == 'q') {
 	    if (!strcmp(cp, "\"q")) {	/* DECSCA */
+		TRACE(("DECRQSS -> DECSCA\n"));
 		sprintf(reply, "%d%s",
 			(screen->protected_mode == DEC_PROTECT)
 			&& (xw->flags & PROTECTED) ? 1 : 0,
@@ -4150,6 +4151,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    /* actually none of DECRQSS is valid for vt100's */
 		    break;
 		}
+		TRACE(("DECRQSS -> DECSCL\n"));
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
@@ -4159,11 +4161,13 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			: "",
 			cp);
 	    } else if (!strcmp(cp, "r")) {	/* DECSTBM */
+		TRACE(("DECRQSS -> DECSTBM\n"));
 		sprintf(reply, "%d;%dr",
 			screen->top_marg + 1,
 			screen->bot_marg + 1);
 	    } else if (!strcmp(cp, "s")) {	/* DECSLRM */
 		if (screen->vtXX_level >= 4) {	/* VT420 */
+		    TRACE(("DECRQSS -> DECSLRM\n"));
 		    sprintf(reply, "%d;%ds",
 			    screen->lft_marg + 1,
 			    screen->rgt_marg + 1);
@@ -4171,6 +4175,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    okay = False;
 		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
+		TRACE(("DECRQSS -> SGR\n"));
 		strcpy(reply, "0");
 		if (xw->flags & BOLD)
 		    strcat(reply, ";1");
@@ -4203,7 +4208,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    if (xw->flags & FG_COLOR) {
 #if OPT_DIRECT_COLOR
 			if (screen->direct_color && xw->sgr_fg_extended) {
-			    strcat(reply, ";38:2:");
+			    strcat(reply, ";38:2::");
 			    formatDirectColor(reply + strlen(reply),
 					      xw, xw->cur_foreground);
 			} else
@@ -4220,7 +4225,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    if (xw->flags & BG_COLOR) {
 #if OPT_DIRECT_COLOR
 			if (screen->direct_color && xw->sgr_bg_extended) {
-			    strcat(reply, ";48:2:");
+			    strcat(reply, ";48:2::");
 			    formatDirectColor(reply + strlen(reply),
 					      xw, xw->cur_background);
 			} else
@@ -4260,6 +4265,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		if (screen->cursor_blink_esc != 0)
 		    code -= 1;
 #endif
+		TRACE(("reply DECSCUSR\n"));
 		sprintf(reply, "%d%s", code, cp);
 	    } else {
 		okay = False;

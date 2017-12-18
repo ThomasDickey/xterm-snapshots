@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.359 2017/12/16 00:52:57 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.360 2017/12/18 00:22:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #331
-.ds RF 2017/12/15
+.ds RF 2017/12/17
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1234,18 +1234,26 @@ All parameters are decimal integers.
 .bP
 RGB values range from zero (0) to 255.
 .bP
-ISO-8613-6 can be interpreted in more than one way;
-\fIxterm\fP allows the semicolons in this control to be replaced by colons
+ISO-8613-6 has been interpreted in more than one way;
+\fIxterm\fP allows the semicolons separating the subparameters
+in this control to be replaced by colons
 (but after the first colon, colons must be used).
 .RE
 .sP
 These ISO-8613-6 controls are supported:
-  \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+  \*(Pm = \*3\*8\*;\*2\*;\*(Pi\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+The color space identifier \*(Pi is ignored.
   \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to \*(Ps.
-  \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+  \*(Pm = \*4\*8\*;\*2\*;\*(Pi\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+The color space identifier \*(Pi is ignored.
   \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps.
 .sp
+This variation on ISO-8613-6 is supported for compatibility with KDE konsole:
+  \*(Pm = \*3\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+  \*(Pm = \*4\*8\*;\*2\*;\*(Pr\*;\*(Pg\*;\*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
+.sp
 If \fIxterm\fP is compiled with direct-color support,
+and the resource \fBdirectColor\fP is true, then
 rather than choosing the closest match,
 \fIxterm\fP asks the X server to directly render a given color.
 .sP

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1498 2017/12/15 23:21:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1500 2017/12/18 00:00:50 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1661,7 +1661,7 @@ param_has_subparams(int item)
     if (parms.has_subparams) {
 	int n = subparam_index(item, 0);
 	if (n >= 0 && parms.is_sub[n]) {
-	    while (n++ < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
+	    while (++n < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
 		result++;
 	    }
 	}
@@ -1735,9 +1735,24 @@ get_subparam(int p, int s)
  * This function accepts either format (per request by Paul Leonerd Evans).
  * It also accepts
  *	CSI 38 : 5 : 1 m
- * according to Lars' original assumption.
+ * according to Lars' original assumption.  While implementing that, I added
+ * support for Konsole's interpretation of "CSI 38 : 2" as a 24-bit RGB value.
+ * ISO-8613-6 documents that as "direct color".
  *
- * By the way - all of the parameters are decimal integers.
+ * At the time in 2012, no one noticed (or commented) regarding ISO-8613-6's
+ * quirk in the description of direct color:  it mentions a color space
+ * identifier parameter which should follow the "2" (as parameter 1).  In the
+ * same section, ISO-8613-6 mentions a parameter 6 which can be ignored, as
+ * well as parameters 7 and 8.  Like parameter 1, parameters 7 and 8 are not
+ * defined clearly in the standard, and a close reading indicates they are
+ * optional, saying they "may be used".  This implementation ignores parameters
+ * 6 (and above), and provides for the color space identifier by checking the
+ * number of parameters:
+ *	3 after "2" (no color space identifier)
+ *	4 or more after "2" (color space identifier)
+ *
+ * By the way - all of the parameters are decimal integers, and missing
+ * parameters represent a default value.  ISO-8613-6 is clear about that.
  */
 #define extended_colors_limit(n) ((n) == 5 ? 1 : ((n) == 2 ? 3 : 0))
 static Boolean
@@ -1765,7 +1780,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp, Boolean *extended
 	need = extended_colors_limit(code);
 	next = item + have;
 	for (n = 0; n < need && n < 3; ++n) {
-	    values[n] = get_subparam(base, 2 + n);
+	    values[n] = get_subparam(base, 2 + n + (have > 4));
 	}
     } else if (++item < nparam) {
 	++base;
@@ -1776,7 +1791,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp, Boolean *extended
 	    need = extended_colors_limit(code);
 	    next = base + have;
 	    for (n = 0; n < need && n < 3; ++n) {
-		values[n] = get_subparam(base, 1 + n);
+		values[n] = get_subparam(base, 1 + n + (have > 3));
 	    }
 	} else {
 	    /* accept CSI 38 ; 5 ; 1 m */
