@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.168 2017/10/24 23:11:33 tom Exp $
+# $XTermId: terminfo,v 1.171 2017/12/17 19:19:31 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -212,11 +212,11 @@ xterm+pcfkeys|fragment for PC-style keys,
 # Ms modifies the selection/clipboard.  Its parameters are
 #	p1 = the storage unit (clipboard, selection or cut buffer)
 #	p2 = the base64-encoded clipboard content.
-# 
+#
 # Ss is used to set the cursor style as described by the DECSCUSR
 #	function to a block or underline.
 # Se resets the cursor style to the terminal power-on default.
-#  
+#
 # Cs and Ce set and reset the cursor colour.
 xterm+tmux|advanced xterm features used in tmux,
 	Cr=\E]112\007,
@@ -1451,6 +1451,8 @@ xterm+vt+edit|fragment for vt220-style editing keypad,
 	kfnd=\E[1~,
 	kslt=\E[4~,
 
+xterm+titlestack|xterm 251 feature,
+	rmcup=\E[23;0;0t, smcup=\E[22;0;0t,
 #
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
@@ -1648,11 +1650,19 @@ xterm-16color|xterm with 16 colors,
 		m,
 	use=xterm+256color,
 	use=xterm-new,
+
+# "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
-# This uses RGB values 0..1000
+# This implementation uses a 256-element color map where the first 16 entries
+# are shared with the aixterm-compatible colors (and in turn the first 8 are
+# shared with the ANSI colors).  The three levels (256, 16, 8) account for the
+# use of a conditional expression in setaf/setab which reduces the number of
+# characters sent to the screen for typical applications.
 #
-# 256 colors should give 65536 pairs, but terminfo stores numbers in a signed
-# short.  Most people will not notice problems with only 32767 pairs.
+# 256 colors should give 65536 pairs, but SVr4 (legacy) terminfo stores numbers
+# in a signed short.  Most people will not notice problems with only 32767
+# pairs.  With ncurses 6.1, numbers are stored in a signed integer (at least
+# 32-bits), and the inconsistency regarding pairs is eliminated.
 xterm+256color|xterm 256-color feature,
 	ccc,
 	colors#0x100,
@@ -1694,8 +1704,17 @@ xterm-88color|xterm with 88 colors,
 	use=xterm-256color,
 
 # "direct color" is mentioned without definition in ISO 8613-6 (ITU T.416).
+#
 # This is a particular implementation which assume 8-bit values for red, green,
 # and blue.  Other encodings are possible; none are addressed by that standard.
+#
+# The "RGB" flag is an ncurses 6.1 extension which tells the library how to
+# quickly compute the color-content for a given color value.
+#
+# Like xterm+256color, this uses a conditional expression.  But it does that
+# for a different reason: to make it readily usable for applications which
+# print text but also use RGB colors, it uses a color map for the usual ANSI
+# colors (0-7) and RGB colors for the remaining range of the color value.
 xterm+direct|xterm with direct-color indexing,
 	RGB,
 	colors#0x1000000,
@@ -1706,7 +1725,7 @@ xterm+direct|xterm with direct-color indexing,
 		%?
 			%p1%{8}%<
 			%t4%p1%d
-		%e48\:2\:
+		%e48\:2\:\:
 			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
 		%;
 		m,
@@ -1714,7 +1733,7 @@ xterm+direct|xterm with direct-color indexing,
 		%?
 			%p1%{8}%<
 			%t3%p1%d
-		%e38\:2\:
+		%e38\:2\:\:
 			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
 		%;
 		m,
