@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.720 2017/12/01 10:28:15 tom Exp $ */
+/* $XTermId: util.c,v 1.722 2017/12/18 23:38:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2163,7 +2163,7 @@ static void
 set_background(XtermWidget xw, int color GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
-    Pixel c = getXtermBG(xw, xw->flags, color, xw->sgr_bg_extended);
+    Pixel c = getXtermBG(xw, xw->flags, color);
 
     TRACE(("set_background(%d) %#lx\n", color, c));
     XSetWindowBackground(screen->display, VShellWindow(xw), c);
@@ -4251,8 +4251,8 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
     unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
-    Pixel fg_pix = getXtermFG(xw, attr_flags, (int) my_fg, GetCellColorFGExt(fg_bg));
-    Pixel bg_pix = getXtermBG(xw, attr_flags, (int) my_bg, GetCellColorBGExt(fg_bg));
+    Pixel fg_pix = getXtermFG(xw, attr_flags, (int) my_fg);
+    Pixel bg_pix = getXtermBG(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
     Boolean reverse2 = ((attr_flags & INVERSE) && hilite);
@@ -4385,8 +4385,8 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
-    Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground, xw->sgr_fg_extended);
-    Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background, xw->sgr_bg_extended);
+    Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground);
+    Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background);
 
     checkVeryBoldColors(attr_flags, xw->cur_foreground);
 
@@ -4448,8 +4448,6 @@ makeColorPair(XtermWidget xw)
     CellColor result;
 
 #if OPT_DIRECT_COLOR
-    result.fg_extended = xw->sgr_fg_extended;
-    result.bg_extended = xw->sgr_bg_extended;
     result.fg = xw->cur_foreground;
     result.bg = xw->cur_background;
 #else
@@ -4509,44 +4507,49 @@ ClearCurBackground(XtermWidget xw,
 #endif /* OPT_ISO_COLORS */
 
 Pixel
-getXtermBackground(XtermWidget xw, unsigned attr_flags, int color, int extended)
+getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
-    (void) attr_flags;
-    (void) color;
-    (void) extended;
-
 #if OPT_ISO_COLORS
-    if (extended) {
+#if OPT_DIRECT_COLOR
+    if ((attr_flags & ATR_DIRECT_BG)) {
 	/* OOPS - what if negative? */
 	result = color;
-    } else if ((attr_flags & BG_COLOR) &&
-	       (color >= 0 && color < MAXCOLORS)) {
+    } else
+#endif
+	if ((attr_flags & BG_COLOR) &&
+	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }
+#else
+    (void) attr_flags;
+    (void) color;
 #endif
     return result;
 }
 
 Pixel
-getXtermForeground(XtermWidget xw, unsigned attr_flags, int color, int extended)
+getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
 
-    (void) attr_flags;
-    (void) color;
-    (void) extended;
-
 #if OPT_ISO_COLORS
-    if (extended) {
+#if OPT_DIRECT_COLOR
+    if ((attr_flags & ATR_DIRECT_FG)) {
 	/* OOPS - what if negative? */
 	result = color;
-    } else if ((attr_flags & FG_COLOR) &&
-	       (color >= 0 && color < MAXCOLORS)) {
+    } else
+#endif
+	if ((attr_flags & FG_COLOR) &&
+	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }
+#else
+    (void) attr_flags;
+    (void) color;
 #endif
+
 #if OPT_WIDE_ATTRS
 #define DIM_IT(n) work.n = (unsigned short) ((2 * (unsigned)work.n) / 3)
     if ((attr_flags & ATR_FAINT)) {

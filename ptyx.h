@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.862 2017/12/15 23:18:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.864 2017/12/18 23:43:58 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1555,11 +1555,6 @@ typedef int32_t MyColor;
 #if OPT_ISO_COLORS
 #if OPT_DIRECT_COLOR
 typedef struct {
-    /* This is wasteful, so perhaps we should consider how to steal a bit from
-     * the pixel formats or somewhere.
-     */
-    unsigned int fg_extended : 1;
-    unsigned int bg_extended : 1;
     MyColor fg;
     MyColor bg;
 } CellColor;
@@ -1582,37 +1577,45 @@ typedef unsigned CellColor;
 #endif
 
 #ifndef isSameCColor
-#define isSameCColor(p,q) ((p) == (q))
+#define isSameCColor(p,q)	((p) == (q))
 #endif
 
-#define BITS2MASK(b)          ((1 << b) - 1)
+#define BITS2MASK(b)		((1 << b) - 1)
 
-#define COLOR_MASK            BITS2MASK(COLOR_BITS)
+#define COLOR_MASK		BITS2MASK(COLOR_BITS)
 
 #if OPT_DIRECT_COLOR
-#define GetCellColorFG(src)   ((src).fg)
-#define GetCellColorBG(src)   ((src).bg)
-#define GetCellColorFGExt(src) ((src).fg_extended)
-#define GetCellColorBGExt(src) ((src).bg_extended)
+#define clrDirectFG(flags)	UIntClr(flags, ATR_DIRECT_FG)
+#define clrDirectBG(flags)	UIntClr(flags, ATR_DIRECT_BG)
+#define GetCellColorFG(data)	((data).fg)
+#define GetCellColorBG(data)	((data).bg)
+#define hasDirectFG(flags)	((flags) & ATR_DIRECT_FG)
+#define hasDirectBG(flags)	((flags) & ATR_DIRECT_BG)
+#define setDirectFG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_FG); else UIntClr(flags, ATR_DIRECT_BG)
+#define setDirectBG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_BG); else UIntClr(flags, ATR_DIRECT_BG)
 #else
-#define GetCellColorFG(src)   ((src) & COLOR_MASK)
-#define GetCellColorBG(src)   (((src) >> COLOR_BITS) & COLOR_MASK)
-#define GetCellColorFGExt(src) False
-#define GetCellColorBGExt(src) False
+#define clrDirectFG(flags)	/* nothing */
+#define clrDirectBG(flags)	/* nothing */
+#define GetCellColorFG(data)	((data) & COLOR_MASK)
+#define GetCellColorBG(data)	(((data) >> COLOR_BITS) & COLOR_MASK)
+#define hasDirectFG(flags)	0
+#define hasDirectBG(flags)	0
+#define setDirectFG(flags,test)	(void)(test)
+#define setDirectBG(flags,test)	(void)(test)
 #endif
 extern CellColor blank_cell_color;
 
 typedef Char RowData;		/* wrap/blink, and DEC single-double chars */
 
-#define LINEFLAG_BITS         4
-#define LINEFLAG_MASK         BITS2MASK(LINEFLAG_BITS)
+#define LINEFLAG_BITS		4
+#define LINEFLAG_MASK		BITS2MASK(LINEFLAG_BITS)
 
-#define GetLineFlags(ld)      ((ld)->bufHead & LINEFLAG_MASK)
+#define GetLineFlags(ld)	((ld)->bufHead & LINEFLAG_MASK)
 
 #if OPT_DEC_CHRSET
-#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) ((ld->bufHead & (DBLCS_MASK << LINEFLAG_BITS)) | (xx & LINEFLAG_MASK))
+#define SetLineFlags(ld,xx)	(ld)->bufHead = (RowData) ((ld->bufHead & (DBLCS_MASK << LINEFLAG_BITS)) | (xx & LINEFLAG_MASK))
 #else
-#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) (xx & LINEFLAG_MASK)
+#define SetLineFlags(ld,xx)	(ld)->bufHead = (RowData) (xx & LINEFLAG_MASK)
 #endif
 
 typedef IChar CharData;
@@ -1886,8 +1889,6 @@ typedef struct {
 	int		cur_background;  /* current background color	*/
 	int		sgr_foreground;  /* current SGR foreground color */
 	int		sgr_background;  /* current SGR background color */
-	Boolean		sgr_fg_extended; /* SGR set with extended codes? */
-	Boolean		sgr_bg_extended; /* SGR set with extended codes? */
 #endif
 } SavedCursor;
 
@@ -2924,8 +2925,6 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
-    Boolean	sgr_fg_extended; /* SGR set with extended codes? */
-    Boolean	sgr_bg_extended; /* SGR set with extended codes? */
 #endif
     IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
@@ -2977,7 +2976,9 @@ typedef struct _TekWidgetRec {
 #define ATR_ITALIC	AttrBIT(9)
 #define ATR_STRIKEOUT	AttrBIT(10)
 #define ATR_DBL_UNDER	AttrBIT(11)
-#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER)
+#define ATR_DIRECT_FG	AttrBIT(12)
+#define ATR_DIRECT_BG	AttrBIT(13)
+#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER | ATR_DIRECT_FG | ATR_DIRECT_BG)
 #else
 #define SGR_MASK2       0
 #endif

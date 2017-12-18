@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.770 2017/12/18 01:02:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.771 2017/12/18 23:24:16 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4207,7 +4207,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR) {
 #if OPT_DIRECT_COLOR
-			if (screen->direct_color && xw->sgr_fg_extended) {
+			if (screen->direct_color && hasDirectFG(xw->flags)) {
 			    strcat(reply, ";38:2::");
 			    formatDirectColor(reply + strlen(reply),
 					      xw, xw->cur_foreground);
@@ -4224,7 +4224,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    }
 		    if (xw->flags & BG_COLOR) {
 #if OPT_DIRECT_COLOR
-			if (screen->direct_color && xw->sgr_bg_extended) {
+			if (screen->direct_color && hasDirectBG(xw->flags)) {
 			    strcat(reply, ";48:2::");
 			    formatDirectColor(reply + strlen(reply),
 					      xw, xw->cur_background);
