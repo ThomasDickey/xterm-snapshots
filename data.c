@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.97 2017/11/09 01:22:18 tom Exp $ */
+/* $XTermId: data.c,v 1.98 2017/12/18 23:38:05 tom Exp $ */
 
 /*
  * Copyright 2002-2016,2017 by Thomas E. Dickey
@@ -121,7 +121,8 @@ int ignore_unused;
 #endif
 
 #if OPT_DIRECT_COLOR
-CellColor initCColor = {0, 0, 0, 0};
+CellColor initCColor =
+{0, 0};
 #else
 CellColor initCColor = 0;
 #endif

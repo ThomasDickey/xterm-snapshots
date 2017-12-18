@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.519 2017/12/01 10:20:31 tom Exp $ */
+/* $XTermId: screen.c,v 1.520 2017/12/18 21:48:57 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -2404,13 +2404,11 @@ ScrnFillRectangle(XtermWidget xw,
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR)) | CHARDRAWN;
 		ld->attribs[col] = (IAttr) temp;
-#if OPT_ISO_COLORS
-		if (attrs & (FG_COLOR | BG_COLOR)) {
-		    if_OPT_ISO_COLORS(screen, {
+		if_OPT_ISO_COLORS(screen, {
+		    if (attrs & (FG_COLOR | BG_COLOR)) {
 			ld->color[col] = xtermColorPair(xw);
-		    });
-		}
-#endif
+		    }
+		});
 	    }
 
 	    for (col = (int) left; col < target->right; ++col)

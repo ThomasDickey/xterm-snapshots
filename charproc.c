@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1500 2017/12/18 00:00:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1501 2017/12/18 23:31:41 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -993,7 +993,7 @@ SGR_Foreground(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, FG_COLOR);
     }
-    fg = getXtermFG(xw, xw->flags, color, xw->sgr_fg_extended);
+    fg = getXtermFG(xw, xw->flags, color);
     xw->cur_foreground = color;
 
     setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
@@ -1038,7 +1038,7 @@ SGR_Background(XtermWidget xw, int color)
     } else {
 	UIntClr(xw->flags, BG_COLOR);
     }
-    bg = getXtermBG(xw, xw->flags, color, xw->sgr_bg_extended);
+    bg = getXtermBG(xw, xw->flags, color);
     xw->cur_background = color;
 
     setCgsBack(xw, WhichVWin(screen), gcNorm, bg);
@@ -1068,7 +1068,7 @@ setExtendedFG(XtermWidget xw)
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
-	&& (!xw->sgr_fg_extended)
+	&& (!hasDirectFG(xw->flags))
 	&& (fg >= 0)
 	&& (fg < 8)
 	&& (xw->flags & BOLD))
@@ -1099,7 +1099,7 @@ static void
 reset_SGR_Foreground(XtermWidget xw)
 {
     xw->sgr_foreground = -1;
-    xw->sgr_fg_extended = False;
+    clrDirectFG(xw->flags);
     setExtendedFG(xw);
 }
 
@@ -1107,7 +1107,7 @@ static void
 reset_SGR_Background(XtermWidget xw)
 {
     xw->sgr_background = -1;
-    xw->sgr_bg_extended = False;
+    clrDirectBG(xw->flags);
     setExtendedBG(xw);
 }
 
@@ -1959,6 +1959,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     int laststate;
     int thischar = -1;
     XTermRect myRect;
+    Boolean extended;
 
     do {
 #if OPT_WIDE_CHARS
@@ -3043,7 +3044,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
-			xw->sgr_fg_extended = False;
+			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3053,8 +3054,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     */
 		    if_OPT_ISO_COLORS(screen, {
 			if (parse_extended_colors(xw, &value, &item,
-						  &xw->sgr_fg_extended)) {
+						  &extended)) {
 			    xw->sgr_foreground = value;
+			    setDirectFG(xw->flags, extended);
 			    setExtendedFG(xw);
 			}
 		    });
@@ -3081,15 +3083,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
-			xw->sgr_bg_extended = False;
+			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 48:
 		    if_OPT_ISO_COLORS(screen, {
 			if (parse_extended_colors(xw, &value, &item,
-						  &xw->sgr_bg_extended)) {
+						  &extended)) {
 			    xw->sgr_background = value;
+			    setDirectBG(xw->flags, extended);
 			    setExtendedBG(xw);
 			}
 		    });
@@ -3116,7 +3119,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 97:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_foreground = (op - 90 + 8);
-			xw->sgr_fg_extended = False;
+			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
 		    break;
@@ -3143,7 +3146,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 107:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_background = (op - 100 + 8);
-			xw->sgr_bg_extended = False;
+			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
 		    break;
@@ -8449,8 +8452,8 @@ VTInitialize(Widget wrequest,
     }
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
-    wnew->sgr_fg_extended = False;
-    wnew->sgr_bg_extended = False;
+    clrDirectFG(wnew->flags);
+    clrDirectFG(wnew->flags);
 #endif /* OPT_ISO_COLORS */
 
     /*
@@ -10348,12 +10351,8 @@ ShowCursor(void)
 	fg_bg = ld->color[cursor_col];
     });
 
-    fg_pix = getXtermFG(xw, flags,
-			(int) extract_fg(xw, fg_bg, flags),
-			GetCellColorFGExt(fg_bg));
-    bg_pix = getXtermBG(xw, flags,
-			(int) extract_bg(xw, fg_bg, flags),
-			GetCellColorBGExt(fg_bg));
+    fg_pix = getXtermFG(xw, flags, (int) extract_fg(xw, fg_bg, flags));
+    bg_pix = getXtermBG(xw, flags, (int) extract_bg(xw, fg_bg, flags));
 
     /*
      * If we happen to have the same foreground/background colors, choose

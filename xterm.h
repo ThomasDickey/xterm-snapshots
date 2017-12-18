@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.781 2017/12/07 21:49:51 tom Exp $ */
+/* $XTermId: xterm.h,v 1.782 2017/12/18 23:04:28 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1380,8 +1380,8 @@ extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
 extern CgsEnum whichXtermCgs(XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);  
-extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */, int /* extended */);
-extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */, int /* extended */);
+extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
@@ -1514,20 +1514,14 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
-#define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 
 #define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
 
-#if OPT_DIRECT_COLOR
-#define getXtermFG(xw, flags, color, direct) getXtermForeground(xw, flags, color, direct)
-#define getXtermBG(xw, flags, color, direct) getXtermBackground(xw, flags, color, direct)
-#else
-#define getXtermFG(xw, flags, color, direct) getXtermForeground(xw, flags, color, 0)
-#define getXtermBG(xw, flags, color, direct) getXtermBackground(xw, flags, color, 0)
-#endif
+#define getXtermFG(xw, flags, color) getXtermForeground(xw, flags, color)
+#define getXtermBG(xw, flags, color) getXtermBackground(xw, flags, color)
 
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);
