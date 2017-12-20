@@ -1,7 +1,8 @@
-/* $XTermId: svg.c,v 1.7 2017/11/09 00:14:56 tom Exp $ */
+/* $XTermId: svg.c,v 1.10 2017/12/19 23:42:57 tom Exp $ */
 
 /*
- * Copyright 2015-2016,2017 Jens Schweikhardt
+ * Copyright 2015-2016,2017	Jens Schweikhardt
+ * Copyright 2017		Thomas E. Dickey
  *
  * All Rights Reserved
  *
@@ -32,7 +33,6 @@
 #include <xterm.h>
 #include <version.h>
 
-#define NO_COLOR	((unsigned)-1)
 #define RGBPCT(c) c.red / 655.35, c.green / 655.35, c.blue / 655.35
 #define CELLW 10
 #define CELLH 20
@@ -167,12 +167,22 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 	bgcolor.pixel = xw->old_background;
 #if OPT_ISO_COLORS
 	if (ld->attribs[col] & FG_COLOR) {
-	    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
-	    fgcolor.pixel = s->Acolors[fg].value;
+	    Pixel fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
+#if OPT_DIRECT_COLOR
+	    if (ld->attribs[col] & ATR_DIRECT_FG)
+		fgcolor.pixel = fg;
+	    else
+#endif
+		fgcolor.pixel = s->Acolors[fg].value;
 	}
 	if (ld->attribs[col] & BG_COLOR) {
-	    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
-	    bgcolor.pixel = s->Acolors[bg].value;
+	    Pixel bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
+#if OPT_DIRECT_COLOR
+	    if (ld->attribs[col] & ATR_DIRECT_BG)
+		bgcolor.pixel = bg;
+	    else
+#endif
+		bgcolor.pixel = s->Acolors[bg].value;
 	}
 #endif
 

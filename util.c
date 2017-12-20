@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.722 2017/12/18 23:38:05 tom Exp $ */
+/* $XTermId: util.c,v 1.723 2017/12/20 00:06:28 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -4249,8 +4249,8 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
-    unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
-    unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
+    Pixel my_fg = extract_fg(xw, fg_bg, attr_flags);
+    Pixel my_bg = extract_bg(xw, fg_bg, attr_flags);
     Pixel fg_pix = getXtermFG(xw, attr_flags, (int) my_fg);
     Pixel bg_pix = getXtermBG(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
@@ -4512,12 +4512,10 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
 #if OPT_ISO_COLORS
-#if OPT_DIRECT_COLOR
-    if ((attr_flags & ATR_DIRECT_BG)) {
-	/* OOPS - what if negative? */
-	result = color;
+    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
+	result = (Pixel) color;
     } else
-#endif
+    )
 	if ((attr_flags & BG_COLOR) &&
 	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
@@ -4535,12 +4533,10 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
 
 #if OPT_ISO_COLORS
-#if OPT_DIRECT_COLOR
-    if ((attr_flags & ATR_DIRECT_FG)) {
-	/* OOPS - what if negative? */
-	result = color;
+    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_FG), {
+	result = (Pixel) color;
     } else
-#endif
+    )
 	if ((attr_flags & FG_COLOR) &&
 	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
