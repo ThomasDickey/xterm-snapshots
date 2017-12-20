@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.347 2017/11/09 00:18:36 tom Exp $
+dnl $XTermId: configure.in,v 1.348 2017/12/20 00:05:37 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1067,7 +1067,7 @@ AC_MSG_RESULT($with_warnings)
 if test "$with_warnings" = yes
 then
 	CF_GCC_ATTRIBUTES
-	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum)
+	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
 fi
 fi
 

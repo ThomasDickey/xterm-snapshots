@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.345 2017/07/22 03:17:24 Lauri.Tirkkonen Exp $ */
+/* $XTermId: menu.c,v 1.346 2017/12/20 00:03:45 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -476,15 +476,17 @@ typedef struct {
 } MenuHeader;
 
     /* This table is ordered to correspond with MenuIndex */
+#define DATA(name) { (char *)#name, name ## Entries, XtNumber(name ## Entries ) }
 static const MenuHeader menu_names[] = {
-    { "mainMenu", mainMenuEntries, XtNumber(mainMenuEntries) },
-    { "vtMenu",   vtMenuEntries,   XtNumber(vtMenuEntries)   },
-    { "fontMenu", fontMenuEntries, XtNumber(fontMenuEntries) },
+    DATA( mainMenu),
+    DATA( vtMenu),
+    DATA( fontMenu),
 #if OPT_TEK4014
-    { "tekMenu",  tekMenuEntries,  XtNumber(tekMenuEntries)  },
+    DATA( tekMenu),
 #endif
-    { 0,          0,               0 },
+    { NULL, 0, 0 },
 };
+#undef DATA
 /* *INDENT-ON* */
 
 /*

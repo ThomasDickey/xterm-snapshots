@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.771 2017/12/18 23:24:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.777 2017/12/20 00:09:31 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2954,6 +2954,82 @@ formatDirectColor(char *target, XtermWidget xw, unsigned value)
 }
 #endif /* OPT_DIRECT_COLOR */
 
+#define fg2SGR(n) \
+		(n) >= 8 ? 9 : 3, \
+		(n) >= 8 ? (n) - 8 : (n)
+#define bg2SGR(n) \
+		(n) >= 8 ? 10 : 4, \
+		(n) >= 8 ? (n) - 8 : (n)
+
+#define EndOf(s) (s) + strlen(s)
+
+char *
+xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
+{
+    TScreen *screen = TScreenOf(xw);
+    char *msg = target;
+
+    strcpy(target, "0");
+    if (attr & BOLD)
+	strcat(msg, ";1");
+    if (attr & UNDERLINE)
+	strcat(msg, ";4");
+    if (attr & BLINK)
+	strcat(msg, ";5");
+    if (attr & INVERSE)
+	strcat(msg, ";7");
+    if (attr & INVISIBLE)
+	strcat(msg, ";8");
+#if OPT_WIDE_ATTRS
+    if (attr & ATR_FAINT)
+	strcat(msg, ";2");
+    if (attr & ATR_ITALIC)
+	strcat(msg, ";3");
+    if (attr & ATR_STRIKEOUT)
+	strcat(msg, ";9");
+    if (attr & ATR_DBL_UNDER)
+	strcat(msg, ";21");
+#endif
+#if OPT_256_COLORS || OPT_88_COLORS
+    if_OPT_ISO_COLORS(screen, {
+	if (attr & FG_COLOR) {
+	    if_OPT_DIRECT_COLOR2(screen, hasDirectFG(attr), {
+		strcat(msg, ";38:2::");
+		formatDirectColor(EndOf(msg), xw, (unsigned) fg);
+	    } else
+	    )
+		if (fg >= 16) {
+		sprintf(EndOf(msg), ";38:5:%d", fg);
+	    } else {
+		sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
+	    }
+	}
+	if (attr & BG_COLOR) {
+	    if_OPT_DIRECT_COLOR2(screen, hasDirectBG(attr), {
+		strcat(msg, ";48:2::");
+		formatDirectColor(EndOf(msg), xw, (unsigned) bg);
+	    } else
+	    )
+		if (bg >= 16) {
+		sprintf(EndOf(msg), ";48:5:%d", bg);
+	    } else {
+		sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
+	    }
+	}
+    });
+#elif OPT_ISO_COLORS
+    if_OPT_ISO_COLORS(screen, {
+	if (attr & FG_COLOR) {
+	    sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
+	}
+	if (attr & BG_COLOR) {
+	    sprintf(EndOf(msg), ";%d%d", bg2SGR(fg));
+	}
+    });
+#endif
+    return target;
+}
+
 #if OPT_PASTE64
 static void
 ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
@@ -4176,84 +4252,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
 		TRACE(("DECRQSS -> SGR\n"));
-		strcpy(reply, "0");
-		if (xw->flags & BOLD)
-		    strcat(reply, ";1");
-		if (xw->flags & UNDERLINE)
-		    strcat(reply, ";4");
-		if (xw->flags & BLINK)
-		    strcat(reply, ";5");
-		if (xw->flags & INVERSE)
-		    strcat(reply, ";7");
-		if (xw->flags & INVISIBLE)
-		    strcat(reply, ";8");
-#if OPT_WIDE_ATTRS
-		if (xw->flags & ATR_FAINT)
-		    strcat(reply, ";2");
-		if (xw->flags & ATR_ITALIC)
-		    strcat(reply, ";3");
-		if (xw->flags & ATR_STRIKEOUT)
-		    strcat(reply, ";9");
-		if (xw->flags & ATR_DBL_UNDER)
-		    strcat(reply, ";21");
-#endif
-#define fg2SGR(n) \
-		(n) >= 8 ? 9 : 3, \
-		(n) >= 8 ? (n) - 8 : (n)
-#define bg2SGR(n) \
-		(n) >= 8 ? 10 : 4, \
-		(n) >= 8 ? (n) - 8 : (n)
-#if OPT_256_COLORS || OPT_88_COLORS
-		if_OPT_ISO_COLORS(screen, {
-		    if (xw->flags & FG_COLOR) {
-#if OPT_DIRECT_COLOR
-			if (screen->direct_color && hasDirectFG(xw->flags)) {
-			    strcat(reply, ";38:2::");
-			    formatDirectColor(reply + strlen(reply),
-					      xw, xw->cur_foreground);
-			} else
-#endif
-			if (xw->cur_foreground >= 16) {
-			    sprintf(reply + strlen(reply),
-				    ";38:5:%d", xw->cur_foreground);
-			} else {
-			    sprintf(reply + strlen(reply),
-				    ";%d%d",
-				    fg2SGR(xw->cur_foreground));
-			}
-		    }
-		    if (xw->flags & BG_COLOR) {
-#if OPT_DIRECT_COLOR
-			if (screen->direct_color && hasDirectBG(xw->flags)) {
-			    strcat(reply, ";48:2::");
-			    formatDirectColor(reply + strlen(reply),
-					      xw, xw->cur_background);
-			} else
-#endif
-			if (xw->cur_background >= 16) {
-			    sprintf(reply + strlen(reply),
-				    ";48:5:%d", xw->cur_background);
-			} else {
-			    sprintf(reply + strlen(reply),
-				    ";%d%d",
-				    bg2SGR(xw->cur_background));
-			}
-		    }
-		});
-#elif OPT_ISO_COLORS
-		if_OPT_ISO_COLORS(screen, {
-		    if (xw->flags & FG_COLOR) {
-			sprintf(reply + strlen(reply),
-				";%d%d",
-				fg2SGR(xw->cur_foreground));
-		    }
-		    if (xw->flags & BG_COLOR) {
-			sprintf(reply + strlen(reply),
-				";%d%d",
-				bg2SGR(xw->cur_background));
-		    }
-		});
-#endif
+		xtermFormatSGR(xw, reply, xw->flags, xw->cur_foreground, xw->cur_background);
 		strcat(reply, "m");
 	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
 		int code = STEADY_BLOCK;

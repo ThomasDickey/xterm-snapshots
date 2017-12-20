@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.520 2017/12/18 21:48:57 tom Exp $ */
+/* $XTermId: screen.c,v 1.521 2017/12/19 23:48:26 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2017 by Thomas E. Dickey
@@ -1460,7 +1460,7 @@ ScrnRefresh(XtermWidget xw,
 	unsigned flags;
 	unsigned test;
 	CellColor fg_bg = initCColor;
-	unsigned fg = 0, bg = 0;
+	Pixel fg = 0, bg = 0;
 	int x;
 	GC gc;
 	Bool hilite;

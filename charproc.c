@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1501 2017/12/18 23:31:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1502 2017/12/19 01:45:56 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -10167,6 +10167,7 @@ VTSetValues(Widget cur,
  * Given a font-slot and information about selection/reverse, find the
  * corresponding cached-GC slot.
  */
+#if OPT_WIDE_ATTRS
 static int
 reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
 {
@@ -10226,6 +10227,7 @@ reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
     }
     return result;
 }
+#endif
 
 #define setGC(code) set_at = __LINE__, currentCgs = code
 

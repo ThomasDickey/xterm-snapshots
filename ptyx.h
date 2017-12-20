@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.864 2017/12/18 23:43:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.866 2017/12/19 23:37:44 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1329,6 +1329,14 @@ typedef enum {
 # define if_OPT_ISO_COLORS(screen, code) /* nothing */
 #endif
 
+#if OPT_DIRECT_COLOR
+# define if_OPT_DIRECT_COLOR(screen, code) if (screen->direct_color) code
+# define if_OPT_DIRECT_COLOR2(screen, test, code) if (screen->direct_color && (test)) code
+#else
+# define if_OPT_DIRECT_COLOR(screen, code) /* nothing */
+# define if_OPT_DIRECT_COLOR2(screen, test, code) /* nothing */
+#endif
+
 #define COLOR_RES_NAME(root) "color" root
 
 #if OPT_COLOR_CLASS
@@ -1575,6 +1583,8 @@ typedef Char CellColor;
 #else
 typedef unsigned CellColor;
 #endif
+
+#define NO_COLOR		((unsigned)-1)
 
 #ifndef isSameCColor
 #define isSameCColor(p,q)	((p) == (q))

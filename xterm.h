@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.782 2017/12/18 23:04:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.785 2017/12/19 23:41:22 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1052,6 +1052,7 @@ extern XtermWidget getXtermWidget (Widget /* w */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);
+extern char *xtermFormatSGR (XtermWidget /* xw */, char * /* target */, unsigned /* attrs */, int /* fg */, int /* bg */);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern Boolean allocateBestRGB(XtermWidget /* xw */, XColor * /* def */);

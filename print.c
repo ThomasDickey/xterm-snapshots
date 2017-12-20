@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.163 2017/11/06 00:14:38 tom Exp $ */
+/* $XTermId: print.c,v 1.166 2017/12/19 23:47:15 tom Exp $ */
 
 /*
  * Copyright 1997-2016,2017 by Thomas E. Dickey
@@ -119,8 +119,6 @@ printCursorLine(XtermWidget xw)
     printLine(xw, screen->cur_row, '\n', getPrinterFlags(xw, NULL, 0));
 }
 
-#define NO_COLOR	((unsigned)-1)
-
 /*
  * DEC's manual doesn't document whether trailing blanks are removed, or what
  * happens with a line that is entirely blank.  This function prints the
@@ -136,11 +134,11 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
 #define ColorOf(ld,col) (ld->color[col])
 #endif
-    unsigned fg = NO_COLOR;
-    unsigned bg = NO_COLOR;
+    Pixel fg = NO_COLOR;
+    Pixel bg = NO_COLOR;
 #if OPT_PRINT_COLORS
-    unsigned last_fg = NO_COLOR;
-    unsigned last_bg = NO_COLOR;
+    Pixel last_fg = NO_COLOR;
+    Pixel last_bg = NO_COLOR;
 #endif
 
     ld = getLineData(screen, inx);
@@ -182,19 +180,19 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 		}
 	    }
 #endif
-	    if ((((ld->attribs[col] & SGR_MASK) != attr)
+	    if ((((ld->attribs[col] & ATTRIBUTES) != attr)
 #if OPT_PRINT_COLORS
 		 || (last_fg != fg) || (last_bg != bg)
 #endif
 		)
 		&& ch) {
-		attr = ld->attribs[col] & SGR_MASK;
+		attr = (IAttr) (ld->attribs[col] & ATTRIBUTES);
 #if OPT_PRINT_COLORS
 		last_fg = fg;
 		last_bg = bg;
 #endif
 		if (p->print_attributes)
-		    send_SGR(xw, attr, fg, bg);
+		    send_SGR(xw, attr, (unsigned) fg, (unsigned) bg);
 	    }
 
 	    if (ch == 0)
@@ -386,38 +384,16 @@ send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
 {
     char msg[80];
 
-    strcpy(msg, "\033[0");
-    if (attr & BOLD)
-	strcat(msg, ";1");
-#if OPT_WIDE_ATTRS
-    if (attr & ATR_FAINT)
-	strcat(msg, ";2");
-    if (attr & ATR_ITALIC)
-	strcat(msg, ";3");
-#endif
-    if (attr & UNDERLINE)
-	strcat(msg, ";4");	/* typo? DEC documents this as '2' */
-    if (attr & BLINK)
-	strcat(msg, ";5");
-    if (attr & INVERSE)		/* typo? DEC documents this as invisible */
-	strcat(msg, ";7");
-#if OPT_PRINT_COLORS
-    if (bg != NO_COLOR) {
-	sprintf(msg + strlen(msg), ";%u", (bg < 8) ? (40 + bg) : (92 + bg));
-    }
-    if (fg != NO_COLOR) {
-#if OPT_PC_COLORS
+#if OPT_ISO_COLORS && OPT_PC_COLORS
+    if ((attr & FG_COLOR) && (fg != NO_COLOR)) {
 	if (TScreenOf(xw)->boldColors
 	    && fg > 8
 	    && (attr & BOLD) != 0)
 	    fg -= 8;
-#endif
-	sprintf(msg + strlen(msg), ";%u", (fg < 8) ? (30 + fg) : (82 + fg));
     }
-#else
-    (void) bg;
-    (void) fg;
 #endif
+    strcpy(msg, "\033[");
+    xtermFormatSGR(xw, msg + strlen(msg), attr, (int) fg, (int) bg);
     strcat(msg, "m");
     stringToPrinter(xw, msg);
 }
