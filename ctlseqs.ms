@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.360 2017/12/18 00:22:29 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.366 2017/12/23 00:02:27 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #331
-.ds RF 2017/12/17
+.ds RF 2017/12/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -989,7 +989,9 @@ and set VT100 mode.
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.  This is the X10 xterm mouse protocol.
   \*(Ps = \*1\*0 \(-> Show toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Start Blinking Cursor (att610).
+  \*(Ps = \*1\*2 \(-> Start Blinking Cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Start Blinking Cursor (set only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Enable XOR of Blinking Cursor control sequence and menu.
   \*(Ps = \*1\*8 \(-> Print form feed (DECPFF).
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX).
   \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM).
@@ -1094,7 +1096,9 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM).
   \*(Ps = \*9 \(-> Don't send Mouse X & Y on button press.
   \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (att610).
+  \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Disable Blinking Cursor (reset only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Disable XOR of Blinking Cursor control sequence and menu.
   \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF).
   \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX).
   \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM).
@@ -1388,7 +1392,7 @@ For VT300 and up, reply is
 .br
   \*(Cs\*(Ps\*;\*(Pm\*$\*y
 .br
-where \*(Ps is the mode number as in RM,
+where \*(Ps is the mode number as in SM/RM,
 and \*(Pm is the mode value:
 .br
   0 - not recognized
@@ -1403,8 +1407,12 @@ For VT300 and up, reply is
 .br
   \*(Cs\*?\*(Ps\*;\*(Pm\*$\*y
 .br
-where \*(Ps is the mode number as in DECSET,
+where \*(Ps is the mode number as in DECSET/DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
+.br
+Two private modes are read-only (i.e., \*1\*3 and \*1\*4),
+provided only for reporting their values using this control sequence.
+They correspond to the resources \fBcursorBlink\fP and \fBcursorBlinkXOR\fP.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*q
 Load LEDs (DECLL).

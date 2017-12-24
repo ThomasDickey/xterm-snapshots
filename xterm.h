@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.785 2017/12/19 23:41:22 tom Exp $ */
+/* $XTermId: xterm.h,v 1.787 2017/12/24 19:07:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -428,6 +428,7 @@ extern char **environ;
 #define XtNctrlFKeys		"ctrlFKeys"
 #define XtNcurses		"curses"
 #define XtNcursorBlink		"cursorBlink"
+#define XtNcursorBlinkXOR	"cursorBlinkXOR"
 #define XtNcursorColor		"cursorColor"
 #define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorOnTime		"cursorOnTime"
@@ -620,6 +621,7 @@ extern char **environ;
 #define XtCCtrlFKeys		"CtrlFKeys"
 #define XtCCurses		"Curses"
 #define XtCCursorBlink		"CursorBlink"
+#define XtCCursorBlinkXOR	"CursorBlinkXOR"
 #define XtCCursorOffTime	"CursorOffTime"
 #define XtCCursorOnTime		"CursorOnTime"
 #define XtCCursorUnderLine	"CursorUnderLine"
@@ -1089,10 +1091,10 @@ extern void ReverseOldColors (XtermWidget /* xw */);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);
+extern void do_ansi_rqm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t /* len */);
-extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
+extern void do_dec_rqm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t /* len */, int /* final */);
-extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int * /* params */);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);

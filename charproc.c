@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1502 2017/12/19 01:45:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1513 2017/12/24 19:07:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -168,12 +168,14 @@ static void restoremodes(XtermWidget /* xw */ );
 static void savemodes(XtermWidget /* xw */ );
 static void window_ops(XtermWidget /* xw */ );
 
-#define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
-
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-#define UpdateCursorBlink(screen) SetCursorBlink(screen, screen->cursor_blink)
+#define SettableCursorBlink(screen) \
+	(((screen)->cursor_blink != cbAlways) && \
+	 ((screen)->cursor_blink != cbNever))
+#define UpdateCursorBlink(screen) \
+	 SetCursorBlink(screen, screen->cursor_blink)
 static void SetCursorBlink(TScreen * /* screen */ ,
-			   Bool /* enable */ );
+			   BlinkOps /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
 			   XtIntervalId * /* id */ );
 static void StartBlinking(TScreen * /* screen */ );
@@ -556,7 +558,8 @@ static XtResource xterm_resources[] =
 #endif				/* NO_ACTIVE_ICON */
 
 #if OPT_BLINK_CURS
-    Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, False),
+    Bres(XtNcursorBlinkXOR, XtCCursorBlinkXOR, screen.cursor_blink_xor, True),
+    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "false"),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
 
@@ -4168,13 +4171,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_RQM:
 	    TRACE(("CASE_RQM\n"));
-	    do_rpm(xw, ParamPair(0));
+	    do_ansi_rqm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECRQM:
 	    TRACE(("CASE_DECRQM\n"));
-	    do_decrpm(xw, ParamPair(0));
+	    do_dec_rqm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
@@ -5331,10 +5334,29 @@ HandleStructNotify(Widget w GCC_UNUSED,
 #endif /* HANDLE_STRUCT_NOTIFY */
 
 #if OPT_BLINK_CURS
-static void
-SetCursorBlink(TScreen *screen, Bool enable)
+static int
+DoStartBlinking(TScreen *screen)
 {
-    screen->cursor_blink = (Boolean) enable;
+    int actual = ((screen->cursor_blink == cbTrue ||
+		   screen->cursor_blink == cbAlways)
+		  ? 1
+		  : 0);
+    int wanted = screen->cursor_blink_esc ? 1 : 0;
+    int result;
+    if (screen->cursor_blink_xor) {
+	result = actual ^ wanted;
+    } else {
+	result = actual | wanted;
+    }
+    return result;
+}
+
+static void
+SetCursorBlink(TScreen *screen, BlinkOps enable)
+{
+    if (SettableCursorBlink(screen)) {
+	screen->cursor_blink = enable;
+    }
     if (DoStartBlinking(screen)) {
 	StartBlinking(screen);
     } else {
@@ -5351,7 +5373,11 @@ SetCursorBlink(TScreen *screen, Bool enable)
 void
 ToggleCursorBlink(TScreen *screen)
 {
-    SetCursorBlink(screen, (Bool) (!(screen->cursor_blink)));
+    if (screen->cursor_blink == cbTrue) {
+	SetCursorBlink(screen, cbFalse);
+    } else if (screen->cursor_blink == cbFalse) {
+	SetCursorBlink(screen, cbTrue);
+    }
 }
 #endif
 
@@ -5511,11 +5537,17 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    if (SettableCursorBlink(screen)) {
 		set_bool_mode(screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -5899,10 +5931,16 @@ savemodes(XtermWidget xw)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    if (SettableCursorBlink(screen)) {
 		DoSM(DP_CRS_BLINK, screen->cursor_blink_esc);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -6187,10 +6225,16 @@ restoremodes(XtermWidget xw)
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
+	    if (SettableCursorBlink(screen)) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    /* intentionally ignored (this is user-preference) */
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    /* intentionally ignored (this is user-preference) */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -7758,6 +7802,18 @@ VTInitialize(Widget wrequest,
 #define DftBg(name) isDefaultBackground(Kolor(name))
 
 #define DATA_END   { NULL,  -1       }
+
+#if OPT_BLINK_CURS
+#define DATA(name) { #name, cb##name }
+    static const FlagList tblBlinkOps[] =
+    {
+	DATA(Always)
+	,DATA(Never)
+	,DATA_END
+    };
+#undef DATA
+#endif
+
 #define DATA(name) { #name, ec##name }
     static const FlagList tblColorOps[] =
     {
@@ -7996,18 +8052,21 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.move_sgr_ok);
 #endif
 #if OPT_BLINK_CURS
-    init_Bres(screen.cursor_blink);
+    init_Sres(screen.cursor_blink_s);
+    wnew->screen.cursor_blink =
+	extendedBoolean(wnew->screen.cursor_blink_s,
+			tblBlinkOps, cbLAST);
+    init_Bres(screen.cursor_blink_xor);
     init_Ires(screen.blink_on);
     init_Ires(screen.blink_off);
-    screen->cursor_blink_res = screen->cursor_blink;
 #endif
     init_Bres(screen.cursor_underline);
     /* resources allow for underline or block, not (yet) bar */
     InitCursorShape(screen, TScreenOf(request));
 #if OPT_BLINK_CURS
-    TRACE(("cursor_shape:%d blinks:%s\n",
+    TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
-	   BtoS(screen->cursor_blink)));
+	   screen->cursor_blink));
 #endif
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
@@ -10991,9 +11050,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
 #if OPT_BLINK_CURS
-    TRACE(("cursor_shape:%d blinks:%s\n",
+    TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
-	   BtoS(screen->cursor_blink)));
+	   screen->cursor_blink));
 #endif
 
     /* reset scrolling region */

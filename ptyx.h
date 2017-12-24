@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.866 2017/12/19 23:37:44 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.873 2017/12/24 19:07:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1022,7 +1022,7 @@ typedef enum {
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
- * restoremodes() and do_decrpm().
+ * restoremodes() and do_dec_rqm().
  */
 typedef enum {
     srm_DECCKM = 1
@@ -1039,6 +1039,8 @@ typedef enum {
 #endif
 #if OPT_BLINK_CURS
     ,srm_ATT610_BLINK = 12
+    ,srm_CURSOR_BLINK_OPS = 13
+    ,srm_XOR_CURSOR_BLINKS = 14
 #endif
     ,srm_DECPFF = 18
     ,srm_DECPEX = 19
@@ -1142,6 +1144,16 @@ typedef enum {
 #endif
     ,NSELECTUNITS
 } SelectUnit;
+
+#if OPT_BLINK_CURS
+typedef enum {
+    cbFalse = 0
+    , cbTrue
+    , cbAlways
+    , cbNever
+    , cbLAST
+} BlinkOps;
+#endif
 
 typedef enum {
     ecSetColor = 1
@@ -2261,9 +2273,10 @@ typedef struct {
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
-	Boolean		cursor_blink;	/* cursor blink enable		*/
-	Boolean		cursor_blink_res; /* initial cursor blink value	*/
-	Boolean		cursor_blink_esc; /* cursor blink escape-state	*/
+	BlinkOps	cursor_blink;	/* cursor blink enable		*/
+	char *		cursor_blink_s;	/* ...resource cursorBlink	*/
+	int		cursor_blink_esc; /* cursor blink escape-state	*/
+	Boolean		cursor_blink_xor; /* how to merge menu/escapes	*/
 #endif
 #if OPT_BLINK_TEXT
 	Boolean		blink_as_bold;	/* text blink disable		*/
