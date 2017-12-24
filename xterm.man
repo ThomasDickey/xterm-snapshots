@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.725 2017/12/12 22:01:19 tom Exp $
+.\" $XTermId: xterm.man,v 1.729 2017/12/24 21:47:59 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -2653,12 +2653,53 @@ The default is \*(``false\*(''.
 .TP 8
 .B "cursorBlink\fP (class\fB CursorBlink\fP)"
 Specifies whether to make the cursor blink.
-The default is \*(``false\*(''.
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP 3
+false (0)
+The cursor will not blink, but may be combined with escape sequences
+according to the \fBcursorBlinkXOR\fP resource.
+.TP 3
+true (1)
+The cursor will blink, but may be combined with escape sequences
+according to the \fBcursorBlinkXOR\fP resource.
+.TP 3
+always (2)
+The cursor will always blink, ignoring escape sequences.
+The menu entry will be disabled.
+.TP 3
+never (3)
+The cursor will never blink, ignoring escape sequences.
+The menu entry will be disabled.
+.RE
 .IP
-\fI\*N\fP uses two variables to determine whether the cursor blinks.
-One is set by this resource.
-The other is set by control sequences (private mode 12 and DECSCUSR).
-\fI\*N\fP tests the XOR of the two variables.
+The default is \*(``false\*(''.
+.TP 8
+.B "cursorBlinkXOR\fP (class\fB CursorBlinkXOR\fP)"
+\fI\*N\fP uses two inputs to determine whether the cursor blinks:
+.RS
+.bP
+The \fBcursorBlink\fP resource (which can be altered with a menu entry).
+.bP
+Control sequences (private mode 12 and DECSCUSR).
+.RE
+.IP
+The \fBcursorBlinkXOR\fP resource determines how those inputs are combined:
+.RS
+.TP 5
+false
+.br
+\fI\*N\fP uses the logical-OR of the two variables.
+If either is set, \fI\*n\fP makes the cursor blink.
+.TP 5
+true
+.br
+\fI\*N\fP uses the logical-XOR of the two variables.
+If only one is set, \fI\*n\fP makes the cursor blink.
+.RE
+.IP
+The default is \*(``true\*(''.
 .TP 8
 .B "cursorColor\fP (class\fB CursorColor\fP)"
 Specifies the color to use for the text cursor.
@@ -5681,11 +5722,17 @@ This corresponds to the \fB\-pop\fP option and the \fBpopOnBell\fP resource.
 .B Enable Blinking Cursor\fP (resource \fBcursorblink\fP)
 Enable (or disable) the blinking-cursor feature.
 This corresponds to the \fB\-bc\fP option and the \fBcursorBlink\fP resource.
-There is also an escape sequence
+There are also escape sequences
 (see \fI\*N Control Sequences\fP).
-The menu entry and the escape sequence states are XOR'd:
+.IP
+If the \fBcursorBlinkXOR\fP resource is set,
+the menu entry and the escape sequence states will be XOR'd:
 if both are enabled, the cursor will not blink,
 if only one is enabled, the cursor will blink.
+.IP
+Normally the \fBcursorBlinkXOR\fP is not set;
+if either the menu entry or the escape sequence states are set,
+the cursor will blink.
 .
 .TP
 .B Enable Alternate Screen Switching\fP (resource \fBtiteInhibit\fP)

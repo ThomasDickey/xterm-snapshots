@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.346 2017/12/20 00:03:45 tom Exp $ */
+/* $XTermId: menu.c,v 1.349 2017/12/21 23:54:19 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1602,8 +1602,7 @@ do_cursorblink(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
-    ToggleCursorBlink(screen);
+    ToggleCursorBlink(TScreenOf(term));
 }
 #endif
 
@@ -2605,7 +2604,6 @@ HandleCursorBlink(Widget w,
 		  String *params,
 		  Cardinal *param_count)
 {
-    /* eventually want to see if sensitive or not */
     handle_vt_toggle(do_cursorblink, TScreenOf(term)->cursor_blink,
 		     params, *param_count, w);
 }
@@ -3617,10 +3615,17 @@ update_marginbell(void)
 void
 update_cursorblink(void)
 {
+    BlinkOps check = TScreenOf(term)->cursor_blink;
+
+    if (check == cbAlways ||
+	check == cbNever) {
+	SetItemSensitivity(vtMenuEntries[vtMenu_cursorblink].widget, False);
+    }
     UpdateCheckbox("update_cursorblink",
 		   vtMenuEntries,
 		   vtMenu_cursorblink,
-		   TScreenOf(term)->cursor_blink);
+		   (check == cbTrue ||
+		    check == cbAlways));
 }
 #endif
 

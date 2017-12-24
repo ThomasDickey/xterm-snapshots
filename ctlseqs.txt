@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2017)
-               updated for XTerm Patch #331 (2017/12/17)
+               updated for XTerm Patch #331 (2017/12/22)
 
 
 
@@ -465,7 +465,11 @@ CSI ? Pm h
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
           tion Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
-            Ps = 1 2  -> Start Blinking Cursor (att610).
+            Ps = 1 2  -> Start Blinking Cursor (AT&T 610).
+            Ps = 1 3  -> Start Blinking Cursor (set only via resource or
+          menu).
+            Ps = 1 4  -> Enable XOR of Blinking Cursor control sequence
+          and menu.
             Ps = 1 8  -> Print form feed (DECPFF).
             Ps = 1 9  -> Set print extent to full screen (DECPEX).
             Ps = 2 5  -> Show Cursor (DECTCEM).
@@ -572,7 +576,11 @@ CSI ? Pm l
             Ps = 8  -> No Auto-repeat Keys (DECARM).
             Ps = 9  -> Don't send Mouse X & Y on button press.
             Ps = 1 0  -> Hide toolbar (rxvt).
-            Ps = 1 2  -> Stop Blinking Cursor (att610).
+            Ps = 1 2  -> Stop Blinking Cursor (AT&T 610).
+            Ps = 1 3  -> Disable Blinking Cursor (reset only via
+          resource or menu).
+            Ps = 1 4  -> Disable XOR of Blinking Cursor control sequence
+          and menu.
             Ps = 1 8  -> Don't print form feed (DECPFF).
             Ps = 1 9  -> Limit print to scrolling region (DECPEX).
             Ps = 2 5  -> Hide Cursor (DECTCEM).
@@ -842,7 +850,7 @@ CSI Ps ; Ps " p
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
             CSI Ps; Pm$ y
-          where Ps is the mode number as in RM, and Pm is the mode
+          where Ps is the mode number as in SM/RM, and Pm is the mode
           value:
             0 - not recognized
             1 - set
@@ -852,8 +860,12 @@ CSI Ps $ p
 CSI ? Ps$ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply is
             CSI ? Ps; Pm$ y
-          where Ps is the mode number as in DECSET, Pm is the mode value
-          as in the ANSI DECRQM.
+          where Ps is the mode number as in DECSET/DECSET, Pm is the
+          mode value as in the ANSI DECRQM.
+          Two private modes are read-only (i.e., 1 3  and 1 4 ), pro-
+          vided only for reporting their values using this control
+          sequence.  They correspond to the resources cursorBlink and
+          cursorBlinkXOR.
 CSI Ps q  Load LEDs (DECLL).
             Ps = 0  -> Clear all LEDS (default).
             Ps = 1  -> Light Num Lock.

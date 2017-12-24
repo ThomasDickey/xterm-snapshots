@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1798 2017/12/19 23:12:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.1802 2017/12/23 02:17:13 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -950,6 +950,14 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add case for private mode 1044 in DECRQM, to report the
+    keepClipboard resource setting and corresponding menu
+    entry.</li>
+
+    <li>add private modes 13 and 14, as well as resource
+    <code>cursorBlinkXOR</code> to allow better control over the
+    cursor-blinking state (discussion with Bram Moolenaar).</li>
+
     <li>modify the html and svg screen dumps to support direct
     color</li>
 

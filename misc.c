@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.777 2017/12/20 00:09:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.783 2017/12/24 19:07:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2997,8 +2997,7 @@ xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
 		strcat(msg, ";38:2::");
 		formatDirectColor(EndOf(msg), xw, (unsigned) fg);
 	    } else
-	    )
-		if (fg >= 16) {
+	    )if (fg >= 16) {
 		sprintf(EndOf(msg), ";38:5:%d", fg);
 	    } else {
 		sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
@@ -3009,8 +3008,7 @@ xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
 		strcat(msg, ";48:2::");
 		formatDirectColor(EndOf(msg), xw, (unsigned) bg);
 	    } else
-	    )
-		if (bg >= 16) {
+	    )if (bg >= 16) {
 		sprintf(EndOf(msg), ";48:5:%d", bg);
 	    } else {
 		sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
@@ -4423,17 +4421,18 @@ enum {
  * Only one mode can be reported at a time.
  */
 void
-do_rpm(XtermWidget xw, int nparams, int *params)
+do_ansi_rqm(XtermWidget xw, int nparams, int *params)
 {
     ANSI reply;
     int count = 0;
 
-    TRACE(("do_rpm %d:%d\n", nparams, params[0]));
+    TRACE(("do_ansi_rqm %d:%d\n", nparams, params[0]));
     memset(&reply, 0, sizeof(reply));
 
     if (nparams >= 1) {
-	int result = 0;
+	int result = mdUnknown;
 
+	/* DECRQM can only ask about one mode at a time */
 	switch (params[0]) {
 	case 1:		/* GATM */
 	    result = mdAlwaysReset;
@@ -4480,19 +4479,20 @@ do_rpm(XtermWidget xw, int nparams, int *params)
 }
 
 void
-do_decrpm(XtermWidget xw, int nparams, int *params)
+do_dec_rqm(XtermWidget xw, int nparams, int *params)
 {
     ANSI reply;
     int count = 0;
 
-    TRACE(("do_decrpm %d:%d\n", nparams, params[0]));
+    TRACE(("do_dec_rqm %d:%d\n", nparams, params[0]));
     memset(&reply, 0, sizeof(reply));
 
     if (nparams >= 1) {
 	TScreen *screen = TScreenOf(xw);
-	int result = 0;
+	int result = mdUnknown;
 
-	switch (params[0]) {
+	/* DECRQM can only ask about one mode at a time */
+	switch ((DECSET_codes) params[0]) {
 	case srm_DECCKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECCKM);
 	    break;
@@ -4530,8 +4530,31 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
-	    result = MdBool(screen->cursor_blink_res);
+	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
+	    result = MdBool(screen->cursor_blink_esc);
+	    break;
+	case srm_CURSOR_BLINK_OPS:
+	    switch (screen->cursor_blink) {
+	    case cbTrue:
+		result = mdMaybeSet;
+		break;
+	    case cbFalse:
+		result = mdMaybeReset;
+		break;
+	    case cbAlways:
+		result = mdAlwaysSet;
+		break;
+	    case cbLAST:
+		/* FALLTHRU */
+	    case cbNever:
+		result = mdAlwaysReset;
+		break;
+	    }
+	    break;
+	case srm_XOR_CURSOR_BLINKS:
+	    result = (screen->cursor_blink_xor
+		      ? mdAlwaysSet
+		      : mdAlwaysReset);
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -4677,6 +4700,12 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case srm_POP_ON_BELL:
 	    result = MdBool(screen->poponbell);
+	    break;
+	case srm_KEEP_CLIPBOARD:
+	    result = MdBool(screen->keepClipboard);
+	    break;
+	case srm_ALLOW_ALTBUF:
+	    result = MdBool(xw->misc.titeInhibit);
 	    break;
 	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
