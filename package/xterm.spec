@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.98 2017/08/08 23:09:38 tom Exp $
+# $XTermId: xterm.spec,v 1.99 2017/12/25 11:39:08 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -112,8 +112,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 %endif
 	--with-app-class=%{my_class} \
 	--disable-imake \
-	--enable-256-color \
-	--enable-88-color \
 	--enable-dabbrev \
 	--enable-dec-locator \
 	--enable-exec-xterm \
@@ -125,7 +123,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-paste64 \
 	--enable-regis-graphics \
 	--enable-sco-fkeys \
-	--enable-screen-dumps \
 	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \
