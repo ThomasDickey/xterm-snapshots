@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.168 2017/11/08 10:01:37 tom Exp $
+-- $XTermId: INSTALL,v 1.176 2017/12/25 12:48:26 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2016,2017 by Thomas E. Dickey
 --
@@ -48,6 +48,16 @@ the available options.  This script uses "enable" and "disable" to indicate
 the sense of the default behavior.
 
 The options (in alphabetic order):
+
+  --disable-256-color     disable 256-color support
+
+  	Do not compile-in code that interprets SGR 38 and 48 for 256-colors.
+	If this feature is disabled, the 88-color feature will be used.
+
+  --disable-88-color      disable 88-color support
+
+	Do not compile-in code that interprets SGR 38 and 48 for 88-colors.
+	The 256-color option overrides this.
 
   --disable-16-color      disable 16-color support
 
@@ -136,6 +146,11 @@ The options (in alphabetic order):
 	required by desktop-file-install.
 
 	Note: If desktop-utils is not found they will not be installed anyway.
+
+  --disable-direct-color  disable direct color support
+
+  	Do not compile-in code that interprets SGR 38 and 48 for direct colors.
+	This feature extends the 256-color feature.
 
   --disable-doublechars   disable support for double-size chars
 
@@ -285,6 +300,10 @@ The options (in alphabetic order):
 	Do not compile-in code that suppresses redundant updates to the
 	titlebar when the text has not changed.
 
+  --disable-screen-dumps  disable XHTML and SVG screen dumps
+
+	Do not compile-in code that provides XHTML and SVG screen dumps.
+
   --disable-selection-ops disable selection operations
 
 	Do not compile-in code to support the actions which allow users
@@ -345,7 +364,7 @@ The options (in alphabetic order):
 	ISO 6429 defines a few more which historically have found little use.
 	Some people find these amusing.
 
-	This is normally enabled.
+	This is normally enabled.  The direct-colors feature relies upon it.
 
   --disable-wide-chars    disable wide-character support
 
@@ -365,19 +384,7 @@ The options (in alphabetic order):
 	This uses less memory, but is less complete.  However, most languages
 	are covered by the 16-bit encoding.
 
-  --enable-256-color      enable 256-color support
-
-  	Compile-in code that interprets SGR 38 and 48 for 256-colors.
-
-  --enable-88-color       enable 88-color support
-
-	Compile-in code that interprets SGR 38 and 48 for 88-colors.
-
-  --enable-direct-color   enable direct color support
-
-  	Compile-in code that interprets SGR 38 and 48 for direct colors.
-
---enable-alt-sends-esc  set default altSendsEscape resource (default: no)
+  --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
 
 	This sets the default resource value, which is shown in the manpage.
 
@@ -525,10 +532,6 @@ The options (in alphabetic order):
   --enable-sixel-graphics enable support for sixel-graphics
 
   	Compile-in code to support experimental sixel-graphics
-
-  --enable-sun-fkeys      enable support for Sun-style function keys
-
-  	Compile-in code to support Sun-style function keys.
 
   --enable-toolbar        enable pulldown menus on toolbar
 
@@ -708,14 +711,18 @@ The options (in alphabetic order):
   --with-man2html[=XXX]   use XXX rather than groff
 
 	Specify an alternative program to use for converting manpages and
-	control sequences document to html.  If the option is given, its
-	default value is "man2html", otherwise it is "groff" with groff's
-	special options.  The "man2html" script reads formatted nroff output
-	from its standard input, and writes html to its standard output.  Other
-	input/output conventions are not currently supported.
+	control sequences document to html.  The default value for the option
+	is "man2html".  If the "man2html" script is not found, then "groff" is
+	used with groff's special options.
+	
+	The "man2html" script reads formatted nroff output from its standard
+	input, and writes html to its standard output.  Other input/output
+	conventions are not currently supported.
 
 	See
 		http://invisible-island.net/scripts
+		http://invisible-island.net/scripts/man2html.html
+
 	for an up-to-date version of "man2html".
 
   --with-neXtaw           link with neXT Athena library
@@ -737,6 +744,10 @@ The options (in alphabetic order):
 	common variety of "xterm-color" is not suited for xterm, but is
 	directed to other variations (such as nxterm) which do not
 	support the background-color erase capability.
+
+  --with-pixmapdir=DIR    directory in which to install pixmaps (DATADIR/pixmaps)
+
+	Specify directory in which to install ".xpm" files.
 
   --with-pcre             use PCRE for regular-expressions
 

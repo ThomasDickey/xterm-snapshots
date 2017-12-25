@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.783 2017/12/24 19:07:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.784 2017/12/25 11:22:52 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3021,7 +3021,7 @@ xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
 	    sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
 	}
 	if (attr & BG_COLOR) {
-	    sprintf(EndOf(msg), ";%d%d", bg2SGR(fg));
+	    sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
 	}
     });
 #endif
