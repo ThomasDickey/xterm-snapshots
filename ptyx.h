@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.873 2017/12/24 19:07:43 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.874 2017/12/25 16:38:36 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2316,6 +2316,7 @@ typedef struct {
 	 * Working variables for getLineData().
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
+	size_t		cellExtra;	/* extra space for combining chars */
 	/*
 	 * Pointer to the current visible buffer.
 	 */

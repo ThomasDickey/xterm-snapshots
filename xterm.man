@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.729 2017/12/24 21:47:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.730 2017/12/26 01:53:11 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -6374,7 +6374,7 @@ For example, this translation would invoke a new \fI\*n\fP process
 to view a file whose name is selected while holding the shift key down.
 The new process is started when the mouse button is released:
 .NS
-*VT100*translations: #override Shift \\
+*VT100*translations: #override Shift \\\&
     <Btn1Up>:\fBexec\-formatted\fP("xterm \-e view \*(AQ%t\*(AQ", \fBSELECT\fP)
 .NE
 .TP 8
@@ -6599,7 +6599,7 @@ The \fIcount\fP argument
 indicates the number of \fIunits\fP (which may be \fIpage\fP, \fIhalfpage\fP,
 \fIpixel\fP, or \fIline\fP) by which to scroll.
 .IP
-An adjustment can be specified for these values
+An adjustment can be specified for the \fIpage\fP or \fIhalfpage\fP units
 by appending a \*(``+\*('' or \*(``\-\*(''
 sign followed by a number,
 e.g., \fIpage\-2\fP to specify 2 lines less than a page.
@@ -6620,6 +6620,19 @@ entry in \fImainMenu\fP.
 This action sets, unsets or toggles internal state which tells
 \fI\*n\fP whether Scroll Lock is active,
 subject to the \fBallowScrollLock\fP resource.
+.TP 8
+.B "scroll-to(\fIcount\fP)"
+Scroll to the given line relative to the beginning of the saved-lines.
+For instance, \*(``\fBscroll-to(0)\fP\*('' would scroll to the beginning.
+Two special nonnumeric parameters are recognized:
+.RS
+.TP 8
+.B scroll-to(begin)
+Scroll to the beginning of the saved lines.
+.TP 8
+.B scroll-to(end)
+Scroll to the end of the saved lines, i.e., to the currently active page.
+.RE
 .TP 8
 .B "select-cursor-end(\fIdestname\fP [, \&...\&])"
 This action is similar to \fBselect-end\fP except that it should be used
@@ -7082,14 +7095,37 @@ A leading \*(``*\*('' is used because the widget hierarchy above the
 \fIvt100\fP widget depends on
 whether the toolbar support is compiled into \fI\*n\fP.
 .PP
+Most of the predefined translations are related to the mouse,
+with a few that use some of the special keys on the keyboard.
+Applications use special keys (function-keys, cursor-keys, keypad-keys)
+with modifiers (shift, control, alt).
+If \fI\*n\fP defines a translation for a given combination of
+special key and modifier, that makes it unavailable for use
+by applications within the terminal.
+For instance, one might extend the use of \fIPage Up\fP and \fIPage Down\fP
+keys seen here:
+.NS
+    Shift <KeyPress> Prior : \fBscroll\-back\fP(1,halfpage) \\n\\\&
+    Shift <KeyPress> Next  : \fBscroll\-forw\fP(1,halfpage) \\n\\\&
+.NE
+.PP
+to the \fIHome\fP and \fIEnd\fP keys:
+.NS
+    Shift <KeyPress> Home : \fBscroll\-to\fP(begin) \\n\\\&
+    Shift <KeyPress> End  : \fBscroll\-to\fP(end)
+.NE
+.PP
+but then shift\-\fIHome\fP and shift\-\fIEnd\fP would then
+be unavailable to applications.
+.PP
 Not everyone finds the three-button mouse bindings easy to use.
 In a wheel mouse, the middle button might be the wheel.
-As an alternative, you could add a binding shifted keys:
+As an alternative, you could add a binding using shifted keys:
 .NS
-*VT100*translations:      #override \\n\\
-    Shift <Key>Home:    \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
-    Shift <Key>Insert:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
-    Ctrl Shift <Key>C:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\
+*VT100*translations:      #override \\n\\\&
+    Shift <Key>Home:    \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\\&
+    Shift <Key>Insert:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\\&
+    Ctrl Shift <Key>C:  \fBcopy\-selection\fP(\fBSELECT\fP) \\n\\\&
     Ctrl Shift <Key>V:  \fBinsert\-selection\fP(\fBSELECT\fP)
 .NE
 .PP
@@ -7102,8 +7138,8 @@ and minus bindings for switching between font sizes.
 You can work around that by assigning the actions to more readily accessed
 keys:
 .NS
-*VT100*translations:      #override \\n\\
-    Ctrl <Key> +:       \fBlarger\-vt\-font\fP() \\n\\
+*VT100*translations:      #override \\n\\\&
+    Ctrl <Key> +:       \fBlarger\-vt\-font\fP() \\n\\\&
     Ctrl <Key> \-:       \fBsmaller\-vt\-font\fP()
 .NE
 .PP
@@ -7115,13 +7151,13 @@ keys for entering commonly-typed words:
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
         <Key>F14:       \fBkeymap\fP(None) \\n\\\&
-        <Key>F17:       \fBstring\fP("next") \\n\\
+        <Key>F17:       \fBstring\fP("next") \\n\\\&
                         \fBstring\fP(0x0d) \\n\\\&
-        <Key>F18:       \fBstring\fP("step") \\n\\
+        <Key>F18:       \fBstring\fP("step") \\n\\\&
                         \fBstring\fP(0x0d) \\n\\\&
-        <Key>F19:       \fBstring\fP("continue") \\n\\
+        <Key>F19:       \fBstring\fP("continue") \\n\\\&
                         \fBstring\fP(0x0d) \\n\\\&
-        <Key>F20:       \fBstring\fP("print ") \\n\\
+        <Key>F20:       \fBstring\fP("print ") \\n\\\&
                         \fBinsert\-selection\fP(\fBPRIMARY\fP, \fBCUT_BUFFER0\fP)
 .NE
 .SS Default Scrollbar Bindings
@@ -7332,8 +7368,8 @@ for its command-line use regardless of whether the terminal uses
 normal or application mode initially.
 Here is an example:
 .NS
-[[ "$terminfo[kcuu1]" == "^[O"* ]] && \\
-bindkey \-M viins "${terminfo[kcuu1]/O/[}" \\
+[[ "$terminfo[kcuu1]" == "^[O"* ]] && \\\&
+bindkey \-M viins "${terminfo[kcuu1]/O/[}" \\\&
 vi\-up\-line\-or\-history
 .NE
 .
