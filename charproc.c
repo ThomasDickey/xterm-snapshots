@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1514 2017/12/26 01:23:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1516 2017/12/26 11:51:43 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -494,6 +494,7 @@ static XtResource xterm_resources[] =
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 SPS.printer_controlmode, 0),
     Ires(XtNtitleModes, XtCTitleModes, screen.title_modes, DEF_TITLE_MODES),
+    Ires(XtNnextEventDelay, XtCNextEventDelay, screen.nextEventDelay, 1),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollBarBorder, XtCScrollBarBorder, screen.scrollBarBorder, 1),
@@ -8131,7 +8132,11 @@ VTInitialize(Widget wrequest,
     screen->vtXX_level = (screen->terminal_id / 100);
 
     init_Ires(screen.title_modes);
-    wnew->screen.title_modes0 = wnew->screen.title_modes;
+    screen->title_modes0 = screen->title_modes;
+
+    init_Ires(screen.nextEventDelay);
+    if (screen->nextEventDelay <= 0)
+	screen->nextEventDelay = 1;
 
     init_Bres(screen.visualbell);
     init_Bres(screen.flash_line);

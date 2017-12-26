@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.788 2017/12/26 00:47:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.789 2017/12/26 11:37:37 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -491,8 +491,8 @@ extern char **environ;
 #define XtNlogging		"logging"
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
-#define XtNmaximized		"maximized"
 #define XtNmaxGraphicSize	"maxGraphicSize"
+#define XtNmaximized		"maximized"
 #define XtNmenuBar		"menuBar"	/* internal */
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -508,6 +508,7 @@ extern char **environ;
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNnextEventDelay	"nextEventDelay"
 #define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
@@ -679,8 +680,8 @@ extern char **environ;
 #define XtCLogging		"Logging"
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
-#define XtCMaximized		"Maximized"
 #define XtCMaxGraphicSize	"MaxGraphicSize"
+#define XtCMaximized		"Maximized"
 #define XtCMenuBar		"MenuBar"	/* internal */
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
@@ -695,6 +696,7 @@ extern char **environ;
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCNextEventDelay	"NextEventDelay"
 #define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"

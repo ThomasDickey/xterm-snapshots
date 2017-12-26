@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.784 2017/12/25 11:22:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.785 2017/12/26 11:42:24 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -125,6 +125,9 @@
 		(event.type == Type && \
 		   (event.xcrossing.window == XtWindow(XtParent(xw))))
 #endif
+
+#define VB_DELAY    screen->visualBellDelay
+#define EVENT_DELAY TScreenOf(term)->nextEventDelay
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
@@ -562,7 +565,7 @@ xtermAppPending(void)
      * this case, to avoid max'ing the CPU.
      */
     if (hold_screen && caught_intr && !found) {
-	Sleep(10);
+	Sleep(EVENT_DELAY);
     }
     return result;
 }
@@ -613,7 +616,7 @@ xevents(void)
 	 * this function, e.g., those handled in in_put().
 	 */
 	if (screen->waitingForTrackInfo) {
-	    Sleep(10);
+	    Sleep(EVENT_DELAY);
 	    return;
 	}
 	XtAppNextEvent(app_con, &event);
@@ -1240,8 +1243,6 @@ Bell(XtermWidget xw, int which, int percent)
 	screen->bellInProgress = True;
     }
 }
-
-#define VB_DELAY screen->visualBellDelay
 
 static void
 flashWindow(TScreen *screen, Window window, GC visualGC, unsigned width, unsigned height)
@@ -5389,7 +5390,7 @@ NormalExit(void)
 	hold_screen = 2;
 	while (hold_screen) {
 	    xevents();
-	    Sleep(10);
+	    Sleep(EVENT_DELAY);
 	}
     }
 #if OPT_SESSION_MGT
