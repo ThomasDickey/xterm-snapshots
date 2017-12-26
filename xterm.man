@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.730 2017/12/26 01:53:11 tom Exp $
+.\" $XTermId: xterm.man,v 1.732 2017/12/26 12:47:40 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -3829,6 +3829,10 @@ Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is \*(``10\*(''.
 .TP 8
+.B "nextEventDelay\fP (class\fB NextEventDelay\fP)"
+Specifies a delay time in milliseconds before checking for new X events.
+The default is \*(``1\*(''.
+.TP 8
 .B "numColorRegisters\fP (class\fB NumColorRegisters\fP)"
 If \fI\*n\fR is configured to support ReGIS or SIXEL graphics,
 this specifies the number of color-registers which are available.
@@ -5723,16 +5727,22 @@ This corresponds to the \fB\-pop\fP option and the \fBpopOnBell\fP resource.
 Enable (or disable) the blinking-cursor feature.
 This corresponds to the \fB\-bc\fP option and the \fBcursorBlink\fP resource.
 There are also escape sequences
-(see \fI\*N Control Sequences\fP).
-.IP
+(see \fI\*N Control Sequences\fP):
+.RS
+.bP
 If the \fBcursorBlinkXOR\fP resource is set,
 the menu entry and the escape sequence states will be XOR'd:
 if both are enabled, the cursor will not blink,
 if only one is enabled, the cursor will blink.
-.IP
-Normally the \fBcursorBlinkXOR\fP is not set;
+.bP
+If the \fBcursorBlinkXOR\fP is not set;
 if either the menu entry or the escape sequence states are set,
 the cursor will blink.
+.RE
+.IP
+In either case, the checkbox for the menu shows the state of the
+\fBcursorBlink\fP resource,
+which may not correspond to what the cursor is actually doing.
 .
 .TP
 .B Enable Alternate Screen Switching\fP (resource \fBtiteInhibit\fP)

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.874 2017/12/25 16:38:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.875 2017/12/26 11:40:30 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2044,6 +2044,7 @@ typedef struct {
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
 					   (position report, etc.)	*/
+	int		nextEventDelay;	/* msecs to delay for x-events  */
 /* These parameters apply to VT100 window */
 	IChar		unparse_bfr[256];
 	unsigned	unparse_len;
