@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1513 2017/12/24 19:07:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1514 2017/12/26 01:23:12 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -262,6 +262,7 @@ static XtActionsRec actionsList[] = {
     { "redraw",			HandleRedraw },
     { "scroll-back",		HandleScrollBack },
     { "scroll-forw",		HandleScrollForward },
+    { "scroll-to",		HandleScrollTo },
     { "secure",			HandleSecure },
     { "select-cursor-end",	HandleKeyboardSelectEnd },
     { "select-cursor-extend",   HandleKeyboardSelectExtend },
@@ -895,6 +896,7 @@ xtermAddInput(Widget w)
 	{ "string",		    HandleStringEvent },
 	{ "scroll-back",	    HandleScrollBack },
 	{ "scroll-forw",	    HandleScrollForward },
+	{ "scroll-to",		    HandleScrollTo },
 	{ "select-cursor-end",	    HandleKeyboardSelectEnd },
 	{ "select-cursor-extend",   HandleKeyboardSelectExtend },
 	{ "select-cursor-start",    HandleKeyboardSelectStart },

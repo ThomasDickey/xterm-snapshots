@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.787 2017/12/24 19:07:43 tom Exp $ */
+/* $XTermId: xterm.h,v 1.788 2017/12/26 00:47:29 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -1356,6 +1356,7 @@ extern void deleteScrollback (TScreen * /* screen */);
 extern void DoResizeScreen (XtermWidget /* xw */);
 extern void HandleScrollBack           PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward        PROTO_XT_ACTIONS_ARGS;
+extern void HandleScrollTo             PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget  /* xw */);
 extern void ScrollBarDrawThumb (Widget  /* scrollWidget */);
 extern void ScrollBarOff (XtermWidget  /* xw */);

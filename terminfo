@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.171 2017/12/17 19:19:31 tom Exp $
+# $XTermId: terminfo,v 1.177 2017/12/25 21:08:55 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -31,6 +31,8 @@
 # holders shall not be used in advertising or otherwise to promote the
 # sale, use or other dealings in this Software without prior written
 # authorization.
+#------------------------------------------------------------------------------
+# format (ncurses 6.1): tic -W -1 -f -x terminfo
 #------------------------------------------------------------------------------
 #
 # Special Capabilities:
@@ -133,13 +135,23 @@ xterm-new|modern xterm terminal emulator,
 	kb2=\EOE,
 	kcbt=\E[Z,
 	kent=\EOM,
-	rep=%p1%c\E[%p2%{1}%-%db,
 	rin=\E[%p1%dT,
+	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
 	use=xterm-basic,
-#
+
+# These "ansi+XXX" blocks were added in ncurses 5.0:
+ansi+rep,
+	rep=%p1%c\E[%p2%{1}%-%db,
+
+ansi+enq|ncurses extension for ANSI ENQ,
+	u6=\E[%i%d;%dR,
+	u7=\E[6n,
+	u8=\E[?%[;0123456789]c,
+	u9=\E[c,
+
 # Encode modifiers using parameters (see "Xterm Control Sequences" ctlseqs.ms).
 # Note that this is unrelated to PCTERM.
 #
@@ -885,6 +897,7 @@ xterm+pce0|fragment with modifyCursorKeys:0,
 	kPRV7=\E[5;7~,
 	use=xterm+edit,
 
+# This is an ncurses extension
 ecma+strikeout|ECMA-48 strikeout/crossed-out,
 	rmxx=\E[29m,
 	smxx=\E[9m,
@@ -960,7 +973,6 @@ xterm-basic|modern xterm terminal emulator - common,
 	ritm=\E[23m,
 	rmacs=\E(B,
 	rmam=\E[?7l,
-	rmcup=\E[?1049l,
 	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmm=\E[?1034l,
@@ -1042,19 +1054,16 @@ xterm-basic|modern xterm terminal emulator - common,
 	sitm=\E[3m,
 	smacs=\E(0,
 	smam=\E[?7h,
-	smcup=\E[?1049h,
 	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smm=\E[?1034h,
 	smso=\E[7m,
 	smul=\E[4m,
 	tbc=\E[3g,
-	u6=\E[%i%d;%dR,
-	u7=\E[6n,
-	u8=\E[?%[;0123456789]c,
-	u9=\E[c,
 	vpa=\E[%i%p1%dd,
 	E3=\E[3J,
+	use=ansi+enq,
+	use=xterm+alt+title,
 	use=xterm+kbs,
 #
 # The xterm-new description has all of the features, but is not completely
@@ -1451,8 +1460,21 @@ xterm+vt+edit|fragment for vt220-style editing keypad,
 	kfnd=\E[1~,
 	kslt=\E[4~,
 
+xterm+noalt|xterm without altscreen,
+	rmcup@,
+	smcup@,
+
+xterm+alt1049|xterm 90 feature,
+	rmcup=\E[?1049l,
+	smcup=\E[?1049h,
+
 xterm+titlestack|xterm 251 feature,
-	rmcup=\E[23;0;0t, smcup=\E[22;0;0t,
+	rmcup=\E[23;0;0t,
+	smcup=\E[22;0;0t,
+
+xterm+alt+title|xterm 90 and 251 features combined,
+	rmcup=\E[?1049l\E[23;0;0t,
+	smcup=\E[?1049h\E[22;0;0t,
 #
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
@@ -2091,7 +2113,6 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	rin=\E[%p1%dT,
 	rmacs=^O,
 	rmam=\E[?7l,
-	rmcup=\E[?1049l,
 	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmso=\E[27m,
@@ -2166,7 +2187,6 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	sgr0=\E[m\017,
 	smacs=^N,
 	smam=\E[?7h,
-	smcup=\E[?1049h,
 	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,
@@ -2181,6 +2201,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	kb1=\EOt,
 	kb3=\EOv,
 	kc2=\EOr,
+	use=xterm+alt1049,
 	use=xterm+kbs,
 xterm-xfree86|xterm terminal emulator (XFree86 4.4 Window System),
 	use=xterm-xf86-v44,
