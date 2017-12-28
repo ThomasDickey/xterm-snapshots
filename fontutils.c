@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.540 2017/12/18 23:03:12 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.543 2017/12/28 17:56:11 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1540,7 +1540,7 @@ xtermLoadFont(XtermWidget xw,
     setupPackedFonts(xw);
 #endif
     screen->fnt_prop = (Boolean) (proportional && !(screen->force_packed));
-    screen->fnt_boxes = True;
+    screen->fnt_boxes = 1;
 
 #if OPT_BOX_CHARS
     /*
@@ -1553,7 +1553,7 @@ xtermLoadFont(XtermWidget xw,
 	/*
 	 * FIXME: we shouldn't even be here if we're using Xft.
 	 */
-	screen->fnt_boxes = False;
+	screen->fnt_boxes = 0;
 	TRACE(("assume Xft missing line-drawing chars\n"));
     } else
 #endif
@@ -1570,29 +1570,42 @@ xtermLoadFont(XtermWidget xw,
 #endif
 #endif
 
-	for (ch = 1; ch < 32; ch++) {
-	    unsigned n = ch;
 #if OPT_WIDE_CHARS
-	    if (screen->utf8_mode || screen->unicode_font) {
-		n = dec2ucs(ch);
-		if (n == UCS_REPL)
-		    continue;
+	if (screen->utf8_mode || screen->unicode_font) {
+	    UIntSet(screen->fnt_boxes, 2);
+	    for (ch = 1; ch < 32; ch++) {
+		unsigned n = dec2ucs(ch);
+		if ((n != UCS_REPL)
+		    && (n != ch)
+		    && (screen->fnt_boxes & 2)) {
+		    if (xtermMissingChar(n, &fnts[fNorm]) ||
+			xtermMissingChar(n, &fnts[fBold])) {
+			UIntClr(screen->fnt_boxes, 2);
+			TRACE(("missing graphics character #%d, U+%04X\n",
+			       ch, n));
+			break;
+		    }
+		}
 	    }
+	}
 #endif
-	    if (IsXtermMissingChar(screen, n, &fnts[fNorm])) {
-		TRACE(("missing normal char #%d\n", n));
-		screen->fnt_boxes = False;
+
+	for (ch = 1; ch < 32; ch++) {
+	    if (xtermMissingChar(ch, &fnts[fNorm])) {
+		TRACE(("missing normal char #%d\n", ch));
+		UIntClr(screen->fnt_boxes, 1);
 		break;
 	    }
-	    if (IsXtermMissingChar(screen, n, &fnts[fBold])) {
-		TRACE(("missing bold char #%d\n", n));
-		screen->fnt_boxes = False;
+	    if (xtermMissingChar(ch, &fnts[fBold])) {
+		TRACE(("missing bold   char #%d\n", ch));
+		UIntClr(screen->fnt_boxes, 1);
 		break;
 	    }
 	}
     }
-    TRACE(("Will %suse internal line-drawing characters\n",
-	   screen->fnt_boxes ? "not " : ""));
+    TRACE(("Will %suse internal line-drawing characters (mode %d)\n",
+	   screen->fnt_boxes ? "not " : "",
+	   screen->fnt_boxes));
 #endif
 
     if (screen->always_bold_mode) {
@@ -2678,7 +2691,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		     * graphics characters.
 		     */
 		    if (screen->fnt_boxes) {
-			screen->fnt_boxes = False;
+			screen->fnt_boxes = 0;
 			TRACE(("Xft opened - will %suse internal line-drawing characters\n",
 			       screen->fnt_boxes ? "not " : ""));
 		    }
@@ -3134,16 +3147,16 @@ xtermDrawBoxChar(XtermWidget xw,
 #endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
+	int which = (attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
-	    if (dec2ucs(n) == ch
-		&& !((attr_flags & BOLD)
-		     ? IsXtermMissingChar(screen, n, getNormalFont(screen, fBold))
-		     : IsXtermMissingChar(screen, n, getNormalFont(screen, fNorm)))) {
-		TRACE(("...use xterm-style linedrawing\n"));
-		ch = n;
-		break;
-	    }
+	    if (xtermMissingChar(n, getNormalFont(screen, which)))
+		continue;
+	    if (dec2ucs(n) != ch)
+		continue;
+	    TRACE(("...use xterm-style linedrawing U+%04X ->%d\n", ch, n));
+	    ch = n;
+	    break;
 	}
     }
 #endif

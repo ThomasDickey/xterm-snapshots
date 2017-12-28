@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1516 2017/12/26 11:51:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1517 2017/12/28 18:43:58 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3480,7 +3480,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCUSR\n"));
 	    {
 		Boolean change = True;
-		Boolean blinks = screen->cursor_blink_esc;
+		int blinks = screen->cursor_blink_esc;
 
 		HideCursor();
 
