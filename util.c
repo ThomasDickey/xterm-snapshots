@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.723 2017/12/20 00:06:28 tom Exp $ */
+/* $XTermId: util.c,v 1.726 2017/12/28 18:45:23 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3920,6 +3920,14 @@ drawXtermText(XtermWidget xw,
 	    if (ch == HIDDEN_CHAR)
 		continue;
 
+#if OPT_BOX_CHARS
+	    if ((screen->fnt_boxes == 1) && (ch >= 256)) {
+		unsigned part = ucs2dec(ch);
+		if (part < 32)
+		    ch = (IChar) part;
+	    }
+#endif
+
 	    if (!needWide
 		&& !IsIcon(screen)
 		&& ((on_wide || my_wcwidth((wchar_t) ch) > 1)
@@ -4851,7 +4859,7 @@ systemWcwidthOk(int samplesize, int samplepass)
 	if ((system_code < 0 && intern_code >= 1)
 	    || (system_code >= 0 && intern_code != system_code)) {
 	    TRACE((".. width(U+%04X) = %d, expected %d\n",
-		   n, system_code, intern_code));
+		   (unsigned) n, system_code, intern_code));
 	    if (++oops > samplepass)
 		break;
 	}

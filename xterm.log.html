@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1811 2017/12/26 11:48:37 tom Exp $
+  $XTermId: xterm.log.html,v 1.1812 2017/12/28 14:47:26 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -950,6 +950,21 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve a special case where a non-Unicode font's
+    line-drawing characters were not used, when specifying it via
+    the <code>utf8Fonts</code> resource, e.g.,
+
+      <blockquote>
+        <pre>
+        -fs 15 \
+        -xrm '*VT100.font:12x24' \
+        -xrm '*VT100.boldFont:12x24' \
+        -xrm '*VT100.utf8Fonts.font: 12x24' \
+        -xrm '*VT100.utf8Fonts.boldFont: 12x24' \
+</pre>
+      </blockquote>
+    </li>
+
     <li>replace constant 10msec delay for next X event with new
     resource <code>nextEventDelay</code>, and reduce that to 1msec
     to accommodate faster machines than used when
