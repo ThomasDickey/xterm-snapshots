@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.560 2017/12/30 00:28:35 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.563 2017/12/30 15:04:01 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -477,12 +477,12 @@ open_italic_font(XtermWidget xw, int n, FontNameProperties *fp, XTermFonts * dat
 	"o",
 	"i"
     };
-    char *name;
     Cardinal pass;
     Boolean result = False;
 
     NoFontWarning(data);
     for (pass = 0; pass < XtNumber(slant); ++pass) {
+	char *name;
 	if ((name = italic_font_name(fp, slant[pass])) != 0) {
 	    TRACE(("open_italic_font %s %s\n",
 		   whichFontEnum((VTFontEnum) n), name));
@@ -4347,7 +4347,7 @@ save2FontList(XtermWidget xw,
 	}
 	if (success) {
 	    size_t limit = use_ttf ? MAX_XFT_FONTS : MAX_XLFD_FONTS;
-	    if (count > limit && !IsEmpty(value)) {
+	    if (count > limit && *x_skip_blanks(value)) {
 		fprintf(stderr, "%s: too many fonts for %s, ignoring %s\n",
 			ProgramName,
 			whichFontEnum(which),
@@ -4380,7 +4380,7 @@ allocFontList(XtermWidget xw,
     char *blob;
 
     blob = x_strdup(source);
-    if (!IsEmpty(blob)) {
+    if (blob != 0) {
 	int n;
 	int pass;
 	char **list = 0;

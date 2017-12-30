@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.878 2017/12/29 20:35:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.879 2017/12/30 14:42:05 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3138,7 +3138,7 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	(&((screen)->fullVwin))
 #define WhichTWin(screen)	(&((screen)->fullTwin))
 
-#define WhichVFont(screen,name)	getNormalFont(screen, name)->fs
+#define WhichVFont(screen,name)	getNormalFont(screen, (int)(name))->fs
 #define FontAscent(screen)	WhichVWin(screen)->f_ascent
 #define FontDescent(screen)	WhichVWin(screen)->f_descent
 

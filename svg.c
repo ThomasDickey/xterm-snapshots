@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.10 2017/12/19 23:42:57 tom Exp $ */
+/* $XTermId: svg.c,v 1.11 2017/12/30 14:47:53 tom Exp $ */
 
 /*
  * Copyright 2015-2016,2017	Jens Schweikhardt
@@ -33,7 +33,14 @@
 #include <xterm.h>
 #include <version.h>
 
-#define RGBPCT(c) c.red / 655.35, c.green / 655.35, c.blue / 655.35
+#define MakeDim(color) \
+	color = (unsigned short) ((2 * (unsigned) color) / 3)
+
+#define RGBPCT(c) \
+ 	((double)c.red   / 655.35), \
+	((double)c.green / 655.35), \
+	((double)c.blue  / 655.35)
+
 #define CELLW 10
 #define CELLH 20
 
@@ -196,9 +203,9 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 	}
 #if OPT_WIDE_ATTRS
 	if (ld->attribs[col] & ATR_FAINT) {
-	    fgcolor.red = (unsigned short) ((2 * fgcolor.red) / 3);
-	    fgcolor.green = (unsigned short) ((2 * fgcolor.green) / 3);
-	    fgcolor.blue = (unsigned short) ((2 * fgcolor.blue) / 3);
+	    MakeDim(fgcolor.red);
+	    MakeDim(fgcolor.green);
+	    MakeDim(fgcolor.blue);
 	}
 #endif
 	if (ld->attribs[col] & INVERSE) {
