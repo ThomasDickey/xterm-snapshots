@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.349 2017/12/21 23:54:19 tom Exp $ */
+/* $XTermId: menu.c,v 1.350 2017/12/29 20:54:09 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -839,9 +839,6 @@ domenu(Widget w,
 	    update_menu_allowBoldFonts();
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
-	    SetItemSensitivity(
-				  fontMenuEntries[fontMenu_font_boxchars].widget,
-				  True);
 	    update_font_packed();
 	    SetItemSensitivity(
 				  fontMenuEntries[fontMenu_font_packedfont].widget,
@@ -3686,10 +3683,13 @@ update_font_doublesize(void)
 void
 update_font_boxchars(void)
 {
+    SetItemSensitivity(fontMenuEntries[fontMenu_font_boxchars].widget,
+		       !TScreenOf(term)->broken_box_chars);
     UpdateCheckbox("update_font_boxchars",
 		   fontMenuEntries,
 		   fontMenu_font_boxchars,
-		   TScreenOf(term)->force_box_chars);
+		   TScreenOf(term)->force_box_chars ||
+		   TScreenOf(term)->broken_box_chars);
 }
 
 void
@@ -3723,6 +3723,14 @@ update_font_renderfont(void)
 		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(CurrentXftFont(term)));
+
+    if (term->work.render_font) {
+	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
+    } else {
+	TScreenOf(term)->broken_box_chars = False;
+    }
+    update_font_boxchars();
+
     update_fontmenu(term);
 }
 #endif
