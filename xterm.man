@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.732 2017/12/26 12:47:40 tom Exp $
+.\" $XTermId: xterm.man,v 1.736 2017/12/30 13:47:54 tom Exp $
 .\"
 .\" Copyright 1996-2016,2017 by Thomas E. Dickey
 .\"
@@ -347,6 +347,7 @@ There are a few drawbacks
 .bP
 \fI\*N\fP cannot tell easily whether a resource value was set by
 one of the external resource- or application-defaults files,
+whether it was set using \fBxrdb\fP(1),
 or if it was set through the \fB\-xrm\fP option
 or via some directly relevant command-line option.
 \fI\*N\fP sees only the end-result:
@@ -7817,23 +7818,32 @@ tty(4)
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
 .sp
-http://invisible\-island.net/xterm/xterm.html
+https://invisible\-island.net/xterm/xterm.html
 .br
-http://invisible\-island.net/xterm/ctlseqs/ctlseqs.html
+https://invisible\-island.net/xterm/manpage/xterm.html
 .br
-http://invisible\-island.net/xterm/xterm.faq.html
+https://invisible\-island.net/xterm/ctlseqs/ctlseqs.html
+.br
+https://invisible\-island.net/xterm/xterm.faq.html
+.br
+https://invisible\-island.net/xterm/xterm.log.html
 .
 .
 .SH AUTHORS
-Far too many people, including:
-.sp
+Far too many people.
+.PP
+These contributed to the X Consortium:
 Loretta Guarino Reid (DEC-UEG-WSL),
 Joel McCormack (DEC-UEG-WSL), Terry Weissman (DEC-UEG-WSL),
 Edward Moy (Berkeley), Ralph R.\& Swick (MIT-Athena),
 Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
-Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
+Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
+.PP
+Beginning with XFree86, there were far more identifiable contributors.
+The \fITHANKS\fP file in \*n's source lists 189 at the end of 2017.
+Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,
 Ross Combs,

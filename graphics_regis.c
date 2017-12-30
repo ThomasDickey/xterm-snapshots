@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.99 2017/12/14 01:34:53 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.101 2017/12/30 15:06:36 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2017 by Ross Combs
@@ -5647,13 +5647,16 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			/* FIXME: verify no leading char or button sequence */
 			TRACE(("sending one-shot input report with %c at %d,%d\n",
 			       ch, x, y));
+#if 0				/* FIXME - dead code */
 			if (ch == '\r') {
 			    /* Return only reports the location. */
 			    sprintf(reply, "[%d,%d]\r", x, y);
 			} else if (ch == '\177') {
 			    /* DEL exits locator mode reporting nothing. */
 			    sprintf(reply, "\r");
-			} else {
+			} else
+#endif
+			{
 			    sprintf(reply, "%c[%d,%d]\r", ch, x, y);
 			}
 			unparseputs(context->display_graphic->xw, reply);
@@ -7185,7 +7188,6 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		char temp[MAX_MACROGRAPH_LEN];
 		char name;
 		char prev = '\0';
-		char next;
 		int len = 0;
 
 		name = pop_fragment(input);
@@ -7198,7 +7200,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    return 1;
 		}
 		for (;;) {
-		    next = peek_fragment(input);
+		    char next = peek_fragment(input);
 		    if (prev == '@' && next == ';') {
 			/* FIXME: parse, handle  :<name><definition>; */
 			pop_fragment(input);
