@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.543 2017/12/28 17:56:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.560 2017/12/30 00:28:35 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -1602,10 +1602,11 @@ xtermLoadFont(XtermWidget xw,
 		break;
 	    }
 	}
+
+	TRACE(("Will %suse internal line-drawing characters (mode %d)\n",
+	       screen->fnt_boxes ? "not " : "",
+	       screen->fnt_boxes));
     }
-    TRACE(("Will %suse internal line-drawing characters (mode %d)\n",
-	   screen->fnt_boxes ? "not " : "",
-	   screen->fnt_boxes));
 #endif
 
     if (screen->always_bold_mode) {
@@ -2474,29 +2475,268 @@ dimSquareRoot(double value)
 }
 #endif
 
+#if OPT_WIDE_CHARS
+#define MY_UCS(code,high,wide,name) { code, high, wide, #name }
+static const struct {
+    unsigned code, high, wide;
+    const char *name;
+} unicode_boxes[] = {
+
+    MY_UCS(0x2500, 0, 1, box drawings light horizontal),
+	MY_UCS(0x2502, 1, 0, box drawings light vertical),
+	MY_UCS(0x250c, 2, 2, box drawings light down and right),
+	MY_UCS(0x2510, 2, 2, box drawings light down and left),
+	MY_UCS(0x2514, 2, 2, box drawings light up and right),
+	MY_UCS(0x2518, 2, 2, box drawings light up and left),
+	MY_UCS(0x251c, 1, 2, box drawings light vertical and right),
+	MY_UCS(0x2524, 1, 2, box drawings light vertical and left),
+	MY_UCS(0x252c, 2, 1, box drawings light down and horizontal),
+	MY_UCS(0x2534, 2, 1, box drawings light up and horizontal),
+	MY_UCS(0x253c, 1, 1, box drawings light vertical and horizontal),
+    {
+	0, 0, 0, NULL
+    }
+};
+
+#undef MY_UCS
+#endif /* OPT_WIDE_CHARS */
+
+#ifdef DEBUG_XFT
+static void
+trace_xft_glyph(TScreen *screen, XftFont *font, FT_Face face, int code, const char *name)
+{
+    if (!XftGlyphExists(screen->display, font, code)) {
+	TRACE(("Xft glyph U+%04X missing :%s\n", code, name));
+    } else if (FT_Load_Char(face, code, FT_LOAD_RENDER) == 0) {
+	FT_GlyphSlot g = face->glyph;
+	TRACE(("Xft glyph U+%04X size(%3d,%3d) at(%3d,%3d) :%s\n",
+	       code,
+	       g->bitmap.rows, g->bitmap.width,
+	       g->bitmap_top, g->bitmap_left,
+	       name));
+    }
+}
+
+#if OPT_WIDE_CHARS
+static void
+trace_xft_line_drawing(TScreen *screen, XftFont *font, FT_Face face)
+{
+    int n;
+    for (n = 0; unicode_boxes[n].code != 0; ++n) {
+	trace_xft_glyph(screen, font, face, unicode_boxes[n].code,
+			unicode_boxes[n].name);
+    }
+}
+#else
+#define trace_xft_line_drawing(screen, font, face)	/* nothing */
+#endif
+#endif
+
+static void
+setBrokenBoxChars(XtermWidget xw, Bool state)
+{
+    term->work.broken_box_chars = (Boolean) state;
+    TScreenOf(xw)->broken_box_chars = (Boolean) state;
+    update_font_boxchars();
+}
+
+/*
+ * Check if the line-drawing characters do not fill the bounding box.  If so,
+ * they're not useful.
+ */
+static void
+linedrawing_gaps(XtermWidget xw, XftFont *font)
+{
+    Boolean broken;
+
+#if OPT_WIDE_CHARS
+    TScreen *screen = TScreenOf(xw);
+    int n;
+    FT_Face face;
+    face = XftLockFace(font);
+    broken = False;
+    for (n = 0; unicode_boxes[n].code; ++n) {
+	unsigned code = unicode_boxes[n].code;
+
+	if (!XftGlyphExists(screen->display, font, code)) {
+	    TRACE(("Xft glyph U+%04X is missing\n", code));
+	    broken = True;
+	    break;
+	}
+
+	if (FT_Load_Char(face, code, FT_LOAD_RENDER) == 0) {
+	    FT_GlyphSlot g = face->glyph;
+	    TRACE(("Xft glyph U+%04X size(%3d,%3d) at(%3d,%3d) :%s\n",
+		   code,
+		   g->bitmap.rows, g->bitmap.width,
+		   g->bitmap_top, g->bitmap_left,
+		   unicode_boxes[n].name));
+	    /*
+	     * While it is possible for badly-designed fonts to have line
+	     * drawing characters which do not meet, FreeType aggravates the
+	     * situation with its rounding.  Check for an obvious case where
+	     * the weights at the ends of a vertical line do not add up.  That
+	     * shows up as two under-weight rows at the beginning/end of the
+	     * bitmap.
+	     */
+	    if (code == 0x2502) {
+		unsigned r, c;
+		unsigned mids = 0, ends = 0;
+		unsigned char *data = g->bitmap.buffer;
+
+		switch (g->bitmap.pixel_mode) {
+		case FT_PIXEL_MODE_MONO:
+		    /* FALLTHRU */
+		case FT_PIXEL_MODE_GRAY:
+		    for (r = 0; r < (unsigned) g->bitmap.rows; ++r) {
+			unsigned k = r * (unsigned) g->bitmap.pitch;
+			unsigned sum = 0;
+			for (c = 0; c < (unsigned) g->bitmap.width; ++c) {
+			    unsigned xx = 0;
+			    switch (g->bitmap.pixel_mode) {
+			    case FT_PIXEL_MODE_MONO:
+				xx = (data[k + (c / 8)] >> (c % 8)) & 1;
+				break;
+			    case FT_PIXEL_MODE_GRAY:
+				xx = data[k + c];
+				break;
+			    }
+			    sum += xx;
+			    TRACE2((" %2x", xx));
+			}
+			TRACE2((" = %u\n", sum));
+			if (r > 0 && (r + 1) < (unsigned) g->bitmap.rows) {
+			    mids = sum;
+			} else {
+			    ends += sum;
+			}
+		    }
+		    TRACE(("...compare middle %u vs ends %u\n", mids, ends));
+		    if ((mids > ends) && (g->bitmap.rows < 16))
+			broken = True;
+		    break;
+		default:
+		    TRACE(("FIXME pixel_mode %d not handled\n",
+			   g->bitmap.pixel_mode));
+		    break;
+		}
+		if (broken)
+		    break;
+	    }
+	    switch (unicode_boxes[n].high) {
+	    case 1:
+		if ((unsigned) g->bitmap.rows < (unsigned) FontHeight(screen)) {
+		    broken = True;
+		}
+		break;
+	    case 2:
+		if ((unsigned) (g->bitmap.rows * 2) < (unsigned) FontHeight(screen)) {
+		    broken = True;
+		}
+		break;
+	    }
+	    switch (unicode_boxes[n].wide) {
+	    case 1:
+		if ((unsigned) g->bitmap.width < (unsigned) FontWidth(screen)) {
+		    broken = True;
+		}
+		break;
+	    case 2:
+		if ((unsigned) (g->bitmap.width * 2) < (unsigned) FontWidth(screen)) {
+		    broken = True;
+		}
+		break;
+	    }
+	    if (broken)
+		break;
+	}
+    }
+    XftUnlockFace(font);
+#else
+    broken = True;
+#endif
+
+    if (broken) {
+	TRACE(("Xft line-drawing would leave gaps\n"));
+	setBrokenBoxChars(xw, True);
+    }
+}
+
 /*
  * Given the Xft font metrics, determine the actual font size.  This is used
  * for each font to ensure that normal, bold and italic fonts follow the same
  * rule.
  */
 static void
-setRenderFontsize(TScreen *screen, VTwin *win, XftFont *font, const char *tag)
+setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 {
     if (font != 0) {
+	TScreen *screen = TScreenOf(xw);
 	int width, height, ascent, descent;
+#ifdef DEBUG_XFT
+	int n;
+	FT_Face face;
+	FT_Size size;
+	FT_Size_Metrics metrics;
+	Boolean scalable;
+	Boolean is_fixed;
+	Boolean debug_xft = False;
 
-	(void) screen;
+	face = XftLockFace(font);
+	size = face->size;
+	metrics = size->metrics;
+	is_fixed = FT_IS_FIXED_WIDTH(face);
+	scalable = FT_IS_SCALABLE(face);
+	trace_xft_line_drawing(screen, font, face);
+	for (n = 32; n < 127; ++n) {
+	    char name[80];
+	    sprintf(name, "letter \"%c\"", n);
+	    trace_xft_glyph(screen, font, face, n, name);
+	}
+	XftUnlockFace(font);
+
+	/* freetype's inconsistent for this sign */
+	metrics.descender = -metrics.descender;
+
+#define TR_XFT	   "Xft metrics: "
+#define D_64(name) ((double)(metrics.name)/64.0)
+#define M_64(a,b)  ((font->a * 64) != metrics.b)
+#define BOTH(a,b)  D_64(b), M_64(a,b) ? "*" : ""
+
+	debug_xft = (M_64(ascent, ascender)
+		     || M_64(descent, descender)
+		     || M_64(height, height)
+		     || M_64(max_advance_width, max_advance));
+
+	TRACE(("Xft font is %sscalable, %sfixed-width\n",
+	       is_fixed ? "" : "not ",
+	       scalable ? "" : "not "));
+
+	if (debug_xft) {
+	    TRACE(("Xft font size %d+%d vs %d by %d\n",
+		   font->ascent,
+		   font->descent,
+		   font->height,
+		   font->max_advance_width));
+	    TRACE((TR_XFT "ascender    %6.2f%s\n", BOTH(ascent, ascender)));
+	    TRACE((TR_XFT "descender   %6.2f%s\n", BOTH(descent, descender)));
+	    TRACE((TR_XFT "height      %6.2f%s\n", BOTH(height, height)));
+	    TRACE((TR_XFT "max_advance %6.2f%s\n", BOTH(max_advance_width, max_advance)));
+	} else {
+	    TRACE((TR_XFT "matches font\n"));
+	}
+#endif
 
 	width = font->max_advance_width;
 	height = font->height;
 	ascent = font->ascent;
 	descent = font->descent;
 	if (height < ascent + descent) {
-	    TRACE(("...increase height from %d\n", height));
+	    TRACE(("...increase height from %d to %d\n", height, ascent + descent));
 	    height = ascent + descent;
 	}
 	if (is_double_width_font_xft(screen->display, font)) {
-	    TRACE(("...reduced width from %d\n", width));
+	    TRACE(("...reduce width from %d to %d\n", width, width >> 1));
 	    width >>= 1;
 	}
 	if (tag == 0) {
@@ -2521,6 +2761,9 @@ setRenderFontsize(TScreen *screen, VTwin *win, XftFont *font, const char *tag)
 	    win->f_descent = descent;
 	} else {
 	    TRACE(("setRenderFontsize %s unchanged\n", tag));
+	}
+	if (!screen->broken_box_chars && (tag == 0)) {
+	    linedrawing_gaps(xw, font);
 	}
     }
 }
@@ -2771,9 +3014,10 @@ xtermComputeFontInfo(XtermWidget xw,
 	    update_font_renderfont();
 	    /* now we will fall through into the bitmap fonts */
 	} else {
-	    setRenderFontsize(screen, win, norm, NULL);
-	    setRenderFontsize(screen, win, bold, "bold");
-	    setRenderFontsize(screen, win, ital, "ital");
+	    setBrokenBoxChars(xw, False);
+	    setRenderFontsize(xw, win, norm, NULL);
+	    setRenderFontsize(xw, win, bold, "bold");
+	    setRenderFontsize(xw, win, ital, "ital");
 #if OPT_BOX_CHARS
 	    setupPackedFonts(xw);
 

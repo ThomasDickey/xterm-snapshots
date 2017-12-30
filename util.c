@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.726 2017/12/28 18:45:23 tom Exp $ */
+/* $XTermId: util.c,v 1.728 2017/12/29 19:03:33 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -3311,8 +3311,8 @@ fixupItalics(XtermWidget xw,
 }
 #endif
 
-#define SetMissing() \
-	TRACE(("%s@%d: missing %d\n", __FILE__, __LINE__, missing)); \
+#define SetMissing(tag) \
+	TRACE(("%s %s: missing %d\n", __FILE__, tag, missing)); \
 	missing = 1
 
 /*
@@ -3543,8 +3543,9 @@ drawXtermText(XtermWidget xw,
 		     * position.  Failing that, use our own box-characters.
 		     */
 		    if (screen->force_box_chars
+			|| screen->broken_box_chars
 			|| xtermXftMissing(xw, currFont, dec2ucs(ch))) {
-			SetMissing();
+			SetMissing("case 1");
 		    } else {
 			ch = dec2ucs(ch);
 			replace = True;
@@ -3559,9 +3560,10 @@ drawXtermText(XtermWidget xw,
 			unsigned part = ucs2dec(ch);
 			if (xtermIsDecGraphic(part)) {
 			    if (screen->force_box_chars
+				|| screen->broken_box_chars
 				|| xtermXftMissing(xw, currFont, ch)) {
 				ch = part;
-				SetMissing();
+				SetMissing("case 2");
 			    }
 			} else if (xtermXftMissing(xw, currFont, ch)) {
 			    XftFont *test = pickXftFont(needed, font0, wfont0);
@@ -3574,7 +3576,7 @@ drawXtermText(XtermWidget xw,
 				ch = part;
 				replace = True;
 			    } else if (ch != HIDDEN_CHAR) {
-				SetMissing();
+				SetMissing("case 3");
 			    }
 			}
 		    });
@@ -3590,7 +3592,7 @@ drawXtermText(XtermWidget xw,
 		     * box-characters.
 		     */
 		    if (xtermXftMissing(xw, currFont, ch)) {
-			SetMissing();
+			SetMissing("case 4");
 		    }
 		}
 #endif

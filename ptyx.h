@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.876 2017/12/28 14:26:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.878 2017/12/29 20:35:07 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -2247,6 +2247,7 @@ typedef struct {
 	Boolean		force_packed;	/* true to override proportional */
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume no boxchars */
+	Boolean		broken_box_chars;/* true if broken boxchars	*/
 	Boolean		force_all_chars;/* true to outline missing chars */
 	Boolean		assume_all_chars;/* true to allow missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
@@ -2888,6 +2889,7 @@ typedef struct _Work {
 #endif
     ScrnColors *oldColors;
     Boolean palette_changed;
+    Boolean broken_box_chars;
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
