@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.228 2017/05/29 23:19:34 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.229 2017/05/29 23:19:34 tom Exp $ */
 
 /*
  * Copyright 2001-2016,2017 by Thomas E. Dickey
@@ -29,7 +29,7 @@
  * sale, use or other dealings in this Software without prior written
  * authorization.
  *
- * Copyright 1988  The Open Group
+ * Copyright 1988  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -47,9 +47,9 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall not be
+ * Except as contained in this notice, the name of the X Consortium shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from The Open Group.
+ * in this Software without prior written authorization from the X Consortium.
  *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *

@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.139 2016/12/22 02:04:51 tom Exp $ */
+/* $XTermId: menu.h,v 1.140 2016/12/22 02:04:51 tom Exp $ */
 
 /*
  * Copyright 1999-2015,2016 by Thomas E. Dickey
@@ -30,7 +30,7 @@
  * authorization.
  *
  *
- * Copyright 1989  The Open Group
+ * Copyright 1989  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -49,10 +49,10 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall
+ * Except as contained in this notice, the name of the X Consortium shall
  * not be used in advertising or otherwise to promote the sale, use or
  * other dealings in this Software without prior written authorization
- * from The Open Group.
+ * from the X Consortium.
  *
  */
 

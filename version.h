@@ -1,7 +1,7 @@
-/* $XTermId: version.h,v 1.440 2018/01/01 16:13:30 tom Exp $ */
+/* $XTermId: version.h,v 1.441 2018/01/01 16:13:30 tom Exp $ */
 
 /*
- * Copyright 1998-2016,2017 by Thomas E. Dickey
+ * Copyright 1998-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

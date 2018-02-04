@@ -1,5 +1,6 @@
-.\" $XTermId: uxterm.man,v 1.6 2013/01/01 00:40:55 tom Exp $
+.\" $XTermId: uxterm.man,v 1.7 2013/01/01 00:40:55 tom Exp $
 .\"
+.\" Copyright 2007-2011, 2012 Thomas E. Dickey
 .\" Copyright 2001, 2004 Branden Robinson
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
