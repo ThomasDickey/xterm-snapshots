@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1517 2017/12/28 18:43:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1518 2017/12/28 18:43:58 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -30,7 +30,7 @@
  * authorization.
  *
  *
- * Copyright 1988  The Open Group
+ * Copyright 1988  X Consortium
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -48,9 +48,9 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * Except as contained in this notice, the name of The Open Group shall not be
+ * Except as contained in this notice, the name of the X Consortium shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
- * in this Software without prior written authorization from The Open Group.
+ * in this Software without prior written authorization from the X Consortium.
  *
  */
 /*

@@ -1,5 +1,6 @@
-.\" $XTermId: koi8rxterm.man,v 1.6 2013/01/01 00:43:18 tom Exp $
+.\" $XTermId: koi8rxterm.man,v 1.7 2013/01/01 00:43:18 tom Exp $
 .\"
+.\" Copyright 2007-2011, 2012 Thomas E. Dickey
 .\" Copyright 2004 Branden Robinson
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
