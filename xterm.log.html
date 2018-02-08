@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1817 2018/02/04 16:46:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.1818 2018/02/08 02:32:07 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -952,6 +952,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modified configure checks for groff and man2html, to use
+    the latter by default, but allowing mandoc as a partial
+    replacement for former.</li>
+
     <li>revisited the inconsistent copyright notices mentioned in
     <a href="#xterm_165">patch #165</a>, and eliminate the issue as
     mentioned in this <a href=
@@ -959,6 +963,8 @@
     discussion</a>.</li>
 
     <li>fix typo in this change-log (report by Sven Joachim)</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_331" id="xterm_331">Patch #331 -
