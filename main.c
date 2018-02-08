@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.810 2017/12/20 01:17:24 tom Exp $ */
+/* $XTermId: main.c,v 1.811 2018/02/08 10:14:29 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3358,6 +3358,29 @@ find_utmp(struct UTMP_STR *tofind)
 #define USE_NO_DEV_TTY 0
 #endif
 
+#if defined(HAVE_GETUSERSHELL) && defined(HAVE_ENDUSERSHELL)
+static Boolean
+validShell(const char *pathname)
+{
+    Boolean result = False;
+
+    if (validProgram(pathname)) {
+	char *q;
+
+	while ((q = getusershell()) != 0) {
+	    TRACE(("...test \"%s\"\n", q));
+	    if (!strcmp(q, pathname)) {
+		result = True;
+		break;
+	    }
+	}
+	endusershell();
+    }
+
+    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
+    return result;
+}
+#else
 static int
 same_leaf(char *a, char *b)
 {
@@ -3422,6 +3445,8 @@ validShell(const char *pathname)
 			    result = True;
 			}
 			free(r);
+			if (result)
+			    break;
 		    }
 		    p = 0;
 		}
@@ -3433,6 +3458,7 @@ validShell(const char *pathname)
     TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
     return result;
 }
+#endif
 
 static char *
 resetShell(char *oldPath)
