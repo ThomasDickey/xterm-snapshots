@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.353 2017/12/25 12:36:41 tom Exp $
+dnl $XTermId: configure.in,v 1.354 2018/02/08 10:01:03 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2016,2017 by Thomas E. Dickey
+dnl Copyright 1997-2017,2018 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -90,6 +90,8 @@ AC_TYPE_OFF_T
 ###	checks for library functions
 AC_CHECK_FUNCS( \
 	gethostname \
+	getusershell \
+	endusershell \
 	getlogin \
 	initgroups \
 	mkdtemp \
@@ -252,6 +254,7 @@ AC_CHECK_HEADERS( \
 	X11/Sunkeysym.h \
 	X11/XF86keysym.h \
 	X11/XKBlib.h \
+	X11/TranslateI.h \
 	X11/Xpoll.h \
 	X11/extensions/XKB.h \
 	)
