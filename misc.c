@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.785 2017/12/26 11:42:24 tom Exp $ */
+/* $XTermId: misc.c,v 1.786 2018/04/01 23:53:54 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4270,7 +4270,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    }
 
 	    unparseputc1(xw, ANSI_DCS);
-	    unparseputc(xw, okay ? '1' : '0');
+	    unparseputc(xw, okay ? '0' : '1');
 	    unparseputc(xw, '$');
 	    unparseputc(xw, 'r');
 	    cp = reply;
