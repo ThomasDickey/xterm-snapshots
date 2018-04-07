@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.563 2017/12/30 15:04:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.564 2018/04/07 15:39:19 tom Exp $ */
 
 /*
  * Copyright 1998-2016,2017 by Thomas E. Dickey
@@ -2653,6 +2653,7 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
     }
     XftUnlockFace(font);
 #else
+    (void) font;
     broken = True;
 #endif
 
