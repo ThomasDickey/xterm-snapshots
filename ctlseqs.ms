@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.381 2018/04/04 01:33:44 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.389 2018/04/07 01:03:51 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #332
-.ds RF 2018/04/03
+.ds RF 2018/04/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1622,7 +1622,7 @@ Save DEC Private Mode Values.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
-Window manipulation (from \fIdtterm\fP, as well as extensions).
+Window manipulation (from \fIdtterm\fP, as well as extensions by \fIxterm\fP).
 These controls may be disabled using the \fIallowWindowOps\fP resource.
 Valid values for the first (and any additional parameters) are:
   \*(Ps = \*1 \(-> De-iconify window.
@@ -1651,7 +1651,10 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 .br
 Result is
 \*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t
-  \*(Ps = \*1\*4 \(-> Report \fIxterm\fP window in pixels.
+  \*(Ps = \*1\*4 \(-> Report \fIxterm\fP window size in pixels.
+Normally \fIxterm\fP's \fIwindow\fP is larger than its \fItext area\fP,
+since it includes the frame (or decoration) applied by the
+window manager, as well as the area used by a scroll-bar.
 .br
 Result is
 \*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
@@ -1671,13 +1674,17 @@ Result is
 .br
 Result is
 \*(Os\*s\*l\*s\fIlabel\fP\*s\*(ST
+.iP
   \*(Ps = \*2\*2\*s\*;\*s\*0 \(-> Save \fIxterm\fP icon and window title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*1 \(-> Save \fIxterm\fP icon title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*2 \(-> Save \fIxterm\fP window title on stack.
   \*(Ps = \*2\*3\*s\*;\*s\*0 \(-> Restore \fIxterm\fP icon and window title from stack.
   \*(Ps = \*2\*3\*s\*;\*s\*1 \(-> Restore \fIxterm\fP icon title from stack.
   \*(Ps = \*2\*3\*s\*;\*s\*2 \(-> Restore \fIxterm\fP window title from stack.
-  \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP), VT340 and VT420. \fIxterm\fP adapts this by resizing its window.
+.iP
+  \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP), VT340 and VT420.
+.br
+\fIxterm\fP adapts this by resizing its window.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*t
@@ -3023,5 +3030,86 @@ Move the cursor to given row and column.
 Identify.
   \(-> \*(Es\*s\*/\*s\*Z (\*(``I am a VT52.\*('').
 .Ed
+.
+.Sh "Further reading"
+.LP
+The list is incomplete, because there are no
+manuals for the terminal emulators which have influenced \fIxterm\fP.
+Manuals for \fIhardware\fP terminals are more readily available than
+similarly-detailed documentation for terminal \fIemulators\fP
+such as \fIaixterm\fP, \fIcmdtool\fP, \fIdtterm\fP.
+The documentation for those programs is available only in
+less-accessible and less-detailed manual \fIpages\fP.
+.bP
+\fIECMA-35: Character Code Structure and Extension Techniques\fP
+.br
+(6th Edition, December 1994).
+.bP
+\fIECMA-48: Control Functions for Coded Character Sets\fP
+.br
+(5th Edition, June 1991).
+.bP
+\fIDEC STD 070 Video Systems Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(A-MN-ELSM070-00-0000 Rev H, December 3, 1991).
+.bP
+\fIDECscope User's Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT5X-OP-001 1975).
+.bP
+\fIVT100 Series Video Terminal Technical Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT100-TM-003, July 1982).
+.bP
+\fIVT100 User Guide\fP.
+.br
+Digital Equipment Corporation
+(EK-VT100-UG-003, June 1981).
+.bP
+\fIVT102 User Guide\fP.
+.br
+Digital Equipment Corporation
+(EK-VT102-UG-003, February 1982).
+.bP
+\fIVT220 Programmer Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT220-RM-002, August 1984).
+.bP
+\fIVT330/VT340 Programmer Reference Manual\fP
+.br
+\fIVolume 1: Text Programming\fP.
+.br
+Digital Equipment Corporation
+(EK-VT3XX-TP-001, March 1987).
+.bP
+\fIVT330/VT340 Programmer Reference Manual\fP
+.br
+\fIVolume 2: Graphics Programming\fP.
+.br
+Digital Equipment Corporation
+(EK-VT3XX-GP-001, March 1987).
+.bP
+\fIVT420 Programmer Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT420-RM-002, February 1992).
+.bP
+\fIVT520/VT525 Video Terminal\fP
+.br
+\fIProgrammer Information\fP.
+.br
+Digital Equipment Corporation
+(EK-VT520-RM A01, July 1994).
+.bP
+\fI4014 and 4014-1 Computer Display Terminal\fP
+.br
+\fIUser's Manual\fP.
+.br
+Tektronix, Inc.
+(070-1647-00, November 1979).
 .
 .if n .pl \n(nlu+1v

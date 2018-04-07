@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.521 2017/12/19 23:48:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.524 2018/04/07 01:19:28 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2731,7 +2731,9 @@ xtermCheckRect(XtermWidget xw,
 	    int right = (target.right - 1);
 
 	    ld = getLineData(screen, row);
-	    for (col = left; col <= right; ++col) {
+	    if (ld == 0)
+		continue;
+	    for (col = left; col <= right && col < ld->lineSize; ++col) {
 		if (ld->attribs[col] & CHARDRAWN) {
 		    *result += (int) ld->charData[col];
 		    if_OPT_WIDE_CHARS(screen, {

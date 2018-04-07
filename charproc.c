@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1518 2017/12/28 18:43:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1524 2018/04/07 13:57:49 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1177,6 +1177,8 @@ modified_DECNRCM(XtermWidget xw)
 	switchPtyData(screen, !enabled);
 	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
     }
+#else
+    (void) xw;
 #endif
 }
 
@@ -3623,10 +3625,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    int new_vtXX_level = GetParam(0) - 60;
 		    int case_value = zero_if_default(1);
 		    /*
-		     * VT300, VT420, VT520 manuals claim that DECSCL does a
-		     * hard reset (RIS).  VT220 manual states that it is a soft
-		     * reset.  Perhaps both are right (unlikely).  Kermit says
-		     * it's soft.
+		     * Note:
+		     *
+		     * The VT300, VT420, VT520 manuals claim that DECSCL does a
+		     * hard reset (RIS).
+		     *
+		     * Both the VT220 manual and DEC STD 070 (which documents
+		     * levels 1-4 in detail) state that it is a soft reset.
+		     *
+		     * Perhaps both sets of manuals are right (unlikely). 
+		     * Kermit says it's soft.
 		     */
 		    ReallyReset(xw, False, False);
 		    init_parser(xw, sp);
@@ -4091,16 +4099,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRQCRA:
 	    if (screen->vtXX_level >= 4) {
 		int checksum;
+		int pid;
 
 		TRACE(("CASE_DECRQCRA - Request checksum of rectangular area\n"));
 		xtermCheckRect(xw, ParamPair(0), &checksum);
 		init_reply(ANSI_DCS);
 		count = 0;
-		reply.a_param[count++] = (ParmType) GetParam(1);	/* PID */
+		checksum &= 0xffff;
+		pid = GetParam(1);
+		reply.a_param[count++] = (ParmType) pid;
 		reply.a_delim = "!~";	/* delimiter */
 		reply.a_radix[count] = 16;
 		reply.a_param[count++] = (ParmType) checksum;
 		reply.a_nparam = (ParmType) count;
+		TRACE(("...checksum(%d) = %04X\n", pid, checksum));
 		unparseseq(xw, &reply);
 	    }
 	    ResetState(sp);
@@ -5196,15 +5208,13 @@ dotext(XtermWidget xw,
 #endif
 
 	int last_col = LineMaxCol(screen, ld);
-	if (last_col > (right + 1))
-	    last_col = right + 1;
+	if (last_col > right)
+	    last_col = right;
 	this_col = last_col - screen->cur_col + 1;
-	if (this_col <= 1) {
-	    if (screen->do_wrap) {
-		screen->do_wrap = False;
-		if ((xw->flags & WRAPAROUND)) {
-		    WrapLine(xw);
-		}
+	if (screen->do_wrap) {
+	    screen->do_wrap = False;
+	    if ((xw->flags & WRAPAROUND)) {
+		WrapLine(xw);
 	    }
 	    this_col = 1;
 	}
@@ -7057,6 +7067,9 @@ unparse_end(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (screen->unparse_len) {
+	TRACE(("unparse_end %u:%s\n",
+	       screen->unparse_len,
+	       visibleIChars(screen->unparse_bfr, screen->unparse_len)));
 #ifdef VMS
 	tt_write(screen->unparse_bfr, screen->unparse_len);
 #else /* VMS */
@@ -7355,10 +7368,12 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    askedWidth = FullWidth(screen);
     }
 
-    if (rows == 0)
+    if (rows == 0) {
 	askedHeight = (Dimension) attrs.height;
-    if (cols == 0)
+    }
+    if (cols == 0) {
 	askedWidth = (Dimension) attrs.width;
+    }
 
     if (xw->misc.limit_resize > 0) {
 	Dimension high = (Dimension) (xw->misc.limit_resize * attrs.height);

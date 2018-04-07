@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1821 2018/04/02 09:19:42 tom Exp $
+  $XTermId: xterm.log.html,v 1.1823 2018/04/06 22:26:24 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -957,12 +957,19 @@
   </ul>
 
   <ul>
-    <li>fixes based on George Nachman's <code>esctest</code>
-    script:
+    <li>fixes prompted by review of George Nachman's
+    <code>esctest</code> script:
 
       <ul>
         <li>correct reversed status code for <code>DECRPSS</code>
         (see <em>VT420 Reference Manual</em>, Chapter 12).</li>
+
+        <li>add a null-pointer check and a limit-check in
+        <code>xtermCheckRect</code>.</li>
+
+        <li>correct limit-check for right-margin when processing
+        autowrapping if xterm is not built for
+        wide-characters.</li>
       </ul>
     </li>
 
