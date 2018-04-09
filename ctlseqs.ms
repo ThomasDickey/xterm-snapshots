@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.389 2018/04/07 01:03:51 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.393 2018/04/09 01:00:35 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #332
-.ds RF 2018/04/06
+.ds RF 2018/04/08
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1097,7 +1097,7 @@ and set VT100 mode.
   \*(Ps = \*4 \(-> Smooth (Slow) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Reverse Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Origin Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> Wraparound Mode (DECAWM), VT100.
+  \*(Ps = \*7 \(-> Auto-wrap Mode (DECAWM), VT100.
   \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.  This is the X10 \fIxterm\fP mouse protocol.
@@ -1212,7 +1212,7 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*4 \(-> Jump (Fast) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Normal Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM), VT100.
+  \*(Ps = \*7 \(-> No Auto-wrap Mode (DECAWM), VT100.
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Don't send Mouse X & Y on button press, \fIxterm\fP.
   \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt).
@@ -1658,6 +1658,14 @@ window manager, as well as the area used by a scroll-bar.
 .br
 Result is
 \*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
+  \*(Ps = \*1\*5 \(-> Report X display size in pixels.
+.br
+Result is
+\*(Cs\*s\*5\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
+  \*(Ps = \*1\*6 \(-> Report \fIxterm\fP character size in pixels.
+.br
+Result is
+\*(Cs\*s\*6\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
   \*(Ps = \*1\*8 \(-> Report the size of the text area in characters.
 .br
 Result is
@@ -3032,27 +3040,11 @@ Identify.
 .Ed
 .
 .Sh "Further reading"
+.Ss "Technical manuals"
 .LP
-The list is incomplete, because there are no
-manuals for the terminal emulators which have influenced \fIxterm\fP.
 Manuals for \fIhardware\fP terminals are more readily available than
 similarly-detailed documentation for terminal \fIemulators\fP
 such as \fIaixterm\fP, \fIcmdtool\fP, \fIdtterm\fP.
-The documentation for those programs is available only in
-less-accessible and less-detailed manual \fIpages\fP.
-.bP
-\fIECMA-35: Character Code Structure and Extension Techniques\fP
-.br
-(6th Edition, December 1994).
-.bP
-\fIECMA-48: Control Functions for Coded Character Sets\fP
-.br
-(5th Edition, June 1991).
-.bP
-\fIDEC STD 070 Video Systems Reference Manual\fP.
-.br
-Digital Equipment Corporation
-(A-MN-ELSM070-00-0000 Rev H, December 3, 1991).
 .bP
 \fIDECscope User's Manual\fP.
 .br
@@ -3111,5 +3103,52 @@ Digital Equipment Corporation
 .br
 Tektronix, Inc.
 (070-1647-00, November 1979).
+.Ss "Standards"
+.bP
+\fIECMA-35: Character Code Structure and Extension Techniques\fP
+.br
+(6th Edition, December 1994).
+.bP
+\fIECMA-48: Control Functions for Coded Character Sets\fP
+.br
+(5th Edition, June 1991).
+.bP
+\fIDEC STD 070 Video Systems Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(A-MN-ELSM070-00-0000 Rev H, December 3, 1991).
+.Ss "Miscellaneous"
+.LP
+A few hardware terminals survived into the 1990s only as terminal emulators.
+Documentation for these and other terminal emulators
+which have influenced \fIxterm\fP
+are generally available only in
+less-accessible and less-detailed manual pages.
+.bP
+XXX notes for cmdtool, dtterm
+.bP
+The \fIaixterm\fP manual page gives the format of the control sequence
+for foreground and background colors 8-15,
+but does not specify what those colors are.
+That is implied by the description:
+.iP
+.RS
+The aixterm command provides a standard terminal type for programs that  
+do not interact directly with Enhanced X-Windows. This command provides  
+an emulation for a VT102 terminal or a high function terminal (HFT).     
+The VT102 mode is activated by the -v flag.
+.RE
+.IP
+Unlike \fIxterm\fP, there are no resource names for the 16 colors,
+leaving the reader to assume that the mapping is hard-coded.
+The control sequences for colors 8-15 are not specified by ECMA-48,
+but rather (as done in other instances by \fIxterm\fP) chosen to
+not conflict with current or future standards.
+.bP
+XXX notes for rxvt
+.bP
+XXX notes for AT&T 610
+.bP
+XXX notes for SCO console
 .
 .if n .pl \n(nlu+1v

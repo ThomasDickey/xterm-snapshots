@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.172 2017/11/07 00:12:24 tom Exp $ */
+/* $XTermId: trace.c,v 1.174 2018/04/09 01:03:51 tom Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -630,6 +630,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		}
 		TRACE((":\n"));
 
+#if 0
 		TRACE(("  xx:"));
 		for (col = 0; col < ld->lineSize; ++col) {
 		    unsigned attrs = ld->attribs[col];
@@ -646,6 +647,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		    TRACE(("%c", ch));
 		}
 		TRACE((":\n"));
+#endif
 
 #if 0
 		TRACE(("  fg:"));

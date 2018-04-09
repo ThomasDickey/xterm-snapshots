@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.564 2018/04/07 15:39:19 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.565 2018/04/09 01:03:06 tom Exp $ */
 
 /*
- * Copyright 1998-2016,2017 by Thomas E. Dickey
+ * Copyright 1998-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

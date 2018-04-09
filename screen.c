@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.524 2018/04/07 01:19:28 tom Exp $ */
+/* $XTermId: screen.c,v 1.526 2018/04/08 20:49:16 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2825,6 +2825,19 @@ set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
     Atom atom_fullscreen = XInternAtom(dpy, prop, False);
     Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
 
+#if OPT_TRACE
+    const char *what = "?";
+    switch (operation) {
+    case _NET_WM_STATE_ADD:
+	what = "adding";
+	break;
+    case _NET_WM_STATE_REMOVE:
+	what = "removing";
+	break;
+    }
+    TRACE(("set_ewmh_hint %s %s\n", what, prop));
+#endif
+
     memset(&e, 0, sizeof(e));
     e.xclient.type = ClientMessage;
     e.xclient.message_type = atom_state;
@@ -2884,6 +2897,15 @@ probe_netwm(Display *dpy, _Xconst char *propname)
 	}
 	ldata = (long *) (void *) args;
 	for (i = 0; i < nitems; i++) {
+#if OPT_TRACE > 1
+	    char *name;
+	    if ((name = XGetAtomName(dpy, ldata[i])) != 0) {
+		TRACE(("atom[%d] = %s\n", i, name));
+		XFree(name);
+	    } else {
+		TRACE(("atom[%d] = ?\n", i));
+	    }
+#endif
 	    if ((Atom) ldata[i] == atom_fullscreen) {
 		has_capability = True;
 		break;
@@ -2916,8 +2938,9 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 {
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
-    _Xconst char *oldprop = ewmhProperty(xw->work.ewmh[0].mode);
-    _Xconst char *newprop = ewmhProperty(new_ewmh_mode);
+    int old_ewmh_mode;
+    _Xconst char *oldprop;
+    _Xconst char *newprop;
 
     int which = 0;
     Window window;
@@ -2930,9 +2953,18 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 #endif
 	window = VShellWindow(xw);
 
-    TRACE(("FullScreen %d:%s\n", new_ewmh_mode, BtoS(new_ewmh_mode)));
+    old_ewmh_mode = xw->work.ewmh[which].mode;
+    oldprop = ewmhProperty(old_ewmh_mode);
+    newprop = ewmhProperty(new_ewmh_mode);
 
-    if (new_ewmh_mode < 0 || new_ewmh_mode >= MAX_EWMH_MODE) {
+    TRACE(("FullScreen %d:%s -> %d:%s\n",
+	   old_ewmh_mode, NonNull(oldprop),
+	   new_ewmh_mode, NonNull(newprop)));
+
+    if (new_ewmh_mode == old_ewmh_mode) {
+	TRACE(("...unchanged\n"));
+	return;
+    } else if (new_ewmh_mode < 0 || new_ewmh_mode > MAX_EWMH_MODE) {
 	TRACE(("BUG: FullScreen %d\n", new_ewmh_mode));
 	return;
     } else if (new_ewmh_mode == 0) {
@@ -2947,6 +2979,7 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
     }
 
     if (xw->work.ewmh[which].allowed[new_ewmh_mode]) {
+	TRACE(("...new EWMH mode is allowed\n"));
 	if (new_ewmh_mode && !xw->work.ewmh[which].mode) {
 	    unset_resize_increments(xw);
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);

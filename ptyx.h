@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.879 2017/12/30 14:42:05 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.882 2018/04/09 01:03:30 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1222,6 +1222,10 @@ typedef enum {
     , ewGetWinState = 11
     , ewGetWinPosition = 13
     , ewGetWinSizePixels = 14
+#if OPT_MAXIMIZE
+    , ewGetScreenSizePixels = 15
+    , ewGetCharSizePixels = 16
+#endif
     , ewGetWinSizeChars = 18
 #if OPT_MAXIMIZE
     , ewGetScreenSizeChars = 19
@@ -2870,8 +2874,8 @@ typedef struct _Work {
 #define MAX_EWMH_DATA (1 + OPT_TEK4014)
     struct {
 	int mode;		/* fullscreen, etc.		*/
-	Boolean checked[MAX_EWMH_MODE];
-	Boolean allowed[MAX_EWMH_MODE];
+	Boolean checked[MAX_EWMH_MODE + 1];
+	Boolean allowed[MAX_EWMH_MODE + 1];
     } ewmh[MAX_EWMH_DATA];
 #endif
 #if OPT_NUM_LOCK
