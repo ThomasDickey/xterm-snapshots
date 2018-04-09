@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1823 2018/04/06 22:26:24 tom Exp $
+  $XTermId: xterm.log.html,v 1.1826 2018/04/09 00:43:11 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -957,6 +957,10 @@
   </ul>
 
   <ul>
+    <li>add control sequences for querying the X display size and
+    the character size, both in pixels to help eliminate some of
+    the constants in <code>esctest</code>.</li>
+
     <li>fixes prompted by review of George Nachman's
     <code>esctest</code> script:
 
@@ -970,6 +974,12 @@
         <li>correct limit-check for right-margin when processing
         autowrapping if xterm is not built for
         wide-characters.</li>
+
+        <li>repair logic in <code>RIS</code> to reset 132-column
+        mode when an escape sequence is used to enable
+        80/132-column switching.</li>
+
+        <li>correct array-limit for EWMH working state.</li>
       </ul>
     </li>
 

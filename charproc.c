@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1524 2018/04/07 13:57:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1526 2018/04/08 22:02:35 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6774,6 +6774,41 @@ window_ops(XtermWidget xw)
 	}
 	break;
 
+#if OPT_MAXIMIZE
+    case ewGetScreenSizePixels:	/* Report the screen's size, in Pixels */
+	if (AllowWindowOps(xw, ewGetScreenSizePixels)) {
+	    TRACE(("...get screen size in pixels\n"));
+	    (void) QueryMaximize(xw, &root_width, &root_height);
+	    init_reply(ANSI_CSI);
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 5;
+	    reply.a_param[1] = (ParmType) root_height;
+	    reply.a_param[2] = (ParmType) root_width;
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+    case ewGetCharSizePixels:	/* Report the font's size, in pixel */
+	if (AllowWindowOps(xw, ewGetScreenSizeChars)) {
+	    TRACE(("...get font size in pixels\n"));
+	    TRACE(("...using font size %dx%d\n",
+		   FontHeight(screen),
+		   FontWidth(screen)));
+	    init_reply(ANSI_CSI);
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 6;
+	    reply.a_param[1] = (ParmType) FontHeight(screen);
+	    reply.a_param[2] = (ParmType) FontWidth(screen);
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+#endif
+
     case ewGetWinSizeChars:	/* Report the text's size in characters */
 	if (AllowWindowOps(xw, ewGetWinSizeChars)) {
 	    TRACE(("...get window size in characters\n"));
@@ -11057,6 +11092,11 @@ static void
 ReallyReset(XtermWidget xw, Bool full, Bool saved)
 {
     TScreen *screen = TScreenOf(xw);
+    IFlags saveflags = xw->flags;
+
+    TRACE(("ReallyReset %s, %s\n",
+	   full ? "hard" : "soft",
+	   saved ? "clear savedLines" : "keep savedLines"));
 
     if (!XtIsRealized((Widget) xw) || (CURRENT_EMU() != (Widget) xw)) {
 	Bell(xw, XkbBI_MinorError, 0);
@@ -11195,22 +11235,10 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	screen->paste_literal_nl = OFF;
 #endif /* OPT_READLINE */
 
-	if (screen->c132 && (xw->flags & IN132COLUMNS)) {
-	    Dimension reqWidth = (Dimension) (80 * FontWidth(screen)
-					      + 2 * screen->border
-					      + ScrollbarWidth(screen));
-	    Dimension reqHeight = (Dimension) (FontHeight(screen)
-					       * MaxRows(screen)
-					       + 2 * screen->border);
-	    Dimension replyWidth;
-	    Dimension replyHeight;
-
+	if (screen->c132 && (saveflags & IN132COLUMNS)) {
 	    TRACE(("Making resize-request to restore 80-columns %dx%d\n",
-		   reqHeight, reqWidth));
-	    REQ_RESIZE((Widget) xw,
-		       reqWidth,
-		       reqHeight,
-		       &replyWidth, &replyHeight);
+		   MaxRows(screen), MaxCols(screen)));
+	    RequestResize(xw, MaxRows(screen), 80, True);
 	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
 	    if (xtermAppPending())

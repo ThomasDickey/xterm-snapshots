@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #332 (2018/04/06)
+               updated for XTerm Patch #332 (2018/04/08)
 
 
 
@@ -582,7 +582,7 @@ CSI ? Pm h
             Ps = 4  -> Smooth (Slow) Scroll (DECSCLM), VT100.
             Ps = 5  -> Reverse Video (DECSCNM), VT100.
             Ps = 6  -> Origin Mode (DECOM), VT100.
-            Ps = 7  -> Wraparound Mode (DECAWM), VT100.
+            Ps = 7  -> Auto-wrap Mode (DECAWM), VT100.
             Ps = 8  -> Auto-repeat Keys (DECARM), VT100.
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
           tion Mouse Tracking.  This is the X10 xterm mouse protocol.
@@ -704,7 +704,7 @@ CSI ? Pm l
             Ps = 4  -> Jump (Fast) Scroll (DECSCLM), VT100.
             Ps = 5  -> Normal Video (DECSCNM), VT100.
             Ps = 6  -> Normal Cursor Mode (DECOM), VT100.
-            Ps = 7  -> No Wraparound Mode (DECAWM), VT100.
+            Ps = 7  -> No Auto-wrap Mode (DECAWM), VT100.
             Ps = 8  -> No Auto-repeat Keys (DECARM), VT100.
             Ps = 9  -> Don't send Mouse X & Y on button press, xterm.
             Ps = 1 0  -> Hide toolbar (rxvt).
@@ -1118,6 +1118,10 @@ CSI Ps ; Ps ; Ps t
           the frame (or decoration) applied by the window manager, as
           well as the area used by a scroll-bar.
           Result is CSI  4  ;  height ;  width t
+            Ps = 1 5  -> Report X display size in pixels.
+          Result is CSI  5  ;  height ;  width t
+            Ps = 1 6  -> Report xterm character size in pixels.
+          Result is CSI  6  ;  height ;  width t
             Ps = 1 8  -> Report the size of the text area in characters.
           Result is CSI  8  ;  height ;  width t
             Ps = 1 9  -> Report the size of the screen in characters.
@@ -2255,22 +2259,12 @@ ESC Z     Identify.
 
 Further reading
 
-The list is incomplete, because there are no manuals for the terminal
-emulators which have influenced xterm.  Manuals for hardware terminals
-are more readily available than similarly-detailed documentation for
-terminal emulators such as aixterm, cmdtool, dtterm.  The documentation
-for those programs is available only in less-accessible and less-
-detailed manual pages.
 
-o   ECMA-35: Character Code Structure and Extension Techniques
-    (6th Edition, December 1994).
+Technical manuals
 
-o   ECMA-48: Control Functions for Coded Character Sets
-    (5th Edition, June 1991).
-
-o   DEC STD 070 Video Systems Reference Manual.
-    Digital Equipment Corporation (A-MN-ELSM070-00-0000 Rev H, December
-    3, 1991).
+Manuals for hardware terminals are more readily available than simi-
+larly-detailed documentation for terminal emulators such as aixterm,
+cmdtool, dtterm.
 
 o   DECscope User's Manual.
     Digital Equipment Corporation (EK-VT5X-OP-001 1975).
@@ -2305,3 +2299,48 @@ o   VT520/VT525 Video Terminal
 o   4014 and 4014-1 Computer Display Terminal
     User's Manual.
     Tektronix, Inc.  (070-1647-00, November 1979).
+
+
+Standards
+
+o   ECMA-35: Character Code Structure and Extension Techniques
+    (6th Edition, December 1994).
+
+o   ECMA-48: Control Functions for Coded Character Sets
+    (5th Edition, June 1991).
+
+o   DEC STD 070 Video Systems Reference Manual.
+    Digital Equipment Corporation (A-MN-ELSM070-00-0000 Rev H, December
+    3, 1991).
+
+
+Miscellaneous
+
+A few hardware terminals survived into the 1990s only as terminal emula-
+tors.  Documentation for these and other terminal emulators which have
+influenced xterm are generally available only in less-accessible and
+less-detailed manual pages.
+
+o   XXX notes for cmdtool, dtterm
+
+o   The aixterm manual page gives the format of the control sequence for
+    foreground and background colors 8-15, but does not specify what
+    those colors are.  That is implied by the description:
+
+        The aixterm command provides a standard terminal type for pro-
+        grams that do not interact directly with Enhanced X-Windows.
+        This command provides an emulation for a VT102 terminal or a
+        high function terminal (HFT).  The VT102 mode is activated by
+        the -v flag.
+
+    Unlike xterm, there are no resource names for the 16 colors, leaving
+    the reader to assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to not conflict with
+    current or future standards.
+
+o   XXX notes for rxvt
+
+o   XXX notes for AT&T 610
+
+o   XXX notes for SCO console
