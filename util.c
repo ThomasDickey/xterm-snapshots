@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.728 2017/12/29 19:03:33 tom Exp $ */
+/* $XTermId: util.c,v 1.731 2018/04/10 01:11:41 tom Exp $ */
 
 /*
  * Copyright 1999-2016,2017 by Thomas E. Dickey
@@ -726,21 +726,26 @@ void
 xtermColIndex(XtermWidget xw, Bool toLeft)
 {
     TScreen *screen = TScreenOf(xw);
-    int margin;
 
     if (toLeft) {
-	margin = ScrnLeftMargin(xw);
-	if (screen->cur_col > margin) {
+	if (ScrnIsColInMargins(screen, screen->cur_col)) {
+	    if (screen->cur_col == ScrnLeftMargin(xw)) {
+		xtermColScroll(xw, 1, False, screen->cur_col);
+	    } else {
+		CursorBack(xw, 1);
+	    }
+	} else {
 	    CursorBack(xw, 1);
-	} else if (screen->cur_col == margin) {
-	    xtermColScroll(xw, 1, False, screen->cur_col);
 	}
     } else {
-	margin = ScrnRightMargin(xw);
-	if (screen->cur_col < margin) {
+	if (ScrnIsColInMargins(screen, screen->cur_col)) {
+	    if (screen->cur_col == ScrnRightMargin(xw)) {
+		xtermColScroll(xw, 1, True, ScrnLeftMargin(xw));
+	    } else {
+		CursorForward(xw, 1);
+	    }
+	} else {
 	    CursorForward(xw, 1);
-	} else if (screen->cur_col == margin) {
-	    xtermColScroll(xw, 1, True, ScrnLeftMargin(xw));
 	}
     }
 }
@@ -1130,6 +1135,7 @@ InsertLine(XtermWidget xw, int n)
 
     TRACE(("InsertLine count=%d\n", n));
 
+    set_cur_col(screen, ScrnLeftMargin(xw));
     if (screen->cursor_state)
 	HideCursor();
 
@@ -1215,6 +1221,7 @@ DeleteLine(XtermWidget xw, int n)
 
     TRACE(("DeleteLine count=%d\n", n));
 
+    set_cur_col(screen, ScrnLeftMargin(xw));
     if (screen->cursor_state)
 	HideCursor();
 
@@ -4521,11 +4528,13 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
+#define if_OPT_DIRECT_COLOR2_else(cond, test, stmt) \
+	if_OPT_DIRECT_COLOR2(cond, test, stmt else)
+
 #if OPT_ISO_COLORS
-    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
+    if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
 	result = (Pixel) color;
-    } else
-    )
+    })
 	if ((attr_flags & BG_COLOR) &&
 	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
@@ -4543,10 +4552,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
 
 #if OPT_ISO_COLORS
-    if_OPT_DIRECT_COLOR2(TScreenOf(xw), (attr_flags & ATR_DIRECT_FG), {
+    if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_FG), {
 	result = (Pixel) color;
-    } else
-    )
+    })
 	if ((attr_flags & FG_COLOR) &&
 	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);

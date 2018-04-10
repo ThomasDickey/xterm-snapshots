@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1526 2018/04/08 22:02:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1527 2018/04/09 21:21:59 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2658,14 +2658,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_IL:
 	    TRACE(("CASE_IL - insert line\n"));
-	    set_cur_col(screen, ScrnLeftMargin(xw));
 	    InsertLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DL:
 	    TRACE(("CASE_DL - delete line\n"));
-	    set_cur_col(screen, ScrnLeftMargin(xw));
 	    DeleteLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;

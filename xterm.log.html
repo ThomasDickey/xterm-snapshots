@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1826 2018/04/09 00:43:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.1830 2018/04/10 01:15:15 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -980,6 +980,23 @@
         80/132-column switching.</li>
 
         <li>correct array-limit for EWMH working state.</li>
+
+        <li>further improve limit-checks versus assert's (see
+        <a href="#xterm_315">patch #315</a>).</li>
+
+        <li>correct order of check-margins and move-to-left margin
+        for <code>DL</code> and <code>IL</code>.</li>
+
+        <li>modify reverse-wrap to pay attention to top/bottom
+        margins as it has done for left/right margins since
+        <a href="#xterm_279">patch #279</a>.</li>
+
+        <li style="list-style: none; display: inline">
+          <p>modify behavior of <code>DECFI</code> and
+          <code>DECBI</code> to not index the screen at the
+          left/right edge of the display unless those happen to be
+          the left/right margins.</p>
+        </li>
       </ul>
     </li>
 
