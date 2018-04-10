@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.526 2018/04/08 20:49:16 tom Exp $ */
+/* $XTermId: screen.c,v 1.527 2018/04/09 09:03:17 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1121,9 +1121,6 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     TRACE(("ScrnInsertLine(last %d, where %d, n %d, size %d)\n",
 	   last, where, n, size));
 
-    if ((int) n > last)
-	n = (unsigned) last;
-
     assert(where >= 0);
     assert(last >= where);
 
@@ -1132,6 +1129,10 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 
     /* save n lines at bottom */
     ScrnClearLines(xw, sb, (last -= (int) n - 1), n, size);
+    if (last < 0) {
+	TRACE(("...remainder of screen is blank\n"));
+	return;
+    }
 
     /*
      * WARNING, overlapping copy operation.  Move down lines (pointers).
