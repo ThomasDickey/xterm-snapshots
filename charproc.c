@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1527 2018/04/09 21:21:59 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1528 2018/04/11 00:47:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3225,8 +3225,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 27;
 		    reply.a_param[count++] = 1;		/* North American */
-		    if (screen->vtXX_level >= 4) {	/* VT420 */
+		    if (screen->vtXX_level >= 3) {	/* VT320 */
 			reply.a_param[count++] = 0;	/* ready */
+		    }
+		    if (screen->vtXX_level >= 4) {	/* VT420 */
 			reply.a_param[count++] = 0;	/* LK201 */
 		    }
 		}

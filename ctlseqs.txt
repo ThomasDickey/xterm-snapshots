@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #332 (2018/04/08)
+               updated for XTerm Patch #332 (2018/04/10)
 
 
 
@@ -613,7 +613,7 @@ CSI ? Pm h
             Ps = 6 7  -> Backarrow key sends backspace (DECBKM), VT340,
           VT420.
             Ps = 6 9  -> Enable left and right margin mode (DECLRMM),
-          VT340, VT420 and up.
+          VT420 and up.
             Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
@@ -959,8 +959,8 @@ CSI ? Ps n
             Ps = 2 6  -> Report Keyboard status as
           CSI ? 2 7 ; 1 ; 0 ; 0 n  (North American).
 
-          The last two parameters apply to VT400 & up, and denote key-
-          board ready and LK01 respectively.
+          The last two parameters apply to VT300 & up (keyboard ready)
+          and VT400 & up (LK01) respectively.
 
             Ps = 5 3  -> Report Locator status as CSI ? 5 3 n  Locator
           available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
@@ -1009,7 +1009,7 @@ CSI Ps ; Ps " p
             Ps = 2  -> 8-bit controls.
 
 CSI Ps $ p
-          Request ANSI mode (DECRQM).  For VT300 and up, reply is
+          Request ANSI mode (DECRQM).  For VT300 and up, reply DECRPM is
             CSI Ps; Pm$ y
           where Ps is the mode number as in SM/RM, and Pm is the mode
           value:
@@ -1020,7 +1020,8 @@ CSI Ps $ p
             4 - permanently reset
 
 CSI ? Ps$ p
-          Request DEC private mode (DECRQM).  For VT300 and up, reply is
+          Request DEC private mode (DECRQM).  For VT300 and up, reply
+          DECRPM is
             CSI ? Ps; Pm$ y
           where Ps is the mode number as in DECSET/DECSET, Pm is the
           mode value as in the ANSI DECRQM.
@@ -2265,6 +2266,16 @@ Technical manuals
 Manuals for hardware terminals are more readily available than simi-
 larly-detailed documentation for terminal emulators such as aixterm,
 cmdtool, dtterm.
+
+DEC's manuals did not provide a comprehensive comparison of the features
+in different models.  Peter Sichel's Host Interface Functions Checklist
+spreadsheet is useful for noting which model introduced a given feature
+(although there are a few apparent errors such as DECRQSS cited for
+VT320 whereas the manual omits it).
+
+On the other hand, sometimes the manuals disagree.  For example, DEC's
+standard document for terminals says that DECSCL performs a soft reset
+(DECSTR), while the VT420 manual says it does a hard reset (RIS).
 
 o   DECscope User's Manual.
     Digital Equipment Corporation (EK-VT5X-OP-001 1975).
