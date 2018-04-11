@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1830 2018/04/10 01:15:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.1832 2018/04/11 01:23:27 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -965,9 +965,6 @@
     <code>esctest</code> script:
 
       <ul>
-        <li>correct reversed status code for <code>DECRPSS</code>
-        (see <em>VT420 Reference Manual</em>, Chapter 12).</li>
-
         <li>add a null-pointer check and a limit-check in
         <code>xtermCheckRect</code>.</li>
 
@@ -991,12 +988,13 @@
         margins as it has done for left/right margins since
         <a href="#xterm_279">patch #279</a>.</li>
 
-        <li style="list-style: none; display: inline">
-          <p>modify behavior of <code>DECFI</code> and
-          <code>DECBI</code> to not index the screen at the
-          left/right edge of the display unless those happen to be
-          the left/right margins.</p>
-        </li>
+        <li>modify behavior of <code>DECFI</code> and
+        <code>DECBI</code> to not index the screen at the
+        left/right edge of the display unless those happen to be
+        the left/right margins.</li>
+
+        <li>add case for VT320 DSR response for keyboard
+        status.</li>
       </ul>
     </li>
 

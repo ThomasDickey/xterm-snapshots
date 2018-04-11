@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.393 2018/04/09 01:00:35 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.396 2018/04/11 01:00:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #332
-.ds RF 2018/04/08
+.ds RF 2018/04/10
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1122,7 +1122,7 @@ This is normally disabled by a compile-time option.
 This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM), VT320.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
-  \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT340, VT420 and up.
+  \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.  This is the X11 \fIxterm\fP mouse protocol.
@@ -1473,7 +1473,8 @@ or
 \*(Cs\*?\*2\*7\*;\*1\*;\*0\*;\*0\*n (North American).
 .iP
 .IP
-The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 respectively.
+The last two parameters apply to VT300 & up (keyboard ready) and
+VT400 & up (LK01) respectively.
 .iP
   \*(Ps = \*5\*3 \(-> Report Locator status as
 \*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or
@@ -1533,7 +1534,7 @@ Valid values for the second parameter:
 .IP \\*(Cs\\*(Ps\\*s\\*$\\*p
 .br
 Request ANSI mode (DECRQM).
-For VT300 and up, reply is
+For VT300 and up, reply DECRPM is
 .br
   \*(Cs\*(Ps\*;\*(Pm\*$\*y
 .br
@@ -1549,7 +1550,7 @@ and \*(Pm is the mode value:
 .iP
 .IP \\*(Cs\\*?\\*(Ps\\*$\\*p
 Request DEC private mode (DECRQM).
-For VT300 and up, reply is
+For VT300 and up, reply DECRPM is
 .br
   \*(Cs\*?\*(Ps\*;\*(Pm\*$\*y
 .br
@@ -3045,6 +3046,18 @@ Identify.
 Manuals for \fIhardware\fP terminals are more readily available than
 similarly-detailed documentation for terminal \fIemulators\fP
 such as \fIaixterm\fP, \fIcmdtool\fP, \fIdtterm\fP.
+.LP
+DEC's manuals did not provide a comprehensive comparison of the features
+in different models.
+Peter Sichel's \fIHost Interface Functions Checklist\fP
+spreadsheet is useful for noting
+which model introduced a given feature (although there are a few apparent
+errors such as \fBDECRQSS\fP cited for VT320 whereas the manual omits it).
+.LP
+On the other hand, sometimes the manuals disagree.
+For example, DEC's standard document for terminals says
+that DECSCL performs a \fIsoft\fP reset (DECSTR),
+while the VT420 manual says it does a \fIhard\fP reset (RIS).
 .bP
 \fIDECscope User's Manual\fP.
 .br
