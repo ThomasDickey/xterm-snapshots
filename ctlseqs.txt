@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #332 (2018/04/10)
+               updated for XTerm Patch #332 (2018/04/13)
 
 
 
@@ -2267,15 +2267,43 @@ Manuals for hardware terminals are more readily available than simi-
 larly-detailed documentation for terminal emulators such as aixterm,
 cmdtool, dtterm.
 
-DEC's manuals did not provide a comprehensive comparison of the features
-in different models.  Peter Sichel's Host Interface Functions Checklist
-spreadsheet is useful for noting which model introduced a given feature
-(although there are a few apparent errors such as DECRQSS cited for
-VT320 whereas the manual omits it).
+However long, the technical manuals have problems:
 
-On the other hand, sometimes the manuals disagree.  For example, DEC's
-standard document for terminals says that DECSCL performs a soft reset
-(DECSTR), while the VT420 manual says it does a hard reset (RIS).
+o   DEC's manuals did not provide a comprehensive comparison of the fea-
+    tures in different model.
+
+    Peter Sichel's Host Interface Functions Checklist spreadsheet is
+    useful for noting which model introduced a given feature (although
+    there are a few apparent errors such as the DECRQSS feature cited
+    for VT320 whereas the technical manual omits it).
+
+o   Sometimes the manuals disagree.  For example, DEC's standard docu-
+    ment (DEC STD 070) for terminals says that DECSCL performs a soft
+    reset (DECSTR), while the VT420 manual says it does a hard reset
+    (RIS).
+
+o   Sometimes the manuals are simply incorrect.  For example, testing a
+    DEC VT420 in 1996 showed that the documented code for a valid or
+    invalid response to DECRQSS was reversed.  At the time, DEC STD 070
+    was not available, but it also agrees with vttest.
+
+o   Not all details are clear even in DEC STD 070 (which is more than
+    twice the length of the VT520 programmer's reference manual), but as
+    an internal standards document, it is more likely to describe the
+    actual behavior of DEC's terminals than the more polished user's
+    guides.
+
+    The vttest program checks for the value that a real VT420 would
+    send, just as a reminder not to rely solely on the documentation.
+
+That said, here are technical manuals which have been used for this doc-
+ument.  Not all were available initially.  In August 1996 for instance,
+the technical references were limited to EK-VT220-HR-002 and EK-
+VT420-UG.002.  Shortly after, Richard Shuford sent a copy of EK-VT3XX-
+TP-001.  Still later (beginning in 2003), Paul Williams' vt100.net site
+provided EK-VT102-UG-003, EK-VT220-RM-002, EK-VT420-RM-002, EK-VT520-RM
+A01, EK-VT100-TM-003, and EK-VT102-UG-003.  The remaining documents were
+found on the bitsavers site.
 
 o   DECscope User's Manual.
     Digital Equipment Corporation (EK-VT5X-OP-001 1975).
@@ -2289,6 +2317,9 @@ o   VT100 User Guide.
 o   VT102 User Guide.
     Digital Equipment Corporation (EK-VT102-UG-003, February 1982).
 
+o   VT220 Programmer Pocket Guide.
+    Digital Equipment Corporation (EK-VT220-HR-002, July 1984).
+
 o   VT220 Programmer Reference Manual.
     Digital Equipment Corporation (EK-VT220-RM-002, August 1984).
 
@@ -2299,6 +2330,11 @@ o   VT330/VT340 Programmer Reference Manual
 o   VT330/VT340 Programmer Reference Manual
     Volume 2: Graphics Programming.
     Digital Equipment Corporation (EK-VT3XX-GP-001, March 1987).
+
+o   Installing and Using
+    The VT420 Video Terminal
+    (North American Model).
+    Digital Equipment Corporation (EK-VT420-UG.002, February 1990).
 
 o   VT420 Programmer Reference Manual.
     Digital Equipment Corporation (EK-VT420-RM-002, February 1992).
@@ -2332,7 +2368,58 @@ tors.  Documentation for these and other terminal emulators which have
 influenced xterm are generally available only in less-accessible and
 less-detailed manual pages.
 
-o   XXX notes for cmdtool, dtterm
+o   Xterm supports control sequences for manipulating its window which
+    were implemented by Sun's cmdtool/shelltool programs.  Those pro-
+    grams ran in the OPEN LOOK environment introduced in XXX.
+
+    Later, in 1995, OPEN LOOK was abandoned in favor of CDE.  The CDE
+    terminal emulator dtterm implemented those controls, with a couple
+    of additions.
+
+    Starting in July 1996, xterm implemented those (based on the dtterm
+    manual pages) and further extended the group of window controls.
+
+    There were two sets of controls (CSI Ps[; Pm; Pm]t , and OSC
+    PstextST ) implemented by cmdtool, documented in appendix E of both
+    PHIGS Programming Manual (1992), and the unpublished X Window System
+    User's Guide (OPEN LOOK Edition) (1995).  The CDE program kept
+    those, and added a few new ones.
+
+    Code         Sun   CDE   xterm   Description
+    -----------------------------------------------------------------
+    CSI 1 t      yes   yes    yes    de-iconify
+    CSI 2 t      yes   yes    yes    iconify
+    CSI 3 t      yes   yes    yes    move window to pixel-position
+    CSI 4 t      yes   yes    yes    resize window in pixels
+    CSI 5 t      yes   yes    yes    raise window to front of stack
+    CSI 6 t      yes   yes    yes    raise window to back of stack
+    CSI 7 t      yes   yes    yes    refresh window
+    CSI 8 t      yes   yes    yes    resize window in chars
+    CSI 9 t       -     -     yes    maximize/unmaximize window
+    CSI 1 0 t     -     -     yes    to/from full-screen
+    CSI 1 1 t    yes   yes    yes    report if window is iconified
+    CSI 1 2 t     -     -      -     -
+    CSI 1 3 t    yes   yes    yes    report window position
+    CSI 1 4 t    yes   yes    yes    report window size in pixels
+    CSI 1 5 t     -     -     yes    report X display size in pixels
+    CSI 1 6 t     -     -     yes    report character cell in pixels
+    CSI 1 7 t     -     -      -     -
+    CSI 1 8 t    yes   yes    yes    report window size in chars
+    CSI 1 9 t     -     -     yes    report window size in pixels
+    CSI 2 0 t     -    yes    yes    report icon label
+    CSI 2 1 t     -    yes    yes    report window title
+    CSI 2 2 t     -     -     yes    save window/icon title
+    CSI 2 3 t     -     -     yes    restore window/icon title
+    CSI 2 4 t     -     -     yes    resize window (DECSLPP)
+    OSC 1 ST     yes   yes    yes    set window and icon title
+    OSC 2 ST      -     -     yes    set icon label
+    OSC 3 ST      -     -     yes    set window title
+    OSC I ST     yes   yes     -     set icon to file
+    OSC L ST     yes   yes     -     set icon label
+
+    Besides the Sun-derived OSC controls for setting window title and
+    icon label, dtterm also supported the xterm controls for the same
+    feature.
 
 o   The aixterm manual page gives the format of the control sequence for
     foreground and background colors 8-15, but does not specify what

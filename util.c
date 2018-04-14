@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.731 2018/04/10 01:11:41 tom Exp $ */
+/* $XTermId: util.c,v 1.732 2018/04/10 01:11:41 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

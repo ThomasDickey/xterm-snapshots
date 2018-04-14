@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1528 2018/04/11 00:47:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1529 2018/04/12 00:56:35 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4097,7 +4097,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECRQCRA:
-	    if (screen->vtXX_level >= 4) {
+	    if (screen->vtXX_level >= 4 && AllowWindowOps(xw, ewGetChecksum)) {
 		int checksum;
 		int pid;
 
@@ -7939,10 +7939,13 @@ VTInitialize(Widget wrequest,
 	,DATA(GetWinTitle)
 	,DATA(PushTitle)
 	,DATA(PopTitle)
+	/* this item uses all remaining numbers in the sequence */
 	,DATA(SetWinLines)
+	/* starting at this point, numbers do not apply */
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
+	,DATA(GetChecksum)
 	,DATA_END
     };
 #undef DATA

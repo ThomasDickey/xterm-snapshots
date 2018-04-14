@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.396 2018/04/11 01:00:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.406 2018/04/14 01:25:48 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #332
-.ds RF 2018/04/10
+.ds RF 2018/04/13
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3047,17 +3047,56 @@ Manuals for \fIhardware\fP terminals are more readily available than
 similarly-detailed documentation for terminal \fIemulators\fP
 such as \fIaixterm\fP, \fIcmdtool\fP, \fIdtterm\fP.
 .LP
+However long, the technical manuals have problems:
+.bP
 DEC's manuals did not provide a comprehensive comparison of the features
-in different models.
+in different model.
+.IP
 Peter Sichel's \fIHost Interface Functions Checklist\fP
 spreadsheet is useful for noting
 which model introduced a given feature (although there are a few apparent
-errors such as \fBDECRQSS\fP cited for VT320 whereas the manual omits it).
-.LP
-On the other hand, sometimes the manuals disagree.
-For example, DEC's standard document for terminals says
-that DECSCL performs a \fIsoft\fP reset (DECSTR),
+errors such as the \fBDECRQSS\fP feature cited for VT320
+whereas the technical manual omits it).
+.bP
+Sometimes the manuals disagree.
+For example, DEC's standard document (DEC STD 070) for terminals says
+that \fBDECSCL\fP performs a \fIsoft\fP reset (DECSTR),
 while the VT420 manual says it does a \fIhard\fP reset (RIS).
+.bP
+Sometimes the manuals are simply incorrect.
+For example, testing a DEC VT420 in 1996 showed that the documented
+code for a valid or invalid response to \fBDECRQSS\fP was reversed.
+At the time, DEC STD 070 was not available,
+but it also agrees with \fIvttest\fP.
+.bP
+Not all details are clear even in DEC STD 070
+(which is more than twice the length of the
+VT520 programmer's reference manual),
+but as an internal standards document,
+it is more likely to describe the actual behavior of DEC's terminals
+than the more polished user's guides.
+.IP
+The \fIvttest\fP program checks for the value that a real VT420 would send,
+just as a reminder not to rely solely on the documentation.
+.LP
+That said, here are technical manuals which have been used for this document.
+Not all were available initially.
+In August 1996 for instance, the technical references were
+limited to
+EK-VT220-HR-002 and
+EK-VT420-UG.002.
+Shortly after,
+Richard Shuford sent a copy of
+EK-VT3XX-TP-001.
+Still later (beginning in 2003), Paul Williams' vt100.net site
+provided 
+EK-VT102-UG-003,
+EK-VT220-RM-002,
+EK-VT420-RM-002,
+EK-VT520-RM A01,
+EK-VT100-TM-003, and
+EK-VT102-UG-003.
+The remaining documents were found on the bitsavers site.
 .bP
 \fIDECscope User's Manual\fP.
 .br
@@ -3079,6 +3118,11 @@ Digital Equipment Corporation
 Digital Equipment Corporation
 (EK-VT102-UG-003, February 1982).
 .bP
+\fIVT220 Programmer Pocket Guide\fP.
+.br
+Digital Equipment Corporation
+(EK-VT220-HR-002, July 1984).
+.bP
 \fIVT220 Programmer Reference Manual\fP.
 .br
 Digital Equipment Corporation
@@ -3097,6 +3141,15 @@ Digital Equipment Corporation
 .br
 Digital Equipment Corporation
 (EK-VT3XX-GP-001, March 1987).
+.bP
+\fIInstalling and Using\fP
+.br
+\fIThe VT420 Video Terminal\fP
+.br
+\fI(North American Model)\fP.
+.br
+Digital Equipment Corporation
+(EK-VT420-UG.002, February 1990).
 .bP
 \fIVT420 Programmer Reference Manual\fP.
 .br
@@ -3138,7 +3191,64 @@ which have influenced \fIxterm\fP
 are generally available only in
 less-accessible and less-detailed manual pages.
 .bP
-XXX notes for cmdtool, dtterm
+\fIXterm\fP supports control sequences for manipulating its \fIwindow\fP
+which were implemented by Sun's cmdtool/shelltool programs.
+Those programs ran in the \fIOPEN LOOK\fP environment introduced in XXX.
+.IP
+Later, in 1995, \fIOPEN LOOK\fP was abandoned in favor of \fICDE\fP.
+The \fICDE\fP terminal emulator \fIdtterm\fP implemented those controls,
+with a couple of additions.
+.IP
+Starting in July 1996,
+\fIxterm\fP implemented those (based on the \fIdtterm\fP manual pages)
+and further extended the group of window controls.
+.IP
+There were two sets of controls
+(\*(Cs\*(Ps[\*;\*(Pm\*;\*(Pm]\*t,
+and \*(Os\*(Ps\fItext\fP\*(ST) implemented
+by \fIcmdtool\fP, documented in appendix E of both
+\fIPHIGS Programming Manual\fP (1992), and the unpublished
+\fIX Window System User's Guide (OPEN LOOK Edition)\fP (1995).
+The \fICDE\fP program kept those,
+and added a few new ones.
+.TS
+l l l l l
+_ _ _ _ _
+l c c c l.
+\fBCode\fR	\fBSun\fR	\fBCDE\fR	\fIxterm\fP	\fIDescription\fP
+\*(Cs\*1\*t	yes	yes	yes	de-iconify
+\*(Cs\*2\*t	yes	yes	yes	iconify
+\*(Cs\*3\*t	yes	yes	yes	move window to pixel-position
+\*(Cs\*4\*t	yes	yes	yes	resize window in pixels
+\*(Cs\*5\*t	yes	yes	yes	raise window to front of stack
+\*(Cs\*6\*t	yes	yes	yes	raise window to back of stack
+\*(Cs\*7\*t	yes	yes	yes	refresh window
+\*(Cs\*8\*t	yes	yes	yes	resize window in chars
+\*(Cs\*9\*t	-	-	yes	maximize/unmaximize window
+\*(Cs\*1\*0\*t	-	-	yes	to/from full-screen
+\*(Cs\*1\*1\*t	yes	yes	yes	report if window is iconified
+\*(Cs\*1\*2\*t	-	-	-	-
+\*(Cs\*1\*3\*t	yes	yes	yes	report window position
+\*(Cs\*1\*4\*t	yes	yes	yes	report window size in pixels
+\*(Cs\*1\*5\*t	-	-	yes	report X display size in pixels
+\*(Cs\*1\*6\*t	-	-	yes	report character cell in pixels
+\*(Cs\*1\*7\*t	-	-	-	-
+\*(Cs\*1\*8\*t	yes	yes	yes	report window size in chars
+\*(Cs\*1\*9\*t	-	-	yes	report window size in pixels
+\*(Cs\*2\*0\*t	-	yes	yes	report icon label
+\*(Cs\*2\*1\*t	-	yes	yes	report window title
+\*(Cs\*2\*2\*t	-	-	yes	save window/icon title
+\*(Cs\*2\*3\*t	-	-	yes	restore window/icon title
+\*(Cs\*2\*4\*t	-	-	yes	resize window (DECSLPP)
+\*(Os\*1\*(ST	yes	yes	yes	set window and icon title
+\*(Os\*2\*(ST	-	-	yes	set icon label
+\*(Os\*3\*(ST	-	-	yes	set window title
+\*(Os\*I\*(ST	yes	yes	-	set icon to file
+\*(Os\*L\*(ST	yes	yes	-	set icon label
+.TE
+.br
+Besides the Sun-derived OSC controls for setting window title and icon label,
+\fIdtterm\fP also supported the \fIxterm\fP controls for the same feature.
 .bP
 The \fIaixterm\fP manual page gives the format of the control sequence
 for foreground and background colors 8-15,

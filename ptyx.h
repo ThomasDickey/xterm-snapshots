@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.882 2018/04/09 01:03:30 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.883 2018/04/12 00:59:34 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1239,6 +1239,7 @@ typedef enum {
     , ewSetXprop
     , ewGetSelection
     , ewSetSelection
+    , ewGetChecksum
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
