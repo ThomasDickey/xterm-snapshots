@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.72 2018/04/10 00:11:42 tom Exp $ */
+/* $XTermId: cursor.c,v 1.73 2018/04/10 00:11:42 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2018 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
