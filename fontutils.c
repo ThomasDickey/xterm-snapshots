@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.565 2018/04/09 01:03:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.566 2018/04/15 19:45:09 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2532,6 +2532,7 @@ trace_xft_line_drawing(TScreen *screen, XftFont *font, FT_Face face)
 #endif
 #endif
 
+#if OPT_BOX_CHARS
 static void
 setBrokenBoxChars(XtermWidget xw, Bool state)
 {
@@ -2539,6 +2540,10 @@ setBrokenBoxChars(XtermWidget xw, Bool state)
     TScreenOf(xw)->broken_box_chars = (Boolean) state;
     update_font_boxchars();
 }
+
+#else
+#define setBrokenBoxChars(xw, state)	/* nothing */
+#endif
 
 /*
  * Check if the line-drawing characters do not fill the bounding box.  If so,
@@ -2657,10 +2662,12 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
     broken = True;
 #endif
 
+#if OPT_BOX_CHARS
     if (broken) {
 	TRACE(("Xft line-drawing would leave gaps\n"));
 	setBrokenBoxChars(xw, True);
     }
+#endif
 }
 
 /*
@@ -2763,9 +2770,11 @@ setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 	} else {
 	    TRACE(("setRenderFontsize %s unchanged\n", tag));
 	}
+#if OPT_BOX_CHARS
 	if (!screen->broken_box_chars && (tag == 0)) {
 	    linedrawing_gaps(xw, font);
 	}
+#endif
     }
 }
 #endif
