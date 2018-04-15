@@ -21,7 +21,8 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #332 (2018/04/13)
+               updated for XTerm Patch #332 (2018/04/15)
+
 
 
 
@@ -39,6 +40,7 @@ Pm   A multiple numeric parameter composed of any number of single
      ues for the parameters are listed with Ps .
 
 Pt   A text parameter composed of printable characters.
+
 
 Control Bytes, Characters, and Sequences
 
@@ -92,6 +94,7 @@ o   Some controls (such as OSC ) introduce a string mode, which is ended
     string.  However, xterm has a resource setting brokenLinuxOSC to
     allow recovery from applications which rely upon malformed palette
     sequences used by the Linux console.
+
 
 C1 (8-Bit) Control Characters
 
@@ -152,6 +155,7 @@ ESC _
 
 
 These control characters are used in the vtXXX emulation.
+
 
 VT100 Mode
 
@@ -1458,6 +1462,7 @@ Privacy Message
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not
           be printable characters.
 
+
 Alt and Meta Keys
 
 Many keyboards have keys labeled "Alt".  Few have keys labeled "Meta".
@@ -1507,6 +1512,7 @@ This assumes altIsNotMeta is set:
        Alt-x      | ON             | ON              | ESC  x
        Alt+Meta-x | ON             | ON              | ESC  x
        -----------+----------------+-----------------+------------
+
 
 
 PC-Style Function Keys
@@ -1645,6 +1651,7 @@ For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 If the alwaysUseMods resource is set, the Meta modifier also is recog-
 nized, making parameters 9 through 16.
 
+
 VT220-Style Function Keys
 
 However, xterm is most useful as a DEC VT102 or VT220 emulator.  Set the
@@ -1713,6 +1720,7 @@ access these keys by Control/F1 for F13, etc.
                        ---------+-----------------
 
 
+
 VT52-Style Function Keys
 
 A VT52 does not have function keys, but it does have a numeric keypad
@@ -1758,6 +1766,7 @@ The keypad is similar:
                   -------------+----------+-------------
 
 
+
 Sun-Style Function Keys
 
 The xterm program provides support for Sun keyboards more directly, by a
@@ -1769,10 +1778,12 @@ Only function keys are altered; keypad and cursor keys are the same.
 The emulation responds identically.  See the xterm-sun terminfo entry
 for details.
 
+
 HP-Style Function Keys
 
 Similarly, xterm can be compiled to support HP keyboards.  See the
 xterm-hp terminfo entry for details.
+
 
 The Alternate Screen Buffer
 
@@ -1800,6 +1811,7 @@ ply disable the switching.  They add other features such as clearing the
 display for the same reason: to make the details of switching indepen-
 dent of the application that requests the switch.
 
+
 Bracketed Paste Mode
 
 When bracketed paste mode is set, pasted text is bracketed with control
@@ -1808,6 +1820,7 @@ in text.  When bracketed paste mode is set, the program will receive:
    ESC [ 2 0 0 ~ ,
 followed by the pasted text, followed by
    ESC [ 2 0 1 ~ .
+
 
 Title Modes
 
@@ -1838,6 +1851,7 @@ manageable (and constrained), for use in shell scripts, xterm has an
 optional feature which decodes the string from hexadecimal (for setting
 titles) or for encoding the title into hexadecimal when querying the
 value.
+
 
 Mouse Tracking
 
@@ -2067,6 +2081,7 @@ URXVT (1015)
           sons, the 1015 control is not recommended; it is not an
           improvement over 1005.
 
+
 Sixel Graphics
 
 If xterm is configured as VT240, VT241, VT330, VT340 or VT382 using the
@@ -2098,6 +2113,7 @@ DCS Pa; Pb; Ph q  Ps..Ps ST
             Ph -> horizontal grid size (ignored).
             Ps -> sixel data
 
+
 ReGIS Graphics
 
 If xterm is configured as VT125, VT240, VT241, VT330 or VT340 using the
@@ -2124,6 +2140,7 @@ DCS Pm p Pr..Pr ST
             Pm = 1 -> start new command, use fullscreen mode.
             Pm = 2 -> resume command, use command display mode.
             Pm = 3 -> start new command, use command display mode.
+
 
 Tektronix 4014 Mode
 
@@ -2220,6 +2237,7 @@ RS        Incremental Plot Mode (Ctrl-^).
 
 US        Alpha Mode (Ctrl-_).
 
+
 VT52 Mode
 
 Parameters for cursor movement are at the end of the ESC Y  escape
@@ -2258,6 +2276,7 @@ ESC Y Ps Ps
 ESC Z     Identify.
             -> ESC  /  Z  ("I am a VT52.").
 
+
 Further reading
 
 
@@ -2265,7 +2284,7 @@ Technical manuals
 
 Manuals for hardware terminals are more readily available than simi-
 larly-detailed documentation for terminal emulators such as aixterm,
-cmdtool, dtterm.
+shelltool, dtterm.
 
 However long, the technical manuals have problems:
 
@@ -2284,20 +2303,20 @@ o   Sometimes the manuals disagree.  For example, DEC's standard docu-
 
 o   Sometimes the manuals are simply incorrect.  For example, testing a
     DEC VT420 in 1996 showed that the documented code for a valid or
-    invalid response to DECRQSS was reversed.  At the time, DEC STD 070
-    was not available, but it also agrees with vttest.
+    invalid response to DECRQSS was reversed.
+
+    The test results were incorporated into vttest program.  At the
+    time, DEC STD 070 was not available, but it also agrees with vttest.
 
 o   Not all details are clear even in DEC STD 070 (which is more than
-    twice the length of the VT520 programmer's reference manual), but as
-    an internal standards document, it is more likely to describe the
-    actual behavior of DEC's terminals than the more polished user's
-    guides.
+    twice the length of the VT520 programmer's reference manual, and
+    almost three times longer than the VT420 reference manual).  How-
+    ever, as an internal standards document, DEC STD 070 is more likely
+    to describe the actual behavior of DEC's terminals than the more
+    polished user's guides.
 
-    The vttest program checks for the value that a real VT420 would
-    send, just as a reminder not to rely solely on the documentation.
-
-That said, here are technical manuals which have been used for this doc-
-ument.  Not all were available initially.  In August 1996 for instance,
+That said, here are technical manuals which have been used in developing
+xterm.  Not all were available initially.  In August 1996 for instance,
 the technical references were limited to EK-VT220-HR-002 and EK-
 VT420-UG.002.  Shortly after, Richard Shuford sent a copy of EK-VT3XX-
 TP-001.  Still later (beginning in 2003), Paul Williams' vt100.net site
@@ -2350,6 +2369,11 @@ o   4014 and 4014-1 Computer Display Terminal
 
 Standards
 
+The DEC terminal family (VT100 through VT525) is upward-compatible,
+using standards plus extensions, e.g., "private modes".  Not all com-
+monly-used features are standard.  For example, scrolling regions are
+not found in ECMA-48.
+
 o   ECMA-35: Character Code Structure and Extension Techniques
     (6th Edition, December 1994).
 
@@ -2369,21 +2393,38 @@ influenced xterm are generally available only in less-accessible and
 less-detailed manual pages.
 
 o   Xterm supports control sequences for manipulating its window which
-    were implemented by Sun's cmdtool/shelltool programs.  Those pro-
-    grams ran in the OPEN LOOK environment introduced in XXX.
+    were implemented by Sun's shelltool program.  This was part of Sun-
+    View (SunOS 3.0, 1986).  The change-notes for xterm's resize program
+    in X10.4 (1986) mention its use of these "Sun tty emulation escape
+    sequences" for resizing the window.  The X10.4 xterm program recog-
+    nized these sequences for resizing the terminal, except for the
+    iconfig/deiconfy pair.  SunView also introduced the SIGWINCH signal,
+    used by the X10.4 xterm and mentioned in its CHANGES file:
 
-    Later, in 1995, OPEN LOOK was abandoned in favor of CDE.  The CDE
-    terminal emulator dtterm implemented those controls, with a couple
-    of additions.
+        The window size is passed to the operating system via TIOCSWINSZ
+        (4.3) or TIOCSSIZE (sun).  A SIGWINCH siganl is sent if the
+        vt102 window is resized.
 
-    Starting in July 1996, xterm implemented those (based on the dtterm
-    manual pages) and further extended the group of window controls.
+    While support for the Sun control-sequences remained in resize, the
+    next release of xterm (X11R1 in 1987) omitted the code for inter-
+    preting them.
+
+    Later, the SunView program was adapted for the OPEN LOOK environment
+    introduced 1988-1990.
+
+    Still later, in 1995, OPEN LOOK was abandoned in favor of CDE.  The
+    CDE terminal emulator dtterm implemented those controls, with a cou-
+    ple of additions.
+
+    Starting in July 1996, xterm re-implemented those control sequences
+    (based on the dtterm manual pages) and further extended the group of
+    window controls.
 
     There were two sets of controls (CSI Ps[; Pm; Pm]t , and OSC
-    PstextST ) implemented by cmdtool, documented in appendix E of both
-    PHIGS Programming Manual (1992), and the unpublished X Window System
-    User's Guide (OPEN LOOK Edition) (1995).  The CDE program kept
-    those, and added a few new ones.
+    PstextST ) implemented by shelltool, documented in appendix E of
+    both PHIGS Programming Manual (1992), and the unpublished X Window
+    System User's Guide (OPEN LOOK Edition) (1995).  The CDE program
+    kept those, and added a few new ones.
 
     Code         Sun   CDE   xterm   Description
     -----------------------------------------------------------------
@@ -2421,9 +2462,30 @@ o   Xterm supports control sequences for manipulating its window which
     icon label, dtterm also supported the xterm controls for the same
     feature.
 
+    While the CDE source was unavailable for inspection until 2012,
+    testing the changes for vttest demonstrated that the pixel-related
+    set/get controls deal with the shell window (counting window manager
+    decorations) while character-related set/get controls deal with the
+    terminal window, like xterm.
+
+o   The control sequences for saving/restoring the cursor and for sav-
+    ing/restoring "DEC Private Mode Values" may appear to be related
+    (since the "save" controls both end with s ), but that is coinciden-
+    tal.  The latter was introduced in X10.4:
+
+        Most Dec Private mode settings can be save away internally using
+        \E[?ns, where n is the same number to set or reset the Dec Pri-
+        vate mode.  The mode can be restored using \E[?nr.  This can be
+        used in termcap for vi, for example, to turn off saving of
+        lines, but restore whatever the original state was on exit.
+
+    while the SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
+    mented long afterwards).
+
 o   The aixterm manual page gives the format of the control sequence for
     foreground and background colors 8-15, but does not specify what
-    those colors are.  That is implied by the description:
+    those colors are.  That is implied by the description's mention of
+    HFT:
 
         The aixterm command provides a standard terminal type for pro-
         grams that do not interact directly with Enhanced X-Windows.
@@ -2436,9 +2498,3 @@ o   The aixterm manual page gives the format of the control sequence for
     sequences for colors 8-15 are not specified by ECMA-48, but rather
     (as done in other instances by xterm) chosen to not conflict with
     current or future standards.
-
-o   XXX notes for rxvt
-
-o   XXX notes for AT&T 610
-
-o   XXX notes for SCO console
