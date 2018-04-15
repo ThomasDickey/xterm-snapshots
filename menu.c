@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.351 2017/12/29 20:54:09 tom Exp $ */
+/* $XTermId: menu.c,v 1.352 2018/04/15 19:45:01 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3724,11 +3724,13 @@ update_font_renderfont(void)
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(CurrentXftFont(term)));
 
+#if OPT_BOX_CHARS
     if (term->work.render_font) {
 	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
     } else {
 	TScreenOf(term)->broken_box_chars = False;
     }
+#endif
     update_font_boxchars();
 
     update_fontmenu(term);
