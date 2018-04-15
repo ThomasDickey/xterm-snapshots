@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.406 2018/04/14 01:25:48 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.415 2018/04/15 18:10:25 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #332
-.ds RF 2018/04/13
+.ds RF 2018/04/15
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -112,7 +112,7 @@
 .\" Section header
 .de Sh
 .ds RH \\$1
-.br
+.iP
 .SH
 \\$1
 ..
@@ -3045,7 +3045,7 @@ Identify.
 .LP
 Manuals for \fIhardware\fP terminals are more readily available than
 similarly-detailed documentation for terminal \fIemulators\fP
-such as \fIaixterm\fP, \fIcmdtool\fP, \fIdtterm\fP.
+such as \fIaixterm\fP, \fIshelltool\fP, \fIdtterm\fP.
 .LP
 However long, the technical manuals have problems:
 .bP
@@ -3066,20 +3066,21 @@ while the VT420 manual says it does a \fIhard\fP reset (RIS).
 Sometimes the manuals are simply incorrect.
 For example, testing a DEC VT420 in 1996 showed that the documented
 code for a valid or invalid response to \fBDECRQSS\fP was reversed.
+.IP
+The test results were incorporated into \fIvttest\fP program.
 At the time, DEC STD 070 was not available,
 but it also agrees with \fIvttest\fP.
 .bP
 Not all details are clear even in DEC STD 070
 (which is more than twice the length of the
-VT520 programmer's reference manual),
-but as an internal standards document,
-it is more likely to describe the actual behavior of DEC's terminals
+VT520 programmer's reference manual,
+and almost three times longer than the VT420 reference manual).
+However, as an internal standards document,
+DEC STD 070 is more likely to describe the actual behavior of DEC's terminals
 than the more polished user's guides.
-.IP
-The \fIvttest\fP program checks for the value that a real VT420 would send,
-just as a reminder not to rely solely on the documentation.
 .LP
-That said, here are technical manuals which have been used for this document.
+That said, here are technical manuals
+which have been used in developing \fIxterm\fP.
 Not all were available initially.
 In August 1996 for instance, the technical references were
 limited to
@@ -3089,7 +3090,7 @@ Shortly after,
 Richard Shuford sent a copy of
 EK-VT3XX-TP-001.
 Still later (beginning in 2003), Paul Williams' vt100.net site
-provided 
+provided
 EK-VT102-UG-003,
 EK-VT220-RM-002,
 EK-VT420-RM-002,
@@ -3170,6 +3171,11 @@ Digital Equipment Corporation
 Tektronix, Inc.
 (070-1647-00, November 1979).
 .Ss "Standards"
+.LP
+The DEC terminal family (VT100 through VT525) is upward-compatible,
+using standards plus \fIextensions\fP, e.g., "private modes".
+Not all commonly-used features are standard.
+For example, scrolling regions are not found in ECMA-48.
 .bP
 \fIECMA-35: Character Code Structure and Extension Techniques\fP
 .br
@@ -3192,21 +3198,41 @@ are generally available only in
 less-accessible and less-detailed manual pages.
 .bP
 \fIXterm\fP supports control sequences for manipulating its \fIwindow\fP
-which were implemented by Sun's cmdtool/shelltool programs.
-Those programs ran in the \fIOPEN LOOK\fP environment introduced in XXX.
+which were implemented by Sun's \fIshelltool\fP program.
+This was part of SunView (SunOS 3.0, 1986).
+The change-notes for \fIxterm\fP's \fIresize\fP program in X10.4 (1986)
+mention its use of these "Sun tty emulation escape sequences"
+for resizing the window.
+The X10.4 \fIxterm\fP program recognized these sequences for resizing
+the terminal, except for the iconfig/deiconfy pair.
+SunView also introduced the \fBSIGWINCH\fP signal,
+used by the X10.4 \fIxterm\fP and mentioned in its \fICHANGES\fP file:
+.iP
+.RS
+The window size is passed to the operating system via TIOCSWINSZ (4.3) or
+TIOCSSIZE (sun).  A SIGWINCH siganl is sent if the vt102 window is resized.
+.RE
 .IP
-Later, in 1995, \fIOPEN LOOK\fP was abandoned in favor of \fICDE\fP.
+While support for the Sun control-sequences remained in \fIresize\fP,
+the next release of \fIxterm\fP (X11R1 in 1987)
+omitted the code for interpreting them.
+.IP
+Later, the SunView program was adapted for
+the \fIOPEN LOOK\fP environment introduced 1988-1990.
+.IP
+Still later, in 1995, \fIOPEN LOOK\fP was abandoned in favor of \fICDE\fP.
 The \fICDE\fP terminal emulator \fIdtterm\fP implemented those controls,
 with a couple of additions.
 .IP
 Starting in July 1996,
-\fIxterm\fP implemented those (based on the \fIdtterm\fP manual pages)
+\fIxterm\fP re-implemented those control sequences
+(based on the \fIdtterm\fP manual pages)
 and further extended the group of window controls.
 .IP
 There were two sets of controls
 (\*(Cs\*(Ps[\*;\*(Pm\*;\*(Pm]\*t,
 and \*(Os\*(Ps\fItext\fP\*(ST) implemented
-by \fIcmdtool\fP, documented in appendix E of both
+by \fIshelltool\fP, documented in appendix E of both
 \fIPHIGS Programming Manual\fP (1992), and the unpublished
 \fIX Window System User's Guide (OPEN LOOK Edition)\fP (1995).
 The \fICDE\fP program kept those,
@@ -3249,16 +3275,40 @@ l c c c l.
 .br
 Besides the Sun-derived OSC controls for setting window title and icon label,
 \fIdtterm\fP also supported the \fIxterm\fP controls for the same feature.
+.IP
+While the \fICDE\fP source was unavailable for inspection until 2012,
+testing the changes for \fIvttest\fP demonstrated that the pixel-related
+set/get controls deal with the \fIshell window\fP (counting window
+manager decorations) while character-related set/get controls deal with
+the \fIterminal window\fP,
+like \fIxterm\fP.
+.bP
+The control sequences for saving/restoring the cursor and
+for saving/restoring "DEC Private Mode Values" may appear to be
+related (since the "save" controls both end with \*(cs),
+but that is coincidental.
+The latter was introduced in X10.4:
+.iP
+.RS
+Most Dec Private mode settings can be save away internally using \\E[?ns,
+where n is the same number to set or reset the Dec Private mode.  The
+mode can be restored using \\E[?nr.  This can be used in termcap for vi, for
+example, to turn off saving of lines, but restore whatever the original
+state was on exit.
+.RE
+.IP
+while the SCOSC/SCORC pair was added in 1995 by XFree86
+(and documented long afterwards).
 .bP
 The \fIaixterm\fP manual page gives the format of the control sequence
 for foreground and background colors 8-15,
 but does not specify what those colors are.
-That is implied by the description:
+That is implied by the description's mention of \fIHFT\fP:
 .iP
 .RS
-The aixterm command provides a standard terminal type for programs that  
-do not interact directly with Enhanced X-Windows. This command provides  
-an emulation for a VT102 terminal or a high function terminal (HFT).     
+The \fIaixterm\fP command provides a standard terminal type for programs that
+do not interact directly with Enhanced X-Windows. This command provides
+an emulation for a VT102 terminal or a high function terminal (HFT).
 The VT102 mode is activated by the -v flag.
 .RE
 .IP
@@ -3267,11 +3317,5 @@ leaving the reader to assume that the mapping is hard-coded.
 The control sequences for colors 8-15 are not specified by ECMA-48,
 but rather (as done in other instances by \fIxterm\fP) chosen to
 not conflict with current or future standards.
-.bP
-XXX notes for rxvt
-.bP
-XXX notes for AT&T 610
-.bP
-XXX notes for SCO console
 .
 .if n .pl \n(nlu+1v
