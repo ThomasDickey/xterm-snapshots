@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1529 2018/04/12 00:56:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1531 2018/04/20 09:17:22 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6718,7 +6718,17 @@ window_ops(XtermWidget xw)
 	break;
     case ewFullscreenWin:	/* Fullscreen or restore */
 	if (AllowWindowOps(xw, ewFullscreenWin)) {
-	    FullScreen(xw, zero_if_default(1));
+	    switch (zero_if_default(1)) {
+	    default:
+		RequestMaximize(xw, 0);
+		break;
+	    case 1:
+		RequestMaximize(xw, 1);
+		break;
+	    case 2:
+		RequestMaximize(xw, !(screen->restore_data));
+		break;
+	    }
 	}
 	break;
 #endif
@@ -7939,9 +7949,9 @@ VTInitialize(Widget wrequest,
 	,DATA(GetWinTitle)
 	,DATA(PushTitle)
 	,DATA(PopTitle)
-	/* this item uses all remaining numbers in the sequence */
+    /* this item uses all remaining numbers in the sequence */
 	,DATA(SetWinLines)
-	/* starting at this point, numbers do not apply */
+    /* starting at this point, numbers do not apply */
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
