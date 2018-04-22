@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.732 2018/04/10 01:11:41 tom Exp $ */
+/* $XTermId: util.c,v 1.734 2018/04/22 17:49:14 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3551,10 +3551,10 @@ drawXtermText(XtermWidget xw,
 		     */
 		    if (screen->force_box_chars
 			|| screen->broken_box_chars
-			|| xtermXftMissing(xw, currFont, dec2ucs(ch))) {
+			|| xtermXftMissing(xw, currFont, dec2ucs(screen, ch))) {
 			SetMissing("case 1");
 		    } else {
-			ch = dec2ucs(ch);
+			ch = dec2ucs(screen, ch);
 			replace = True;
 		    }
 		} else if (ch >= 256) {
@@ -3564,7 +3564,7 @@ drawXtermText(XtermWidget xw,
 		     * box-code if Xft tells us that the glyph is missing.
 		     */
 		    if_OPT_WIDE_CHARS(screen, {
-			unsigned part = ucs2dec(ch);
+			unsigned part = ucs2dec(screen, ch);
 			if (xtermIsDecGraphic(part)) {
 			    if (screen->force_box_chars
 				|| screen->broken_box_chars
@@ -3823,8 +3823,8 @@ drawXtermText(XtermWidget xw,
 		if (!isMissing
 		    && TScreenOf(xw)->force_box_chars) {
 		    if (ch > 255
-			&& ucs2dec(ch) < 32) {
-			ch = ucs2dec(ch);
+			&& ucs2dec(screen, ch) < 32) {
+			ch = ucs2dec(screen, ch);
 			isMissing = True;
 		    } else if (ch < 32) {
 			isMissing = True;
@@ -3931,7 +3931,7 @@ drawXtermText(XtermWidget xw,
 
 #if OPT_BOX_CHARS
 	    if ((screen->fnt_boxes == 1) && (ch >= 256)) {
-		unsigned part = ucs2dec(ch);
+		unsigned part = ucs2dec(screen, ch);
 		if (part < 32)
 		    ch = (IChar) part;
 	    }
@@ -3978,7 +3978,8 @@ drawXtermText(XtermWidget xw,
 	    if (screen->unicode_font
 		&& (text[src] == ANSI_DEL ||
 		    text[src] < ANSI_SPA)) {
-		unsigned ni = dec2ucs((unsigned) ((text[src] == ANSI_DEL)
+		unsigned ni = dec2ucs(screen,
+				      (unsigned) ((text[src] == ANSI_DEL)
 						  ? 0
 						  : text[src]));
 		UCS2SBUF(ni);
@@ -4837,7 +4838,7 @@ systemWcwidthOk(int samplesize, int samplepass)
     int oops = 0;
 
     for (n = 21; n <= 25; ++n) {
-	wchar_t code = (wchar_t) dec2ucs((unsigned) n);
+	wchar_t code = (wchar_t) dec2ucs(NULL, (unsigned) n);
 	int system_code = wcwidth(code);
 	int intern_code = mk_wcwidth(code);
 

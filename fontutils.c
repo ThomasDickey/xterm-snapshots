@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.566 2018/04/15 19:45:09 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.569 2018/04/22 18:33:08 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -1574,7 +1574,7 @@ xtermLoadFont(XtermWidget xw,
 	if (screen->utf8_mode || screen->unicode_font) {
 	    UIntSet(screen->fnt_boxes, 2);
 	    for (ch = 1; ch < 32; ch++) {
-		unsigned n = dec2ucs(ch);
+		unsigned n = dec2ucs(screen, ch);
 		if ((n != UCS_REPL)
 		    && (n != ch)
 		    && (screen->fnt_boxes & 2)) {
@@ -3406,10 +3406,23 @@ xtermDrawBoxChar(XtermWidget xw,
 	for (n = 1; n < 32; n++) {
 	    if (xtermMissingChar(n, getNormalFont(screen, which)))
 		continue;
-	    if (dec2ucs(n) != ch)
+	    if (dec2ucs(screen, n) != ch)
 		continue;
 	    TRACE(("...use xterm-style linedrawing U+%04X ->%d\n", ch, n));
 	    ch = n;
+	    break;
+	}
+    }
+#endif
+
+#if OPT_VT52_MODE
+    if (!(screen->vtXX_level)) {
+	switch (ch) {
+	case 6:
+	    ch = 7;
+	    break;
+	default:
+	    ch = 256;
 	    break;
 	}
     }
@@ -3557,7 +3570,7 @@ xtermXftMissing(XtermWidget xw, XftFont *font, unsigned wc)
 	if (!XftGlyphExists(screen->display, font, wc)) {
 #if OPT_WIDE_CHARS
 	    TRACE2(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
-		    wc, ucs2dec(wc), dec2ucs(wc)));
+		    wc, ucs2dec(screen, wc), dec2ucs(screen, wc)));
 #else
 	    TRACE2(("xtermXftMissing %d\n", wc));
 #endif
@@ -3571,45 +3584,55 @@ xtermXftMissing(XtermWidget xw, XftFont *font, unsigned wc)
 #if OPT_WIDE_CHARS
 #define MY_UCS(ucs,dec) case ucs: result = dec; break
 unsigned
-ucs2dec(unsigned ch)
+ucs2dec(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
     if ((ch > 127)
 	&& (ch != UCS_REPL)) {
-	switch (ch) {
-	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
-	    MY_UCS(0x25c6, 1);	/* black diamond                              */
-	    MY_UCS(0x2592, 2);	/* medium shade                               */
-	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
-	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
-	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
-	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
-	    MY_UCS(0x00b0, 7);	/* degree sign                                */
-	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
-	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
-	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
-	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
-	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
-	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
-	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
-	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
-	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
-	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
-	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
-	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
-	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
-	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
-	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
-	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
-	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
-	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
-	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
-	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
-	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
-	    MY_UCS(0x2260, 29);	/* not equal to                               */
-	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
-	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
-	}
+#if OPT_VT52_MODE
+	if (screen != 0 && !(screen->vtXX_level)) {
+	    /*
+	     * Intentionally empty: it would be possible to use the built-in
+	     * line-drawing fallback in xtermDrawBoxChar(), but for testing
+	     * ncurses, this is good enough.
+	     */
+	    ;
+	} else
+#endif
+	    switch (ch) {
+		MY_UCS(0x25ae, 0);	/* black vertical rectangle           */
+		MY_UCS(0x25c6, 1);	/* black diamond                      */
+		MY_UCS(0x2592, 2);	/* medium shade                       */
+		MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation   */
+		MY_UCS(0x240c, 4);	/* symbol for form feed               */
+		MY_UCS(0x240d, 5);	/* symbol for carriage return         */
+		MY_UCS(0x240a, 6);	/* symbol for line feed               */
+		MY_UCS(0x00b0, 7);	/* degree sign                        */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                    */
+		MY_UCS(0x2424, 9);	/* symbol for newline                 */
+		MY_UCS(0x240b, 10);	/* symbol for vertical tabulation     */
+		MY_UCS(0x2518, 11);	/* box drawings light up and left     */
+		MY_UCS(0x2510, 12);	/* box drawings light down and left   */
+		MY_UCS(0x250c, 13);	/* box drawings light down and right  */
+		MY_UCS(0x2514, 14);	/* box drawings light up and right    */
+		MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+		MY_UCS(0x23ba, 16);	/* box drawings scan 1                */
+		MY_UCS(0x23bb, 17);	/* box drawings scan 3                */
+		MY_UCS(0x2500, 18);	/* box drawings light horizontal      */
+		MY_UCS(0x23bc, 19);	/* box drawings scan 7                */
+		MY_UCS(0x23bd, 20);	/* box drawings scan 9                */
+		MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+		MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+		MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+		MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+		MY_UCS(0x2502, 25);	/* box drawings light vertical        */
+		MY_UCS(0x2264, 26);	/* less-than or equal to              */
+		MY_UCS(0x2265, 27);	/* greater-than or equal to           */
+		MY_UCS(0x03c0, 28);	/* greek small letter pi              */
+		MY_UCS(0x2260, 29);	/* not equal to                       */
+		MY_UCS(0x00a3, 30);	/* pound sign                         */
+		MY_UCS(0x00b7, 31);	/* middle dot                         */
+	    }
     }
     return result;
 }
@@ -3618,44 +3641,82 @@ ucs2dec(unsigned ch)
 #define MY_UCS(ucs,dec) case dec: result = ucs; break
 
 unsigned
-dec2ucs(unsigned ch)
+dec2ucs(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
     if (xtermIsDecGraphic(ch)) {
-	switch (ch) {
-	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
-	    MY_UCS(0x25c6, 1);	/* black diamond                              */
-	    MY_UCS(0x2592, 2);	/* medium shade                               */
-	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
-	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
-	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
-	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
-	    MY_UCS(0x00b0, 7);	/* degree sign                                */
-	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
-	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
-	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
-	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
-	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
-	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
-	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
-	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
-	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
-	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
-	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
-	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
-	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
-	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
-	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
-	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
-	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
-	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
-	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
-	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
-	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
-	    MY_UCS(0x2260, 29);	/* not equal to                               */
-	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
-	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
-	}
+#if OPT_VT52_MODE
+	if (screen != 0 && !(screen->vtXX_level)) {
+	    switch (ch) {
+		MY_UCS(0x0020, 0);	/* reserved, treat as blank           */
+		MY_UCS(0x25ae, 1);	/* black vertical rectangle           */
+		MY_UCS(0x215f, 2);	/* "1/"                               */
+		MY_UCS(0x0020, 3);	/* "3/", not in Unicode, ignore       */
+		MY_UCS(0x0020, 4);	/* "5/", not in Unicode, ignore       */
+		MY_UCS(0x0020, 5);	/* "7/", not in Unicode, ignore       */
+		MY_UCS(0x00b0, 6);	/* degree sign                        */
+		MY_UCS(0x00b1, 7);	/* plus-minus sign                    */
+		MY_UCS(0x2192, 8);	/* right-arrow                        */
+		MY_UCS(0x2026, 9);	/* ellipsis                           */
+		MY_UCS(0x00f7, 10);	/* divide by                          */
+		MY_UCS(0x2193, 11);	/* down arrow                         */
+		MY_UCS(0x23ba, 12);	/* bar at scan 0                      */
+		MY_UCS(0x23ba, 13);	/* bar at scan 1                      */
+		MY_UCS(0x23bb, 14);	/* bar at scan 2                      */
+		MY_UCS(0x23bb, 15);	/* bar at scan 3                      */
+		MY_UCS(0x23bc, 16);	/* bar at scan 4                      */
+		MY_UCS(0x23bc, 17);	/* bar at scan 5                      */
+		MY_UCS(0x23bd, 18);	/* bar at scan 6                      */
+		MY_UCS(0x23bd, 19);	/* bar at scan 7                      */
+		MY_UCS(0x2080, 20);	/* subscript 0                        */
+		MY_UCS(0x2081, 21);	/* subscript 1                        */
+		MY_UCS(0x2082, 22);	/* subscript 2                        */
+		MY_UCS(0x2083, 23);	/* subscript 3                        */
+		MY_UCS(0x2084, 24);	/* subscript 4                        */
+		MY_UCS(0x2085, 25);	/* subscript 5                        */
+		MY_UCS(0x2086, 26);	/* subscript 6                        */
+		MY_UCS(0x2087, 27);	/* subscript 7                        */
+		MY_UCS(0x2088, 28);	/* subscript 8                        */
+		MY_UCS(0x2089, 29);	/* subscript 9                        */
+		MY_UCS(0x00b6, 30);	/* paragraph                          */
+		MY_UCS(0x007f, 31);	/* invalid, treat as rubout           */
+	    }
+	} else
+#endif
+	    switch (ch) {
+		MY_UCS(0x25ae, 0);	/* black vertical rectangle           */
+		MY_UCS(0x25c6, 1);	/* black diamond                      */
+		MY_UCS(0x2592, 2);	/* medium shade                       */
+		MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation   */
+		MY_UCS(0x240c, 4);	/* symbol for form feed               */
+		MY_UCS(0x240d, 5);	/* symbol for carriage return         */
+		MY_UCS(0x240a, 6);	/* symbol for line feed               */
+		MY_UCS(0x00b0, 7);	/* degree sign                        */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                    */
+		MY_UCS(0x2424, 9);	/* symbol for newline                 */
+		MY_UCS(0x240b, 10);	/* symbol for vertical tabulation     */
+		MY_UCS(0x2518, 11);	/* box drawings light up and left     */
+		MY_UCS(0x2510, 12);	/* box drawings light down and left   */
+		MY_UCS(0x250c, 13);	/* box drawings light down and right  */
+		MY_UCS(0x2514, 14);	/* box drawings light up and right    */
+		MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+		MY_UCS(0x23ba, 16);	/* box drawings scan 1                */
+		MY_UCS(0x23bb, 17);	/* box drawings scan 3                */
+		MY_UCS(0x2500, 18);	/* box drawings light horizontal      */
+		MY_UCS(0x23bc, 19);	/* box drawings scan 7                */
+		MY_UCS(0x23bd, 20);	/* box drawings scan 9                */
+		MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+		MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+		MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+		MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+		MY_UCS(0x2502, 25);	/* box drawings light vertical        */
+		MY_UCS(0x2264, 26);	/* less-than or equal to              */
+		MY_UCS(0x2265, 27);	/* greater-than or equal to           */
+		MY_UCS(0x03c0, 28);	/* greek small letter pi              */
+		MY_UCS(0x2260, 29);	/* not equal to                       */
+		MY_UCS(0x00a3, 30);	/* pound sign                         */
+		MY_UCS(0x00b7, 31);	/* middle dot                         */
+	    }
     }
     return result;
 }

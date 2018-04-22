@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.120 2017/12/14 01:28:08 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.122 2018/04/22 16:34:56 tom Exp $ */
 
 /*
- * Copyright 1998-2016,2017 by Thomas E. Dickey
+ * Copyright 1998-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -154,8 +154,8 @@ extern void xtermLoadItalics (XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS
-extern unsigned ucs2dec (unsigned);
-extern unsigned dec2ucs (unsigned);
+extern unsigned ucs2dec (TScreen * /* screen */, unsigned /* ch */);
+extern unsigned dec2ucs (TScreen * /* screen */, unsigned /* ch */);
 #endif
 
 /* *INDENT-ON* */

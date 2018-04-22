@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.415 2018/04/15 18:10:25 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.418 2018/04/22 01:05:58 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #332
-.ds RF 2018/04/15
+.ds LF Patch #333
+.ds RF 2018/04/21
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1652,14 +1652,14 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 .br
 Result is
 \*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t
-  \*(Ps = \*1\*4 \(-> Report \fIxterm\fP window size in pixels.
+  \*(Ps = \*1\*4 \(-> Report \fIxterm\fP text area size in pixels.
 Normally \fIxterm\fP's \fIwindow\fP is larger than its \fItext area\fP,
 since it includes the frame (or decoration) applied by the
 window manager, as well as the area used by a scroll-bar.
 .br
 Result is
 \*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
-  \*(Ps = \*1\*5 \(-> Report X display size in pixels.
+  \*(Ps = \*1\*5 \(-> Report size of the screen in pixels.
 .br
 Result is
 \*(Cs\*s\*5\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
@@ -3256,11 +3256,11 @@ l c c c l.
 \*(Cs\*1\*2\*t	-	-	-	-
 \*(Cs\*1\*3\*t	yes	yes	yes	report window position
 \*(Cs\*1\*4\*t	yes	yes	yes	report window size in pixels
-\*(Cs\*1\*5\*t	-	-	yes	report X display size in pixels
+\*(Cs\*1\*5\*t	-	-	yes	report screen size in pixels
 \*(Cs\*1\*6\*t	-	-	yes	report character cell in pixels
 \*(Cs\*1\*7\*t	-	-	-	-
 \*(Cs\*1\*8\*t	yes	yes	yes	report window size in chars
-\*(Cs\*1\*9\*t	-	-	yes	report window size in pixels
+\*(Cs\*1\*9\*t	-	-	yes	report screen size in chars
 \*(Cs\*2\*0\*t	-	yes	yes	report icon label
 \*(Cs\*2\*1\*t	-	yes	yes	report window title
 \*(Cs\*2\*2\*t	-	-	yes	save window/icon title
@@ -3276,12 +3276,9 @@ l c c c l.
 Besides the Sun-derived OSC controls for setting window title and icon label,
 \fIdtterm\fP also supported the \fIxterm\fP controls for the same feature.
 .IP
-While the \fICDE\fP source was unavailable for inspection until 2012,
-testing the changes for \fIvttest\fP demonstrated that the pixel-related
-set/get controls deal with the \fIshell window\fP (counting window
-manager decorations) while character-related set/get controls deal with
-the \fIterminal window\fP,
-like \fIxterm\fP.
+The \fICDE\fP source was unavailable for inspection until 2012,
+so that clarification of the details of the window operations
+relied upon \fIvttest\fP.
 .bP
 The control sequences for saving/restoring the cursor and
 for saving/restoring "DEC Private Mode Values" may appear to be
