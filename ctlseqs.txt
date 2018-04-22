@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #332 (2018/04/15)
+               updated for XTerm Patch #333 (2018/04/21)
 
 
 
@@ -1118,12 +1118,12 @@ CSI Ps ; Ps ; Ps t
           window is iconified, it returns CSI 2 t .
             Ps = 1 3  -> Report xterm window position.
           Result is CSI 3 ; x ; y t
-            Ps = 1 4  -> Report xterm window size in pixels.  Normally
-          xterm's window is larger than its text area, since it includes
-          the frame (or decoration) applied by the window manager, as
-          well as the area used by a scroll-bar.
+            Ps = 1 4  -> Report xterm text area size in pixels.  Nor-
+          mally xterm's window is larger than its text area, since it
+          includes the frame (or decoration) applied by the window man-
+          ager, as well as the area used by a scroll-bar.
           Result is CSI  4  ;  height ;  width t
-            Ps = 1 5  -> Report X display size in pixels.
+            Ps = 1 5  -> Report size of the screen in pixels.
           Result is CSI  5  ;  height ;  width t
             Ps = 1 6  -> Report xterm character size in pixels.
           Result is CSI  6  ;  height ;  width t
@@ -2442,11 +2442,11 @@ o   Xterm supports control sequences for manipulating its window which
     CSI 1 2 t     -     -      -     -
     CSI 1 3 t    yes   yes    yes    report window position
     CSI 1 4 t    yes   yes    yes    report window size in pixels
-    CSI 1 5 t     -     -     yes    report X display size in pixels
+    CSI 1 5 t     -     -     yes    report screen size in pixels
     CSI 1 6 t     -     -     yes    report character cell in pixels
     CSI 1 7 t     -     -      -     -
     CSI 1 8 t    yes   yes    yes    report window size in chars
-    CSI 1 9 t     -     -     yes    report window size in pixels
+    CSI 1 9 t     -     -     yes    report screen size in chars
     CSI 2 0 t     -    yes    yes    report icon label
     CSI 2 1 t     -    yes    yes    report window title
     CSI 2 2 t     -     -     yes    save window/icon title
@@ -2462,11 +2462,9 @@ o   Xterm supports control sequences for manipulating its window which
     icon label, dtterm also supported the xterm controls for the same
     feature.
 
-    While the CDE source was unavailable for inspection until 2012,
-    testing the changes for vttest demonstrated that the pixel-related
-    set/get controls deal with the shell window (counting window manager
-    decorations) while character-related set/get controls deal with the
-    terminal window, like xterm.
+    The CDE source was unavailable for inspection until 2012, so that
+    clarification of the details of the window operations relied upon
+    vttest.
 
 o   The control sequences for saving/restoring the cursor and for sav-
     ing/restoring "DEC Private Mode Values" may appear to be related

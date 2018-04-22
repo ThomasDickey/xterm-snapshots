@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.71 2017/11/08 01:39:21 tom Exp $ */
+/* $XTermId: charsets.c,v 1.72 2018/04/22 16:30:15 tom Exp $ */
 
 /*
- * Copyright 1998-2013,2017 by Thomas E. Dickey
+ * Copyright 1998-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -549,7 +549,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    if (seven > 0x5f && seven <= 0x7e) {
 #if OPT_WIDE_CHARS
 		if (screen->utf8_mode || screen->utf8_nrc_mode)
-		    chr = (int) dec2ucs((unsigned) (seven - 0x5f));
+		    chr = (int) dec2ucs(screen, (unsigned) (seven - 0x5f));
 		else
 #endif
 		    chr = seven - 0x5f;

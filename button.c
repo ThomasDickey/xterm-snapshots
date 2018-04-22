@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.526 2017/12/01 00:47:35 tom Exp $ */
+/* $XTermId: button.c,v 1.527 2018/04/22 17:56:33 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1257,7 +1257,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 	    } else if (value < 256) {
 		AddChar(&buffer, &used, offset, CharOf(value));
 	    } else {
-		unsigned eqv = ucs2dec(value);
+		unsigned eqv = ucs2dec(screen, value);
 		if (xtermIsDecGraphic(eqv)) {
 		    AddChar(&buffer, &used, offset, DECtoASCII(eqv));
 		} else {
