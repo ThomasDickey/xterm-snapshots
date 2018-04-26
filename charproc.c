@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1531 2018/04/20 09:17:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1535 2018/04/26 01:00:43 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3238,7 +3238,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case 55:		/* according to the VT330/VT340 Text Programming Manual */
 		TRACE(("...request locator status\n"));
 		if (sp->private_function
-		    && screen->vtXX_level >= 2) {	/* VT220 */
+		    && screen->vtXX_level >= 3) {	/* VT330 */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 50;	/* locator ready */
 #else
@@ -3249,7 +3249,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case 56:
 		TRACE(("...request locator type\n"));
 		if (sp->private_function
-		    && screen->vtXX_level >= 3) {	/* VT330 (FIXME: what about VT220?) */
+		    && screen->vtXX_level >= 3) {	/* VT330 */
 		    reply.a_param[count++] = 57;
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 1;		/* mouse */
@@ -6761,8 +6761,27 @@ window_ops(XtermWidget xw)
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 3;
-	    reply.a_param[1] = (ParmType) win_attrs.x;
-	    reply.a_param[2] = (ParmType) win_attrs.y;
+	    switch (zero_if_default(1)) {
+	    case 2:		/* report the text-window's position */
+		win_attrs.y = 0;
+		win_attrs.x = 0;
+		{
+		    Widget mw;
+		    for (mw = (Widget) xw; mw != 0; mw = XtParent(mw)) {
+			win_attrs.x += mw->core.x;
+			win_attrs.y += mw->core.y;
+			if (mw == SHELL_OF(xw))
+			    break;
+		    }
+		}
+		win_attrs.x += OriginX(screen);
+		win_attrs.y += OriginY(screen);
+		/* FALLTHRU */
+	    default:
+		reply.a_param[1] = (ParmType) win_attrs.x;
+		reply.a_param[2] = (ParmType) win_attrs.y;
+		break;
+	    }
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
@@ -6771,13 +6790,27 @@ window_ops(XtermWidget xw)
 
     case ewGetWinSizePixels:	/* Report the window's size in pixels */
 	if (AllowWindowOps(xw, ewGetWinSizePixels)) {
+	    Dimension high = Height(screen);
+	    Dimension wide = Width(screen);
+
 	    TRACE(("...get window size in pixels\n"));
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 4;
-	    reply.a_param[1] = (ParmType) Height(screen);
-	    reply.a_param[2] = (ParmType) Width(screen);
+	    switch (zero_if_default(1)) {
+	    case 2:		/* report the shell-window's size */
+		xtermGetWinAttrs(screen->display,
+				 WMFrameWindow(xw),
+				 &win_attrs);
+		high = win_attrs.height;
+		wide = win_attrs.width;
+		/* FALLTHRU */
+	    default:
+		reply.a_param[1] = (ParmType) high;
+		reply.a_param[2] = (ParmType) wide;
+		break;
+	    }
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
