@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.418 2018/04/22 01:05:58 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.419 2018/04/26 01:19:17 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #333
-.ds RF 2018/04/21
+.ds RF 2018/04/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1646,13 +1646,24 @@ Zero parameters use the display's height or width.
   \*(Ps = \*1\*0\*s\*;\*s\*1 \(-> Change to full-screen.
   \*(Ps = \*1\*0\*s\*;\*s\*2 \(-> Toggle full-screen.
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
-If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
+.br
+If the \fIxterm\fP window is non-iconified, it returns \*(Cs\*1\*t.
+.br
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*1\*3 \(-> Report \fIxterm\fP window position.
 .br
 Result is
 \*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t
+  \*(Ps = \*1\*3\*s\*;\*s\*2 \(-> Report \fIxterm\fP text-area position.
+.br
+Result is
+\*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t
   \*(Ps = \*1\*4 \(-> Report \fIxterm\fP text area size in pixels.
+.br
+Result is
+\*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
+  \*(Ps = \*1\*4\*s\*;\*s\*2 \(-> Report \fIxterm\fP window size in pixels.
+.br
 Normally \fIxterm\fP's \fIwindow\fP is larger than its \fItext area\fP,
 since it includes the frame (or decoration) applied by the
 window manager, as well as the area used by a scroll-bar.

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #333 (2018/04/21)
+               updated for XTerm Patch #333 (2018/04/25)
 
 
 
@@ -1113,13 +1113,17 @@ CSI Ps ; Ps ; Ps t
             Ps = 1 0  ;  0  -> Undo full-screen mode.
             Ps = 1 0  ;  1  -> Change to full-screen.
             Ps = 1 0  ;  2  -> Toggle full-screen.
-            Ps = 1 1  -> Report xterm window state.  If the xterm window
-          is open (non-iconified), it returns CSI 1 t .  If the xterm
-          window is iconified, it returns CSI 2 t .
+            Ps = 1 1  -> Report xterm window state.
+          If the xterm window is non-iconified, it returns CSI 1 t .
+          If the xterm window is iconified, it returns CSI 2 t .
             Ps = 1 3  -> Report xterm window position.
           Result is CSI 3 ; x ; y t
-            Ps = 1 4  -> Report xterm text area size in pixels.  Nor-
-          mally xterm's window is larger than its text area, since it
+            Ps = 1 3  ;  2  -> Report xterm text-area position.
+          Result is CSI 3 ; x ; y t
+            Ps = 1 4  -> Report xterm text area size in pixels.
+          Result is CSI  4  ;  height ;  width t
+            Ps = 1 4  ;  2  -> Report xterm window size in pixels.
+          Normally xterm's window is larger than its text area, since it
           includes the frame (or decoration) applied by the window man-
           ager, as well as the area used by a scroll-bar.
           Result is CSI  4  ;  height ;  width t
