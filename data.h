@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.131 2017/11/09 01:22:18 tom Exp $ */
+/* $XTermId: data.h,v 1.133 2018/04/27 23:47:42 tom Exp $ */
 
 /*
- * Copyright 2002-2016,2017 by Thomas E. Dickey
+ * Copyright 2002-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -218,6 +218,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_REPORT_FONTS
     Boolean reportFonts;	/* show bitmap-font information as loaded */
+#endif
+#if OPT_REPORT_ICONS
+    Boolean reportIcons;	/* show icon information as loaded */
 #endif
 #if OPT_SAME_NAME
     Boolean sameName;		/* Don't change the title or icon name if it is

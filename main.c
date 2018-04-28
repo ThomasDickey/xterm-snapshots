@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.811 2018/02/08 10:14:29 tom Exp $ */
+/* $XTermId: main.c,v 1.814 2018/04/27 22:17:23 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -892,6 +892,9 @@ static XtResource application_resources[] =
 #if OPT_REPORT_FONTS
     Bres("reportFonts", "ReportFonts", reportFonts, False),
 #endif
+#if OPT_REPORT_ICONS
+    Bres("reportIcons", "ReportIcons", reportIcons, False),
+#endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
 #endif
@@ -1036,6 +1039,9 @@ DATA("-report-charclass","*reportCClass", XrmoptionNoArg,	"on"),
 #endif
 #if OPT_REPORT_COLORS
 DATA("-report-colors",	"*reportColors", XrmoptionNoArg,	"on"),
+#endif
+#if OPT_REPORT_ICONS
+DATA("-report-icons",	"*reportIcons",	XrmoptionNoArg,		"on"),
 #endif
 #if OPT_REPORT_FONTS
 DATA("-report-fonts",	"*reportFonts", XrmoptionNoArg,		"on"),

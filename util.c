@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.734 2018/04/22 17:49:14 tom Exp $ */
+/* $XTermId: util.c,v 1.735 2018/04/26 22:43:27 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4529,14 +4529,10 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 {
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
-#define if_OPT_DIRECT_COLOR2_else(cond, test, stmt) \
-	if_OPT_DIRECT_COLOR2(cond, test, stmt else)
-
 #if OPT_ISO_COLORS
     if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
 	result = (Pixel) color;
-    })
-	if ((attr_flags & BG_COLOR) &&
+    }) if ((attr_flags & BG_COLOR) &&
 	    (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.739 2018/04/12 00:54:19 tom Exp $
+.\" $XTermId: xterm.man,v 1.740 2018/04/27 23:41:54 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1015,6 +1015,11 @@ Print a report to the standard output showing information about fonts
 which are loaded.
 This corresponds to the \fBreportFonts\fP resource.
 .TP 8
+.B \-report\-icons
+Print a report to the standard output showing information about pixmap-icons
+which are loaded.
+This corresponds to the \fBreportIcons\fP resource.
+.TP 8
 .B \-rightbar
 Force scrollbar to the right side of VT100 screen.
 .TP 8
@@ -1792,6 +1797,11 @@ The default is \*(``false\*(''.
 .B "reportFonts\fP (class\fB ReportFonts\fP)"
 If true, \fI\*n\fP will print to the standard output a summary of
 each font's metrics (size, number of glyphs, etc.), as it loads them.
+The default is \*(``false\*(''.
+.TP 8
+.B "reportIcons\fP (class\fB ReportIcons\fP)"
+If true, \fI\*n\fP will print to the standard output a summary of
+each pixmap icon as it loads them.
 The default is \*(``false\*(''.
 .TP 8
 .B "sameName\fP (class\fB SameName\fP)"

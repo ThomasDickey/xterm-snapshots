@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.787 2018/04/04 20:37:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.799 2018/04/28 00:30:09 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2994,22 +2994,20 @@ xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
 #if OPT_256_COLORS || OPT_88_COLORS
     if_OPT_ISO_COLORS(screen, {
 	if (attr & FG_COLOR) {
-	    if_OPT_DIRECT_COLOR2(screen, hasDirectFG(attr), {
+	    if_OPT_DIRECT_COLOR2_else(screen, hasDirectFG(attr), {
 		strcat(msg, ";38:2::");
 		formatDirectColor(EndOf(msg), xw, (unsigned) fg);
-	    } else
-	    )if (fg >= 16) {
+	    }) if (fg >= 16) {
 		sprintf(EndOf(msg), ";38:5:%d", fg);
 	    } else {
 		sprintf(EndOf(msg), ";%d%d", fg2SGR(fg));
 	    }
 	}
 	if (attr & BG_COLOR) {
-	    if_OPT_DIRECT_COLOR2(screen, hasDirectBG(attr), {
+	    if_OPT_DIRECT_COLOR2_else(screen, hasDirectBG(attr), {
 		strcat(msg, ";48:2::");
 		formatDirectColor(EndOf(msg), xw, (unsigned) bg);
-	    } else
-	    )if (bg >= 16) {
+	    }) if (bg >= 16) {
 		sprintf(EndOf(msg), ";48:5:%d", bg);
 	    } else {
 		sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
@@ -3675,6 +3673,18 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		    return;
 		}
 		break;
+	    } else {
+		switch (*cp) {
+		case 'I':
+		    xtermLoadIcon(xw, (char *) ++cp);
+		    return;
+		case 'l':
+		    ChangeTitle(xw, (char *) ++cp);
+		    return;
+		case 'L':
+		    ChangeIconName(xw, (char *) ++cp);
+		    return;
+		}
 	    }
 	    /* FALLTHRU */
 	case 1:
@@ -3712,7 +3722,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (xw->work.palette_changed) {
 	switch (mode) {
-	case 3:		/* change X property */
+	case 03:		/* change X property */
 	case 30:		/* Konsole (unused) */
 	case 31:		/* Konsole (unused) */
 	case 50:		/* font operations */
@@ -4796,6 +4806,24 @@ udk_lookup(XtermWidget xw, int keycode, int *len)
     return 0;
 }
 
+#if OPT_REPORT_ICONS
+void
+report_icons(const char *fmt,...)
+{
+    if (resource.reportIcons) {
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stdout, fmt, ap);
+	va_end(ap);
+#if OPT_TRACE
+	va_start(ap, fmt);
+	TraceVA(fmt, ap);
+	va_end(ap);
+#endif
+    }
+}
+#endif
+
 #ifdef HAVE_LIBXPM
 
 #ifndef PIXMAP_ROOTDIR
@@ -4808,9 +4836,8 @@ typedef struct {
 } XPM_DATA;
 
 static char *
-x_find_icon(char **work, int *state, const char *suffix)
+x_find_icon(char **work, int *state, const char *filename, const char *suffix)
 {
-    const char *filename = resource.icon_hint;
     const char *prefix = PIXMAP_ROOTDIR;
     const char *larger = "_48x48";
     char *result = 0;
@@ -4851,16 +4878,17 @@ x_find_icon(char **work, int *state, const char *suffix)
 }
 
 #if OPT_BUILTIN_XPMS
+
 static const XPM_DATA *
-BuiltInXPM(const XPM_DATA * table, Cardinal length)
+built_in_xpm(const XPM_DATA * table, Cardinal length, const char *find)
 {
-    const char *find = resource.icon_hint;
     const XPM_DATA *result = 0;
     if (!IsEmpty(find)) {
 	Cardinal n;
 	for (n = 0; n < length; ++n) {
 	    if (!x_strcasecmp(find, table[n].name)) {
 		result = table + n;
+		ReportIcons(("use builtin-icon %s\n", table[n].name));
 		break;
 	    }
 	}
@@ -4875,11 +4903,13 @@ BuiltInXPM(const XPM_DATA * table, Cardinal length)
 	    if (last != 0
 		&& !x_strncasecmp(find, base, (unsigned) (last - base))) {
 		result = table + length - 1;
+		ReportIcons(("use builtin-icon %s\n", table[0].name));
 	    }
 	}
     }
     return result;
 }
+#define BuiltInXPM(name) built_in_xpm(name, XtNumber(name), icon_hint)
 #endif /* OPT_BUILTIN_XPMS */
 
 typedef enum {
@@ -4887,20 +4917,6 @@ typedef enum {
     ,eHintNone
     ,eHintSearch
 } ICON_HINT;
-
-static ICON_HINT
-which_icon_hint(void)
-{
-    ICON_HINT result = eHintDefault;
-    if (!IsEmpty(resource.icon_hint)) {
-	if (!x_strcasecmp(resource.icon_hint, "none")) {
-	    result = eHintNone;
-	} else {
-	    result = eHintSearch;
-	}
-    }
-    return result;
-}
 #endif /* HAVE_LIBXPM */
 
 int
@@ -4918,21 +4934,28 @@ getVisualDepth(XtermWidget xw)
  * WM_ICON_SIZE should be honored if possible.
  */
 void
-xtermLoadIcon(XtermWidget xw)
+xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 {
 #ifdef HAVE_LIBXPM
     Display *dpy = XtDisplay(xw);
     Pixmap myIcon = 0;
     Pixmap myMask = 0;
     char *workname = 0;
-    ICON_HINT hint = which_icon_hint();
+    ICON_HINT hint = eHintDefault;
 #include <builtin_icons.h>
 
-    TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_hint)));
+    ReportIcons(("Load Icon (hint: %s)\n", NonNull(icon_hint)));
+    if (!IsEmpty(icon_hint)) {
+	if (!x_strcasecmp(icon_hint, "none")) {
+	    hint = eHintNone;
+	} else {
+	    hint = eHintSearch;
+	}
+    }
 
     if (hint == eHintSearch) {
 	int state = 0;
-	while (x_find_icon(&workname, &state, ".xpm") != 0) {
+	while (x_find_icon(&workname, &state, icon_hint, ".xpm") != 0) {
 	    Pixmap resIcon = 0;
 	    Pixmap shapemask = 0;
 	    XpmAttributes attributes;
@@ -4949,6 +4972,7 @@ xtermLoadIcon(XtermWidget xw)
 		myIcon = resIcon;
 		myMask = shapemask;
 		TRACE(("...success\n"));
+		ReportIcons(("found/loaded icon-file %s\n", workname));
 		break;
 	    }
 	}
@@ -4962,13 +4986,13 @@ xtermLoadIcon(XtermWidget xw)
 	char **data;
 #if OPT_BUILTIN_XPMS
 	const XPM_DATA *myData = 0;
-	myData = BuiltInXPM(mini_xterm_xpms, XtNumber(mini_xterm_xpms));
+	myData = BuiltInXPM(mini_xterm_xpms);
 	if (myData == 0)
-	    myData = BuiltInXPM(filled_xterm_xpms, XtNumber(filled_xterm_xpms));
+	    myData = BuiltInXPM(filled_xterm_xpms);
 	if (myData == 0)
-	    myData = BuiltInXPM(xterm_color_xpms, XtNumber(xterm_color_xpms));
+	    myData = BuiltInXPM(xterm_color_xpms);
 	if (myData == 0)
-	    myData = BuiltInXPM(xterm_xpms, XtNumber(xterm_xpms));
+	    myData = BuiltInXPM(xterm_xpms);
 	if (myData == 0)
 	    myData = &mini_xterm_xpms[XtNumber(mini_xterm_xpms) - 1];
 	data = (char **) myData->data;
@@ -4978,7 +5002,9 @@ xtermLoadIcon(XtermWidget xw)
 	if (XpmCreatePixmapFromData(dpy,
 				    DefaultRootWindow(dpy),
 				    data,
-				    &myIcon, &myMask, 0) != 0) {
+				    &myIcon, &myMask, 0) == 0) {
+	    ReportIcons(("loaded built-in pixmap icon\n"));
+	} else {
 	    myIcon = 0;
 	    myMask = 0;
 	}
@@ -4999,7 +5025,7 @@ xtermLoadIcon(XtermWidget xw)
 
 	    XSetWMHints(dpy, VShellWindow(xw), hints);
 	    XFree(hints);
-	    TRACE(("...loaded icon\n"));
+	    ReportIcons(("updated window-manager hints\n"));
 	}
     }
 
@@ -5056,7 +5082,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
     limit = strlen(name);
     my_attr = x_strdup(attribute);
 
-    TRACE(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
+    ReportIcons(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
 
     /*
      * Ignore titles that are too long to be plausible requests.
@@ -5096,7 +5122,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 			}
 			*temp = 0;
 			name = (char *) converted;
-			TRACE(("...converted{%s}\n", name));
+			ReportIcons(("...converted{%s}\n", name));
 		    }
 		    break;
 		}
@@ -5118,8 +5144,8 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 #endif /* OPT_SAME_NAME */
 
 	if (changed) {
-	    TRACE(("...updating %s\n", my_attr));
-	    TRACE(("...value is %s\n", name));
+	    ReportIcons(("...updating %s\n", my_attr));
+	    ReportIcons(("...value is %s\n", name));
 	    XtSetArg(args[0], my_attr, name);
 	    XtSetValues(top, args, 1);
 
@@ -5133,15 +5159,15 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 					: "_NET_WM_ICON_NAME");
 		if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
 		    if (IsSetUtf8Title(xw)) {
-			TRACE(("...updating %s\n", propname));
-			TRACE(("...value is %s\n", value));
+			ReportIcons(("...updating %s\n", propname));
+			ReportIcons(("...value is %s\n", value));
 			XChangeProperty(dpy, VShellWindow(xw), my_atom,
 					XA_UTF8_STRING(dpy), 8,
 					PropModeReplace,
 					(Char *) value,
 					(int) strlen(value));
 		    } else {
-			TRACE(("...deleting %s\n", propname));
+			ReportIcons(("...deleting %s\n", propname));
 			XDeleteProperty(dpy, VShellWindow(xw), my_atom);
 		    }
 		}

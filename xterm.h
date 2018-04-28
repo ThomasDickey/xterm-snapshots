@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.789 2017/12/26 11:37:37 tom Exp $ */
+/* $XTermId: xterm.h,v 1.793 2018/04/27 23:48:29 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1117,7 +1117,7 @@ extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
 extern void xtermEmbedWindow (Window /* winToEmbedInfo */);
-extern void xtermLoadIcon (XtermWidget /* xw */);
+extern void xtermLoadIcon (XtermWidget /* xw */, const char * /* icon_hint */);
 extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermSetWinSize (XtermWidget /* xw */);
@@ -1146,6 +1146,13 @@ extern void HandleIconify              PROTO_XT_ACTIONS_ARGS;
 extern void HandleMaximize             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRestoreSize          PROTO_XT_ACTIONS_ARGS;
 extern void RequestMaximize (XtermWidget  /* termw */, int  /* maximize */);
+#endif
+
+#if OPT_REPORT_ICONS
+extern void report_icons(const char *fmt,...) GCC_PRINTFLIKE(1,2);
+#define ReportIcons(params)	report_icons params
+#else
+#define ReportIcons(params)	TRACE(params)
 #endif
 
 #if OPT_SCROLL_LOCK

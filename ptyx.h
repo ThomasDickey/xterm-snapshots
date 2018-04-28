@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.883 2018/04/12 00:59:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.885 2018/04/26 22:43:01 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -707,6 +707,10 @@ typedef struct {
 #define OPT_REPORT_FONTS   1 /* provide "-report-fonts" option */
 #endif
 
+#ifndef OPT_REPORT_ICONS
+#define OPT_REPORT_ICONS   1 /* provide "-report-fonts" option */
+#endif
+
 #ifndef OPT_SAME_NAME
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
@@ -1353,6 +1357,9 @@ typedef enum {
 # define if_OPT_DIRECT_COLOR(screen, code) /* nothing */
 # define if_OPT_DIRECT_COLOR2(screen, test, code) /* nothing */
 #endif
+
+#define if_OPT_DIRECT_COLOR2_else(cond, test, stmt) \
+	if_OPT_DIRECT_COLOR2(cond, test, stmt else)
 
 #define COLOR_RES_NAME(root) "color" root
 
