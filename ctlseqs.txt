@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #333 (2018/04/25)
+               updated for XTerm Patch #333 (2018/04/26)
 
 
 
@@ -1326,7 +1326,7 @@ OSC Ps ; Pt ST
             Ps = 2  -> Change Window Title to Pt.
             Ps = 3  -> Set X property on top-level window.  Pt should be
           in the form "prop=value", or just "prop" to delete the prop-
-          erty
+          erty.
             Ps = 4 ; c; spec -> Change Color Number c to the color spec-
           ified by spec.  This can be a name or RGB specification as per
           XParseColor.  Any number of c/spec pairs may be given.  The
@@ -1393,10 +1393,13 @@ OSC Ps ; Pt ST
           plus or minus sign) or absolute.  A number is expected but not
           required after the sign (the default is the current entry for
           relative, zero for absolute indexing).
+
           The same rule (plus or minus sign, optional number) is used
           when querying the font.  The remainder of Pt is ignored.
+
           A font can be specified after a "#" index expression, by
           adding a space and then the font specifier.
+
           If the "TrueType Fonts" menu entry is set (the renderFont
           resource), then this control sets/queries the faceName
           resource.
@@ -1413,12 +1416,15 @@ OSC Ps ; Pt ST
           or cut buffers 0 through 7 respectively, in the order given.
           If the parameter is empty, xterm uses s 0 , to specify the
           configurable primary/clipboard selection and cut buffer 0.
+
           The second parameter, Pd, gives the selection data.  Normally
           this is a string encoded in base64.  The data becomes the new
           selection, which is then available for pasting by other appli-
           cations.
+
           If the second parameter is a ? , xterm replies to the host
           with the selection data encoded using the same protocol.
+
           If the second parameter is neither a base64 string nor ? ,
           then the selection is cleared.
 
@@ -1459,6 +1465,14 @@ OSC Ps ; Pt ST
             Ps = 1 1 7  -> Reset highlight color.
             Ps = 1 1 8  -> Reset Tektronix cursor color.
             Ps = 1 1 9  -> Reset highlight foreground color.
+
+            Ps = I ; c -> Set icon to file. Sun shelltool, CDE dtterm.
+          The file is expected to be XPM format, and uses the same
+          search logic as the iconHint resource.
+
+            Ps = l ; c -> Set window title. Sun shelltool, CDE dtterm.
+
+            Ps = L ; c -> Set icon label. Sun shelltool, CDE dtterm.
 
 
 Privacy Message
@@ -2456,11 +2470,13 @@ o   Xterm supports control sequences for manipulating its window which
     CSI 2 2 t     -     -     yes    save window/icon title
     CSI 2 3 t     -     -     yes    restore window/icon title
     CSI 2 4 t     -     -     yes    resize window (DECSLPP)
-    OSC 1 ST     yes   yes    yes    set window and icon title
-    OSC 2 ST      -     -     yes    set icon label
-    OSC 3 ST      -     -     yes    set window title
-    OSC I ST     yes   yes     -     set icon to file
-    OSC L ST     yes   yes     -     set icon label
+    OSC 0 ST      -    yes    yes    set window and icon title
+    OSC 1 ST      -    yes    yes    set icon label
+    OSC 2 ST      -    yes    yes    set window title
+    OSC 3 ST      -    n/a    yes    set X server property
+    OSC I ST     yes   yes    yes    set icon to file
+    OSC l ST     yes   yes    yes    set window title
+    OSC L ST     yes   yes    yes    set icon label
 
     Besides the Sun-derived OSC controls for setting window title and
     icon label, dtterm also supported the xterm controls for the same

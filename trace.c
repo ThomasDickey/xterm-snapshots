@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.174 2018/04/09 01:03:51 tom Exp $ */
+/* $XTermId: trace.c,v 1.175 2018/04/26 08:51:58 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -977,6 +977,9 @@ TraceXtermResources(void)
 #endif
 #if OPT_REPORT_FONTS
     XRES_B(reportFonts);
+#endif
+#if OPT_REPORT_ICONS
+    XRES_B(reportIcons);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);

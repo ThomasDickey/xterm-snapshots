@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.419 2018/04/26 01:19:17 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.423 2018/04/27 23:47:24 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #333
-.ds RF 2018/04/25
+.ds RF 2018/04/27
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1911,7 +1911,7 @@ and window title.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt.
   \*(Ps = \*3 \(-> Set X property on top-level window.
 \*(Pt should be in the form
-"\fIprop=value\fP", or just "\fIprop\fP" to delete the property
+"\fIprop=value\fP", or just "\fIprop\fP" to delete the property.
   \*(Ps = \*4\*;\fIc\fP\*;\fIspec\fP \(-> Change Color Number \fIc\fP to
 the color specified by \fIspec\fP.
 This can be a name or RGB specification as per \fIXParseColor\fP.
@@ -1983,14 +1983,14 @@ next character is a plus or minus sign) or absolute.
 A number is
 expected but not required after the sign (the default is the current
 entry for relative, zero for absolute indexing).
-.br
+.sP
 The same rule (plus or minus sign, optional number) is used when
 querying the font.
 The remainder of \*(Pt is ignored.
-.br
+.sP
 A font can be specified after a "#" index expression,
 by adding a space and then the font specifier.
-.br
+.sP
 If the "TrueType Fonts" menu entry is set (the \fBrenderFont\fP resource),
 then this control sets/queries the \fBfaceName\fP resource.
 .sP
@@ -2012,16 +2012,16 @@ or cut buffers 0 through 7 respectively,
 in the order given.
 If the parameter is empty, \fIxterm\fP uses \*(cs\*0,
 to specify the configurable primary/clipboard selection and cut buffer 0.
-.br
+.sP
 The second parameter, \*(Pd, gives the selection data.
 Normally this is a string encoded in base64.
 The data becomes the new selection,
 which is then available for pasting by other applications.
-.br
+.sP
 If the second parameter is a \*?,
 \fIxterm\fP replies to the host with the selection
 data encoded using the same protocol.
-.br
+.sP
 If the second parameter is neither a base64 string nor \*?,
 then the selection is cleared.
 .sP
@@ -2064,6 +2064,15 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*7 \(-> Reset highlight color.
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
   \*(Ps = \*1\*1\*9 \(-> Reset highlight foreground color.
+.sP
+  \*(Ps = \*I\*;\fIc\fP \(-> Set icon to file. Sun shelltool, CDE dtterm.
+.br
+The file is expected to be XPM format,
+and uses the same search logic as the \fBiconHint\fP resource.
+.sP
+  \*(Ps = \*l\*;\fIc\fP \(-> Set window title. Sun shelltool, CDE dtterm.
+.sP
+  \*(Ps = \*L\*;\fIc\fP \(-> Set icon label. Sun shelltool, CDE dtterm.
 .Ed
 .
 .Ss Privacy Message
@@ -3277,11 +3286,13 @@ l c c c l.
 \*(Cs\*2\*2\*t	-	-	yes	save window/icon title
 \*(Cs\*2\*3\*t	-	-	yes	restore window/icon title
 \*(Cs\*2\*4\*t	-	-	yes	resize window (DECSLPP)
-\*(Os\*1\*(ST	yes	yes	yes	set window and icon title
-\*(Os\*2\*(ST	-	-	yes	set icon label
-\*(Os\*3\*(ST	-	-	yes	set window title
-\*(Os\*I\*(ST	yes	yes	-	set icon to file
-\*(Os\*L\*(ST	yes	yes	-	set icon label
+\*(Os\*0\*(ST	-	yes	yes	set window and icon title
+\*(Os\*1\*(ST	-	yes	yes	set icon label
+\*(Os\*2\*(ST	-	yes	yes	set window title
+\*(Os\*3\*(ST	-	n/a	yes	set X server property
+\*(Os\*I\*(ST	yes	yes	yes	set icon to file
+\*(Os\*l\*(ST	yes	yes	yes	set window title
+\*(Os\*L\*(ST	yes	yes	yes	set icon label
 .TE
 .br
 Besides the Sun-derived OSC controls for setting window title and icon label,

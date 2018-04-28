@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1535 2018/04/26 01:00:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1538 2018/04/28 00:10:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6754,9 +6754,6 @@ window_ops(XtermWidget xw)
     case ewGetWinPosition:	/* Report the window's position */
 	if (AllowWindowOps(xw, ewGetWinPosition)) {
 	    TRACE(("...get window position\n"));
-	    xtermGetWinAttrs(screen->display,
-			     WMFrameWindow(xw),
-			     &win_attrs);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
@@ -6776,12 +6773,15 @@ window_ops(XtermWidget xw)
 		}
 		win_attrs.x += OriginX(screen);
 		win_attrs.y += OriginY(screen);
-		/* FALLTHRU */
+		break;
 	    default:
-		reply.a_param[1] = (ParmType) win_attrs.x;
-		reply.a_param[2] = (ParmType) win_attrs.y;
+		xtermGetWinAttrs(screen->display,
+				 WMFrameWindow(xw),
+				 &win_attrs);
 		break;
 	    }
+	    reply.a_param[1] = (ParmType) win_attrs.x;
+	    reply.a_param[2] = (ParmType) win_attrs.y;
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
@@ -6790,8 +6790,8 @@ window_ops(XtermWidget xw)
 
     case ewGetWinSizePixels:	/* Report the window's size in pixels */
 	if (AllowWindowOps(xw, ewGetWinSizePixels)) {
-	    Dimension high = Height(screen);
-	    Dimension wide = Width(screen);
+	    ParmType high = (ParmType) Height(screen);
+	    ParmType wide = (ParmType) Width(screen);
 
 	    TRACE(("...get window size in pixels\n"));
 	    init_reply(ANSI_CSI);
@@ -6803,12 +6803,12 @@ window_ops(XtermWidget xw)
 		xtermGetWinAttrs(screen->display,
 				 WMFrameWindow(xw),
 				 &win_attrs);
-		high = win_attrs.height;
-		wide = win_attrs.width;
+		high = (ParmType) win_attrs.height;
+		wide = (ParmType) win_attrs.width;
 		/* FALLTHRU */
 	    default:
-		reply.a_param[1] = (ParmType) high;
-		reply.a_param[2] = (ParmType) wide;
+		reply.a_param[1] = high;
+		reply.a_param[2] = wide;
 		break;
 	    }
 	    reply.a_inters = 0;
@@ -9891,7 +9891,7 @@ VTRealize(Widget w,
 #ifndef NO_ACTIVE_ICON
     if (!xw->work.active_icon)
 #endif
-	xtermLoadIcon(xw);
+	xtermLoadIcon(xw, resource.icon_hint);
 
     /*
      * Do this last, since it may change the layout via a resize.
