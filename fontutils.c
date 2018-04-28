@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.569 2018/04/22 18:33:08 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.570 2018/04/28 21:34:28 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2549,6 +2549,7 @@ setBrokenBoxChars(XtermWidget xw, Bool state)
  * Check if the line-drawing characters do not fill the bounding box.  If so,
  * they're not useful.
  */
+#if OPT_BOX_CHARS
 static void
 linedrawing_gaps(XtermWidget xw, XftFont *font)
 {
@@ -2662,13 +2663,12 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
     broken = True;
 #endif
 
-#if OPT_BOX_CHARS
     if (broken) {
 	TRACE(("Xft line-drawing would leave gaps\n"));
 	setBrokenBoxChars(xw, True);
     }
-#endif
 }
+#endif /* OPT_BOX_CHARS */
 
 /*
  * Given the Xft font metrics, determine the actual font size.  This is used

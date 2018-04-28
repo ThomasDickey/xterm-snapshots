@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.82 2017/11/07 23:03:12 Thomas.Wolff Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.83 2018/04/28 12:23:29 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -532,7 +532,7 @@ CASE_GROUND_STATE,
 /*	\		]		^		_	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SD,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
@@ -692,7 +692,7 @@ CASE_GROUND_STATE,
 /*      Udiaeresis      Yacute          Thorn           ssharp          */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SD,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,
@@ -856,7 +856,7 @@ CASE_GROUND_STATE,
 /*	\		]		^		_	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SD,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
@@ -1016,7 +1016,7 @@ CASE_GROUND_STATE,
 /*      Udiaeresis      Yacute          Thorn           ssharp          */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SD,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,

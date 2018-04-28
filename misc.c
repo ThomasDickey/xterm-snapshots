@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.799 2018/04/28 00:30:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.801 2018/04/28 21:29:40 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4769,7 +4769,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(SCREEN_FLAG(screen, paste_literal_nl));
 	    break;
 #endif /* OPT_READLINE */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:
 	    result = MdBool(screen->privatecolorregisters);
 	    break;
@@ -4944,7 +4944,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
     ICON_HINT hint = eHintDefault;
 #include <builtin_icons.h>
 
-    ReportIcons(("Load Icon (hint: %s)\n", NonNull(icon_hint)));
+    ReportIcons(("load icon (hint: %s)\n", NonNull(icon_hint)));
     if (!IsEmpty(icon_hint)) {
 	if (!x_strcasecmp(icon_hint, "none")) {
 	    hint = eHintNone;

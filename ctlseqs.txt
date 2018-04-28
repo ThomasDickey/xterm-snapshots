@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #333 (2018/04/26)
+               updated for XTerm Patch #333 (2018/04/28)
 
 
 
@@ -161,13 +161,13 @@ VT100 Mode
 
 Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals (i.e., VT220, VT320,
-VT420, VT510), as well as ISO 6429 and aixterm color controls.  The only
+VT420, VT510), as well as ECMA-48 and aixterm color controls.  The only
 VT102 feature not supported is auto-repeat, since the only way X pro-
 vides for this will affect all windows.
 
 There are additional control sequences to provide xterm-dependent func-
 tions, such as the scrollbar or window size.  Where the function is
-specified by DEC or ISO 6429, the code assigned to it is given in paren-
+specified by DEC or ECMA-48, the code assigned to it is given in paren-
 theses.
 
 The escape codes to designate and invoke character sets are specified by
@@ -430,7 +430,7 @@ CSI Ps M  Delete Ps Line(s) (default = 1) (DL).
 
 CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
 
-CSI Ps S  Scroll up Ps lines (default = 1) (SU).
+CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
 
 CSI ? Pi; Pa; Pv S
           If configured to support either Sixel Graphics or ReGIS Graph-
@@ -467,15 +467,15 @@ CSI ? Pi; Pa; Pv S
               sizes, but disallows modifying those sizes because that is
               done once, using resource-values.
           o   Graphics geometry is not necessarily the same as "window
-              size" (see the dtterm window manipulation extensions). For
-              example, xterm limits the maximum graphics geometry at
+              size" (see the dtterm window manipulation extensions).
+              For example, xterm limits the maximum graphics geometry at
               compile time (1000x1000 as of version 328) although the
               window size can be larger.
           o   While resizing a window will always change the current
               graphics geometry, the reverse is not true.  Setting
               graphics geometry does not affect the window size.
 
-CSI Ps T  Scroll down Ps lines (default = 1) (SD).
+CSI Ps T  Scroll down Ps lines (default = 1) (SD), VT420.
 
 CSI Ps ; Ps ; Ps ; Ps ; Ps T
           Initiate highlight mouse tracking.  Parameters are
@@ -494,11 +494,16 @@ CSI > Ps; Ps T
             Ps = 2  -> Do not set window/icon labels using UTF-8.
             Ps = 3  -> Do not query window/icon labels using UTF-8.
 
-          (See discussion of "Title Modes").
+          (See discussion of Title Modes).
 
 CSI Ps X  Erase Ps Character(s) (default = 1) (ECH).
 
 CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
+
+CSI Ps ^  Scroll down Ps lines (default = 1) (SD), ECMA-48.
+          This is probably an error in ECMA-48, because the standard
+          writes codes as pairs of decimal values, and this is "14" ver-
+          sus the VT420 "4".
 
 CSI Pm `  Character Position Absolute  [column] (default = [row,1])
           (HPA).
@@ -801,21 +806,21 @@ CSI ? Pm l
 CSI Pm m  Character Attributes (SGR).
             Ps = 0  -> Normal (default).
             Ps = 1  -> Bold.
-            Ps = 2  -> Faint, decreased intensity (ISO 6429).
-            Ps = 3  -> Italicized (ISO 6429).
+            Ps = 2  -> Faint, decreased intensity (ECMA-48).
+            Ps = 3  -> Italicized (ECMA-48).
             Ps = 4  -> Underlined.
             Ps = 5  -> Blink (appears as Bold in X11R6 xterm).
             Ps = 7  -> Inverse.
             Ps = 8  -> Invisible, i.e., hidden (VT300).
-            Ps = 9  -> Crossed-out characters (ISO 6429).
-            Ps = 2 1  -> Doubly-underlined (ISO 6429).
+            Ps = 9  -> Crossed-out characters (ECMA-48).
+            Ps = 2 1  -> Doubly-underlined (ECMA-48).
             Ps = 2 2  -> Normal (neither bold nor faint).
-            Ps = 2 3  -> Not italicized (ISO 6429).
+            Ps = 2 3  -> Not italicized (ECMA-48).
             Ps = 2 4  -> Not underlined.
             Ps = 2 5  -> Steady (not blinking).
             Ps = 2 7  -> Positive (not inverse).
             Ps = 2 8  -> Visible, i.e., not hidden (VT300).
-            Ps = 2 9  -> Not crossed-out (ISO 6429).
+            Ps = 2 9  -> Not crossed-out (ECMA-48).
             Ps = 3 0  -> Set foreground color to Black.
             Ps = 3 1  -> Set foreground color to Red.
             Ps = 3 2  -> Set foreground color to Green.
@@ -1087,8 +1092,16 @@ CSI ? Pm s
 CSI Ps ; Ps ; Ps t
           Window manipulation (from dtterm, as well as extensions by
           xterm).  These controls may be disabled using the allowWin-
-          dowOps resource.  Valid values for the first (and any addi-
-          tional parameters) are:
+          dowOps resource.
+
+          xterm uses Extended Window Manager Hints (EWMH) to maximize
+          the window.  Some window managers have incomplete support for
+          EWMH.  For instance, fvwm, flwm and quartz-wm advertise sup-
+          port for maximizing windows horizontally or vertically, but in
+          fact equate those to the maximize operation.
+
+          Valid values for the first (and any additional parameters)
+          are:
             Ps = 1  -> De-iconify window.
             Ps = 2  -> Iconify window.
             Ps = 3  ;  x ;  y -> Move window to [x, y].
@@ -1159,7 +1172,7 @@ CSI > Ps; Ps t
             Ps = 1  -> Query window/icon labels using hexadecimal.
             Ps = 2  -> Set window/icon labels using UTF-8.
             Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
-          cussion of "Title Modes")
+          cussion of Title Modes)
 
 CSI Ps SP t
           Set warning-bell volume (DECSWBV), VT520.
@@ -1400,7 +1413,7 @@ OSC Ps ; Pt ST
           A font can be specified after a "#" index expression, by
           adding a space and then the font specifier.
 
-          If the "TrueType Fonts" menu entry is set (the renderFont
+          If the TrueType Fonts menu entry is set (the renderFont
           resource), then this control sets/queries the faceName
           resource.
 
@@ -1668,6 +1681,32 @@ For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 
 If the alwaysUseMods resource is set, the Meta modifier also is recog-
 nized, making parameters 9 through 16.
+
+The codes used for the PC-style function keys were inspired by a feature
+of the VT510, referred to in its reference manual as DECFNK.  In the
+DECFNK scheme, codes 2-8 identify modifiers for function-keys and cur-
+sor-, editing-keypad keys.  Unlike xterm, the VT510 limits the modifiers
+which can be used with cursor- and editing-keypad keys.  Although the
+name "DECFNK" implies that it is a mode, the VT510 manual mentions it
+only as a feature, which (like xterm) interacts with the DECUDK feature.
+Unlike xterm, VT510/VT520 provide an extension to DECUDK (DECPFK and
+DECPAK) which apparently was the reason for the feature in those termi-
+nals, i.e., for identifying a programmable key rather than making it
+simple for applications to obtain modifier information.  It is not
+described in the related VT520 manual.  Neither manual was readily
+available at the time the feature was added to xterm.
+
+On the other hand, the VT510 and VT520 reference manuals do document a
+related feature.  That is its emulation of the SCO console, which is
+similar to the "xterm-sco" terminal description.  The SCO console func-
+tion-keys are less useful to applications developers than the approach
+used by xterm because
+
+o   the relationship between modifiers and the characters sent by func-
+    tion-keys is not readily apparent, and
+
+o   the scheme is not extensible, i.e., it is an ad hoc asssignment lim-
+    ited to two modifiers (shift and control).
 
 
 VT220-Style Function Keys
@@ -1983,13 +2022,19 @@ On button press, the same information as for normal tracking is gener-
 ated; xterm then waits for the program to send mouse tracking informa-
 tion.  All X events are ignored until the proper escape sequence is
 received from the pty: CSI Ps ; Ps ; Ps ; Ps ; Ps T .  The parameters
-are func, startx, starty, firstrow, and lastrow.  func is non-zero to
-initiate highlight tracking and zero to abort.  startx and starty give
-the starting x and y location for the highlighted region.  The ending
-location tracks the mouse, but will never be above row firstrow and will
-always be above row lastrow.  (The top of the screen is row 1.)  When
-the button is released, xterm reports the ending position one of two
-ways:
+are func, startx, starty, firstrow, and lastrow.
+
+o   func is non-zero to initiate highlight tracking and zero to abort.
+
+o   startx and starty give the starting x and y location for the high-
+    lighted region.
+
+o   The ending location tracks the mouse, but will never be above row
+    firstrow and will always be above row lastrow.  (The top of the
+    screen is row 1.)
+
+When the button is released, xterm reports the ending position one of
+two ways:
 
 o   if the start and end coordinates are the same locations:
     CSI t CxCy.
