@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.423 2018/04/27 23:47:24 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.430 2018/04/28 18:42:11 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #333
-.ds RF 2018/04/27
+.ds RF 2018/04/28
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -375,7 +375,7 @@ A text parameter composed of printable characters.
 .
 .Sh "Control Bytes, Characters, and Sequences"
 .LP
-ECMA-48 (aka "ISO 6429") documents C1 (8-bit) and C0 (7-bit) codes.
+ECMA-48 (aka \*(``ISO 6429\*('') documents C1 (8-bit) and C0 (7-bit) codes.
 Those are respectively codes 128 to 159 and 0 to 31.
 ECMA-48 avoids referring to these codes as characters,
 because that term is associated with \fIgraphic characters\fP.
@@ -493,13 +493,13 @@ These control characters are used in the vtXXX emulation.
 Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals
 (i.e., VT220, VT320, VT420, VT510),
-as well as ISO 6429 and \fIaixterm\fP color controls.
+as well as ECMA-48 and \fIaixterm\fP color controls.
 The only VT102 feature not supported is auto-repeat,
 since the only way X provides for this will affect all windows.
 .LP
 There are additional control sequences to provide
 \fIxterm-\fPdependent functions, such as the scrollbar or window size.
-Where the function is specified by DEC or ISO 6429, the code assigned
+Where the function is specified by DEC or ECMA-48, the code assigned
 to it is given in parentheses.
 .LP
 The escape codes to designate and invoke
@@ -774,7 +774,7 @@ The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .IP \\*(Dc\\*$\\*q\\*(Pt\\*s\\*(ST
 Request Status String (DECRQSS), VT420 and up.
 .br
-The string following the "q" is one of the following:
+The string following the \*(``q\*('' is one of the following:
   \*(c"\*q	\(-> DECSCA
   \*(c"\*p	\(-> DECSCL
   \*r		\(-> DECSTBM
@@ -793,16 +793,16 @@ for invalid requests.
 .iP
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
 Set Termcap/Terminfo Data (xterm, experimental).
-The string following the "p" is a name to use for retrieving data from
+The string following the \*(``p\*('' is a name to use for retrieving data from
 the terminal database.
-The data will be used for the "tcap" keyboard
+The data will be used for the \*(``tcap\*('' keyboard
 configuration's function- and special-keys, as well as by the
 Request Termcap/Terminfo String control.
 .
 .iP
 .IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
 Request Termcap/Terminfo String (xterm).
-The string following the "q" is a list of names
+The string following the \*(``q\*('' is a list of names
 encoded in hexadecimal (2 digits per character)
 separated by \*;
 which correspond to termcap or terminfo key names.
@@ -914,7 +914,7 @@ Delete \*(Ps Character(s) (default = 1) (DCH).
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*S
-Scroll up \*(Ps lines (default = 1) (SU).
+Scroll up \*(Ps lines (default = 1) (SU), VT420, ECMA-48.
 .
 .iP
 .IP \\*(Cs\\*?\\*(Pi\\*;\\*(Pa\\*;\\*(Pv\\*s\\*S
@@ -954,9 +954,9 @@ The current implementation allows reading the graphics sizes,
 but disallows modifying those sizes because that is done once,
 using resource-values.
 .bP
-Graphics geometry is not necessarily the same as "window
-size" (see the dtterm window manipulation extensions). For example,
-\fIxterm\fP limits the maximum graphics geometry at compile time
+Graphics geometry is not necessarily the same as \*(``window size\*(''
+(see the dtterm window manipulation extensions).
+For example, \fIxterm\fP limits the maximum graphics geometry at compile time
 (1000x1000 as of version 328)
 although the window size can be larger.
 .bP
@@ -967,7 +967,7 @@ Setting graphics geometry does not affect the window size.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*T
-Scroll down \*(Ps lines (default = 1) (SD).
+Scroll down \*(Ps lines (default = 1) (SD), VT420.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*T
@@ -978,7 +978,7 @@ See the section \fBMouse Tracking\fP.
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*T
 Reset one or more features of the title modes to the default value.
-Normally, "reset" disables the feature.
+Normally, \*(``reset\*('' disables the feature.
 It is possible to disable the ability to reset features
 by compiling a different default for the title modes into \fIxterm\fP.
 .iP
@@ -987,7 +987,7 @@ by compiling a different default for the title modes into \fIxterm\fP.
   \*(Ps = \*2 \(-> Do not set window/icon labels using UTF-8.
   \*(Ps = \*3 \(-> Do not query window/icon labels using UTF-8.
 .iP
-(See discussion of "Title Modes").
+(See discussion of \fBTitle Modes\fP).
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(XX
@@ -996,6 +996,14 @@ Erase \*(Ps Character(s) (default = 1) (ECH).
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*Z
 Cursor Backward Tabulation \*(Ps tab stops (default = 1) (CBT).
+.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\*^
+Scroll down \*(Ps lines (default = 1) (SD), ECMA-48.
+.br
+This is probably an error in ECMA-48, because the standard writes
+codes as pairs of decimal values,
+and this is \*(``14\*('' versus the VT420 \*(``4\*(''.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*`
@@ -1137,7 +1145,7 @@ This corresponds to the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
-  \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, \fIxterm\fP.
+  \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fIxterm\fP.
 This sets eighth bit of keyboard input (and enables the \fBeightBitInput\fP resource).
   \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys, \fIxterm\fP.
 This enables the \fBnumLock\fP resource.
@@ -1250,7 +1258,7 @@ This corresponds to the \fBalternateScroll\fP resource.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
-  \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key, \fIxterm\fP.
+  \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret \*(``meta\*('' key, \fIxterm\fP.
 This disables the \fBeightBitInput\fP resource.
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys, \fIxterm\fP.
 This disables the \fBnumLock\fP resource.
@@ -1293,21 +1301,21 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
 Character Attributes (SGR).
   \*(Ps = \*0 \(-> Normal (default).
   \*(Ps = \*1 \(-> Bold.
-  \*(Ps = \*2 \(-> Faint, decreased intensity (ISO 6429).
-  \*(Ps = \*3 \(-> Italicized (ISO 6429).
+  \*(Ps = \*2 \(-> Faint, decreased intensity (ECMA-48).
+  \*(Ps = \*3 \(-> Italicized (ECMA-48).
   \*(Ps = \*4 \(-> Underlined.
   \*(Ps = \*5 \(-> Blink (appears as Bold in X11R6 xterm).
   \*(Ps = \*7 \(-> Inverse.
   \*(Ps = \*8 \(-> Invisible, i.e., hidden (VT300).
-  \*(Ps = \*9 \(-> Crossed-out characters (ISO 6429).
-  \*(Ps = \*2\*1 \(-> Doubly-underlined (ISO 6429).
+  \*(Ps = \*9 \(-> Crossed-out characters (ECMA-48).
+  \*(Ps = \*2\*1 \(-> Doubly-underlined (ECMA-48).
   \*(Ps = \*2\*2 \(-> Normal (neither bold nor faint).
-  \*(Ps = \*2\*3 \(-> Not italicized (ISO 6429).
+  \*(Ps = \*2\*3 \(-> Not italicized (ECMA-48).
   \*(Ps = \*2\*4 \(-> Not underlined.
   \*(Ps = \*2\*5 \(-> Steady (not blinking).
   \*(Ps = \*2\*7 \(-> Positive (not inverse).
   \*(Ps = \*2\*8 \(-> Visible, i.e., not hidden (VT300).
-  \*(Ps = \*2\*9 \(-> Not crossed-out (ISO 6429).
+  \*(Ps = \*2\*9 \(-> Not crossed-out (ECMA-48).
   \*(Ps = \*3\*0 \(-> Set foreground color to Black.
   \*(Ps = \*3\*1 \(-> Set foreground color to Red.
   \*(Ps = \*3\*2 \(-> Set foreground color to Green.
@@ -1438,8 +1446,8 @@ can change the form of the string sent from the modified F1 key.
 Disable modifiers which may be enabled via the
 \*(Cs\*>\*(Ps\*;\*(Ps\*s\*m
 sequence.
-This corresponds to a resource value of "-1", which cannot be set with
-the other sequence.
+This corresponds to a resource value of \*(``-1\*('',
+which cannot be set with the other sequence.
 .iP
 .IP
 The parameter identifies the resource to be disabled:
@@ -1459,7 +1467,7 @@ than adding a parameter to each function key to denote the modifiers.
 Device Status Report (DSR, DEC-specific).
   \*(Ps = \*6 \(-> Report Cursor Position (DECXCPR) [row;column] as
 \*(Cs\*?\*(Ir\*s\*;\*(Ic\*s\*R
-(assumes the default page, i.e., "1").
+(assumes the default page, i.e., \*(``1\*('').
   \*(Ps = \*1\*5 \(-> Report Printer status as
 \*(Cs\*?\*1\*0\*n (ready).
 or
@@ -1625,6 +1633,13 @@ Save DEC Private Mode Values.
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
 Window manipulation (from \fIdtterm\fP, as well as extensions by \fIxterm\fP).
 These controls may be disabled using the \fIallowWindowOps\fP resource.
+.iP
+\fIxterm\fP uses \fIExtended Window Manager Hints\fP (EWMH) to maximize
+the window.  Some window managers have incomplete support for EWMH.
+For instance, \fIfvwm\fP, \fIflwm\fP and \fIquartz-wm\fP advertise
+support for maximizing windows horizontally or vertically, but
+in fact equate those to the maximize operation.
+.iP
 Valid values for the first (and any additional parameters) are:
   \*(Ps = \*1 \(-> De-iconify window.
   \*(Ps = \*2 \(-> Iconify window.
@@ -1715,7 +1730,7 @@ Each parameter enables a single feature.
   \*(Ps = \*1 \(-> Query window/icon labels using hexadecimal.
   \*(Ps = \*2 \(-> Set window/icon labels using UTF-8.
   \*(Ps = \*3 \(-> Query window/icon labels using UTF-8.
-(See discussion of "Title Modes")
+(See discussion of \fBTitle Modes\fP)
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*t
@@ -1758,7 +1773,7 @@ Parameters are [top;left;bottom;right].
 Defines the coordinates of a filter rectangle and activates it.
 Anytime the locator is detected outside of the filter rectangle,
 an outside rectangle event is generated and the rectangle is disabled.
-Filter rectangles are always treated as "one-shot" events.
+Filter rectangles are always treated as \*(``one-shot\*('' events.
 Any parameters that are omitted default to the current locator position.
 If all parameters are omitted, any locator motion will be reported.
 DECELR always cancels any prevous rectangle definition.
@@ -1767,7 +1782,7 @@ DECELR always cancels any prevous rectangle definition.
 .IP \\*(Cs\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM).
 .br
-if \*(Ps is a "0" (default) or "1", and \fIxterm\fR is emulating VT100,
+if \*(Ps is a \*(``0\*('' (default) or \*(``1\*('', and \fIxterm\fR is emulating VT100,
 the control sequence elicits a response of the same form
 whose parameters describe the terminal:
   \*(Ps \(-> the given \*(Ps incremented by 2.
@@ -1902,7 +1917,7 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 Set Text Parameters.
 For colors and font,
-if \*(Pt is a "?", the control sequence elicits a response which consists
+if \*(Pt is a \*(``?\*('', the control sequence elicits a response which consists
 of the control sequence which would set the corresponding value.
 The \fIdtterm\fP control sequences allow you to determine the icon name
 and window title.
@@ -1911,7 +1926,8 @@ and window title.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt.
   \*(Ps = \*3 \(-> Set X property on top-level window.
 \*(Pt should be in the form
-"\fIprop=value\fP", or just "\fIprop\fP" to delete the property.
+\*(``\fIprop=value\fP\*('', or just
+\*(``\fIprop\fP\*('' to delete the property.
   \*(Ps = \*4\*;\fIc\fP\*;\fIspec\fP \(-> Change Color Number \fIc\fP to
 the color specified by \fIspec\fP.
 This can be a name or RGB specification as per \fIXParseColor\fP.
@@ -1920,7 +1936,7 @@ The color numbers correspond to the ANSI colors 0-7,
 their bright versions 8-15,
 and if supported, the remainder of the 88-color or 256-color table.
 .sP
-If a "?" is given rather than a name or RGB specification,
+If a \*(``?\*('' is given rather than a name or RGB specification,
 \fI\*(xt\fP replies with a control sequence of the same form which can be used
 to set the corresponding color.
 Because more than one pair of color number and specification can
@@ -1956,7 +1972,7 @@ Each successive parameter changes the next color in the list.
 The value of \*(Ps tells the starting point in the list.
 The colors are specified by name or RGB specification as per \fIXParseColor\fP.
 .sP
-If a "?" is given rather than a name or RGB specification,
+If a \*(``?\*('' is given rather than a name or RGB specification,
 \fI\*(xt\fP replies with a control sequence of the same form which can be used
 to set the corresponding dynamic color.
 Because more than one pair of color number and specification can
@@ -1978,7 +1994,7 @@ This is normally disabled by a compile-time option.
 .sP
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt.
 These controls may be disabled using the \fIallowFontOps\fP resource.
-If \*(Pt begins with a "#", index in the font menu, relative (if the
+If \*(Pt begins with a \*(``#\*('', index in the font menu, relative (if the
 next character is a plus or minus sign) or absolute.
 A number is
 expected but not required after the sign (the default is the current
@@ -1988,10 +2004,10 @@ The same rule (plus or minus sign, optional number) is used when
 querying the font.
 The remainder of \*(Pt is ignored.
 .sP
-A font can be specified after a "#" index expression,
+A font can be specified after a \*(``#\*('' index expression,
 by adding a space and then the font specifier.
 .sP
-If the "TrueType Fonts" menu entry is set (the \fBrenderFont\fP resource),
+If the \fBTrueType Fonts\fP menu entry is set (the \fBrenderFont\fP resource),
 then this control sets/queries the \fBfaceName\fP resource.
 .sP
   \*(Ps = \*5\*1 \(-> reserved for Emacs shell.
@@ -2084,12 +2100,12 @@ and uses the same search logic as the \fBiconHint\fP resource.
 .
 .Sh "Alt and Meta Keys"
 .LP
-Many keyboards have keys labeled "Alt".
-Few have keys labeled "Meta".
+Many keyboards have keys labeled \*(``Alt\*(''.
+Few have keys labeled \*(``Meta\*(''.
 However, \fIxterm\fP's default translations use the \fIMeta\fP modifier.
-Common keyboard configurations assign the \fIMeta\fP modifier to an "Alt" key.
+Common keyboard configurations assign the \fIMeta\fP modifier to an \*(``Alt\*('' key.
 By using \fIxmodmap\fP one may have the modifier assigned to a different key,
-and have "real" alt and meta keys.
+and have \*(``real\*('' alt and meta keys.
 Here is an example:
 .ID
 .ft CW
@@ -2112,7 +2128,7 @@ prefix a key with the \*(Es character.
 .bP
 shift the key from codes 0-127 to 128-255 by adding 128.
 .LP
-The table shows the result for a given character "x" with modifiers
+The table shows the result for a given character \*(``x\*('' with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
 .\" page-eject to work around grohtml bugs
@@ -2156,7 +2172,7 @@ X does not predefine NumLock (used for VT220 keyboards) or Alt (used as
 an extension for the Sun/PC keyboards) as modifiers.
 These keys are recognized as modifiers when enabled
 by the \fBnumLock\fP resource,
-or by the "DECSET \*1\*0\*3\*5" control sequence.
+or by the \*(``DECSET \*1\*0\*3\*5\*('' control sequence.
 .LP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
@@ -2176,7 +2192,7 @@ _
 .TE
 The home- and end-keys
 (unlike PageUp and other keys also on the 6-key editing keypad)
-are considered "cursor keys" by \fIxterm\fP.
+are considered \*(``cursor keys\*('' by \fIxterm\fP.
 Their mode is also controlled by the \fBDECCKM\fP escape sequence:
 .TS H
 center;
@@ -2317,6 +2333,37 @@ For example, shift-F5 would be sent as
 .LP
 If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
 recognized, making parameters 9 through 16.
+.LP
+The codes used for the \fIPC-style function keys\fP were inspired
+by a feature of the VT510, referred to in its reference manual as DECFNK.
+In the DECFNK scheme, codes 2-8 identify modifiers for function-keys
+and cursor-, editing-keypad keys.
+Unlike \fIxterm\fP, the VT510 limits the modifiers which can be used
+with cursor- and editing-keypad keys.
+Although the name \*(``DECFNK\*('' implies that it is a mode,
+the VT510 manual mentions it only as a feature,
+which (like \fIxterm\fP) interacts with the DECUDK feature.
+Unlike \fIxterm\fP, VT510/VT520 provide an extension to DECUDK
+(DECPFK and DECPAK)
+which apparently was the reason for the feature in those terminals,
+i.e., for identifying a programmable key
+rather than making it simple for applications to obtain modifier information.
+It is not described in the related VT520 manual.
+Neither manual was readily available
+at the time the feature was added to \fIxterm\fP.
+.LP
+On the other hand, the VT510 and VT520 reference manuals
+do document a related feature.
+That is its emulation of the SCO console,
+which is similar to the \*(``xterm-sco\*('' terminal description.
+The SCO console function-keys are less useful to
+applications developers than the approach used by \fIxterm\fP because
+.bP
+the relationship between modifiers and the characters sent by function-keys
+is not readily apparent, and
+.bP
+the scheme is not extensible, i.e., it is an \fIad hoc\fP
+asssignment limited to two modifiers (\fIshift\fP and \fIcontrol\fP).
 .Sh "VT220-Style Function Keys"
 .LP
 However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
@@ -2516,7 +2563,7 @@ followed by the pasted text, followed by
 .Sh "Title Modes"
 .LP
 The window- and icon-labels can be set or queried using control sequences.
-As a VT220-emulator, \fIxterm\fP "should" limit the character encoding for
+As a VT220-emulator, \fIxterm\fP \*(``should\*('' limit the character encoding for
 the corresponding strings to ISO-8859-1.
 Indeed, it used to be the case (and was documented) that
 window titles had to be ISO-8859-1.
@@ -2569,9 +2616,10 @@ control sequence, and is not described here
 (control sequences are summarized above).
 The remaining five modes of the mouse protocols
 are each enabled (or disabled) by a different parameter in
-the "DECSET \*(Cs\*?\*(Pm\*s\*h"
+the
+\*(``DECSET \*(Cs\*?\*(Pm\*s\*h\*(''
 or
-"DECRST \*(Cs\*?\*(Pm\*s\*l"
+\*(``DECRST \*(Cs\*?\*(Pm\*s\*l\*(''
 control sequence.
 .LP
 Manifest constants for the parameter values
@@ -2638,7 +2686,7 @@ Note however that the shift and control bits are normally unavailable
 because \fIxterm\fP uses the control modifier with mouse for popup menus,
 and the shift modifier is used in the default translations for button events.
 The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
-and is not necessarily the "Meta" key (see \fBxmodmap\fP(1)).
+and is not necessarily the \*(``Meta\*('' key (see \fBxmodmap\fP(1)).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
@@ -2671,7 +2719,7 @@ can be received.
 .sP
 \fBWarning:\fP use of this mode requires a cooperating program or it will
 hang \fIxterm.\fP
-.sP
+.LP
 On button press, the same information as for normal tracking is
 generated; \fIxterm\fP then waits for the program to send mouse
 tracking information.
@@ -2679,13 +2727,17 @@ tracking information.
 received from the pty:\fP
 \*(Cs\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*T.
 The parameters are \fIfunc, startx, starty, firstrow,\fP and \fIlastrow.\fP
+.bP
 \fIfunc\fP is non-zero to initiate highlight tracking and zero to abort.
+.bP
 \fIstartx\fP and \fIstarty\fP give the starting x and y location for
 the highlighted region.
+.bP
 The ending location tracks the mouse, but
 will never be above row \fIfirstrow\fP and will always be above row
 \fIlastrow.\fP
 (The top of the screen is row 1.)
+.LP
 When the button is released, \fIxterm\fP reports the ending position
 one of two ways:
 .bP
@@ -2751,7 +2803,7 @@ This enables UTF-8 encoding for \*(Cx and \*(Cy under
 all tracking modes, expanding the maximum encodable position from 223 to 2015.
 For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
-generate "extra" bytes which will confuse applications which do not treat
+generate \*(``extra\*('' bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
 Likewise, \*(Cb will be UTF-8 encoded,
 to reduce confusion with wheel mouse events.
@@ -3193,7 +3245,7 @@ Tektronix, Inc.
 .Ss "Standards"
 .LP
 The DEC terminal family (VT100 through VT525) is upward-compatible,
-using standards plus \fIextensions\fP, e.g., "private modes".
+using standards plus \fIextensions\fP, e.g., \*(``private modes\*(''.
 Not all commonly-used features are standard.
 For example, scrolling regions are not found in ECMA-48.
 .bP
@@ -3221,7 +3273,7 @@ less-accessible and less-detailed manual pages.
 which were implemented by Sun's \fIshelltool\fP program.
 This was part of SunView (SunOS 3.0, 1986).
 The change-notes for \fIxterm\fP's \fIresize\fP program in X10.4 (1986)
-mention its use of these "Sun tty emulation escape sequences"
+mention its use of these \*(``Sun tty emulation escape sequences\*(''
 for resizing the window.
 The X10.4 \fIxterm\fP program recognized these sequences for resizing
 the terminal, except for the iconfig/deiconfy pair.
@@ -3303,8 +3355,8 @@ so that clarification of the details of the window operations
 relied upon \fIvttest\fP.
 .bP
 The control sequences for saving/restoring the cursor and
-for saving/restoring "DEC Private Mode Values" may appear to be
-related (since the "save" controls both end with \*(cs),
+for saving/restoring \*(``DEC Private Mode Values\*('' may appear to be
+related (since the \*(``save\*('' controls both end with \*(cs),
 but that is coincidental.
 The latter was introduced in X10.4:
 .iP

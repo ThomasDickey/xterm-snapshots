@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1538 2018/04/28 00:10:23 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1541 2018/04/28 21:32:49 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2699,6 +2699,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		RevScroll(xw, one_if_default(0));
 		do_xevents();
 	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_SD:
+	    /*
+	     * Cater to ECMA-48's typographical error...
+	     */
+	    TRACE(("CASE_SD - scroll down\n"));
+	    RevScroll(xw, one_if_default(0));
+	    do_xevents();
 	    ResetState(sp);
 	    break;
 
@@ -9742,11 +9752,11 @@ VTRealize(Widget w,
 	getIconicFont(screen)->fs =
 	    XLoadQueryFont(screen->display,
 			   screen->MenuFontName(fontMenu_font1));
-	TRACE(("%susing font1 '%s' as iconFont\n",
-	       (getIconicFont(screen)->fs
-		? ""
-		: "NOT "),
-	       screen->MenuFontName(fontMenu_font1)));
+	ReportIcons(("%susing font1 '%s' as iconFont\n",
+		     (getIconicFont(screen)->fs
+		      ? ""
+		      : "NOT "),
+		     screen->MenuFontName(fontMenu_font1)));
     }
 #if OPT_RENDERFONT
     /*
@@ -9759,11 +9769,12 @@ VTRealize(Widget w,
 	&& getIconicFont(screen)->fs == 0) {
 	screen->icon_fontnum = fontMenu_default;
 	getIconicFont(screen)->fs = getNormalFont(screen, fNorm)->fs;	/* need for next-if */
-	TRACE(("using TrueType font as iconFont\n"));
+	ReportIcons(("using TrueType font as iconFont\n"));
     }
 #endif
     if ((xw->work.active_icon == eiDefault) && getIconicFont(screen)->fs) {
 	char *wm_name = getWindowManagerName(xw);
+	ReportIcons(("window manager name is %s\n", wm_name));
 	if (x_strncasecmp(wm_name, "fvwm", 4) &&
 	    x_strncasecmp(wm_name, "window maker", 12))
 	    xw->work.active_icon = eiFalse;
@@ -9775,7 +9786,7 @@ VTRealize(Widget w,
 	VTwin *win = &(screen->iconVwin);
 	int save_fontnum = screen->menu_font_number;
 
-	TRACE(("Initializing active-icon %d\n", screen->icon_fontnum));
+	ReportIcons(("initializing active-icon %d\n", screen->icon_fontnum));
 	screen->menu_font_number = screen->icon_fontnum;
 	XtVaGetValues(shell,
 		      XtNiconX, &iconX,
@@ -9831,7 +9842,7 @@ VTRealize(Widget w,
 	update_activeicon();
 #endif
     } else {
-	TRACE(("Disabled active-icon\n"));
+	ReportIcons(("disabled active-icon\n"));
 	xw->work.active_icon = eiFalse;
     }
 #endif /* NO_ACTIVE_ICON */
@@ -10801,7 +10812,7 @@ HideCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-    CellColor fg_bg;
+    CellColor fg_bg = initCColor;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     int my_col = 0;
@@ -10869,9 +10880,6 @@ HideCursor(void)
 	}
     }
 #endif
-#endif
-#if OPT_ISO_COLORS
-    fg_bg = initCColor;
 #endif
 
     /*
