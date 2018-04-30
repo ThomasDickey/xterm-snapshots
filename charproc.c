@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1541 2018/04/28 21:32:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1543 2018/04/29 23:31:17 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -356,6 +356,10 @@ static XtActionsRec actionsList[] = {
     { "meta-sends-escape",	HandleMetaEsc },
     { "set-num-lock",		HandleNumLock },
 #endif
+#ifdef OPT_PRINT_ON_EXIT
+    { "print-immediate",	HandlePrintImmediate },
+    { "print-on-error",		HandlePrintOnError },
+#endif
 #if OPT_READLINE
     { "readline-button",	ReadLineButton },
 #endif
@@ -519,6 +523,8 @@ static XtResource xterm_resources[] =
 	 screen.disallowedFontOps, DEF_DISALLOWED_FONT),
     Sres(XtNdisallowedMouseOps, XtCDisallowedMouseOps,
 	 screen.disallowedMouseOps, DEF_DISALLOWED_MOUSE),
+    Sres(XtNdisallowedPasteControls, XtCDisallowedPasteControls,
+	 screen.disallowedPasteControls, DEF_DISALLOWED_PASTE_CONTROLS),
     Sres(XtNdisallowedTcapOps, XtCDisallowedTcapOps,
 	 screen.disallowedTcapOps, DEF_DISALLOWED_TCAP),
     Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
@@ -7957,6 +7963,19 @@ VTInitialize(Widget wrequest,
     };
 #undef DATA
 
+#define DATA(name) { #name, ep##name }
+    static const FlagList tblPasteControls[] =
+    {
+	DATA(C0)
+	,DATA(BS)
+	,DATA(CR)
+	,DATA(DEL)
+	,DATA(HT)
+	,DATA(NL)
+	,DATA_END
+    };
+#undef DATA
+
 #define DATA(name) { #name, et##name }
     static const FlagList tblTcapOps[] =
     {
@@ -8357,6 +8376,12 @@ VTInitialize(Widget wrequest,
     set_flags_from_list(screen->disallow_mouse_ops,
 			screen->disallowedMouseOps,
 			tblMouseOps);
+
+    init_Sres(screen.disallowedPasteControls);
+
+    set_flags_from_list(screen->disallow_paste_controls,
+			screen->disallowedPasteControls,
+			tblPasteControls);
 
     init_Sres(screen.disallowedTcapOps);
 
@@ -9279,6 +9304,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->disallowedColorOps);
     TRACE_FREE_LEAK(screen->disallowedFontOps);
     TRACE_FREE_LEAK(screen->disallowedMouseOps);
+    TRACE_FREE_LEAK(screen->disallowedPasteControls);
     TRACE_FREE_LEAK(screen->disallowedTcapOps);
     TRACE_FREE_LEAK(screen->disallowedWinOps);
     TRACE_FREE_LEAK(screen->default_string);

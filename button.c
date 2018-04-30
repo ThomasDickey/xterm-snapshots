@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.527 2018/04/22 17:56:33 tom Exp $ */
+/* $XTermId: button.c,v 1.528 2018/04/29 23:43:24 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2075,17 +2075,33 @@ removeControls(XtermWidget xw, char *value)
 	size_t src = 0;
 	while ((value[dst] = value[src]) != '\0') {
 	    int ch = CharOf(value[src++]);
+
+#define ReplacePaste(n) \
+	    if (screen->disallow_paste_controls[n]) \
+		value[dst] = ' '
+
 	    if (ch < 32) {
+		ReplacePaste(epC0);
 		switch (ch) {
-		case '\b':
-		case '\t':
-		case '\n':
-		case '\r':
-		    ++dst;
+		case ANSI_BS:
+		    ReplacePaste(epBS);
+		    break;
+		case ANSI_HT:
+		    ReplacePaste(epHT);
+		    break;
+		case ANSI_LF:
+		    ReplacePaste(epNL);
+		    break;
+		case ANSI_CR:
+		    ReplacePaste(epCR);
 		    break;
 		default:
 		    continue;
 		}
+		++dst;
+	    } else if (ch == ANSI_DEL) {
+		ReplacePaste(epDEL);
+		++dst;
 	    }
 #if OPT_WIDE_CHARS
 	    else if (screen->utf8_inparse || screen->utf8_nrc_mode)

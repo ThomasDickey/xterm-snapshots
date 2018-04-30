@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.740 2018/04/27 23:41:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.742 2018/04/30 00:38:47 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -2875,6 +2875,43 @@ Like \fIExtended\fP, this is provided for compatibility.
 .TP 5
 AlternateScroll
 This overrides the \fBalternateScroll\fP resource.
+.RE
+.TP 8
+.B "disallowedPasteControls\fP (class\fB DisallowedPasteControls\fP)"
+The \fBallowPasteControls\fP resource is normally used to prevent
+pasting C1 controls, as well as non-formatting C0 controls such
+as the ASCII escape character.
+Those characters are simply ignored.
+This resource further extends the set of control characters
+which cannot be pasted, converting each into a space.
+.IP
+The resource value is a comma-separated list of names.
+\fI\*N\fP ignores capitalization.
+The default value is
+.NS
+BS,HT,DEL
+.NE
+.IP
+The names are listed below:
+.RS
+.TP 5
+C0
+all ASCII control characters.
+.TP 5
+BS
+ASCII backspace
+.TP 5
+CR
+ASCII carriage-return
+.TP 5
+DEL
+ASCII delete
+.TP 5
+HT
+ASCII tab
+.TP 5
+NL
+ASCII line-feed, i.e., \*(``newline\*(''.
 .RE
 .TP 8
 .B "disallowedTcapOps\fP (class\fB DisallowedTcapOps\fP)"
@@ -6339,6 +6376,12 @@ by echoing the event's position
 .in +8
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .in -8
+.TP 8
+.B "dump-html()"
+Invokes the \fBXHTML Screen Dump\fP feature.
+.TP 8
+.B "dump-svg()"
+Invokes the \fBSVG Screen Dump\fP feature.
 .TP 8
 .B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, \&...\&])"
 Execute an external command,

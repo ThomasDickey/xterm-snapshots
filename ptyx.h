@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.885 2018/04/26 22:43:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.886 2018/04/29 23:31:35 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1204,6 +1204,16 @@ typedef enum {
 } MouseOps;
 
 typedef enum {
+    epC0 = 1
+    , epBS
+    , epCR
+    , epDEL
+    , epHT
+    , epNL
+    , epLAST
+} PasteControls;
+
+typedef enum {
     etSetTcap = 1
     , etGetTcap
     , etLAST
@@ -2214,6 +2224,9 @@ typedef struct {
 
 	String		disallowedMouseOps;
 	char		disallow_mouse_ops[emLAST];
+
+	String		disallowedPasteControls;
+	char		disallow_paste_controls[epLAST];
 
 	String		disallowedTcapOps;
 	char		disallow_tcap_ops[etLAST];

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.352 2018/04/15 19:45:01 tom Exp $ */
+/* $XTermId: menu.c,v 1.353 2018/04/29 21:46:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1125,6 +1125,15 @@ do_write_now(Widget gw GCC_UNUSED,
 			  resource.printModeNow);
 }
 
+void
+HandlePrintImmediate(Widget w GCC_UNUSED,
+		     XEvent *event GCC_UNUSED,
+		     String *params GCC_UNUSED,
+		     Cardinal *param_count GCC_UNUSED)
+{
+    do_write_now((Widget) 0, (XtPointer) 0, (XtPointer) 0);
+}
+
 static void
 do_write_error(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
@@ -1137,6 +1146,15 @@ do_write_error(Widget gw GCC_UNUSED,
     }
     TScreenOf(xw)->write_error = (Boolean) (!TScreenOf(xw)->write_error);
     update_write_error();
+}
+
+void
+HandlePrintOnError(Widget w GCC_UNUSED,
+		   XEvent *event GCC_UNUSED,
+		   String *params GCC_UNUSED,
+		   Cardinal *param_count GCC_UNUSED)
+{
+    do_write_error((Widget) 0, (XtPointer) 0, (XtPointer) 0);
 }
 #endif
 
