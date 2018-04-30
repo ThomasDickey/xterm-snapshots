@@ -607,7 +607,7 @@ CSI ? Pm h
             Ps = 2 5  -> Show Cursor (DECTCEM), VT220.
             Ps = 3 0  -> Show scrollbar (rxvt).
             Ps = 3 5  -> Enable font-shifting functions (rxvt).
-            Ps = 3 8  -> Enter Tektronix Mode (DECTEK), xterm.
+            Ps = 3 8  -> Enter Tektronix Mode (DECTEK), VT240, xterm.
             Ps = 4 0  -> Allow 80 -> 132 Mode, xterm.
             Ps = 4 1  -> more(1) fix (see curses(3) resource).
             Ps = 4 2  -> Enable National Replacement Character sets
@@ -2213,6 +2213,14 @@ major features missing are the write-through and defocused modes.  This
 document does not describe the commands used in the various Tektronix
 plotting modes but does describe the commands to switch modes.
 
+Some of the sequences are specific to xterm.  The Tektronix emulation
+was added in X10R4 (1986).  The VT240, introduced two years earlier,
+also supported Tektronix 4010/4014.  Unlike xterm, the VT240 documenta-
+tion implies (there is an obvious error in section 6.9 "Entering and
+Exiting 4010/4014 Mode") that exiting back to ANSI mode is done by
+resetting private mode 3 8  (DECTEK) rather than ESC ETX .  A real Tek-
+tronix 4014 would not respond to either.
+
 BEL       Bell (Ctrl-G).
 
 BS        Backspace (Ctrl-H).
@@ -2405,6 +2413,9 @@ o   VT220 Programmer Pocket Guide.
 o   VT220 Programmer Reference Manual.
     Digital Equipment Corporation (EK-VT220-RM-002, August 1984).
 
+o   VT240 Programmer Reference Manual.
+    Digital Equipment Corporation (EK-VT240-RM-002, October 1984).
+
 o   VT330/VT340 Programmer Reference Manual
     Volume 1: Text Programming.
     Digital Equipment Corporation (EK-VT3XX-TP-001, March 1987).
@@ -2420,6 +2431,10 @@ o   Installing and Using
 
 o   VT420 Programmer Reference Manual.
     Digital Equipment Corporation (EK-VT420-RM-002, February 1992).
+
+o   VT510 Video Terminal
+    Programmer Information.
+    Digital Equipment Corporation (EK-VT510-RM B01, November 1993).
 
 o   VT520/VT525 Video Terminal
     Programmer Information.

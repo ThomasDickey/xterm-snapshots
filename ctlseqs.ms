@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.430 2018/04/28 18:42:11 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.432 2018/04/29 00:14:26 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -1118,7 +1118,7 @@ See the section \fBMouse Tracking\fP.  This is the X10 \fIxterm\fP mouse protoco
   \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM), VT220.
   \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
-  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK), \fIxterm\fP.
+  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK), VT240, \fIxterm\fP.
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode, \fIxterm\fP.
   \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP(3) resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets (DECNRCM), VT220.
@@ -2929,6 +2929,17 @@ The major features missing are
 the write-through and defocused modes.
 This document does not describe the commands used in the various
 Tektronix plotting modes but does describe the commands to switch modes.
+.LP
+Some of the sequences are specific to \fIxterm\fP.
+The Tektronix emulation was added in X10R4 (1986).
+The VT240, introduced two years earlier, also supported Tektronix 4010/4014.
+Unlike \fIxterm\fP, the VT240 documentation implies
+(there is an obvious error in
+section 6.9 \*(``Entering and Exiting 4010/4014 Mode\*('')
+that exiting back to ANSI mode is done by
+resetting private mode \*3\*8 (DECTEK)
+rather than \*(Es\*(Et.
+A real Tektronix 4014 would not respond to either.
 .St
 .IP \\*(Be
 Bell (Ctrl-G).
@@ -3201,6 +3212,11 @@ Digital Equipment Corporation
 Digital Equipment Corporation
 (EK-VT220-RM-002, August 1984).
 .bP
+\fIVT240 Programmer Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT240-RM-002, October 1984).
+.bP
 \fIVT330/VT340 Programmer Reference Manual\fP
 .br
 \fIVolume 1: Text Programming\fP.
@@ -3228,6 +3244,13 @@ Digital Equipment Corporation
 .br
 Digital Equipment Corporation
 (EK-VT420-RM-002, February 1992).
+.bP
+\fIVT510 Video Terminal\fP
+.br
+\fIProgrammer Information\fP.
+.br
+Digital Equipment Corporation
+(EK-VT510-RM B01, November 1993).
 .bP
 \fIVT520/VT525 Video Terminal\fP
 .br

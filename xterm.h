@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.793 2018/04/27 23:48:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.794 2018/04/29 22:17:28 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -442,6 +442,7 @@ extern char **environ;
 #define XtNdisallowedColorOps	"disallowedColorOps"
 #define XtNdisallowedFontOps	"disallowedFontOps"
 #define XtNdisallowedMouseOps	"disallowedMouseOps"
+#define XtNdisallowedPasteControls "disallowedPasteControls"
 #define XtNdisallowedTcapOps	"disallowedTcapOps"
 #define XtNdisallowedWindowOps	"disallowedWindowOps"
 #define XtNdynamicColors	"dynamicColors"
@@ -635,6 +636,7 @@ extern char **environ;
 #define XtCDisallowedColorOps	"DisallowedColorOps"
 #define XtCDisallowedFontOps	"DisallowedFontOps"
 #define XtCDisallowedMouseOps	"DisallowedMouseOps"
+#define XtCDisallowedPasteControls "DisallowedPasteControls"
 #define XtCDisallowedTcapOps	"DisallowedTcapOps"
 #define XtCDisallowedWindowOps	"DisallowedWindowOps"
 #define XtCDynamicColors	"DynamicColors"

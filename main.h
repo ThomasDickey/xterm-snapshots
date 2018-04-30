@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.63 2016/12/22 23:43:46 tom Exp $ */
+/* $XTermId: main.h,v 1.65 2018/04/30 00:59:01 tom Exp $ */
 
 /*
- * Copyright 2000-2013,2016 by Thomas E. Dickey
+ * Copyright 2000-2016,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -129,6 +129,10 @@
 
 #ifndef DEF_DISALLOWED_MOUSE
 #define DEF_DISALLOWED_MOUSE	"*"
+#endif
+
+#ifndef DEF_DISALLOWED_PASTE_CONTROLS
+#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,HT,DEL"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP

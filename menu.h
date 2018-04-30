@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.140 2016/12/22 02:04:51 tom Exp $ */
+/* $XTermId: menu.h,v 1.141 2018/04/29 21:28:37 tom Exp $ */
 
 /*
- * Copyright 1999-2015,2016 by Thomas E. Dickey
+ * Copyright 1999-2016,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -117,6 +117,8 @@ extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintImmediate   PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintOnError     PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
