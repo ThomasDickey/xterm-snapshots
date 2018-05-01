@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.354 2018/02/08 10:01:03 tom Exp $
+dnl $XTermId: configure.in,v 1.356 2018/05/01 00:29:45 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -115,7 +115,28 @@ CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
 CF_WITH_ICON_NAME(xterm-color)
 CF_WITH_ICON_SYMLINK(xterm)
-CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
+
+# Install all icons except for the overused "terminal".
+cf_cv_icon_list=
+for my_item in $srcdir/icons/*.svg
+do
+	test -f "$my_item" || continue
+	cf_icon_name=`echo $my_item |sed -e "s,.svg,," -e "s,^$srcdir/,,"`
+	case $cf_icon_name in
+	(*_48x48)
+		continue
+		;;
+	esac
+	CF_VERBOSE(adding $cf_icon_name to icon-list)
+	cf_cv_icon_list="$cf_cv_icon_list $cf_icon_name"
+	if test -f "${cf_icon_name}_48x48.png"
+	then
+		CF_VERBOSE(adding ${cf_icon_name}_48x48 to icon-list)
+		cf_cv_icon_list="$cf_cv_icon_list ${cf_icon_name}_48x48"
+	fi
+done
+CF_WITH_ICON_THEME([$cf_cv_icon_list],,,icons/${ICON_NAME}_48x48)
+
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,
 	[*rxvt*|*konsole|*[[Tt]]erminal],
@@ -894,7 +915,7 @@ CF_ARG_DISABLE(wide-attrs,
 	[enable_wattr=yes])
 AC_MSG_RESULT($enable_wattr)
 
-if test $enable_wattr = no && test $enable_direct_color = yes ; then
+if test x$enable_wattr = xno && test x$enable_direct_color = xyes ; then
 	AC_MSG_WARN(overriding wide-attributes to support direct color)
 	enable_wattr=yes
 fi
@@ -905,7 +926,7 @@ CF_ARG_DISABLE(wide-chars,
 	[enable_wchar=no],
 	[enable_wchar=yes])
 AC_MSG_RESULT($enable_wchar)
-test "$enable_wattr" = no && AC_DEFINE(OPT_WIDE_ATTRS,0,[Define to 0 to disable rarely-used SGR features])
+test "x$enable_wattr" = xno && AC_DEFINE(OPT_WIDE_ATTRS,0,[Define to 0 to disable rarely-used SGR features])
 
 AC_MSG_CHECKING(if you want only 16-bit character support)
 CF_ARG_ENABLE(16bit-chars,
