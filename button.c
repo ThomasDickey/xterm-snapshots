@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.528 2018/04/29 23:43:24 tom Exp $ */
+/* $XTermId: button.c,v 1.529 2018/05/01 00:36:18 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -96,7 +96,7 @@ button.c	Handles button events in the terminal emulator.
 #include <wcwidth.h>
 #else
 #define CharacterClass(value) \
-	charClass[(value) & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
+	charClass[(value) & (int)((sizeof(charClass)/sizeof(charClass[0]))-1)]
 #endif
 
     /*

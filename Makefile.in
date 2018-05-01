@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.240 2017/11/06 00:21:44 tom Exp $
+## $XTermId: Makefile.in,v 1.242 2018/05/01 00:41:53 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2016,2017 by Thomas E. Dickey
+# Copyright 1997-2017,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -331,14 +331,14 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_icondir@	$(SHELL) -c '\
+@no_icondir@	@ECHO_CC@$(SHELL) -c '\
+@no_icondir@		ACTUAL_XTERM=$(actual_xterm); \
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
 @no_icondir@		for n in $(ICON_LIST); \
 @no_icondir@		do \
 @no_icondir@			x=$$ACTUAL_XTERM; \
 @no_icondir@			l=`echo "$$n" | cut -f1 -d:`; \
-@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e s,$(ICON_NAME),$$x-color,`; \
+@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
 @no_icondir@			test -z "$$r" && continue; \
 @no_icondir@			d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
 @no_icondir@			test -d "$$d" || mkdir -p "$$d"; \
@@ -361,8 +361,8 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install \
 @no_pixmapdir@install-icon \
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
-@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_pixmapdir@	$(SHELL) -c '\
+@no_pixmapdir@	@ECHO_CC@$(SHELL) -c '\
+@no_pixmapdir@		ACTUAL_XTERM=$(actual_xterm); \
 @no_pixmapdir@		h=$(PIXMAPDIR); \
 @no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
@@ -398,7 +398,7 @@ SET_TERMINFO = @SET_TERMINFO@
 
 install-full \
 install-tc ::
-	@-$(SHELL) -c "test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'"
+	@-$(SHELL) -c "if test -f /etc/termcap ; then echo 'You must install the termcap entry manually by editing /etc/termcap'; fi"
 
 installdirs : $(INSTALL_DIRS)
 ################################################################################
@@ -465,7 +465,7 @@ uninstall-full ::
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
 @no_appsdir@uninstall-full ::
-@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	-@ECHO_CC@$(SHELL) -c 'for s in $(APP_NAMES); \
 @no_appsdir@	do \
 @no_appsdir@		echo "** $$s"; \
 @no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
@@ -478,12 +478,13 @@ uninstall-full ::
 @no_icondir@uninstall \
 @no_icondir@uninstall-icon \
 @no_icondir@uninstall-full ::
-@no_icondir@	-@$(SHELL) -c 'for n in $(ICON_LIST); \
+@no_icondir@	-@ECHO_CC@$(SHELL) -c 'ACTUAL_XTERM=$(actual_xterm) ; \
+@no_icondir@		for n in $(ICON_LIST); \
 @no_icondir@		do \
-@no_icondir@		x=$(actual_xterm); \
-@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$x,`; \
+@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$ACTUAL_XTERM,`; \
 @no_icondir@		test -z "$$r" && continue; \
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		test -f $$h/$$r || continue; \
 @no_icondir@		echo removing $$h/$$r; \
 @no_icondir@		$(RM) $$h/$$r; \
 @no_icondir@		done'
@@ -492,8 +493,8 @@ uninstall-full ::
 @no_pixmapdir@uninstall \
 @no_pixmapdir@uninstall-icon \
 @no_pixmapdir@uninstall-full ::
-@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@	-@$(SHELL) -c 'ACTUAL_XTERM=$(actual_xterm) ; \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
 @no_pixmapdir@			l=`basename $$n`; \
 @no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
@@ -509,7 +510,7 @@ uninstall-full ::
 @desktop_utils@install-full ::
 @desktop_utils@	ACTUAL_XTERM=$(actual_xterm) \
 @desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
-@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(DESKTOP_FLAGS) $$n; \
+@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) $(DESKTOP_FLAGS) $$n; \
 @desktop_utils@		done'
 ################################################################################
 mostlyclean :

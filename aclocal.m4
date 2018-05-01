@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.418 2018/02/08 02:32:07 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.419 2018/04/30 23:37:35 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -32,7 +32,7 @@ dnl authorization.
 dnl
 dnl ---------------------------------------------------------------------------
 dnl See
-dnl		http://invisible-island.net/autoconf/autoconf.html
+dnl		https://invisible-island.net/autoconf/autoconf.html
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl AM_LANGINFO_CODESET version: 4 updated: 2015/04/18 08:56:57
@@ -3380,7 +3380,7 @@ dnl $3 = formats (defaults to list [.svg .png .xpm])
 dnl $4 = alternate icon if no theme is used (defaults to $1).
 dnl
 dnl Result:
-dnl ICON_NAME = basename of first item in $1
+dnl ICON_NAME = basename of first item in $1, unless already set
 dnl ICON_LIST = reprocessed $1
 dnl ICON_THEME = reprocessed $2
 dnl ICON_FORMAT = reprocessed $3
@@ -3424,7 +3424,6 @@ fi
 
 : ${ICON_FORMAT:=ifelse([$3],,[".svg .png .xpm"],[$3])}
 
-# ICON_NAME=
 ICON_LIST=
 
 ifelse([$4],,[cf_icon_list=$1],[
