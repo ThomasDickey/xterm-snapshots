@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.357 2017/05/29 20:11:03 tom Exp $ */
+/* $XTermId: input.c,v 1.358 2018/05/02 00:09:44 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -907,9 +907,10 @@ Input(XtermWidget xw,
 
     memset(&reply, 0, sizeof(reply));
 
-    TRACE(("Input keysym "
+    TRACE(("Input(%d,%d) keysym "
 	   KEYSYM_FMT
 	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s\n",
+	   screen->cur_row, screen->cur_col,
 	   kd.keysym,
 	   kd.nbytes,
 	   visibleChars((Char *) kd.strbuf,
