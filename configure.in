@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.356 2018/05/01 00:29:45 tom Exp $
+dnl $XTermId: configure.in,v 1.357 2018/05/02 08:40:40 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -113,7 +113,7 @@ CF_FUNC_TGETENT
 
 CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
-CF_WITH_ICON_NAME(xterm-color)
+CF_WITH_ICON_NAME(mini.xterm)
 CF_WITH_ICON_SYMLINK(xterm)
 
 # Install all icons except for the overused "terminal".

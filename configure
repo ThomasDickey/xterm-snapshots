@@ -694,7 +694,7 @@ Compile/Install Options:
   --disable-full-tgetent  disable check for full tgetent function
   --with-app-class=XXX    override X applications class (default XTerm)
   --with-app-defaults=DIR directory in which to install resource files (EPREFIX/lib/X11/app-defaults)
-  --with-icon-name=XXXX   override icon name (default: xterm-color)
+  --with-icon-name=XXXX   override icon name (default: mini.xterm)
   --with-icon-symlink=XXX make symbolic link for icon name (default: xterm)
   --with-pixmapdir=DIR    directory in which to install pixmaps (DATADIR/pixmaps)
   --with-icondir=DIR      directory in which to install icons for desktop
@@ -6205,11 +6205,11 @@ if test "${with_icon_name+set}" = set; then
   withval="$with_icon_name"
   ICON_NAME="$withval"
 else
-  ICON_NAME=xterm-color
+  ICON_NAME=mini.xterm
 fi;
 case "x$ICON_NAME" in
 (xyes|xno|x)
-	ICON_NAME=xterm-color
+	ICON_NAME=mini.xterm
 	;;
 esac
 
