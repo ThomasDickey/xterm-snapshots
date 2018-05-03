@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.886 2018/04/29 23:31:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.887 2018/05/02 21:52:26 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -605,7 +605,7 @@ typedef struct {
 
 #ifndef OPT_INPUT_METHOD
 #if (XtSpecificationRelease >= 6)
-#define OPT_INPUT_METHOD 1 /* true if xterm uses input-method support */
+#define OPT_INPUT_METHOD OPT_I18N_SUPPORT /* true if xterm uses input-method support */
 #else
 #define OPT_INPUT_METHOD 0
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1543 2018/04/29 23:31:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1545 2018/05/02 21:51:17 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -185,7 +185,7 @@ static void StopBlinking(TScreen * /* screen */ );
 #define StopBlinking(screen)	/* nothing */
 #endif
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 static void PreeditPosition(XtermWidget /* xw */ );
 #endif
 
@@ -822,7 +822,7 @@ static void VTRealize(Widget w, XtValueMask * valuemask,
 		      XSetWindowAttributes * values);
 static void VTResize(Widget w);
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 static void VTInitI18N(XtermWidget);
 #endif
 
@@ -4712,6 +4712,31 @@ reallyStopBlinking(TScreen *screen)
 }
 #endif
 
+static void
+update_the_screen(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean moved;
+
+    if (screen->scroll_amt)
+	FlushScroll(xw);
+    moved = CursorMoved(screen);
+    if (screen->cursor_set && moved) {
+	if (screen->cursor_state)
+	    HideCursor();
+	ShowCursor();
+#if OPT_INPUT_METHOD
+	PreeditPosition(xw);
+#endif
+    } else {
+#if OPT_INPUT_METHOD
+	if (moved)
+	    PreeditPosition(xw);
+#endif
+	updateCursor(screen);
+    }
+}
+
 #ifdef VMS
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
 
@@ -4766,18 +4791,7 @@ in_put(XtermWidget xw)
 		WindowScroll(xw, 0, False);
 	    break;
 	}
-	if (screen->scroll_amt)
-	    FlushScroll(xw);
-	if (screen->cursor_set && CursorMoved(screen)) {
-	    if (screen->cursor_state)
-		HideCursor();
-	    ShowCursor();
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-	    PreeditPosition(xw);
-#endif
-	} else {
-	    updateCursor(screen);
-	}
+	update_the_screen(xw);
 
 	if (QLength(screen->display)) {
 	    select_mask = X_mask;
@@ -4885,19 +4899,7 @@ in_put(XtermWidget xw)
 	    break;
 #endif
 	}
-	/* update the screen */
-	if (screen->scroll_amt)
-	    FlushScroll(xw);
-	if (screen->cursor_set && CursorMoved(screen)) {
-	    if (screen->cursor_state)
-		HideCursor();
-	    ShowCursor();
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-	    PreeditPosition(xw);
-#endif
-	} else {
-	    updateCursor(screen);
-	}
+	update_the_screen(xw);
 
 	XFlush(screen->display);	/* always flush writes before waiting */
 
@@ -4994,7 +4996,7 @@ doinput(void)
     return nextPtyData(screen, VTbuffer);
 }
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 /*
  *  For OverTheSpot, client has to inform the position for XIM preedit.
  */
@@ -9148,7 +9150,7 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
 	    name = 0; \
 	}
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 static void
 cleanupInputMethod(XtermWidget xw)
 {
@@ -9873,7 +9875,7 @@ VTRealize(Widget w,
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
     VTInitI18N(xw);
 #endif
 #if OPT_NUM_LOCK
@@ -9942,7 +9944,7 @@ VTRealize(Widget w,
     TRACE(("}} VTRealize\n"));
 }
 
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 
 /* limit this feature to recent XFree86 since X11R6.x core dumps */
 #if defined(XtSpecificationRelease) && XtSpecificationRelease >= 6 && defined(X_HAVE_UTF8_STRING)
@@ -10275,7 +10277,7 @@ lookupTInput(XtermWidget xw, Widget w)
 
     return result;
 }
-#endif /* OPT_I18N_SUPPORT && OPT_INPUT_METHOD */
+#endif /* OPT_INPUT_METHOD */
 
 static void
 set_cursor_outline_gc(XtermWidget xw,
