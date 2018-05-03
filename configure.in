@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.357 2018/05/02 08:40:40 tom Exp $
+dnl $XTermId: configure.in,v 1.359 2018/05/02 22:07:06 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -717,10 +717,16 @@ AC_MSG_CHECKING(if you want support for input-method)
 CF_ARG_DISABLE(input-method,
 	[  --disable-input-method  disable input-method],
 	[enable_ximp=no],
-	[enable_ximp=yes])
+	[enable_ximp=$enable_i18n])
 AC_MSG_RESULT($enable_ximp)
 CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
+if test "$enable_ximp" != no ; then
+	if test "$enable_i18n" = no ; then
+		AC_MSG_WARN(input-methor relies upon internationalization)
+		enable_ximp=no
+	fi
+fi
 if test "$enable_ximp" = no ; then
 	AC_DEFINE(OPT_INPUT_METHOD,0,[Define to 0 to disable input-method])
 fi

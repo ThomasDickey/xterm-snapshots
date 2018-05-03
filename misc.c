@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.801 2018/04/28 21:29:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.802 2018/05/02 21:52:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -195,7 +195,7 @@ selectwindow(XtermWidget xw, int flag)
     } else
 #endif
     {
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 	TInput *input = lookupTInput(xw, (Widget) xw);
 	if (input && input->xic)
 	    XSetICFocus(input->xic);
@@ -233,7 +233,7 @@ unselectwindow(XtermWidget xw, int flag)
 	} else
 #endif
 	{
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 	    TInput *input = lookupTInput(xw, (Widget) xw);
 	    if (input && input->xic)
 		XUnsetICFocus(input->xic);
