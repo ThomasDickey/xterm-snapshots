@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.101 2018/04/16 00:46:52 tom Exp $
+# $XTermId: xterm.spec,v 1.103 2018/05/03 01:05:48 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -106,7 +106,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--without-xterm-symlink \
 %endif
 %if "%{icon_theme}"
-	--with-icon-symlink \
+	--with-icon-symlink=%{fullname} \
 	--with-icon-theme \
 	--with-icondir=%{_iconsdir} \
 %endif
@@ -225,19 +225,17 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 %if "%{icon_theme}"
-%{_iconsdir}/hicolor/48x48/apps/%{fullname}*.png
-%{_iconsdir}/hicolor/scalable/apps/%{fullname}*.svg
+%{_iconsdir}/hicolor/*.png
+%{_iconsdir}/hicolor/*.svg
+%{_iconsdir}/hicolor/48x48/apps/*.png
+%{_iconsdir}/hicolor/scalable/apps/*.svg
 %endif
-%{_pixmapsdir}/*%{fullname}*.xpm
-
-# files added by --with-icon-symlink
-%if "%{icon_theme}"
-%{_iconsdir}/hicolor/xterm.png
-%{_iconsdir}/hicolor/xterm.svg
-%endif
-%{_pixmapsdir}/xterm.xpm
+%{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Wed May 02 2018 Thomas E. Dickey
+- install all icons
 
 * Fri Jan 29 2016 Thomas E. Dickey
 - use --enable-screen-dumps

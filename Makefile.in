@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.242 2018/05/01 00:41:53 tom Exp $
+## $XTermId: Makefile.in,v 1.243 2018/05/03 00:30:44 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -331,8 +331,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	@ECHO_CC@$(SHELL) -c '\
-@no_icondir@		ACTUAL_XTERM=$(actual_xterm); \
+@no_icondir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
 @no_icondir@		for n in $(ICON_LIST); \
 @no_icondir@		do \
@@ -361,8 +360,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install \
 @no_pixmapdir@install-icon \
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
-@no_pixmapdir@	@ECHO_CC@$(SHELL) -c '\
-@no_pixmapdir@		ACTUAL_XTERM=$(actual_xterm); \
+@no_pixmapdir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_pixmapdir@		h=$(PIXMAPDIR); \
 @no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
