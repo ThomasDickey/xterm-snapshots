@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.887 2018/05/02 21:52:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.888 2018/05/04 21:32:19 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2301,6 +2301,7 @@ typedef struct {
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
 	BlinkOps	cursor_blink;	/* cursor blink enable		*/
+	BlinkOps	cursor_blink_i;	/* save cursor blink enable	*/
 	char *		cursor_blink_s;	/* ...resource cursorBlink	*/
 	int		cursor_blink_esc; /* cursor blink escape-state	*/
 	Boolean		cursor_blink_xor; /* how to merge menu/escapes	*/
