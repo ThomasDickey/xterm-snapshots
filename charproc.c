@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1546 2018/05/04 21:06:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1547 2018/05/15 09:05:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3291,7 +3291,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (sp->private_function
 		    && screen->vtXX_level >= 4) {	/* VT420 */
 		    init_reply(ANSI_DCS);
-		    reply.a_param[count++] = (ParmType) GetParam(1);	/* PID */
+		    reply.a_param[count++] = (ParmType) GetParam(0);	/* PID */
 		    reply.a_delim = "!~";	/* delimiter */
 		    reply.a_radix[count] = 16;	/* use hex */
 		    reply.a_param[count++] = 0;		/* no data */
@@ -4122,7 +4122,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		init_reply(ANSI_DCS);
 		count = 0;
 		checksum &= 0xffff;
-		pid = GetParam(1);
+		pid = GetParam(0);
 		reply.a_param[count++] = (ParmType) pid;
 		reply.a_delim = "!~";	/* delimiter */
 		reply.a_radix[count] = 16;
