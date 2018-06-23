@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.802 2018/05/02 21:52:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.803 2018/06/22 22:19:05 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5856,6 +5856,7 @@ end_vt_mode(void)
 
     if (!TEK4014_ACTIVE(xw)) {
 	FlushLog(xw);
+	set_tek_visibility(True);
 	TEK4014_ACTIVE(xw) = True;
 	TekSetWinSize(tekWidget);
 	longjmp(VTend, 1);
