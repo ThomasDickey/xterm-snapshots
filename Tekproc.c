@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.231 2018/06/22 23:08:47 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.232 2018/06/25 20:14:43 tom Exp $ */
 
 /*
  * Copyright 2001-2017,2018 by Thomas E. Dickey
@@ -157,7 +157,7 @@
 #define	ScaledX(tw,x)	(((x) * ScaleOf(tw)) + BorderOf(tw))
 #define	ScaledY(tw,y)	((BottomY(y) * ScaleOf(tw)) + BorderOf(tw))
 
-#define	TekMove(tw,x,y)	tekscr->cur_X = x; tekscr->cur_Y = y
+#define	TekMove(tw,x,y)	do { tekscr->cur_X = x; tekscr->cur_Y = y; } while (0)
 #define	input()		Tinput(tw)
 #define	unput(c)	*Tpushback++ = (Char) c
 /* *INDENT-OFF* */

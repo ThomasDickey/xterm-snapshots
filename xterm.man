@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.745 2018/06/23 00:18:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.746 2018/06/25 09:19:49 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -857,9 +857,12 @@ Unix98 pseudo-terminals made the BSD scheme unnecessary.
 Unless overridden by the \fB\-lf\fP option or the \fBlogFile\fP resource:
 .RS
 .bP
-The logfile is written to the directory from which \fI\*n\fP is invoked.
+If the filename is \*(``-\*('', then logging is sent to the standard output.
 .bP
-The filename is generated, of the form
+Otherwise a filename is generated, and
+the logfile is written to the directory from which \fI\*n\fP is invoked.
+.bP
+The generated filename is of the form
 .NS
 XtermLog.\fIXXXXXX\fR
 .NE
@@ -905,6 +908,8 @@ This is the default, unless you have set the rightScrollBar resource.
 .BI \-lf " filename"
 Specify the log-filename.
 This sets the \fBlogFile\fP resource.
+If set to \*(``-\*('',
+\fI\*n\fP writes its log to the standard output.
 See the \fB\-l\fP option.
 .TP 8
 .B \-ls
