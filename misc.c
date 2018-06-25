@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.803 2018/06/22 22:19:05 tom Exp $ */
+/* $XTermId: misc.c,v 1.804 2018/06/25 21:49:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2009,7 +2009,7 @@ xtermResetIds(TScreen *screen)
 
 #ifdef ALLOWLOGFILEEXEC
 static void
-logpipe(int sig GCC_UNUSED)
+handle_SIGPIPE(int sig GCC_UNUSED)
 {
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
@@ -2021,12 +2021,140 @@ logpipe(int sig GCC_UNUSED)
     if (screen->logging)
 	CloseLog(xw);
 }
+
+/*
+ * Open a command to pipe log data to it.
+ * Warning, enabling this "feature" allows arbitrary programs
+ * to be run.  If ALLOWLOGFILECHANGES is enabled, this can be
+ * done through escape sequences....  You have been warned.
+ */
+static void
+StartLogExec(TScreen *screen)
+{
+    int pid;
+    int p[2];
+    static char *shell;
+    struct passwd pw;
+
+    if ((shell = x_getenv("SHELL")) == NULL) {
+
+	if (x_getpwuid(screen->uid, &pw)) {
+	    char *name = x_getlogin(screen->uid, &pw);
+	    if (*(pw.pw_shell)) {
+		shell = pw.pw_shell;
+	    }
+	    free(name);
+	}
+    }
+
+    if (shell == 0) {
+	static char dummy[] = "/bin/sh";
+	shell = dummy;
+    }
+
+    if (access(shell, X_OK) != 0) {
+	xtermPerror("Can't execute `%s'\n", shell);
+	return;
+    }
+
+    if (pipe(p) < 0) {
+	xtermPerror("Can't make a pipe connection\n");
+	return;
+    } else if ((pid = fork()) < 0) {
+	xtermPerror("Can't fork...\n");
+	return;
+    }
+    if (pid == 0) {		/* child */
+	/*
+	 * Close our output (we won't be talking back to the
+	 * parent), and redirect our child's output to the
+	 * original stderr.
+	 */
+	close(p[1]);
+	dup2(p[0], 0);
+	close(p[0]);
+	dup2(fileno(stderr), 1);
+	dup2(fileno(stderr), 2);
+
+	close(fileno(stderr));
+	close(ConnectionNumber(screen->display));
+	close(screen->respond);
+
+	signal(SIGHUP, SIG_DFL);
+	signal(SIGCHLD, SIG_DFL);
+
+	/* (this is redundant) */
+	if (xtermResetIds(screen) < 0)
+	    exit(ERROR_SETUID);
+
+	if (access(shell, X_OK) == 0) {
+	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
+	    xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
+	} else {
+	    xtermWarning("Can't execute `%s'\n", shell);
+	}
+	exit(ERROR_LOGEXEC);
+    }
+    close(p[0]);
+    screen->logfd = p[1];
+    signal(SIGPIPE, handle_SIGPIPE);
+}
 #endif /* ALLOWLOGFILEEXEC */
+
+/*
+ * Generate a path for a logfile if no default path is given.
+ */
+static char *
+GenerateLogPath(void)
+{
+    static char *log_default = NULL;
+
+    /* once opened we just reuse the same log name */
+    if (log_default)
+	return (log_default);
+
+#if defined(HAVE_GETHOSTNAME) && defined(HAVE_STRFTIME)
+    {
+#define LEN_HOSTNAME 255
+	/* Internet standard limit (RFC 1035):  ``To simplify implementations,
+	 * the total length of a domain name (i.e., label octets and label
+	 * length octets) is restricted to 255 octets or less.''
+	 */
+#define LEN_GETPID 9
+	/*
+	 * This is arbitrary...
+	 */
+	const char form[] = "Xterm.log.%s%s.%lu";
+	char where[LEN_HOSTNAME + 1];
+	char when[LEN_TIMESTAMP];
+	time_t now = time((time_t *) 0);
+	struct tm *ltm = (struct tm *) localtime(&now);
+
+	if ((gethostname(where, sizeof(where)) == 0) &&
+	    (strftime(when, sizeof(when), FMT_TIMESTAMP, ltm) > 0) &&
+	    ((log_default = (char *) malloc((sizeof(form)
+					     + strlen(where)
+					     + strlen(when)
+					     + LEN_GETPID))) != NULL)) {
+	    (void) sprintf(log_default,
+			   form,
+			   where, when,
+			   ((unsigned long) getpid()) % ((unsigned long) 1e10));
+	}
+    }
+#else
+    static const char log_def_name[] = "XtermLog.XXXXXX";
+    if ((log_default = x_strdup(log_def_name)) != NULL) {
+	mktemp(log_default);
+    }
+#endif
+
+    return (log_default);
+}
 
 void
 StartLog(XtermWidget xw)
 {
-    static char *log_default;
     TScreen *screen = TScreenOf(xw);
 
     if (screen->logging || (screen->inhibit & I_LOG))
@@ -2038,129 +2166,30 @@ StartLog(XtermWidget xw)
     if (screen->logfd < 0)
 	return;			/* open failed */
 #else /*VMS */
-    if (screen->logfile == NULL || *screen->logfile == 0) {
-	if (screen->logfile)
-	    free(screen->logfile);
-	if (log_default == NULL) {
-#if defined(HAVE_GETHOSTNAME) && defined(HAVE_STRFTIME)
-	    const char form[] = "Xterm.log.%s%s.%d";
-	    char where[255 + 1];	/* Internet standard limit (RFC 1035):
-					   ``To simplify implementations, the
-					   total length of a domain name (i.e.,
-					   label octets and label length
-					   octets) is restricted to 255 octets
-					   or less.'' */
-	    char when[LEN_TIMESTAMP];
-	    char formatted[sizeof(form) + sizeof(where) + sizeof(when) + 9];
-	    time_t now;
-	    struct tm *ltm;
 
-	    now = time((time_t *) 0);
-	    ltm = (struct tm *) localtime(&now);
-	    if ((gethostname(where, sizeof(where)) == 0) &&
-		(strftime(when, sizeof(when), FMT_TIMESTAMP, ltm) > 0)) {
-		(void) sprintf(formatted, form, where, when, (int) getpid());
-	    } else {
-		return;
-	    }
-	    if ((log_default = x_strdup(formatted)) == NULL) {
-		return;
-	    }
-#else
-	    static const char log_def_name[] = "XtermLog.XXXXXX";
-	    if ((log_default = x_strdup(log_def_name)) == NULL) {
-		return;
-	    }
-	    mktemp(log_default);
-#endif
-	}
-	if ((screen->logfile = x_strdup(log_default)) == 0)
-	    return;
-    }
+    /* if we weren't supplied with a logfile path, generate one */
+    if (IsEmpty(screen->logfile))
+	screen->logfile = GenerateLogPath();
+
+    /* give up if we were unable to allocate the filename */
+    if (!screen->logfile)
+	return;
+
     if (*screen->logfile == '|') {	/* exec command */
 #ifdef ALLOWLOGFILEEXEC
-	/*
-	 * Warning, enabling this "feature" allows arbitrary programs
-	 * to be run.  If ALLOWLOGFILECHANGES is enabled, this can be
-	 * done through escape sequences....  You have been warned.
-	 */
-	int pid;
-	int p[2];
-	static char *shell;
-	struct passwd pw;
-
-	if ((shell = x_getenv("SHELL")) == NULL) {
-
-	    if (x_getpwuid(screen->uid, &pw)) {
-		char *name = x_getlogin(screen->uid, &pw);
-		if (*(pw.pw_shell)) {
-		    shell = pw.pw_shell;
-		}
-		free(name);
-	    }
-	}
-
-	if (shell == 0) {
-	    static char dummy[] = "/bin/sh";
-	    shell = dummy;
-	}
-
-	if (access(shell, X_OK) != 0) {
-	    xtermPerror("Can't execute `%s'\n", shell);
-	    return;
-	}
-
-	if (pipe(p) < 0) {
-	    xtermPerror("Can't make a pipe connection\n");
-	    return;
-	} else if ((pid = fork()) < 0) {
-	    xtermPerror("Can't fork...\n");
-	    return;
-	}
-	if (pid == 0) {		/* child */
-	    /*
-	     * Close our output (we won't be talking back to the
-	     * parent), and redirect our child's output to the
-	     * original stderr.
-	     */
-	    close(p[1]);
-	    dup2(p[0], 0);
-	    close(p[0]);
-	    dup2(fileno(stderr), 1);
-	    dup2(fileno(stderr), 2);
-
-	    close(fileno(stderr));
-	    close(ConnectionNumber(screen->display));
-	    close(screen->respond);
-
-	    signal(SIGHUP, SIG_DFL);
-	    signal(SIGCHLD, SIG_DFL);
-
-	    /* (this is redundant) */
-	    if (xtermResetIds(screen) < 0)
-		exit(ERROR_SETUID);
-
-	    if (access(shell, X_OK) == 0) {
-		execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
-		xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
-	    } else {
-		xtermWarning("Can't execute `%s'\n", shell);
-	    }
-	    exit(ERROR_LOGEXEC);
-	}
-	close(p[0]);
-	screen->logfd = p[1];
-	signal(SIGPIPE, logpipe);
+	StartLogExec(screen);
 #else
 	Bell(xw, XkbBI_Info, 0);
 	Bell(xw, XkbBI_Info, 0);
 	return;
 #endif
+    } else if (strcmp(screen->logfile, "-") == 0) {
+	screen->logfd = STDOUT_FILENO;
     } else {
 	if ((screen->logfd = open_userfile(screen->uid,
 					   screen->gid,
 					   screen->logfile,
-					   (log_default != 0))) < 0)
+					   True)) < 0)
 	    return;
     }
 #endif /*VMS */

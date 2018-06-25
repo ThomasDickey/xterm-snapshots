@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.814 2018/04/27 22:17:23 tom Exp $ */
+/* $XTermId: main.c,v 1.815 2018/06/25 01:02:36 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -1218,7 +1218,7 @@ static OptionHelp xtermOptions[] = {
 { "-kt keyboardtype",      "set keyboard type:" KEYBOARD_TYPES },
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
-{ "-lf filename",          "logging filename" },
+{ "-lf filename",          "logging filename (use '-' for standard out)" },
 #else
 { "-/+l",                  "turn on/off logging (not supported)" },
 { "-lf filename",          "logging filename (not supported)" },
