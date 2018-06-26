@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.888 2018/05/04 21:32:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.889 2018/06/26 23:24:27 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3152,7 +3152,7 @@ typedef struct _TekWidgetRec {
 #define WhichTWin(screen)	((screen)->whichTwin)
 
 #define WhichVFont(screen,name)	(IsIcon(screen) ? getIconicFont(screen) \
-						: getNormalFont(screen, name))->fs
+						: getNormalFont(screen, (int)(name)))->fs
 #define FontAscent(screen)	(IsIcon(screen) ? getIconicFont(screen)->fs->ascent \
 						: WhichVWin(screen)->f_ascent)
 #define FontDescent(screen)	(IsIcon(screen) ? getIconicFont(screen)->fs->descent \
