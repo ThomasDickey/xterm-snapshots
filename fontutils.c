@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.570 2018/04/28 21:34:28 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.571 2018/06/26 23:23:15 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -4696,7 +4696,7 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 XftFont *
 getXftFont(XtermWidget xw, VTFontEnum which, int fontnum)
 {
-    XTermXftFonts *data = getMyXftFont(xw, which, fontnum);
+    XTermXftFonts *data = getMyXftFont(xw, (int) which, fontnum);
     XftFont *result = 0;
     if (data != 0)
 	result = data->font;

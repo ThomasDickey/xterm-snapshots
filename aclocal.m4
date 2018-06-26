@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.419 2018/04/30 23:37:35 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.421 2018/06/26 23:21:53 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -602,7 +602,7 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 11 updated: 2015/04/12 15:39:00
+dnl CF_FUNC_GRANTPT version: 12 updated: 2018/06/26 16:06:28
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -717,7 +717,9 @@ dnl
 dnl There is no configure run-test for openpty, since older implementations do
 dnl not always run properly as a non-root user.  For that reason, we also allow
 dnl the configure script to suppress this check entirely with $disable_openpty.
-if test "x$disable_openpty" != "xyes" || test -z "$cf_grantpt_opts" ; then
+if test "x$ac_cv_func_posix_openpt" = "xyes" ; then
+	CF_VERBOSE(prefer posix_openpt over openpty)
+elif test "x$disable_openpty" != "xyes" || test -z "$cf_grantpt_opts" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
 	if test "$cf_have_openpty" = yes ; then
 		ac_cv_func_grantpt=no
@@ -999,7 +1001,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 32 updated: 2015/04/12 15:39:00
+dnl CF_GCC_WARNINGS version: 33 updated: 2018/06/20 20:23:13
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -1093,7 +1095,7 @@ then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
 			case $cf_opt in
 			(Wcast-qual)
-				CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
+				CF_APPEND_TEXT(CPPFLAGS,-DXTSTRINGDEFINES)
 				;;
 			(Winline)
 				case $GCC_VERSION in
@@ -1120,7 +1122,7 @@ rm -rf conftest*
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GNU_SOURCE version: 7 updated: 2016/08/05 05:15:37
+dnl CF_GNU_SOURCE version: 9 updated: 2018/06/20 20:23:13
 dnl -------------
 dnl Check if we must define _GNU_SOURCE to get a reasonable value for
 dnl _XOPEN_SOURCE, upon which many POSIX definitions depend.  This is a defect
@@ -1128,38 +1130,101 @@ dnl (or misfeature) of glibc2, which breaks portability of many applications,
 dnl since it is interwoven with GNU extensions.
 dnl
 dnl Well, yes we could work around it...
+dnl
+dnl Parameters:
+dnl	$1 is the nominal value for _XOPEN_SOURCE
 AC_DEFUN([CF_GNU_SOURCE],
 [
-AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
+cf_gnu_xopen_source=ifelse($1,,500,$1)
+
+AC_CACHE_CHECK(if this is the GNU C library,cf_cv_gnu_library,[
 AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifndef _XOPEN_SOURCE
-make an error
-#endif],
-	[cf_cv_gnu_source=no],
-	[cf_save="$CPPFLAGS"
-	 CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
-	 AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifdef _XOPEN_SOURCE
-make an error
-#endif],
-	[cf_cv_gnu_source=no],
-	[cf_cv_gnu_source=yes])
-	CPPFLAGS="$cf_save"
-	])
+	#if __GLIBC__ > 0 && __GLIBC_MINOR__ >= 0
+		return 0;
+	#else
+	#	error not GNU C library
+	#endif],
+	[cf_cv_gnu_library=yes],
+	[cf_cv_gnu_library=no])
 ])
 
-if test "$cf_cv_gnu_source" = yes
-then
-AC_CACHE_CHECK(if we should also define _DEFAULT_SOURCE,cf_cv_default_source,[
-CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
-	AC_TRY_COMPILE([#include <sys/types.h>],[
-#ifdef _DEFAULT_SOURCE
-make an error
-#endif],
-		[cf_cv_default_source=no],
-		[cf_cv_default_source=yes])
+if test x$cf_cv_gnu_library = xyes; then
+
+	# With glibc 2.19 (13 years after this check was begun), _DEFAULT_SOURCE
+	# was changed to help a little...
+	AC_CACHE_CHECK(if _DEFAULT_SOURCE can be used as a basis,cf_cv_gnu_library_219,[
+		cf_save="$CPPFLAGS"
+		CF_APPEND_TEXT(CPPFLAGS,-D_DEFAULT_SOURCE)
+		AC_TRY_COMPILE([#include <sys/types.h>],[
+			#if (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 19) || (__GLIBC__ > 2)
+				return 0;
+			#else
+			#	error GNU C library __GLIBC__.__GLIBC_MINOR__ is too old
+			#endif],
+			[cf_cv_gnu_library_219=yes],
+			[cf_cv_gnu_library_219=no])
+		CPPFLAGS="$cf_save"
 	])
-test "$cf_cv_default_source" = yes && CPPFLAGS="$CPPFLAGS -D_DEFAULT_SOURCE"
+
+	if test "x$cf_cv_gnu_library_219" = xyes; then
+		cf_save="$CPPFLAGS"
+		AC_CACHE_CHECK(if _XOPEN_SOURCE=$cf_gnu_xopen_source works with _DEFAULT_SOURCE,cf_cv_gnu_dftsrc_219,[
+			CF_ADD_CFLAGS(-D_DEFAULT_SOURCE -D_XOPEN_SOURCE=$cf_gnu_xopen_source)
+			AC_TRY_COMPILE([
+				#include <limits.h>
+				#include <sys/types.h>
+				],[
+				#if (_XOPEN_SOURCE >= $cf_gnu_xopen_source) && (MB_LEN_MAX > 1)
+					return 0;
+				#else
+				#	error GNU C library is too old
+				#endif],
+				[cf_cv_gnu_dftsrc_219=yes],
+				[cf_cv_gnu_dftsrc_219=no])
+			])
+		test "x$cf_cv_gnu_dftsrc_219" = "xyes" || CPPFLAGS="$cf_save"
+	else
+		cf_cv_gnu_dftsrc_219=maybe
+	fi
+
+	if test "x$cf_cv_gnu_dftsrc_219" != xyes; then
+
+		AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
+		AC_TRY_COMPILE([#include <sys/types.h>],[
+			#ifndef _XOPEN_SOURCE
+			#error	expected _XOPEN_SOURCE to be defined
+			#endif],
+			[cf_cv_gnu_source=no],
+			[cf_save="$CPPFLAGS"
+			 CF_ADD_CFLAGS(-D_GNU_SOURCE)
+			 AC_TRY_COMPILE([#include <sys/types.h>],[
+				#ifdef _XOPEN_SOURCE
+				#error	expected _XOPEN_SOURCE to be undefined
+				#endif],
+				[cf_cv_gnu_source=no],
+				[cf_cv_gnu_source=yes])
+			CPPFLAGS="$cf_save"
+			])
+		])
+
+		if test "$cf_cv_gnu_source" = yes
+		then
+		AC_CACHE_CHECK(if we should also define _DEFAULT_SOURCE,cf_cv_default_source,[
+			CF_APPEND_TEXT(CPPFLAGS,-D_GNU_SOURCE)
+			AC_TRY_COMPILE([#include <sys/types.h>],[
+				#ifdef _DEFAULT_SOURCE
+				#error	expected _DEFAULT_SOURCE to be undefined
+				#endif],
+				[cf_cv_default_source=no],
+				[cf_cv_default_source=yes])
+			])
+			if test "$cf_cv_default_source" = yes
+			then
+				CF_APPEND_TEXT(CPPFLAGS,-D_DEFAULT_SOURCE)
+			fi
+		fi
+	fi
+
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -1737,7 +1802,7 @@ fi
 AC_SUBST(PKG_CONFIG)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_C_SOURCE version: 9 updated: 2015/04/12 15:39:00
+dnl CF_POSIX_C_SOURCE version: 10 updated: 2018/06/20 20:23:13
 dnl -----------------
 dnl Define _POSIX_C_SOURCE to the given level, and _POSIX_SOURCE if needed.
 dnl
@@ -1790,7 +1855,8 @@ make an error
 	 fi
 	 CF_MSG_LOG(ifdef from value $cf_POSIX_C_SOURCE)
 	 CFLAGS="$cf_trim_CFLAGS"
-	 CPPFLAGS="$cf_trim_CPPFLAGS $cf_cv_posix_c_source"
+	 CPPFLAGS="$cf_trim_CPPFLAGS"
+	 CF_APPEND_TEXT(CPPFLAGS,$cf_cv_posix_c_source)
 	 CF_MSG_LOG(if the second compile does not leave our definition intact error)
 	 AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifndef _POSIX_C_SOURCE
@@ -2469,7 +2535,7 @@ else
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_XOPEN_SOURCE version: 1 updated: 2011/10/30 17:09:50
+dnl CF_TRY_XOPEN_SOURCE version: 2 updated: 2018/06/20 20:23:13
 dnl -------------------
 dnl If _XOPEN_SOURCE is not defined in the compile environment, check if we
 dnl can define it successfully.
@@ -2485,7 +2551,7 @@ make an error
 #endif],
 	[cf_cv_xopen_source=no],
 	[cf_save="$CPPFLAGS"
-	 CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=$cf_XOPEN_SOURCE"
+	 CF_APPEND_TEXT(CPPFLAGS,-D_XOPEN_SOURCE=$cf_XOPEN_SOURCE)
 	 AC_TRY_COMPILE([
 #include <stdlib.h>
 #include <string.h>
@@ -3363,7 +3429,7 @@ AC_SUBST(ICON_SYMLINK)
 AC_MSG_RESULT($ICON_SYMLINK)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_THEME version: 11 updated: 2015/04/12 15:39:00
+dnl CF_WITH_ICON_THEME version: 12 updated: 2018/04/30 19:37:35
 dnl ------------------
 dnl If asked, check for prerequisites and setup symbols to permit installing
 dnl one or more application icons in the Red Hat icon-theme directory
@@ -3597,7 +3663,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 7 updated: 2018/01/07 13:16:19
+dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/26 19:20:37
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -3732,7 +3798,7 @@ CF_EOF
 	done
 
 	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C $NROFF_PATH -man conftest.in >conftest.out
-	cf_man2html_page=`fgrep -n HEAD1 conftest.out |tail -n 1 |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	cf_man2html_page=`fgrep -n HEAD1 conftest.out |sed -e q |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
 	test -z "$cf_man2html_page" && cf_man2html_page=99999
 	test "$cf_man2html_page" -gt 100 && cf_man2html_page=99999
 
@@ -4058,7 +4124,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 52 updated: 2016/08/27 12:21:42
+dnl CF_XOPEN_SOURCE version: 53 updated: 2018/06/16 18:58:58
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -4107,7 +4173,7 @@ case $host_os in
 	cf_XOPEN_SOURCE=
 	;;
 (linux*|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin)
-	CF_GNU_SOURCE
+	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 (minix*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # POSIX.1-2001 features are ifdef'd with this...
@@ -4297,7 +4363,7 @@ if test -z "$cf_x_athena_lib" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_CPPFLAGS version: 5 updated: 2010/05/26 17:35:30
+dnl CF_X_ATHENA_CPPFLAGS version: 6 updated: 2018/06/20 20:23:13
 dnl --------------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -4316,7 +4382,8 @@ do
 		cf_save="$CPPFLAGS"
 		cf_test=X11/$cf_x_athena_root/SimpleMenu.h
 		if test $cf_path != default ; then
-			CPPFLAGS="$cf_save -I$cf_path/include"
+			CPPFLAGS="$cf_save"
+			CF_APPEND_TEXT(CPPFLAGS,-I$cf_path/include)
 			AC_MSG_CHECKING(for $cf_test in $cf_path)
 		else
 			AC_MSG_CHECKING(for $cf_test)
@@ -4340,7 +4407,7 @@ if test -z "$cf_x_athena_inc" ; then
 	AC_MSG_WARN(
 [Unable to successfully find Athena header files with test program])
 elif test "$cf_x_athena_inc" != default ; then
-	CPPFLAGS="$CPPFLAGS -I$cf_x_athena_inc"
+	CF_APPEND_TEXT(CPPFLAGS,-I$cf_x_athena_inc)
 fi
 ])
 dnl ---------------------------------------------------------------------------
