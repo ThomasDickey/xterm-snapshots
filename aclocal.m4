@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.421 2018/06/26 23:21:53 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.422 2018/06/28 08:10:16 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -602,7 +602,7 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 12 updated: 2018/06/26 16:06:28
+dnl CF_FUNC_GRANTPT version: 13 updated: 2018/06/28 04:10:16
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -614,7 +614,10 @@ stropts.h \
 
 cf_func_grantpt="grantpt ptsname"
 case $host_os in
-(darwin[[0-9]].*)
+(xdarwin[[0-9]].*)
+	;;
+(openbsd[[0-9]].*)
+	# The POSIX entrypoints exist, but have never worked.
 	;;
 (*)
 	cf_func_grantpt="$cf_func_grantpt posix_openpt"
@@ -3663,7 +3666,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/26 19:20:37
+dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/27 18:44:03
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -3798,7 +3801,7 @@ CF_EOF
 	done
 
 	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C $NROFF_PATH -man conftest.in >conftest.out
-	cf_man2html_page=`fgrep -n HEAD1 conftest.out |sed -e q |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	cf_man2html_page=`fgrep -n HEAD1 conftest.out |sed -n '$p' |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
 	test -z "$cf_man2html_page" && cf_man2html_page=99999
 	test "$cf_man2html_page" -gt 100 && cf_man2html_page=99999
 

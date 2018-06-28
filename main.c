@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.815 2018/06/25 01:02:36 tom Exp $ */
+/* $XTermId: main.c,v 1.816 2018/06/28 21:33:35 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -2836,17 +2836,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
     result = pty_search(pty);
 #else
 #if defined(USE_USG_PTYS) || defined(__CYGWIN__)
-#ifdef __GLIBC__		/* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
-    /* GNU libc 2 allows us to abstract away from having to know the
-       master pty device name. */
-    if ((*pty = getpt()) >= 0) {
-	char *name = ptsname(*pty);
-	if (name != 0) {	/* if filesystem is trashed, this may be null */
-	    strcpy(ttydev, name);
-	    result = 0;
-	}
-    }
-#elif defined(__MVS__)
+#if defined(__MVS__)
     result = pty_search(pty);
 #else
     result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
