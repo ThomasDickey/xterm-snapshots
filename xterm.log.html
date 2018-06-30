@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1856 2018/06/25 22:17:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.1861 2018/06/30 00:39:10 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -956,6 +956,26 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify display of non-BMP characters when using bitmap
+    fonts to show a null/empty box rather than the replacement
+    character which was used in cleanup changes for <a href=
+    "#xterm_233">patch #233</a> (report by Christian
+    Weisgerber).</li>
+
+    <li>when setting up clipping rectangle for Xft, allow for the
+    case where xterm is only displaying a combining character,
+    where the base was already written (report by Joshua
+    Crowgey).</li>
+
+    <li>allow reset Xft's state if switching font-sizes when
+    double-buffering is used.</li>
+
+    <li>fix repainting, e.g., on resize, when double-buffering is
+    used with Xft (patch by Daniel Colascione).</li>
+
+    <li>correct some interchanged pairs of symbols in
+    <code>unicode/keysym.map</code> (Brad Town).</li>
+
     <li>improve configure macros CF_GCC_WARNINGS, CF_GNU_SOURCE,
     CF_POSIX_C_SOURCE, CF_TRY_XOPEN_SOURCE, CF_XOPEN_SOURCE,
     CF_X_ATHENA_CPPFLAGS.</li>
@@ -969,7 +989,7 @@
     modes.</li>
 
     <li>re-correct parameter for <em>pid</em> used for DECCKSR,
-    DECRQCSR (see <a href="">xterm #315</a>).</li>
+    DECRQCSR (see <a href="#xterm_315">xterm #315</a>).</li>
 
     <li>hard/soft reset now resets the cursor-blinking state that
     may have been set via escape sequences; the cursor-blinking

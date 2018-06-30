@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.735 2018/04/26 22:43:27 tom Exp $ */
+/* $XTermId: util.c,v 1.739 2018/06/30 00:39:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3170,12 +3170,12 @@ xtermSetClipRectangles(Display *dpy,
 		double adds = (screen->scale_height - 1.0) * FontHeight(screen); \
 		int height = dimRound(adds + FontHeight(screen)); \
 		int descnt = dimRound(adds / 2.0) + FontDescent(screen); \
-		int clip_x = px; \
-		int clip_y = py - height + descnt; \
+		int clip_x = (px); \
+		int clip_y = (py) - height + descnt; \
 		clip.x = 0; \
 		clip.y = 0; \
 		clip.height = (unsigned short) height; \
-		clip.width = (unsigned short) (FontWidth(screen) * plength); \
+		clip.width = (unsigned short) (FontWidth(screen) * (plength)); \
 		XftDrawSetClipRectangles (screen->renderDraw, \
 					  clip_x, clip_y, \
 					  &clip, 1); \
@@ -3205,7 +3205,7 @@ drawClippedXftString(XtermWidget xw,
 			       len);
     TScreen *screen = TScreenOf(xw);
 
-    beginXftClipping(screen, x, y, ncells);
+    beginXftClipping(screen, x, y, ncells ? ncells : 1);
     xtermXftDrawString(xw, attr_flags,
 		       fg_color,
 		       font, x, y,
@@ -3943,13 +3943,12 @@ drawXtermText(XtermWidget xw,
 		    && okFont(NormalWFont(screen)))) {
 		needWide = True;
 	    }
-
+#if OPT_WIDER_ICHAR
 	    /*
 	     * bitmap-fonts are limited to 16-bits.
 	     */
-#if OPT_WIDER_ICHAR
 	    if (ch > 0xffff) {
-		ch = UCS_REPL;
+		ch = 0;
 	    }
 #endif
 	    buffer[dst].byte2 = LO_BYTE(ch);
@@ -4533,7 +4532,7 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
     if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
 	result = (Pixel) color;
     }) if ((attr_flags & BG_COLOR) &&
-	    (color >= 0 && color < MAXCOLORS)) {
+	   (color >= 0 && color < MAXCOLORS)) {
 	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
     }
 #else
@@ -5076,3 +5075,21 @@ XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geom
     }
     return XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h);
 }
+
+#if OPT_DOUBLE_BUFFER
+Window
+VDrawable(TScreen *screen)
+{
+    screen->needSwap = 1;
+    return WhichVWin(screen)->drawable;
+}
+
+void
+discardRenderDraw(TScreen *screen)
+{
+    if (screen->renderDraw) {
+	XftDrawDestroy(screen->renderDraw);
+	screen->renderDraw = NULL;
+    }
+}
+#endif

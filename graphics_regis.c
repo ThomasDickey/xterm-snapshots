@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.101 2017/12/30 15:06:36 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.102 2018/06/29 11:24:04 tom Exp $ */
 
 /*
- * Copyright 2014-2016,2017 by Ross Combs
+ * Copyright 2014-2017,2018 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -7489,7 +7489,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
 		    swap.swap_window = VWindow(screen);
 		    swap.swap_action = XdbeCopied;
-		    XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+		    XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
 		    XFlush(XtDisplay(xw));
 		}
 #endif

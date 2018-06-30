@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.113 2016/10/06 00:56:32 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.118 2018/06/29 00:09:26 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -88,7 +88,7 @@ INSTSETIDFLAGS = NullParameter
  */
 #ifdef LinuxGnuSourceDefines
 # ifdef UseInstalled
-   IMAKEDEFINES = -D_GNU_SOURCE
+   IMAKEDEFINES = -D_DEFAULT_SOURCE -U_XOPEN_SOURCE -D_XOPEN_SOURCE=600
 # endif
 #endif
 

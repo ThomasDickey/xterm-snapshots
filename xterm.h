@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.794 2018/04/29 22:17:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.795 2018/06/29 20:53:56 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1471,6 +1471,12 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
+
+#if OPT_RENDERFONT
+extern void discardRenderDraw(TScreen * /* screen */);
+#else
+#define discardRenderDraw(screen) /* nothing */
+#endif
 
 #if OPT_WIDE_ATTRS
 #define MapToWideColorMode(fg, screen, flags) \
