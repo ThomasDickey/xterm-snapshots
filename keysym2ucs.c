@@ -1,4 +1,4 @@
-/* $XTermId: keysym2ucs.c,v 1.16 2016/05/22 20:22:53 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.17 2018/06/29 00:55:04 tom Exp $
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -602,20 +602,20 @@ static struct codepair {
   { 0x0ba8, 0x2228 }, /*                   downcaret ∨ LOGICAL OR */
   { 0x0ba9, 0x2227 }, /*                     upcaret ∧ LOGICAL AND */
   { 0x0bc0, 0x00af }, /*                     overbar ¯ MACRON */
-  { 0x0bc2, 0x22a5 }, /*                    downtack ⊥ UP TACK */
+  { 0x0bc2, 0x22a4 }, /*                    downtack ⊤ DOWN TACK */
   { 0x0bc3, 0x2229 }, /*                      upshoe ∩ INTERSECTION */
   { 0x0bc4, 0x230a }, /*                   downstile ⌊ LEFT FLOOR */
   { 0x0bc6, 0x005f }, /*                    underbar _ LOW LINE */
   { 0x0bca, 0x2218 }, /*                         jot ∘ RING OPERATOR */
   { 0x0bcc, 0x2395 }, /*                        quad ⎕ APL FUNCTIONAL SYMBOL QUAD */
-  { 0x0bce, 0x22a4 }, /*                      uptack ⊤ DOWN TACK */
+  { 0x0bce, 0x22a5 }, /*                      uptack ⊥ UP TACK */
   { 0x0bcf, 0x25cb }, /*                      circle ○ WHITE CIRCLE */
   { 0x0bd3, 0x2308 }, /*                     upstile ⌈ LEFT CEILING */
   { 0x0bd6, 0x222a }, /*                    downshoe ∪ UNION */
   { 0x0bd8, 0x2283 }, /*                   rightshoe ⊃ SUPERSET OF */
   { 0x0bda, 0x2282 }, /*                    leftshoe ⊂ SUBSET OF */
-  { 0x0bdc, 0x22a2 }, /*                    lefttack ⊢ RIGHT TACK */
-  { 0x0bfc, 0x22a3 }, /*                   righttack ⊣ LEFT TACK */
+  { 0x0bdc, 0x22a3 }, /*                    lefttack ⊣ LEFT TACK */
+  { 0x0bfc, 0x22a2 }, /*                   righttack ⊢ RIGHT TACK */
   { 0x0cdf, 0x2017 }, /*        hebrew_doublelowline ‗ DOUBLE LOW LINE */
   { 0x0ce0, 0x05d0 }, /*                hebrew_aleph א HEBREW LETTER ALEF */
   { 0x0ce1, 0x05d1 }, /*                  hebrew_bet ב HEBREW LETTER BET */
@@ -702,7 +702,7 @@ static struct codepair {
   { 0x0dd8, 0x0e38 }, /*                  Thai_sarau ุ THAI CHARACTER SARA U */
   { 0x0dd9, 0x0e39 }, /*                 Thai_sarauu ู THAI CHARACTER SARA UU */
   { 0x0dda, 0x0e3a }, /*                Thai_phinthu ฺ THAI CHARACTER PHINTHU */
-  { 0x0dde, 0x0e3e }, /*      Thai_maihanakat_maitho ฾ ??? */
+/*  0x0dde                    Thai_maihanakat_maitho ? ??? */
   { 0x0ddf, 0x0e3f }, /*                   Thai_baht ฿ THAI CURRENCY SYMBOL BAHT */
   { 0x0de0, 0x0e40 }, /*                  Thai_sarae เ THAI CHARACTER SARA E */
   { 0x0de1, 0x0e41 }, /*                 Thai_saraae แ THAI CHARACTER SARA AE */

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.889 2018/06/26 23:24:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.891 2018/06/29 20:20:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3101,7 +3101,7 @@ typedef struct _TekWidgetRec {
 /* set when the line contains blinking text.
  */
 
-#if OPT_ZICONBEEP || OPT_TOOLBAR
+#if OPT_ZICONBEEP || OPT_TOOLBAR || (OPT_DOUBLE_BUFFER && OPT_RENDERFONT)
 #define HANDLE_STRUCT_NOTIFY 1
 #else
 #define HANDLE_STRUCT_NOTIFY 0
@@ -3186,7 +3186,7 @@ typedef struct _TekWidgetRec {
 #define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 
 #if OPT_DOUBLE_BUFFER
-#define VDrawable(screen)	(((screen)->needSwap=1), WhichVWin(screen)->drawable)
+extern Window VDrawable(TScreen * /* screen */);
 #else
 #define VDrawable(screen)	VWindow(screen)
 #endif

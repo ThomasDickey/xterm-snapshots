@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1547 2018/05/15 09:05:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1550 2018/06/29 23:15:05 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5307,6 +5307,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   event->xconfigure.y, event->xconfigure.x,
 		   event->xconfigure.height, event->xconfigure.width));
 
+#if OPT_DOUBLE_BUFFER
+	    discardRenderDraw(TScreenOf(xw));
+#endif /* OPT_DOUBLE_BUFFER */
+
 #if OPT_TOOLBAR
 	    /*
 	     * The notification is for the top-level widget, but we care about
@@ -9031,14 +9035,9 @@ VTInitialize(Widget wrequest,
 #if OPT_TOOLBAR
     wnew->VT100_TB_INFO(menu_bar) = request->VT100_TB_INFO(menu_bar);
     init_Ires(VT100_TB_INFO(menu_height));
-#else
-    /* Flag icon name with "***"  on window output when iconified.
-     * Put in a handler that will tell us when we get Map/Unmap events.
-     */
-    if (resource.zIconBeep)
 #endif
-	XtAddEventHandler(my_parent, StructureNotifyMask, False,
-			  HandleStructNotify, (Opaque) 0);
+    XtAddEventHandler(my_parent, StructureNotifyMask, False,
+		      HandleStructNotify, (Opaque) 0);
 #endif /* HANDLE_STRUCT_NOTIFY */
 
     screen->bellInProgress = False;
@@ -9280,8 +9279,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	    xtermCloseXft(screen, getMyXftFont(xw, e, (int) n));
 	}
     }
-    if (screen->renderDraw)
-	XftDrawDestroy(screen->renderDraw);
+    discardRenderDraw(screen);
     {
 	ListXftFonts *p;
 	while ((p = screen->list_xft_fonts) != 0) {

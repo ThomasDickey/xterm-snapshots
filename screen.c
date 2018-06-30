@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.527 2018/04/09 09:03:17 tom Exp $ */
+/* $XTermId: screen.c,v 1.528 2018/06/29 11:38:27 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1882,7 +1882,8 @@ ScreenResize(XtermWidget xw,
 	    XFillRectangle(screen->display, VDrawable(screen),
 			   ReverseGC(xw, screen),
 			   FullWidth(screen), 0,
-			   width - FullWidth(screen), height);
+			   (unsigned) (width - FullWidth(screen)),
+			   (unsigned) height);
 #else
 	    XClearArea(screen->display, VDrawable(screen),
 		       FullWidth(screen), 0,	/* right edge */
@@ -1895,7 +1896,8 @@ ScreenResize(XtermWidget xw,
 	    XFillRectangle(screen->display, VDrawable(screen),
 			   ReverseGC(xw, screen),
 			   0, FullHeight(screen),
-			   width, height - FullHeight(screen));
+			   (unsigned) width,
+			   (unsigned) (height - FullHeight(screen)));
 #else
 	    XClearArea(screen->display, VDrawable(screen),
 		       0, FullHeight(screen),	/* bottom */
