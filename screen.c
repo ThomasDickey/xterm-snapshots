@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.528 2018/06/29 11:38:27 tom Exp $ */
+/* $XTermId: screen.c,v 1.529 2018/07/02 18:28:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2745,6 +2745,8 @@ xtermCheckRect(XtermWidget xw,
 			    *result += (int) ld->combData[off][col];
 			}
 		    })
+		} else {
+		    *result += ' ';
 		}
 	    }
 	}

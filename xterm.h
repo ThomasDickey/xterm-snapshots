@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.795 2018/06/29 20:53:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.796 2018/07/02 21:54:59 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1385,10 +1385,11 @@ extern void updateRightScrollbar(XtermWidget  /* xw */);
 /* tabs.c */
 extern Bool TabToNextStop (XtermWidget /* xw */);
 extern Bool TabToPrevStop (XtermWidget /* xw */);
-extern void TabClear (Tabs  /* tabs */, int  /* col */);
-extern void TabReset (Tabs  /* tabs */);
-extern void TabSet (Tabs  /* tabs */, int  /* col */);
-extern void TabZonk (Tabs  /* tabs */);
+extern void TabClear (Tabs /* tabs */, int /* col */);
+extern void TabReset (Tabs /* tabs */);
+extern void TabSet (Tabs /* tabs */, int /* col */);
+extern void TabZonk (Tabs /* tabs */);
+extern Bool TabIsSet(Tabs /* tabs */, int /* col */);
 
 /* util.c */
 extern Boolean isDefaultBackground(const char * /* name */);
