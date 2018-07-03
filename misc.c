@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.804 2018/06/25 21:49:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.806 2018/07/02 23:52:05 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4304,6 +4304,19 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 		TRACE(("reply DECSCUSR\n"));
 		sprintf(reply, "%d%s", code, cp);
+	    } else if (!strcmp(cp, "t")) {	/* DECSLPP */
+		sprintf(reply, "%d%s",
+			((screen->max_row > 24) ? screen->max_row : 24),
+			cp);
+		TRACE(("reply DECSLPP\n"));
+	    } else if (!strcmp(cp, "$t")) {	/* DECRSPS */
+		TRACE(("reply DECRSPS - not implemented\n"));
+		okay = False;
+	    } else if (!strcmp(cp, "$|")) {	/* DECSCPP */
+		TRACE(("reply DECSCPP\n"));
+		sprintf(reply, "%d%s",
+			((xw->flags & IN132COLUMNS) ? 132 : 80),
+			cp);
 	    } else {
 		okay = False;
 	    }

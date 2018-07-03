@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1550 2018/06/29 23:15:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1554 2018/07/03 00:37:34 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1544,77 +1544,98 @@ select_charset(struct ParseState *sp, int type, int size)
 	sp->parsestate = scs96table;
     }
 }
+/* *INDENT-OFF* */
+static struct {
+    DECNRCM_codes result;
+    int prefix;
+    int suffix;
+    int min_level;
+    int max_level;
+    int need_nrc;
+} scs_table[] = {
+    { nrc_ASCII,             0,   'B', 1, 9, 0 },
+    { nrc_British,           0,   'A', 1, 9, 0 },
+    { nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0 },
+    { nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
+    { nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
+    /* VT2xx */
+    { nrc_DEC_Supp,          0,   '<', 2, 9, 0 },
+    { nrc_Dutch,             0,   '4', 2, 9, 1 },
+    { nrc_Finnish,           0,   '5', 2, 9, 1 },
+    { nrc_Finnish2,          0,   'C', 2, 9, 1 },
+    { nrc_French,            0,   'R', 2, 9, 1 },
+    { nrc_French2,           0,   'f', 2, 9, 1 },
+    { nrc_French_Canadian,   0,   'Q', 2, 9, 1 },
+    { nrc_German,            0,   'K', 2, 9, 1 },
+    { nrc_Italian,           0,   'Y', 2, 9, 1 },
+    { nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1 },
+    { nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1 },
+    { nrc_Spanish,           0,   'Z', 2, 9, 1 },
+    { nrc_Swedish,           0,   '7', 2, 9, 1 },
+    { nrc_Swedish2,          0,   'H', 2, 9, 1 },
+    { nrc_Swiss,             0,   '=', 2, 9, 1 },
+    /* VT3xx */
+    { nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
+    { nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
+    { nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
+    { nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
+    { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
+    { nrc_Portugese,         '%', '6', 3, 9, 1 },
+#if 0
+    /* VT5xx (not implemented) */
+    { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
+    { nrc_Greek,             '"', '?', 5, 9, 0 },
+    { nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
+    { nrc_Hebrew,            '"', '4', 5, 9, 0 },
+    { nrc_Hebrew2,           '%', '=', 5, 9, 1 },
+    { nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
+    { nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
+    { nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
+    { nrc_Russian,           '&', '5', 5, 9, 1 },
+    { nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
+    { nrc_Turkish,           '%', '0', 5, 9, 0 },
+    { nrc_Turkish2,	     '%', '2', 5, 9, 1 },
+#endif
+};
+/* *INDENT-ON* */
+
+#if OPT_DEC_RECTOPS
+static char *
+encode_scs(DECNRCM_codes value)
+{
+    static char buffer[3];
+    Cardinal n;
+    char *result = buffer;
+    for (n = 0; n < XtNumber(scs_table); ++n) {
+	if (scs_table[n].result == value) {
+	    if (scs_table[n].prefix)
+		*result++ = (char) scs_table[n].prefix;
+	    if (scs_table[n].suffix)
+		*result++ = (char) scs_table[n].suffix;
+	    break;
+	}
+    }
+    *result = '\0';
+    return buffer;
+}
+#endif
 
 static void
 decode_scs(XtermWidget xw, int which, int prefix, int suffix)
 {
-    /* *INDENT-OFF* */
-    static struct {
-	DECNRCM_codes result;
-	int prefix;
-	int suffix;
-	int min_level;
-	int max_level;
-	int need_nrc;
-    } table[] = {
-	{ nrc_ASCII,             0,   'B', 1, 9, 0 },
-	{ nrc_British,           0,   'A', 1, 9, 0 },
-	{ nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0 },
-	{ nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
-	{ nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
-	/* VT2xx */
-	{ nrc_DEC_Supp,          0,   '<', 2, 9, 0 },
-	{ nrc_Dutch,             0,   '4', 2, 9, 1 },
-	{ nrc_Finnish,           0,   '5', 2, 9, 1 },
-	{ nrc_Finnish2,          0,   'C', 2, 9, 1 },
-	{ nrc_French,            0,   'R', 2, 9, 1 },
-	{ nrc_French2,           0,   'f', 2, 9, 1 },
-	{ nrc_French_Canadian,   0,   'Q', 2, 9, 1 },
-	{ nrc_German,            0,   'K', 2, 9, 1 },
-	{ nrc_Italian,           0,   'Y', 2, 9, 1 },
-	{ nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1 },
-	{ nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1 },
-	{ nrc_Spanish,           0,   'Z', 2, 9, 1 },
-	{ nrc_Swedish,           0,   '7', 2, 9, 1 },
-	{ nrc_Swedish2,          0,   'H', 2, 9, 1 },
-	{ nrc_Swiss,             0,   '=', 2, 9, 1 },
-	/* VT3xx */
-	{ nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
-	{ nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
-	{ nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
-	{ nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
-	{ nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
-	{ nrc_Portugese,         '%', '6', 3, 9, 1 },
-#if 0
-	/* VT5xx (not implemented) */
-	{ nrc_Cyrillic,          '&', '4', 5, 9, 0 },
-	{ nrc_Greek,             '"', '?', 5, 9, 0 },
-	{ nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
-	{ nrc_Hebrew,            '"', '4', 5, 9, 0 },
-	{ nrc_Hebrew2,           '%', '=', 5, 9, 1 },
-	{ nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
-	{ nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
-	{ nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
-	{ nrc_Russian,           '&', '5', 5, 9, 1 },
-	{ nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
-	{ nrc_Turkish,           '%', '0', 5, 9, 0 },
-	{ nrc_Turkish2,		 '%', '2', 5, 9, 1 },
-#endif
-    };
-    /* *INDENT-ON* */
 
     TScreen *screen = TScreenOf(xw);
     Cardinal n;
     DECNRCM_codes result = nrc_Unknown;
 
     suffix &= 0x7f;
-    for (n = 0; n < XtNumber(table); ++n) {
-	if (prefix == table[n].prefix
-	    && suffix == table[n].suffix
-	    && screen->vtXX_level >= table[n].min_level
-	    && screen->vtXX_level <= table[n].max_level
-	    && (table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
-	    result = table[n].result;
+    for (n = 0; n < XtNumber(scs_table); ++n) {
+	if (prefix == scs_table[n].prefix
+	    && suffix == scs_table[n].suffix
+	    && screen->vtXX_level >= scs_table[n].min_level
+	    && screen->vtXX_level <= scs_table[n].max_level
+	    && (scs_table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
+	    result = scs_table[n].result;
 	    break;
 	}
     }
@@ -1974,6 +1995,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     int thischar = -1;
     XTermRect myRect;
     Boolean extended;
+#if OPT_DEC_RECTOPS
+    int thispage = 1;
+#endif
 
     do {
 #if OPT_WIDE_CHARS
@@ -4196,6 +4220,109 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
 		xtermParseRect(xw, ParamPair(0), &myRect);
 		ScrnMarkRectangle(xw, &myRect, True, ParamPair(4));
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECSCPP:
+	    if (screen->vtXX_level >= 3) {
+		TRACE(("CASE_DECSCPP\n"));
+		/* default and 0 are "80", with "132" as the other legal choice */
+		switch (zero_if_default(0)) {
+		case 0:
+		case 80:
+		    value = 80;
+		    break;
+		case 132:
+		    value = 132;
+		    break;
+		default:
+		    value = -1;
+		    break;
+		}
+		if (value > 0) {
+		    if (screen->cur_col + 1 > value)
+			CursorSet(screen, screen->cur_row, value - 1, xw->flags);
+		    UIntClr(xw->flags, IN132COLUMNS);
+		    if (value == 132)
+			UIntSet(xw->flags, IN132COLUMNS);
+		    RequestResize(xw, -1, value, True);
+		}
+		ResetState(sp);
+	    }
+	    break;
+
+	case CASE_DECRQPSR:
+#define reply_char(n,c) do { reply.a_radix[(n)] = 1; reply.a_param[(n)++] = (ParmType)(c); } while (0)
+#define reply_bit(n,c) ((n) ? (c) : 0)
+	    if (screen->vtXX_level >= 3) {
+		TRACE(("CASE_DECRQPSR\n"));
+		switch (GetParam(0)) {
+		case 1:
+		    TRACE(("...DECCIR\n"));
+		    init_reply(ANSI_DCS);
+		    count = 0;
+		    reply_char(count, '1');
+		    reply_char(count, '$');
+		    reply_char(count, 'u');
+		    reply.a_param[count++] = (ParmType) screen->cur_row;
+		    reply.a_param[count++] = (ParmType) screen->cur_col;
+		    reply.a_param[count++] = (ParmType) thispage;
+		    reply_char(count, ';');
+		    reply_char(count, (0x40
+				       | reply_bit(xw->flags & INVERSE, 8)
+				       | reply_bit(xw->flags & BLINK, 4)
+				       | reply_bit(xw->flags & UNDERLINE, 2)
+				       | reply_bit(xw->flags & BOLD, 1)
+			       ));
+		    reply_char(count, ';');
+		    reply_char(count, 0x40 |
+			       reply_bit(screen->protected_mode &
+					 DEC_PROTECT, 1)
+			);
+		    reply_char(count, ';');
+		    reply_char(count, (0x40
+				       | reply_bit(screen->do_wrap, 8)
+				       | reply_bit((screen->curss == 3), 4)
+				       | reply_bit((screen->curss == 2), 2)
+				       | reply_bit(xw->flags & ORIGIN, 1)
+			       ));
+		    reply_char(count, ';');
+		    reply.a_param[count++] = screen->curgl;
+		    reply.a_param[count++] = screen->curgr;
+		    reply_char(count, ';');
+		    reply_char(count, 0x4f);	/* assert all 96's */
+		    reply_char(count, ';');
+		    for (item = 0; item < 4; ++item) {
+			char *temp = encode_scs(screen->gsets[item]);
+			while (*temp != '\0') {
+			    reply_char(count, *temp++);
+			}
+		    }
+		    reply.a_nparam = (ParmType) count;
+		    unparseseq(xw, &reply);
+		    break;
+		case 2:
+		    TRACE(("...DECTABSR\n"));
+		    init_reply(ANSI_DCS);
+		    reply.a_delim = "/";
+		    count = 0;
+		    reply_char(count, '2');
+		    reply_char(count, '$');
+		    reply_char(count, 'u');
+		    for (item = 0; item < MAX_TABS; ++item) {
+			if (count + 1 >= NPARAM)
+			    break;
+			if (TabIsSet(xw->tabs, item)) {
+			    reply.a_param[count++] = (ParmType) (item + 1);
+			}
+			if (item > screen->max_col)
+			    break;
+		    }
+		    reply.a_nparam = (ParmType) count;
+		    unparseseq(xw, &reply);
+		    break;
+		}
 	    }
 	    ResetState(sp);
 	    break;
@@ -7047,8 +7174,10 @@ unparseputc1(XtermWidget xw, int c)
 void
 unparseseq(XtermWidget xw, ANSI *ap)
 {
+    char temp[8];
     int c;
 
+    assert(ap->a_nparam < NPARAM);
     unparseputc1(xw, c = ap->a_type);
     if (c == ANSI_ESC
 	|| c == ANSI_DCS
@@ -7064,18 +7193,25 @@ unparseseq(XtermWidget xw, ANSI *ap)
 	    unparseputc(xw, ap->a_pintro);
 	for (i = 0; i < ap->a_nparam; ++i) {
 	    if (i != 0) {
-		if (ap->a_delim) {
+		if (ap->a_radix[i] == 1 || ap->a_radix[i - 1] == 1) {
+		    ;
+		} else if (ap->a_delim) {
 		    unparseputs(xw, ap->a_delim);
 		} else {
 		    unparseputc(xw, ';');
 		}
 	    }
-	    if (ap->a_radix[i]) {
-		char temp[8];
+	    switch (ap->a_radix[i]) {
+	    case 16:
 		sprintf(temp, "%04X", ap->a_param[i] & 0xffff);
 		unparseputs(xw, temp);
-	    } else {
+		break;
+	    case 1:
+		unparseputc(xw, ap->a_param[i]);
+		break;
+	    default:
 		unparseputn(xw, (unsigned int) ap->a_param[i]);
+		break;
 	    }
 	}
 	if ((inters = ap->a_inters) != 0) {
