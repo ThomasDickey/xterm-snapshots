@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.529 2018/07/02 18:28:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.531 2018/07/04 18:20:45 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -151,22 +151,18 @@ traceScrnBuf(const char *tag, TScreen *screen, ScrnBuf sb, unsigned len)
 #define TRACE_SCRNBUF(tag, screen, sb, len)	/*nothing */
 #endif
 
-static unsigned
-scrnHeadSize(TScreen *screen, unsigned count)
-{
-    unsigned result = SizeOfLineData;
-
-    (void) screen;
-
 #if OPT_WIDE_CHARS
-    if (screen->wide_chars) {
-	result += (unsigned) screen->lineExtra;
-    }
+#define scrnHeadSize(screen, count) \
+	(unsigned) ((count) * \
+		    (SizeOfLineData + \
+		     ((screen)->wide_chars \
+		      ? (unsigned) (screen)->lineExtra \
+		      : 0)))
+#else
+#define scrnHeadSize(screen, count) \
+	(unsigned) ((count) * \
+		    SizeOfLineData)
 #endif
-    result *= count;
-
-    return result;
-}
 
 ScrnBuf
 scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
@@ -174,6 +170,7 @@ scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
     unsigned size = scrnHeadSize(screen, offset);
     ScrnBuf result = ScrnBufAddr(base, size);
 
+    (void) screen;
     assert((int) offset >= 0);
 
     return result;
@@ -199,6 +196,7 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
     unsigned skipNcolCellColor;
 #endif
 
+    (void) screen;
     AlignValue(ncol);
 
     skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
@@ -271,6 +269,7 @@ allocScrnHead(TScreen *screen, unsigned nrow)
     ScrnPtr *result;
     unsigned size = scrnHeadSize(screen, 1);
 
+    (void) screen;
     result = (ScrnPtr *) calloc((size_t) nrow, (size_t) size);
     if (result == 0)
 	SysError(ERROR_SCALLOC);

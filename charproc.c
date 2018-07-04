@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1554 2018/07/03 00:37:34 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1557 2018/07/04 18:22:04 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1994,7 +1994,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     int laststate;
     int thischar = -1;
     XTermRect myRect;
-    Boolean extended;
 #if OPT_DEC_RECTOPS
     int thispage = 1;
 #endif
@@ -2011,7 +2010,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (c >= 0x300
 	    && screen->wide_chars
-	    && my_wcwidth((wchar_t) c) == 0
+	    && CharWidth(c) == 0
 	    && !isWideControl(c)) {
 	    int prev, test;
 	    Boolean used = True;
@@ -2036,9 +2035,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		prev = (int) XTERM_CELL(use_row, use_col);
 		test = do_precomposition(prev, (int) c);
 		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-		       prev, my_wcwidth((wchar_t) prev),
-		       (int) c, my_wcwidth((wchar_t) c),
-		       test, my_wcwidth((wchar_t) test)));
+		       prev, CharWidth(prev),
+		       (int) c, CharWidth(c),
+		       test, CharWidth(test)));
 	    } else {
 		prev = -1;
 		test = -1;
@@ -2048,7 +2047,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * only if it does not change the width of the base character
 	     */
 	    if (test != -1
-		&& my_wcwidth((wchar_t) test) == my_wcwidth((wchar_t) prev)) {
+		&& CharWidth(test) == CharWidth(prev)) {
 		putXtermCell(screen, use_row, use_col, test);
 	    } else if (screen->char_was_written
 		       || getXtermCell(screen, use_row, use_col) > ' ') {
@@ -3099,6 +3098,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     * properly eat all the parameters for unsupported modes.
 		     */
 		    if_OPT_ISO_COLORS(screen, {
+			Boolean extended;
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_foreground = value;
@@ -3135,6 +3135,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 		case 48:
 		    if_OPT_ISO_COLORS(screen, {
+			Boolean extended;
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_background = value;
@@ -4181,9 +4182,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		value = zero_if_default(0);
 
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-		if (nparam > 0
-		    && ((value >= 32 && value <= 126)
-			|| (value >= 160 && value <= 255))) {
+		if (nparam > 0 && IsLatin1(value)) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}
@@ -5261,7 +5260,7 @@ dotext(XtermWidget xw,
 			   buf[n] <= 0xa0) {
 		    last_chomp = 1;
 		} else {
-		    last_chomp = my_wcwidth((wchar_t) buf[n]);
+		    last_chomp = CharWidth(buf[n]);
 		    if (last_chomp <= 0) {
 			IChar ch = buf[n];
 			Bool eat_it = (ch > 127);
@@ -9724,7 +9723,7 @@ VTRealize(Widget w,
     }
 
     /* really screwed if we couldn't open default font */
-    if (!getNormalFont(screen, fNorm)->fs) {
+    if (!GetNormalFont(screen, fNorm)->fs) {
 	xtermWarning("unable to locate a suitable font\n");
 	Exit(1);
     }
@@ -9931,7 +9930,7 @@ VTRealize(Widget w,
     if (UsingRenderFont(xw)
 	&& getIconicFont(screen)->fs == 0) {
 	screen->icon_fontnum = fontMenu_default;
-	getIconicFont(screen)->fs = getNormalFont(screen, fNorm)->fs;	/* need for next-if */
+	getIconicFont(screen)->fs = GetNormalFont(screen, fNorm)->fs;	/* need for next-if */
 	ReportIcons(("using TrueType font as iconFont\n"));
     }
 #endif
@@ -10685,6 +10684,7 @@ ShowCursor(void)
      * Compare the current cell to the last set of colors used for the
      * cursor and update the GC's if needed.
      */
+    (void) fg_bg;
     if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
     });

@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.107 2017/06/16 23:40:20 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.108 2018/07/04 15:45:08 tom Exp $ */
 
 /*
- * Copyright 1999-2016,2017 by Thomas E. Dickey
+ * Copyright 1999-2017,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -260,7 +260,7 @@ nextPtyData(TScreen *screen, PtyData *data)
 {
     IChar result;
     if (screen->utf8_inparse) {
-	result = skipPtyData(data);
+	skipPtyData(data, result);
     } else {
 	result = *((data)->next++);
 	if (!screen->output_eight_bits) {
@@ -268,20 +268,6 @@ nextPtyData(TScreen *screen, PtyData *data)
 	}
     }
     TRACE2(("nextPtyData returns %#x\n", result));
-    return result;
-}
-
-/*
- * Simply return the data and skip past it.
- */
-IChar
-skipPtyData(PtyData *data)
-{
-    IChar result = data->utf_data;
-
-    data->next += data->utf_size;
-    data->utf_size = 0;
-
     return result;
 }
 #endif
