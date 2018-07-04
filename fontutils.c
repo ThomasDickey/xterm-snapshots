@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.572 2018/06/29 23:28:39 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.573 2018/07/04 17:22:01 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -559,7 +559,7 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     int res_y;
 
     props = get_font_name_props(screen->display,
-				getNormalFont(screen, fNorm)->fs, 0);
+				GetNormalFont(screen, fNorm)->fs, 0);
     if (props == 0)
 	return result;
 
@@ -1100,11 +1100,11 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 	    printf("Loaded VTFonts(default)\n");
 	}
 
-	reportOneVTFont("fNorm", getNormalFont(screen, fNorm));
-	reportOneVTFont("fBold", getNormalFont(screen, fBold));
+	reportOneVTFont("fNorm", GetNormalFont(screen, fNorm));
+	reportOneVTFont("fBold", GetNormalFont(screen, fBold));
 #if OPT_WIDE_CHARS
-	reportOneVTFont("fWide", getNormalFont(screen, fWide));
-	reportOneVTFont("fWBold", getNormalFont(screen, fWBold));
+	reportOneVTFont("fWide", GetNormalFont(screen, fWide));
+	reportOneVTFont("fWBold", GetNormalFont(screen, fWBold));
 #endif
     }
 }
@@ -1524,13 +1524,13 @@ xtermLoadFont(XtermWidget xw,
     screen->ifnts_ok = False;
 #endif
 
-    xtermCopyFontInfo(getNormalFont(screen, fNorm), &fnts[fNorm]);
-    xtermCopyFontInfo(getNormalFont(screen, fBold), &fnts[fBold]);
+    xtermCopyFontInfo(GetNormalFont(screen, fNorm), &fnts[fNorm]);
+    xtermCopyFontInfo(GetNormalFont(screen, fBold), &fnts[fBold]);
 #if OPT_WIDE_CHARS
-    xtermCopyFontInfo(getNormalFont(screen, fWide), &fnts[fWide]);
+    xtermCopyFontInfo(GetNormalFont(screen, fWide), &fnts[fWide]);
     if (fnts[fWBold].fs == NULL)
-	xtermCopyFontInfo(getNormalFont(screen, fWide), &fnts[fWide]);
-    xtermCopyFontInfo(getNormalFont(screen, fWBold), &fnts[fWBold]);
+	xtermCopyFontInfo(GetNormalFont(screen, fWide), &fnts[fWide]);
+    xtermCopyFontInfo(GetNormalFont(screen, fWBold), &fnts[fWBold]);
 #endif
 
     xtermUpdateFontGCs(xw, False);
@@ -2081,16 +2081,16 @@ xtermLoadWideFonts(XtermWidget xw, Bool nullOk)
     TScreen *screen = TScreenOf(xw);
     Bool result;
 
-    if (EmptyFont(getNormalFont(screen, fWide)->fs)) {
-	result = (isWideFont(getNormalFont(screen, fNorm)->fs, "normal", nullOk)
-		  && isWideFont(getNormalFont(screen, fBold)->fs, "bold", nullOk));
+    if (EmptyFont(GetNormalFont(screen, fWide)->fs)) {
+	result = (isWideFont(GetNormalFont(screen, fNorm)->fs, "normal", nullOk)
+		  && isWideFont(GetNormalFont(screen, fBold)->fs, "bold", nullOk));
     } else {
-	result = (isWideFont(getNormalFont(screen, fWide)->fs, "wide", nullOk)
-		  && isWideFont(getNormalFont(screen, fWBold)->fs,
+	result = (isWideFont(GetNormalFont(screen, fWide)->fs, "wide", nullOk)
+		  && isWideFont(GetNormalFont(screen, fWBold)->fs,
 				"wide-bold", nullOk));
 	if (result && !screen->utf8_latin1) {
-	    result = (isWideFont(getNormalFont(screen, fNorm)->fs, "normal", nullOk)
-		      && isWideFont(getNormalFont(screen, fBold)->fs,
+	    result = (isWideFont(GetNormalFont(screen, fNorm)->fs, "normal", nullOk)
+		      && isWideFont(GetNormalFont(screen, fBold)->fs,
 				    "bold", nullOk));
 	}
     }
@@ -3110,8 +3110,8 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 		       ? (screen->scrollWidget->core.width +
 			  BorderWidth(screen->scrollWidget))
 		       : 0);
-    xtermComputeFontInfo(xw, win, getNormalFont(screen, fNorm)->fs, scrollbar_width);
-    xtermSaveFontInfo(screen, getNormalFont(screen, fNorm)->fs);
+    xtermComputeFontInfo(xw, win, GetNormalFont(screen, fNorm)->fs, scrollbar_width);
+    xtermSaveFontInfo(screen, GetNormalFont(screen, fNorm)->fs);
 
     if (doresize) {
 	if (VWindow(screen)) {
@@ -4625,7 +4625,7 @@ getNormalFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
     if (which >= 0 && which < fMAX)
-	result = &(screen->fnts[which]);
+	result = GetNormalFont(screen, which);
     return result;
 }
 
@@ -4635,7 +4635,7 @@ getDoubleFont(TScreen *screen, int which)
 {
     XTermFonts *result = 0;
     if ((int) which >= 0 && which < NUM_CHRSET)
-	result = &(screen->double_fonts[which]);
+	result = GetDoubleFont(screen, which);
     return result;
 }
 #endif
@@ -4647,7 +4647,7 @@ getItalicFont(TScreen *screen, int which)
     XTermFonts *result = 0;
 #if OPT_WIDE_ATTRS
     if (which >= 0 && which < fMAX)
-	result = &(screen->ifnts[which]);
+	result = GetItalicFont(screen, which);
 #else
     (void) screen;
     (void) which;

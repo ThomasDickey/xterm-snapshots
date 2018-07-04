@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.739 2018/06/30 00:39:10 tom Exp $ */
+/* $XTermId: util.c,v 1.741 2018/07/04 17:24:12 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2718,14 +2718,14 @@ getXftColor(XtermWidget xw, Pixel pixel)
 	      ? (((ch) >= 128 && (ch) < 160) \
 	          ? (TScreenOf(xw)->c1_printable ? 1 : 0) \
 	          : 1) \
-	      : my_wcwidth(ch)))
+	      : CharWidth(ch)))
 #else
 #define XtermCellWidth(xw, ch) \
 	(((ch) == 0 || (ch) == 127) \
 	  ? 0 \
 	  : (((ch) < 256) \
 	      ? 1 \
-	      : my_wcwidth(ch)))
+	      : CharWidth(ch)))
 #endif
 
 #endif /* OPT_RENDERWIDE */
@@ -2984,7 +2984,7 @@ ucs_workaround(XtermWidget xw,
 	IChar eqv = (IChar) AsciiEquivs(ch);
 
 	if (eqv != (IChar) ch) {
-	    int width = my_wcwidth((wchar_t) ch);
+	    int width = CharWidth(ch);
 
 	    do {
 		drawXtermText(xw,
@@ -3220,10 +3220,10 @@ drawClippedXftString(XtermWidget xw,
 #ifndef NO_ACTIVE_ICON
 #define WhichVFontData(screen,name) \
 		(IsIcon(screen) ? getIconicFont(screen) \
-				: getNormalFont(screen, name))
+				: GetNormalFont(screen, name))
 #else
 #define WhichVFontData(screen,name) \
-				getNormalFont(screen, name)
+				GetNormalFont(screen, name)
 #endif
 
 static int
@@ -3538,7 +3538,7 @@ drawXtermText(XtermWidget xw,
 		unsigned ch = (unsigned) text[last];
 		int filler = 0;
 #if OPT_WIDE_CHARS
-		int needed = my_wcwidth((wchar_t) ch);
+		int needed = CharWidth(ch);
 		XftFont *currFont = pickXftFont(needed, font, wfont);
 
 		if (xtermIsDecGraphic(ch)) {
@@ -3801,7 +3801,7 @@ drawXtermText(XtermWidget xw,
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = my_wcwidth((wchar_t) ch);
+	    ch_width = CharWidth(ch);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((on_wide || ch_width > 1)
@@ -3939,7 +3939,7 @@ drawXtermText(XtermWidget xw,
 
 	    if (!needWide
 		&& !IsIcon(screen)
-		&& ((on_wide || my_wcwidth((wchar_t) ch) > 1)
+		&& ((on_wide || CharWidth(ch) > 1)
 		    && okFont(NormalWFont(screen)))) {
 		needWide = True;
 	    }
@@ -4630,7 +4630,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 	size_t off;
 
 	TRACE(("addXtermCombining %d,%d %#x (%d)\n",
-	       row, col, ch, my_wcwidth((wchar_t) ch)));
+	       row, col, ch, CharWidth(ch)));
 
 	for_each_combData(off, ld) {
 	    if (!ld->combData[off][col]) {

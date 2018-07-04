@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.796 2018/07/02 21:54:59 tom Exp $ */
+/* $XTermId: xterm.h,v 1.799 2018/07/04 16:15:51 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -870,12 +870,16 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 extern void report_char_class(XtermWidget);
 #endif
 
+#define IsLatin1(n)  (((n) >= 32 && (n) <= 126) || ((n) >= 160 && (n) <= 255))
+
 #if OPT_WIDE_CHARS
-extern Bool iswide(int  /* i */);
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
-#define isWide(n)    (((IChar)(n) >= first_widechar) && iswide(n))
+#define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
+#define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
+#define CharWidth(n) (((n) < 256) ? (IsLatin1(n) ? 1 : 0) : my_wcwidth((wchar_t) (n)))
 #else
 #define WideCells(n) 1
+#define CharWidth(n) (IsLatin1(n) ? 1 : 0)
 #endif
 
 /* cachedCgs.c */
@@ -1238,17 +1242,23 @@ extern void noleaks_ptydata ( void );
 #if OPT_WIDE_CHARS
 extern Char *convertToUTF8 (Char * /* lp */, unsigned  /* c */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
-extern IChar skipPtyData (PtyData * /* data */);
 extern PtyData * fakePtyData(PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (TScreen * /* screen */, int  /* f */);
 extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
-#define morePtyData(screen,data) \
+#define morePtyData(screen, data) \
 	(((data)->last > (data)->next) \
 	 ? (((screen)->utf8_inparse && !(data)->utf_size) \
 	    ? decodeUtf8(screen, data) \
 	    : True) \
 	 : False)
+
+#define skipPtyData(data, result) \
+	do { \
+	    result = (data)->utf_data; \
+	    (data)->next += (data)->utf_size; \
+	    (data)->utf_size = 0; \
+	} while (0)
 #else
 #define morePtyData(screen, data) ((data)->last > (data)->next)
 #define nextPtyData(screen, data) (IChar) (*((data)->next++) & \

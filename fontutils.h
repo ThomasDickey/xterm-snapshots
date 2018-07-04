@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.122 2018/04/22 16:34:56 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.123 2018/07/04 17:23:03 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -67,6 +67,15 @@ extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define getIconicFont(screen) (&((screen)->fnt_icon))
+
+/* use these when "which" is constant, or known in-limits */
+#define GetNormalFont(screen, which) (&((screen)->fnts[which]))
+#define GetDoubleFont(screen, which) (&((screen)->double_fonts[which]))
+#if OPT_WIDE_ATTRS
+#define GetItalicFont(screen, which) (&((screen)->ifnts[which]))
+#else
+#define GetItalicFont(screen, which) 0
+#endif
 
 #define FirstItemOf(vector) ((vector) ? (vector)[0] : 0)
 #define CurrentXftFont(xw)  ((xw)->work.fonts.xft.list_n[0])
