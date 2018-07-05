@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.531 2018/07/04 18:20:45 tom Exp $ */
+/* $XTermId: screen.c,v 1.532 2018/07/05 00:11:18 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -757,10 +757,26 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 
 	ld = getLineData(screen, row);
 
+	if (col + len > ld->lineSize)
+	    len = (ld->lineSize - col);
+
+	if_OPT_WIDE_CHARS(screen, {
+	    if (col + len < ld->lineSize &&
+		ld->charData[col + len] == HIDDEN_CHAR) {
+		len++;
+	    }
+	    if (col > 0 &&
+		ld->charData[col] == HIDDEN_CHAR) {
+		len++;
+		col--;
+	    }
+	});
+
 	flags = (int) ((unsigned) flags | TERM_COLOR_FLAGS(xw));
 
-	for (n = 0; n < len; ++n)
+	for (n = 0; n < len; ++n) {
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
+	}
 
 	FillIAttr(ld->attribs + col, (unsigned) flags, (size_t) len);
 
