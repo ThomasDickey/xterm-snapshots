@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.741 2018/07/04 17:24:12 tom Exp $ */
+/* $XTermId: util.c,v 1.744 2018/07/05 00:27:15 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -537,6 +537,35 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 	}
     }
 }
+
+#if OPT_WIDE_CHARS
+/*
+ * If we're repainting a section of wide-characters that, e.g., ClearCells has
+ * repaired when finding double-cell characters, then we should account for
+ * that in the repaint.
+ */
+static void
+ScrnUpdate2(XtermWidget xw,
+	    int toprow,
+	    int leftcol,
+	    int nrows,
+	    int ncols,
+	    Bool force)
+{
+    if_OPT_WIDE_CHARS(TScreenOf(xw), {
+	if (leftcol + ncols <= TScreenOf(xw)->max_col)
+	    ncols++;
+	if (leftcol > 0) {
+	    leftcol--;
+	    ncols++;
+	}
+    });
+    ScrnUpdate(xw, toprow, leftcol, nrows, ncols, force);
+}
+#else
+#define ScrnUpdate2(xw, toprow, leftcol, nrows, ncols, force) \
+	ScrnUpdate(xw, toprow, leftcol, nrows, ncols, force)
+#endif
 
 /*
  * scrolls the screen by amount lines, erases bottom, doesn't alter
@@ -1127,6 +1156,7 @@ InsertLine(XtermWidget xw, int n)
     int i;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
+    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     if (!ScrnIsRowInMargins(screen, screen->cur_row)
 	|| screen->cur_col < left
@@ -1152,7 +1182,7 @@ InsertLine(XtermWidget xw, int n)
     ResetWrap(screen);
     if (n > (i = screen->bot_marg - screen->cur_row + 1))
 	n = i;
-    if (screen->jumpscroll) {
+    if (screen->jumpscroll && scroll_full_line) {
 	if (screen->scroll_amt <= 0 &&
 	    screen->cur_row <= -screen->refresh_amt) {
 	    if (-screen->refresh_amt + n > MaxRows(screen))
@@ -1164,7 +1194,7 @@ InsertLine(XtermWidget xw, int n)
 		FlushScroll(xw);
 	}
     }
-    if (!screen->scroll_amt) {
+    if (!screen->scroll_amt && scroll_full_line) {
 	int shift = INX2ROW(screen, 0);
 	int bot = screen->max_row - shift;
 	int refreshheight = n;
@@ -1188,14 +1218,20 @@ InsertLine(XtermWidget xw, int n)
 	}
     }
     if (n > 0) {
-	if (left > 0 || right < screen->max_col) {
-	    scrollInMargins(xw, -n, screen->cur_row);
-	} else {
+	if (scroll_full_line) {
 	    ScrnInsertLine(xw,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->cur_row,
 			   (unsigned) n);
+	} else {
+	    scrollInMargins(xw, -n, screen->cur_row);
+	    ScrnUpdate2(xw,
+			screen->cur_row,
+			left,
+			screen->bot_marg + 1 - screen->cur_row,
+			right + 1 - left,
+			True);
 	}
     }
 }
@@ -1214,6 +1250,7 @@ DeleteLine(XtermWidget xw, int n)
     Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
 					  && !screen->whichBuf
 					  && screen->cur_row == 0);
+    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     if (!ScrnIsRowInMargins(screen, screen->cur_row) ||
 	!ScrnIsColInMargins(screen, screen->cur_col))
@@ -1236,7 +1273,7 @@ DeleteLine(XtermWidget xw, int n)
     }
 
     ResetWrap(screen);
-    if (screen->jumpscroll) {
+    if (screen->jumpscroll && scroll_full_line) {
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
 		FlushScroll(xw);
@@ -1268,7 +1305,14 @@ DeleteLine(XtermWidget xw, int n)
     }
 
     /* repaint the screen, as needed */
-    if (!screen->scroll_amt) {
+    if (!scroll_full_line) {
+	ScrnUpdate2(xw,
+		    screen->cur_row,
+		    left,
+		    screen->bot_marg + 1 - screen->cur_row,
+		    right + 1 - left,
+		    True);
+    } else if (!screen->scroll_amt) {
 	int shift = INX2ROW(screen, 0);
 	int bot = screen->max_row - shift;
 	int refreshtop;

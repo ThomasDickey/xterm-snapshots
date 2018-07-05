@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.102 2018/06/29 11:24:04 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.103 2018/07/04 20:09:50 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -7479,7 +7479,6 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		       iterations,
 		       DiffTime(curr_tv) - DiffTime(prev_tv)));
 		context->force_refresh = 0;
-		/* FIXME: pre-ANSI compilers need memcpy() */
 		prev_tv = curr_tv;
 		iterations = 0U;
 		refresh_modified_displayed_graphics(xw);
