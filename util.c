@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.744 2018/07/05 00:27:15 tom Exp $ */
+/* $XTermId: util.c,v 1.746 2018/07/06 01:36:12 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -585,6 +585,7 @@ xtermScroll(XtermWidget xw, int amount)
     Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
 					  && !screen->whichBuf
 					  && screen->top_marg == 0);
+    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     TRACE(("xtermScroll count=%d\n", amount));
 
@@ -598,6 +599,9 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > i)
 	amount = i;
 
+    if (!scroll_full_line) {
+	refreshheight = 0;
+    } else
 #if OPT_SCROLL_LOCK
     if (screen->allowScrollLock && screen->scroll_lock) {
 	refreshheight = 0;
@@ -707,6 +711,12 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > 0) {
 	if (left > 0 || right < screen->max_col) {
 	    scrollInMargins(xw, amount, screen->top_marg);
+	    ScrnUpdate2(xw,
+			screen->top_marg,
+			left,
+			screen->bot_marg + 1 - screen->top_marg,
+			right + 1 - left,
+			True);
 	} else if (scroll_all_lines) {
 	    ScrnDeleteLine(xw,
 			   screen->saveBuf_index,
@@ -839,6 +849,7 @@ RevScroll(XtermWidget xw, int amount)
     int i = screen->bot_marg - screen->top_marg + 1;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
+    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     TRACE(("RevScroll count=%d\n", amount));
 
@@ -854,7 +865,9 @@ RevScroll(XtermWidget xw, int amount)
     if (ScrnHaveSelection(screen))
 	adjustHiliteOnBakScroll(xw, amount);
 
-    if (screen->jumpscroll) {
+    if (!scroll_full_line) {
+	;
+    } else if (screen->jumpscroll) {
 	if (screen->scroll_amt < 0) {
 	    if (-screen->refresh_amt + amount > i)
 		FlushScroll(xw);
@@ -907,6 +920,12 @@ RevScroll(XtermWidget xw, int amount)
     if (amount > 0) {
 	if (left > 0 || right < screen->max_col) {
 	    scrollInMargins(xw, -amount, screen->top_marg);
+	    ScrnUpdate2(xw,
+			screen->top_marg,
+			left,
+			screen->bot_marg + 1 - screen->top_marg,
+			right + 1 - left,
+			True);
 	} else {
 	    ScrnInsertLine(xw,
 			   screen->visbuf,
