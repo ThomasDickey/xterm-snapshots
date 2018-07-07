@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.746 2018/07/06 01:36:12 tom Exp $ */
+/* $XTermId: util.c,v 1.747 2018/07/07 13:20:25 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5146,7 +5146,9 @@ VDrawable(TScreen *screen)
     screen->needSwap = 1;
     return WhichVWin(screen)->drawable;
 }
+#endif
 
+#if OPT_RENDERFONT
 void
 discardRenderDraw(TScreen *screen)
 {
