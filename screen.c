@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.532 2018/07/05 00:11:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.533 2018/07/07 11:54:12 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -714,6 +714,19 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
     if (len > 0) {
 	int n;
 	int last = col + len;
+
+	if_OPT_WIDE_CHARS(screen, {
+	    if (col > 0 &&
+		((dst->charData[col] == HIDDEN_CHAR) ^
+		 (src->charData[col] == HIDDEN_CHAR))) {
+		dst->charData[col - 1] = ' ';
+	    }
+	    if (last < src->lineSize &&
+		((dst->charData[last] == HIDDEN_CHAR) ^
+		 (src->charData[last] == HIDDEN_CHAR))) {
+		dst->charData[last] = ' ';
+	    }
+	});
 
 	for (n = col; n < last; ++n) {
 	    dst->charData[n] = src->charData[n];
