@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.531 2018/07/04 16:15:51 tom Exp $ */
+/* $XTermId: button.c,v 1.532 2018/07/07 13:25:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -318,11 +318,11 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 	break;
 
     case DEC_LOCATOR:
-	if (IsBtnEvent(event)) {
 #if OPT_DEC_LOCATOR
+	if (IsBtnEvent(event) || event->type == MotionNotify) {
 	    result = SendLocatorPosition(xw, my_event);
-#endif /* OPT_DEC_LOCATOR */
 	}
+#endif /* OPT_DEC_LOCATOR */
 	break;
     }
     return result;
