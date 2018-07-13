@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1557 2018/07/04 18:22:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1560 2018/07/13 08:59:21 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -9268,6 +9268,8 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
     int n;
 
     for_each_text_gc(n) {
+	if (n == gcBorder)
+	    continue;
 	freeCgs(xw, win, (CgsEnum) n);
     }
 }
@@ -9660,6 +9662,29 @@ getWindowManagerName(XtermWidget xw)
 }
 #endif
 
+static void
+initBorderGC(XtermWidget xw, VTwin *win)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (xw->core.background_pixel != xw->core.border_pixel) {
+	/*
+	 * By default, try to match the inner window's background.
+	 */
+	if ((xw->core.background_pixel == T_COLOR(screen, TEXT_BG)) &&
+	    (xw->core.border_pixel == T_COLOR(screen, TEXT_FG))) {
+	    setCgsFore(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
+	    setCgsBack(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
+	} else {
+	    setCgsFore(xw, win, gcBorder, xw->core.border_pixel);
+	    setCgsBack(xw, win, gcBorder, xw->core.border_pixel);
+	}
+	win->border_gc = getCgsGC(xw, win, gcBorder);
+    } else {
+	win->border_gc = 0;
+    }
+}
+
 /*ARGSUSED*/
 static void
 VTRealize(Widget w,
@@ -9995,6 +10020,8 @@ VTRealize(Widget w,
 
 	copyCgs(xw, win, gcBoldReverse, gcNormReverse);
 
+	initBorderGC(xw, win);
+
 #if OPT_TOOLBAR
 	/*
 	 * Toolbar is initialized before we get here.  Enable the menu item
@@ -10023,6 +10050,7 @@ VTRealize(Widget w,
 #endif
 
     set_cursor_gcs(xw);
+    initBorderGC(xw, &(screen->fullVwin));
 
     /* Reset variables used by ANSI emulation. */
 

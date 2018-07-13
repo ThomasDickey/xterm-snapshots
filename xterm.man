@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.746 2018/06/25 09:19:49 tom Exp $
+.\" $XTermId: xterm.man,v 1.748 2018/07/13 20:06:47 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1398,8 +1398,14 @@ with \fI\*n\fP:
 .TP 8
 .B \-bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
-The corresponding resource name is \fIborderColor\fP.
+The corresponding resource name is \fBborderColor\fP.
 \fI\*N\fP uses the X Toolkit default, which is \*(``XtDefaultForeground\*(''.
+.IP
+\fI\*N\fP's VT100 window has two borders:
+the \fIinner\fP border \fBinternalBorder\fP
+and the \fIouter\fP border \fBborderWidth\fP, managed by the X Toolkit.
+At startup, if the \fBborderColor\fP matches the foreground color,
+\fI\*n\fP will use the actual background color for the inner border.
 .TP 8
 .B \-bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
