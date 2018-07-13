@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.533 2018/07/07 11:54:12 tom Exp $ */
+/* $XTermId: screen.c,v 1.534 2018/07/13 00:05:32 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -770,12 +770,12 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 
 	ld = getLineData(screen, row);
 
-	if (col + len > ld->lineSize)
-	    len = (ld->lineSize - col);
+	if (((unsigned) col + len) > ld->lineSize)
+	    len = (unsigned) (ld->lineSize - col);
 
 	if_OPT_WIDE_CHARS(screen, {
-	    if (col + len < ld->lineSize &&
-		ld->charData[col + len] == HIDDEN_CHAR) {
+	    if (((unsigned) col + len) < ld->lineSize &&
+		ld->charData[col + (int) len] == HIDDEN_CHAR) {
 		len++;
 	    }
 	    if (col > 0 &&

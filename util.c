@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.747 2018/07/07 13:20:25 tom Exp $ */
+/* $XTermId: util.c,v 1.754 2018/07/13 00:22:36 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2195,11 +2195,11 @@ HandleExposure(XtermWidget xw, XEvent *event)
 #endif /* NO_ACTIVE_ICON */
 
     /* if not doing CopyArea or if this is a GraphicsExpose, don't translate */
-    if (!screen->incopy || event->type != Expose)
+    if (!screen->incopy || event->type != Expose) {
 	return handle_translated_exposure(xw, reply->x, reply->y,
 					  reply->width,
 					  reply->height);
-    else {
+    } else {
 	/* compute intersection of area being copied with
 	   area being exposed. */
 	int both_x1 = Max(screen->copy_src_x, reply->x);
@@ -2240,6 +2240,64 @@ set_background(XtermWidget xw, int color GCC_UNUSED)
     XSetWindowBackground(screen->display, VWindow(screen), c);
 }
 
+static void
+xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
+{
+    TScreen *screen = TScreenOf(xw);
+    VTwin *vwin = WhichVWin(screen);
+    Drawable draw = VDrawable(screen);
+    GC gc;
+
+    if ((gc = vwin->border_gc) != 0) {
+	int vmark1 = screen->border;
+	int vmark2 = vwin->height + vmark1;
+	int hmark1 = OriginX(screen);
+	int hmark2 = vwin->width + hmark1;
+	if (y < vmark1) {
+	    int yy = y + (int) height;
+	    int h1 = (yy <= vmark1) ? (yy - y) : (vmark1 - y);
+	    XFillRectangle(screen->display, draw, gc,
+			   x, y, width, (unsigned) h1);
+	    if (yy > vmark1) {
+		xtermClear2(xw, x, vmark1, width, (unsigned) (yy - vmark1));
+	    }
+	} else if (y < vmark2) {
+	    int yy = y + (int) height;
+	    int h2 = (yy <= vmark2) ? (yy - y) : (vmark2 - y);
+	    int xb = x;
+	    int xx = x + (int) width;
+	    int ww = (int) width;
+	    if (x < hmark1) {
+		int w1 = (xx <= hmark1) ? (xx - x) : (hmark1 - x);
+		XFillRectangle(screen->display, draw, gc,
+			       x, y, (unsigned) w1, (unsigned) h2);
+		x += w1;
+		ww -= w1;
+	    }
+	    if ((ww > 0) && (x < hmark2)) {
+		int w2 = (xx <= hmark2) ? (xx - x) : (hmark2 - x);
+		XFillRectangle(screen->display, draw,
+			       ReverseGC(xw, screen),
+			       x, y, (unsigned) w2, (unsigned) h2);
+		x += w2;
+		ww -= w2;
+	    }
+	    if (ww > 0) {
+		XFillRectangle(screen->display, draw, gc,
+			       x, y, (unsigned) ww, (unsigned) h2);
+	    }
+	    if (yy > vmark2) {
+		xtermClear2(xw, xb, vmark2, width, (unsigned) (yy - vmark2));
+	    }
+	} else {
+	    XFillRectangle(screen->display, draw, gc, x, y, width, height);
+	}
+    } else {
+	gc = ReverseGC(xw, screen);
+	XFillRectangle(screen->display, draw, gc, x, y, width, height);
+    }
+}
+
 /*
  * Called by the ExposeHandler to do the actual repaint after the coordinates
  * have been translated to allow for any CopyArea in progress.
@@ -2272,20 +2330,11 @@ handle_translated_exposure(XtermWidget xw,
 	 x1 > Width(screen) ||
 	 y1 > Height(screen))) {
 	set_background(xw, -1);
-#if OPT_DOUBLE_BUFFER
-	XFillRectangle(screen->display, VDrawable(screen),
-		       ReverseGC(xw, screen),
-		       rect_x,
-		       rect_y,
-		       (unsigned) rect_width,
-		       (unsigned) rect_height);
-#else
-	XClearArea(screen->display, VWindow(screen),
-		   rect_x,
-		   rect_y,
-		   (unsigned) rect_width,
-		   (unsigned) rect_height, False);
-#endif
+	xtermClear2(xw,
+		    rect_x,
+		    rect_y,
+		    (unsigned) rect_width,
+		    (unsigned) rect_height);
     }
     toprow = y0 / FontHeight(screen);
     if (toprow < 0)
@@ -2466,14 +2515,7 @@ xtermClear(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermClear\n"));
-#if OPT_DOUBLE_BUFFER
-    XFillRectangle(screen->display, VDrawable(screen),
-		   ReverseGC(xw, screen),
-		   0, 0,
-		   FullWidth(screen), FullHeight(screen));
-#else
-    XClearWindow(screen->display, VWindow(screen));
-#endif
+    xtermClear2(xw, 0, 0, FullWidth(screen), FullHeight(screen));
 }
 
 void
@@ -3120,6 +3162,9 @@ xtermFillCells(XtermWidget xw,
 	    break;
 	case gcBoldReverse:
 	    dstId = gcBold;
+	    break;
+	case gcBorder:
+	    dstId = gcBorder;
 	    break;
 #if OPT_BOX_CHARS
 	case gcLine:
@@ -4565,21 +4610,11 @@ ClearCurBackground(XtermWidget xw,
     if (VWindow(screen)) {
 	set_background(xw, xw->cur_background);
 
-#if OPT_DOUBLE_BUFFER
-	XFillRectangle(screen->display, VDrawable(screen),
-		       ReverseGC(xw, screen),
-		       CursorX2(screen, left, fw),
-		       CursorY(screen, top),
-		       (width * fw),
-		       (height * (unsigned) FontHeight(screen)));
-#else
-	XClearArea(screen->display, VWindow(screen),
-		   CursorX2(screen, left, fw),
-		   CursorY2(screen, top),
-		   (width * fw),
-		   (height * (unsigned) FontHeight(screen)),
-		   False);
-#endif
+	xtermClear2(xw,
+		    CursorX2(screen, left, fw),
+		    CursorY(screen, top),
+		    (width * fw),
+		    (height * (unsigned) FontHeight(screen)));
 
 	set_background(xw, -1);
     }

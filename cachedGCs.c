@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.70 2018/07/04 17:22:01 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.73 2018/07/13 00:07:22 tom Exp $ */
 
 /*
  * Copyright 2007-2017,2018 by Thomas E. Dickey
@@ -90,6 +90,7 @@ traceCgsEnum(CgsEnum value)
 	CASE(Bold);
 	CASE(NormReverse);
 	CASE(BoldReverse);
+	CASE(Border);
 #if OPT_BOX_CHARS
 	CASE(Line);
 	CASE(Dots);
@@ -332,6 +333,9 @@ newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
     mask = (GCForeground | GCBackground | GCFont);
 
     switch (cgsId) {
+    case gcBorder:
+	mask &= (XtGCMask) ~ GCFont;
+	/* FALLTHRU */
     case gcNorm:
     case gcBold:
     case gcNormReverse:

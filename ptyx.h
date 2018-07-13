@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.891 2018/06/29 20:20:10 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.893 2018/07/12 00:51:40 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -889,6 +889,7 @@ typedef enum {
     , gcBold
     , gcNormReverse
     , gcBoldReverse
+    , gcBorder
 #if OPT_BOX_CHARS
     , gcLine
     , gcDots
@@ -1975,6 +1976,7 @@ typedef struct {
 	int		f_ascent;	/* ascent of font in pixels	*/
 	int		f_descent;	/* descent of font in pixels	*/
 	SbInfo		sb_info;
+	GC		border_gc;	/* inner border's fg/bg		*/
 #if OPT_DOUBLE_BUFFER
 	Drawable	drawable;	/* X drawable id                */
 #endif
@@ -3208,6 +3210,7 @@ extern Window VDrawable(TScreen * /* screen */);
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
 
+#define BorderGC(w,sp)		WhichVWin(sp)->border_gc
 #define NormalGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNorm)
 #define ReverseGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNormReverse)
 #define NormalBoldGC(w,sp)	getCgsGC(w, WhichVWin(sp), gcBold)
