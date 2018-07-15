@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.754 2018/07/13 00:22:36 tom Exp $ */
+/* $XTermId: util.c,v 1.759 2018/07/15 20:11:31 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2238,9 +2238,10 @@ set_background(XtermWidget xw, int color GCC_UNUSED)
     TRACE(("set_background(%d) %#lx\n", color, c));
     XSetWindowBackground(screen->display, VShellWindow(xw), c);
     XSetWindowBackground(screen->display, VWindow(screen), c);
+    initBorderGC(xw, WhichVWin(screen));
 }
 
-static void
+void
 xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2276,9 +2277,14 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	    }
 	    if ((ww > 0) && (x < hmark2)) {
 		int w2 = (xx <= hmark2) ? (xx - x) : (hmark2 - x);
+#if OPT_DOUBLE_BUFFER
 		XFillRectangle(screen->display, draw,
-			       ReverseGC(xw, screen),
+			       FillerGC(xw, screen),
 			       x, y, (unsigned) w2, (unsigned) h2);
+#else
+		XClearArea(screen->display, VWindow(screen),
+			   x, y, (unsigned) w2, (unsigned) h2, False);
+#endif
 		x += w2;
 		ww -= w2;
 	    }
@@ -2293,8 +2299,12 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	    XFillRectangle(screen->display, draw, gc, x, y, width, height);
 	}
     } else {
-	gc = ReverseGC(xw, screen);
+#if OPT_DOUBLE_BUFFER
+	gc = FillerGC(xw, screen);
 	XFillRectangle(screen->display, draw, gc, x, y, width, height);
+#else
+	XClearArea(screen->display, VWindow(screen), x, y, width, height, False);
+#endif
     }
 }
 
@@ -3164,7 +3174,8 @@ xtermFillCells(XtermWidget xw,
 	    dstId = gcBold;
 	    break;
 	case gcBorder:
-	    dstId = gcBorder;
+	case gcFiller:
+	    dstId = srcId;
 	    break;
 #if OPT_BOX_CHARS
 	case gcLine:
@@ -3561,7 +3572,6 @@ drawXtermText(XtermWidget xw,
 		x += (int) len *FontWidth(screen);
 	    }
 
-	    TRACE(("drawtext [%4d,%4d]\n", y, x));
 	} else {		/* simulate double-sized characters */
 	    unsigned need = 2 * len;
 	    IChar *temp = TypeMallocN(IChar, need);
@@ -3585,6 +3595,7 @@ drawXtermText(XtermWidget xw,
 		free(temp);
 	    }
 	}
+	TRACE(("DrewText [%4d,%4d]\n", y, x));
 	return x;
     }
 #endif
@@ -4211,12 +4222,16 @@ drawXtermText(XtermWidget xw,
 #endif
 
 	if ((attr_flags & BOLDATTR(screen)) && (screen->enbolden || !useBoldFont)) {
-	    beginClipping(screen, gc, (Cardinal) font_width, len);
+	    if (!(draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
+		beginClipping(screen, gc, (Cardinal) font_width, len);
+	    }
 	    XDrawString16(screen->display, VDrawable(screen), gc,
 			  x + 1,
 			  y + ascent_adjust,
 			  buffer, dst);
-	    endClipping(screen, gc);
+	    if (!(draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
+		endClipping(screen, gc);
+	    }
 	}
 
     } else
@@ -4259,10 +4274,14 @@ drawXtermText(XtermWidget xw,
 #endif
 	underline_len = (Cardinal) length;
 	if ((attr_flags & BOLDATTR(screen)) && screen->enbolden) {
-	    beginClipping(screen, gc, font_width, length);
+	    if (!(draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
+		beginClipping(screen, gc, font_width, length);
+	    }
 	    XDrawString(screen->display, VDrawable(screen), gc,
 			x + 1, y, buffer, length);
-	    endClipping(screen, gc);
+	    if (!(draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
+		endClipping(screen, gc);
+	    }
 	}
     }
 

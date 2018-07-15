@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1560 2018/07/13 08:59:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1562 2018/07/15 20:05:08 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -9268,9 +9268,14 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
     int n;
 
     for_each_text_gc(n) {
-	if (n == gcBorder)
-	    continue;
-	freeCgs(xw, win, (CgsEnum) n);
+	switch (n) {
+	case gcBorder:
+	case gcFiller:
+	    break;
+	default:
+	    freeCgs(xw, win, (CgsEnum) n);
+	    break;
+	}
     }
 }
 
@@ -9662,11 +9667,16 @@ getWindowManagerName(XtermWidget xw)
 }
 #endif
 
-static void
+void
 initBorderGC(XtermWidget xw, VTwin *win)
 {
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
+	   xw->core.background_pixel,
+	   xw->core.border_pixel,
+	   T_COLOR(screen, TEXT_FG),
+	   T_COLOR(screen, TEXT_BG)));
     if (xw->core.background_pixel != xw->core.border_pixel) {
 	/*
 	 * By default, try to match the inner window's background.
@@ -9683,6 +9693,9 @@ initBorderGC(XtermWidget xw, VTwin *win)
     } else {
 	win->border_gc = 0;
     }
+    setCgsFore(xw, win, gcFiller, xw->core.background_pixel);
+    setCgsBack(xw, win, gcFiller, xw->core.background_pixel);
+    win->filler_gc = getCgsGC(xw, win, gcFiller);
 }
 
 /*ARGSUSED*/
