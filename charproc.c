@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1562 2018/07/15 20:05:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1563 2018/07/17 20:39:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -7377,23 +7377,11 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 	if (screen->scroll_amt) {
 	    FlushScroll(xw);
 	}
-#if OPT_DOUBLE_BUFFER
-	XFillRectangle(screen->display,
-		       VDrawable(screen),
-		       ReverseGC(xw, screen),
-		       (int) OriginX(screen),
-		       (int) top * FontHeight(screen) + screen->border,
-		       (unsigned) Width(screen),
-		       (unsigned) ((rows - top) * FontHeight(screen)));
-#else
-	XClearArea(screen->display,
-		   VWindow(screen),
-		   (int) OriginX(screen),
-		   (int) top * FontHeight(screen) + screen->border,
-		   (unsigned) Width(screen),
-		   (unsigned) ((rows - top) * FontHeight(screen)),
-		   False);
-#endif
+	xtermClear2(xw,
+		    (int) OriginX(screen),
+		    (int) top * FontHeight(screen) + screen->border,
+		    (unsigned) Width(screen),
+		    (unsigned) ((rows - top) * FontHeight(screen)));
 	if (clearFirst) {
 	    ClearBufRows(xw, top, rows);
 	}

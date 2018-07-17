@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.534 2018/07/13 00:05:32 tom Exp $ */
+/* $XTermId: screen.c,v 1.535 2018/07/17 20:39:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1906,32 +1906,14 @@ ScreenResize(XtermWidget xw,
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
 	if (width >= (int) FullWidth(screen)) {
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display, VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   FullWidth(screen), 0,
-			   (unsigned) (width - FullWidth(screen)),
-			   (unsigned) height);
-#else
-	    XClearArea(screen->display, VDrawable(screen),
-		       FullWidth(screen), 0,	/* right edge */
-		       0, (unsigned) height,	/* from top to bottom */
-		       False);
-#endif
+	    xtermClear2(xw,
+			FullWidth(screen), 0,	/* right edge */
+			0, (unsigned) height);	/* from top to bottom */
 	}
 	if (height >= (int) FullHeight(screen)) {
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display, VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   0, FullHeight(screen),
-			   (unsigned) width,
-			   (unsigned) (height - FullHeight(screen)));
-#else
-	    XClearArea(screen->display, VDrawable(screen),
-		       0, FullHeight(screen),	/* bottom */
-		       (unsigned) width, 0,	/* all across the bottom */
-		       False);
-#endif
+	    xtermClear2(xw,
+			0, FullHeight(screen),	/* bottom */
+			(unsigned) width, 0);	/* all across the bottom */
 	}
     }
 
