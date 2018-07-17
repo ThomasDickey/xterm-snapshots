@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.759 2018/07/15 20:11:31 tom Exp $ */
+/* $XTermId: util.c,v 1.760 2018/07/17 20:27:49 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3522,6 +3522,8 @@ drawXtermText(XtermWidget xw,
 		    rect.y = (short) (rect.height - (fs->ascent / 2));
 		    y -= rect.y;
 		    draw_flags |= DOUBLEHFONT;
+		    break;
+		case CSET_DWL:
 		    break;
 		default:
 		    nr = 0;

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1874 2018/07/14 01:25:36 tom Exp $
+  $XTermId: xterm.log.html,v 1.1875 2018/07/17 20:41:11 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -956,8 +956,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
-    <li>fix a case where double-sized VT100 characters were not
-    clipped.</li>
+    <li>fix a couple of cases where double-sized VT100 characters
+    were not clipped, seen in Joe Smith's <a href=
+    "http://www.inwap.com/pdp10/vt100test.txt">VT100 torture
+    test</a>.</li>
 
     <li>color the inner border using the same
     <code>borderColor</code> as the outer border, rather than
