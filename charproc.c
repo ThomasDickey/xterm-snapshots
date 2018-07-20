@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1563 2018/07/17 20:39:03 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1566 2018/07/17 23:31:16 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -9659,6 +9659,9 @@ void
 initBorderGC(XtermWidget xw, VTwin *win)
 {
     TScreen *screen = TScreenOf(xw);
+#if OPT_DOUBLE_BUFFER
+    unsigned long filler;
+#endif
 
     TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
 	   xw->core.background_pixel,
@@ -9681,9 +9684,22 @@ initBorderGC(XtermWidget xw, VTwin *win)
     } else {
 	win->border_gc = 0;
     }
-    setCgsFore(xw, win, gcFiller, xw->core.background_pixel);
-    setCgsBack(xw, win, gcFiller, xw->core.background_pixel);
+
+    /*
+     * Initialize a GC for double-buffering, needed for XFillRectangle call
+     * in xtermClear2().  When not double-buffering, the XClearArea call works,
+     * without requiring a separate GC.
+     */
+#if OPT_DOUBLE_BUFFER
+    filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
+	      ? (unsigned long) xw->cur_background
+	      : xw->core.background_pixel);
+
+    setCgsFore(xw, win, gcFiller, filler);
+    setCgsBack(xw, win, gcFiller, filler);
+
     win->filler_gc = getCgsGC(xw, win, gcFiller);
+#endif
 }
 
 /*ARGSUSED*/

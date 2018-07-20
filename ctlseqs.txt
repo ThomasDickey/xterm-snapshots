@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #333 (2018/04/28)
+               updated for XTerm Patch #334 (2018/07/19)
 
 
 
@@ -322,7 +322,7 @@ APC Pt ST None.  xterm implements no APC  functions; Pt is ignored.  Pt
 
 Device-Control functions
 
-DCS Ps; Ps| Pt ST
+DCS Ps ; Ps | Pt ST
           User-Defined Keys (DECUDK), VT220 and up.
 
           The first parameter:
@@ -348,6 +348,8 @@ DCS $ q Pt ST
             s       -> DECSLRM
             m       -> SGR
             SP q    -> DECSCUSR
+            $ |     -> DECSCPP
+            t       -> DECSLPP
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r Pt ST for invalid requests.
@@ -432,7 +434,7 @@ CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
 
 CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
 
-CSI ? Pi; Pa; Pv S
+CSI ? Pi ; Pa ; Pv S
           If configured to support either Sixel Graphics or ReGIS Graph-
           ics, xterm accepts a three-parameter control sequence, where
           Pi, Pa and Pv are the item, action and value:
@@ -448,11 +450,11 @@ CSI ? Pi; Pa; Pv S
 
             Pv can be omitted except when setting (Pa == 3 ).
             Pv = n <- A single integer is used for color registers.
-            Pv = width; height <- Two integers for graphics geometry.
+            Pv = width ; height <- Two integers for graphics geometry.
 
           xterm replies with a control sequence of the same form:
 
-               CSI ? Pi; Ps; Pv S
+               CSI ? Pi ; Ps ; Pv S
 
           where Ps is the status:
             Ps = 0  -> success.
@@ -482,7 +484,7 @@ CSI Ps ; Ps ; Ps ; Ps ; Ps T
           [func;startx;starty;firstrow;lastrow].  See the section Mouse
           Tracking.
 
-CSI > Ps; Ps T
+CSI > Ps ; Ps T
           Reset one or more features of the title modes to the default
           value.  Normally, "reset" disables the feature.  It is possi-
           ble to disable the ability to reset features by compiling a
@@ -688,16 +690,16 @@ CSI Pm i  Media Copy (MC).
             Ps = 0  -> Print screen (default).
             Ps = 4  -> Turn off printer controller mode.
             Ps = 5  -> Turn on printer controller mode.
-            Ps = 1  0  -> HTML screen dump, xterm.
-            Ps = 1  1  -> SVG screen dump, xterm.
+            Ps = 1 0  -> HTML screen dump, xterm.
+            Ps = 1 1  -> SVG screen dump, xterm.
 
 CSI ? Pm i
           Media Copy (MC), DEC-specific.
             Ps = 1  -> Print line containing cursor.
             Ps = 4  -> Turn off autoprint mode.
             Ps = 5  -> Turn on autoprint mode.
-            Ps = 1  0  -> Print composed display, ignores DECPEX.
-            Ps = 1  1  -> Print all pages.
+            Ps = 1 0  -> Print composed display, ignores DECPEX.
+            Ps = 1 1  -> Print all pages.
 
 CSI Pm l  Reset Mode (RM).
             Ps = 2  -> Keyboard Action Mode (AM).
@@ -766,7 +768,7 @@ CSI ? Pm l
           xterm.  This disables the metaSendsEscape resource.
             Ps = 1 0 3 7  -> Send VT220 Remove from the editing-keypad
           Delete key, xterm.
-            Ps = 1 0 3 9  -> Don't send ESC  when Alt modifies a key,
+            Ps = 1 0 3 9  -> Don't send ESC when Alt modifies a key,
           xterm.  This disables the altSendsEscape resource.
             Ps = 1 0 4 0  -> Do not keep selection when not highlighted,
           xterm.  This disables the keepSelection resource.
@@ -878,20 +880,20 @@ CSI Pm m  Character Attributes (SGR).
               first colon, colons must be used).
 
           These ISO-8613-6 controls are supported:
-            Pm = 3 8 ; 2 ; Pi; Pr; Pg; Pb -> Set foreground color to the
-          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-          The color space identifier Pi is ignored.
+            Pm = 3 8 ; 2 ; Pi ; Pr ; Pg ; Pb -> Set foreground color to
+          the closest match in xterm's palette for the given RGB
+          Pr/Pg/Pb.  The color space identifier Pi is ignored.
             Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps.
-            Pm = 4 8 ; 2 ; Pi; Pr; Pg; Pb -> Set background color to the
-          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-          The color space identifier Pi is ignored.
+            Pm = 4 8 ; 2 ; Pi ; Pr ; Pg ; Pb -> Set background color to
+          the closest match in xterm's palette for the given RGB
+          Pr/Pg/Pb.  The color space identifier Pi is ignored.
             Pm = 4 8 ; 5 ; Ps -> Set background color to Ps.
 
           This variation on ISO-8613-6 is supported for compatibility
           with KDE konsole:
-            Pm = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
+            Pm = 3 8 ; 2 ; Pr ; Pg ; Pb -> Set foreground color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Pm = 4 8 ; 2 ; Pr; Pg; Pb -> Set background color to the
+            Pm = 4 8 ; 2 ; Pr ; Pg ; Pb -> Set background color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
 
           If xterm is compiled with direct-color support, and the
@@ -899,7 +901,7 @@ CSI Pm m  Character Attributes (SGR).
           closest match, xterm asks the X server to directly render a
           given color.
 
-CSI > Ps; Ps m
+CSI > Ps ; Ps m
           Set or reset resource-values used by xterm to decide whether
           to construct escape sequences holding information about the
           modifiers pressed with a given key.
@@ -929,9 +931,9 @@ CSI Ps n  Device Status Report (DSR).
           tion the shifted F1 key may send (with shift-, control-, alt-
           modifiers)
 
-            CSI 1  ; 2  R , or
-            CSI 1  ; 5  R , or
-            CSI 1  ; 6  R , etc.
+            CSI 1 ; 2  R , or
+            CSI 1 ; 5  R , or
+            CSI 1 ; 6  R , etc.
 
           The second parameter encodes the modifiers; values range from
           2 to 16.  See the section PC-Style Function Keys for the
@@ -1028,7 +1030,7 @@ CSI Ps $ p
             3 - permanently set
             4 - permanently reset
 
-CSI ? Ps$ p
+CSI ? Ps $ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply
           DECRPM is
             CSI ? Ps; Pm$ y
@@ -1044,9 +1046,9 @@ CSI Ps q  Load LEDs (DECLL), VT100.
             Ps = 1  -> Light Num Lock.
             Ps = 2  -> Light Caps Lock.
             Ps = 3  -> Light Scroll Lock.
-            Ps = 2  1  -> Extinguish Num Lock.
-            Ps = 2  2  -> Extinguish Caps Lock.
-            Ps = 2  3  -> Extinguish Scroll Lock.
+            Ps = 2 1  -> Extinguish Num Lock.
+            Ps = 2 2  -> Extinguish Caps Lock.
+            Ps = 2 3  -> Extinguish Scroll Lock.
 
 CSI Ps SP q
           Set cursor style (DECSCUSR), VT520.
@@ -1073,15 +1075,15 @@ CSI ? Pm r
           Restore DEC Private Mode Values.  The value of Ps previously
           saved is restored.  Ps values are the same as for DECSET.
 
-CSI Pt; Pl; Pb; Pr; Ps$ r
+CSI Pt ; Pl ; Pb ; Pr ; Ps $ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 
 CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
           also ANSI.SYS).
 
-CSI Pl; Pr s
+CSI Pl ; Pr s
           Set left and right margins (DECSLRM), VT420 and up.  This is
           available only when DECLRMM is enabled.
 
@@ -1104,8 +1106,8 @@ CSI Ps ; Ps ; Ps t
           are:
             Ps = 1  -> De-iconify window.
             Ps = 2  -> Iconify window.
-            Ps = 3  ;  x ;  y -> Move window to [x, y].
-            Ps = 4  ;  height ;  width -> Resize the xterm window to
+            Ps = 3 ;  x ;  y -> Move window to [x, y].
+            Ps = 4 ;  height ;  width -> Resize the xterm window to
           given height and width in pixels.  Omitted parameters reuse
           the current height or width.  Zero parameters use the dis-
           play's height or width.
@@ -1114,58 +1116,57 @@ CSI Ps ; Ps ; Ps t
             Ps = 6  -> Lower the xterm window to the bottom of the
           stacking order.
             Ps = 7  -> Refresh the xterm window.
-            Ps = 8  ;  height ;  width -> Resize the text area to given
+            Ps = 8 ;  height ;  width -> Resize the text area to given
           height and width in characters.  Omitted parameters reuse the
           current height or width.  Zero parameters use the display's
           height or width.
-            Ps = 9  ;  0  -> Restore maximized window.
-            Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
+            Ps = 9 ;  0  -> Restore maximized window.
+            Ps = 9 ;  1  -> Maximize window (i.e., resize to screen
           size).
-            Ps = 9  ;  2  -> Maximize window vertically.
-            Ps = 9  ;  3  -> Maximize window horizontally.
-            Ps = 1 0  ;  0  -> Undo full-screen mode.
-            Ps = 1 0  ;  1  -> Change to full-screen.
-            Ps = 1 0  ;  2  -> Toggle full-screen.
+            Ps = 9 ;  2  -> Maximize window vertically.
+            Ps = 9 ;  3  -> Maximize window horizontally.
+            Ps = 1 0 ;  0  -> Undo full-screen mode.
+            Ps = 1 0 ;  1  -> Change to full-screen.
+            Ps = 1 0 ;  2  -> Toggle full-screen.
             Ps = 1 1  -> Report xterm window state.
           If the xterm window is non-iconified, it returns CSI 1 t .
           If the xterm window is iconified, it returns CSI 2 t .
             Ps = 1 3  -> Report xterm window position.
           Result is CSI 3 ; x ; y t
-            Ps = 1 3  ;  2  -> Report xterm text-area position.
+            Ps = 1 3 ;  2  -> Report xterm text-area position.
           Result is CSI 3 ; x ; y t
             Ps = 1 4  -> Report xterm text area size in pixels.
-          Result is CSI  4  ;  height ;  width t
-            Ps = 1 4  ;  2  -> Report xterm window size in pixels.
+          Result is CSI  4 ;  height ;  width t
+            Ps = 1 4 ;  2  -> Report xterm window size in pixels.
           Normally xterm's window is larger than its text area, since it
           includes the frame (or decoration) applied by the window man-
           ager, as well as the area used by a scroll-bar.
-          Result is CSI  4  ;  height ;  width t
+          Result is CSI  4 ;  height ;  width t
             Ps = 1 5  -> Report size of the screen in pixels.
-          Result is CSI  5  ;  height ;  width t
+          Result is CSI  5 ;  height ;  width t
             Ps = 1 6  -> Report xterm character size in pixels.
-          Result is CSI  6  ;  height ;  width t
+          Result is CSI  6 ;  height ;  width t
             Ps = 1 8  -> Report the size of the text area in characters.
-          Result is CSI  8  ;  height ;  width t
+          Result is CSI  8 ;  height ;  width t
             Ps = 1 9  -> Report the size of the screen in characters.
-          Result is CSI  9  ;  height ;  width t
+          Result is CSI  9 ;  height ;  width t
             Ps = 2 0  -> Report xterm window's icon label.
           Result is OSC  L  label ST
             Ps = 2 1  -> Report xterm window's title.
           Result is OSC  l  label ST
 
-            Ps = 2 2  ;  0  -> Save xterm icon and window title on
+            Ps = 2 2 ; 0  -> Save xterm icon and window title on stack.
+            Ps = 2 2 ; 1  -> Save xterm icon title on stack.
+            Ps = 2 2 ; 2  -> Save xterm window title on stack.
+            Ps = 2 3 ; 0  -> Restore xterm icon and window title from
           stack.
-            Ps = 2 2  ;  1  -> Save xterm icon title on stack.
-            Ps = 2 2  ;  2  -> Save xterm window title on stack.
-            Ps = 2 3  ;  0  -> Restore xterm icon and window title from
-          stack.
-            Ps = 2 3  ;  1  -> Restore xterm icon title from stack.
-            Ps = 2 3  ;  2  -> Restore xterm window title from stack.
+            Ps = 2 3 ; 1  -> Restore xterm icon title from stack.
+            Ps = 2 3 ; 2  -> Restore xterm window title from stack.
 
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP), VT340 and VT420.
           xterm adapts this by resizing its window.
 
-CSI > Ps; Ps t
+CSI > Ps ; Ps t
           This xterm control sets one or more features of the title
           modes.  Each parameter enables a single feature.
             Ps = 0  -> Set window/icon labels using hexadecimal.
@@ -1180,10 +1181,10 @@ CSI Ps SP t
             Ps = 2 , 3  or 4  -> low.
             Ps = 5 , 6 , 7 , or 8  -> high.
 
-CSI Pt; Pl; Pb; Pr; Ps$ t
+CSI Pt ; Pl ; Pb ; Pr ; Ps $ t
           Reverse Attributes in Rectangular Area (DECRARA), VT400 and
           up.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
             Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
@@ -1194,12 +1195,26 @@ CSI Ps SP u
             Ps = 2 , 3  or 4  -> low.
             Ps = 0 , 5 , 6 , 7 , or 8  -> high.
 
-CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
+CSI Pt ; Pl ; Pb ; Pr ; Pp ; Pt ; Pl ; Pp $ v
           Copy Rectangular Area (DECCRA), VT400 and up.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
             Pp denotes the source page.
-            Pt; Pl denotes the target location.
+            Pt ; Pl denotes the target location.
             Pp denotes the target page.
+
+CSI Ps $ w
+          Request presentation state report (DECRQPSR), VT320 and up.
+            Ps = 0  -> error.
+            Ps = 1  -> cursor information report (DECCIR).
+          Response is
+            DCS 1 $ u Pt ST
+          Refer to the VT420 programming manual, which requires six
+          pages to document the data string Pt,
+            Ps = 2  -> tab stop report (DECTABSR).
+          Response is
+            DCS 2 $ u Pt ST
+          The data string Pt is a list of the tab-stops, separated by
+          "/" characters.
 
 CSI Pt ; Pl ; Pb ; Pr ' w
           Enable Filter Rectangle (DECEFR), VT420 and up.
@@ -1220,8 +1235,8 @@ CSI Ps x  Request Terminal Parameters (DECREQTPARM).
             Ps -> the given Ps incremented by 2.
             Pn = 1  <- no parity.
             Pn = 1  <- eight bits.
-            Pn = 1  <- 2  8  transmit 38.4k baud.
-            Pn = 1  <- 2  8  receive 38.4k baud.
+            Pn = 1  <- 2 8  transmit 38.4k baud.
+            Pn = 1  <- 2 8  receive 38.4k baud.
             Pn = 1  <- clock multiplier.
             Pn = 0  <- STP flags.
 
@@ -1234,15 +1249,15 @@ CSI Ps * x
 CSI Pc ; Pt ; Pl ; Pb ; Pr $ x
           Fill Rectangular Area (DECFRA), VT420 and up.
             Pc is the character to use.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
 
-CSI Pi ; Pg ; Pt; Pl; Pb; Pr * y
+CSI Pi ; Pg ; Pt ; Pl ; Pb ; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
           Response is
           DCS Pi ! x x x x ST
             Pi is the request id.
             Pg is the page number.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
             The x's are hexadecimal digits 0-9 and A-F.
 
 CSI Ps ; Pu ' z
@@ -1258,9 +1273,9 @@ CSI Ps ; Pu ' z
             Pu = 1  <- device physical pixels.
             Pu = 2  <- character cells.
 
-CSI Pt; Pl; Pb; Pr$ z
+CSI Pt ; Pl ; Pb ; Pr $ z
           Erase Rectangular Area (DECERA), VT400 and up.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
 
 CSI Pm ' {
           Select Locator Events (DECSLE).
@@ -1273,9 +1288,15 @@ CSI Pm ' {
             Ps = 3  -> report button up transitions.
             Ps = 4  -> do not report button up transitions.
 
-CSI Pt; Pl; Pb; Pr $ {
+CSI Pt ; Pl ; Pb ; Pr $ {
           Selective Erase Rectangular Area (DECSERA), VT400 and up.
-            Pt; Pl; Pb; Pr denotes the rectangle.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
+
+CSI Ps $ |
+          Select columns per page (DECSCPP), VT340.
+            Ps = 0  -> 80 columns, default if Ps omitted.
+            Ps = 8 0  -> 80 columns.
+            Ps = 1 3 2  -> 132 columns.
 
 CSI Ps ' |
           Request Locator Position (DECRQLP).
@@ -1340,12 +1361,12 @@ OSC Ps ; Pt ST
             Ps = 3  -> Set X property on top-level window.  Pt should be
           in the form "prop=value", or just "prop" to delete the prop-
           erty.
-            Ps = 4 ; c; spec -> Change Color Number c to the color spec-
-          ified by spec.  This can be a name or RGB specification as per
-          XParseColor.  Any number of c/spec pairs may be given.  The
-          color numbers correspond to the ANSI colors 0-7, their bright
-          versions 8-15, and if supported, the remainder of the 88-color
-          or 256-color table.
+            Ps = 4 ; c ; spec -> Change Color Number c to the color
+          specified by spec.  This can be a name or RGB specification as
+          per XParseColor.  Any number of c/spec pairs may be given.
+          The color numbers correspond to the ANSI colors 0-7, their
+          bright versions 8-15, and if supported, the remainder of the
+          88-color or 256-color table.
 
           If a "?" is given rather than a name or RGB specification,
           xterm replies with a control sequence of the same form which
@@ -1353,7 +1374,7 @@ OSC Ps ; Pt ST
           one pair of color number and specification can be given in one
           control sequence, xterm can make more than one reply.
 
-            Ps = 5 ; c; spec -> Change Special Color Number c to the
+            Ps = 5 ; c ; spec -> Change Special Color Number c to the
           color specified by spec.  This can be a name or RGB specifica-
           tion as per XParseColor.  Any number of c/spec pairs may be
           given.  The special colors can also be set by adding the maxi-
@@ -1365,8 +1386,8 @@ OSC Ps ; Pt ST
               Pc = 3  <- resource colorRV (REVERSE).
               Pc = 4  <- resource colorIT (ITALIC).
 
-            Ps = 6 ; c; f -> Enable/disable Special Color Number c.  OSC
-          6  is the same as OSC 1 0 6 .
+            Ps = 6 ; c ; f -> Enable/disable Special Color Number c.
+          OSC 6  is the same as OSC 1 0 6 .
 
           The 10 colors (below) which may be set or queried using 1 0
           through 1 9  are denoted dynamic colors, since the correspond-
@@ -1422,13 +1443,14 @@ OSC Ps ; Pt ST
             Ps = 5 2  -> Manipulate Selection Data.  These controls may
           be disabled using the allowWindowOps resource.  The parameter
           Pt is parsed as
-               Pc; Pd
+               Pc ; Pd
           The first, Pc, may contain zero or more characters from the
-          set c  p  s  0  1  2  3  4  5  6  7 .  It is used to construct
-          a list of selection parameters for clipboard, primary, select,
-          or cut buffers 0 through 7 respectively, in the order given.
-          If the parameter is empty, xterm uses s 0 , to specify the
-          configurable primary/clipboard selection and cut buffer 0.
+          set c , p , s , 0 , 1 , 2 , 3 , 4 , 5 , 6 , and 7 .  It is
+          used to construct a list of selection parameters for clip-
+          board, primary, select, or cut buffers 0 through 7 respec-
+          tively, in the order given.  If the parameter is empty, xterm
+          uses s 0 , to specify the configurable primary/clipboard
+          selection and cut buffer 0.
 
           The second parameter, Pd, gives the selection data.  Normally
           this is a string encoded in base64.  The data becomes the new
@@ -1455,7 +1477,7 @@ OSC Ps ; Pt ST
           control (or by adding the maximum number of colors using an
           OSC 4  control).
 
-            Ps = 1 0 6 ; c; f -> Enable/disable Special Color Number c.
+            Ps = 1 0 6 ; c ; f -> Enable/disable Special Color Number c.
           The second parameter tells xterm to enable the corresponding
           color mode if nonzero, disable it if zero.
 
@@ -1479,13 +1501,13 @@ OSC Ps ; Pt ST
             Ps = 1 1 8  -> Reset Tektronix cursor color.
             Ps = 1 1 9  -> Reset highlight foreground color.
 
-            Ps = I ; c -> Set icon to file. Sun shelltool, CDE dtterm.
+            Ps = I  ; c -> Set icon to file. Sun shelltool, CDE dtterm.
           The file is expected to be XPM format, and uses the same
           search logic as the iconHint resource.
 
-            Ps = l ; c -> Set window title. Sun shelltool, CDE dtterm.
+            Ps = l  ; c -> Set window title. Sun shelltool, CDE dtterm.
 
-            Ps = L ; c -> Set icon label. Sun shelltool, CDE dtterm.
+            Ps = L  ; c -> Set icon label. Sun shelltool, CDE dtterm.
 
 
 Privacy Message
@@ -1923,7 +1945,7 @@ o   mouse protocol
 o   protocol encoding
 
 The mouse protocols include DEC Locator mode, enabled by the DECELR CSI
-Ps ; Ps  '  z control sequence, and is not described here (control
+Ps ; Ps '  z control sequence, and is not described here (control
 sequences are summarized above).  The remaining five modes of the mouse
 protocols are each enabled (or disabled) by a different parameter in the
 "DECSET CSI ? Pm h " or "DECRST CSI ? Pm l " control sequence.
@@ -2164,7 +2186,7 @@ CSI ? Pm h
             Ps = 8 4 5 2  -> Sixel scrolling leaves cursor to right of
           graphic.
 
-DCS Pa; Pb; Ph q  Ps..Ps ST
+DCS Pa ; Pb ; Ph q  Ps..Ps ST
           See:
 
                http://vt100.net/docs/vt3xx-gp/chapter14.html
@@ -2498,7 +2520,7 @@ o   Xterm supports control sequences for manipulating its window which
     (based on the dtterm manual pages) and further extended the group of
     window controls.
 
-    There were two sets of controls (CSI Ps[; Pm; Pm]t , and OSC
+    There were two sets of controls (CSI Ps[ ; Pm ; Pm]t , and OSC
     PstextST ) implemented by shelltool, documented in appendix E of
     both PHIGS Programming Manual (1992), and the unpublished X Window
     System User's Guide (OPEN LOOK Edition) (1995).  The CDE program
