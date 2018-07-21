@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.806 2018/07/02 23:52:05 tom Exp $ */
+/* $XTermId: misc.c,v 1.815 2018/07/21 01:06:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4233,6 +4233,147 @@ parse_decdld(ANSI *params, const char *string)
 #define parse_decdld(p,q)	/* nothing */
 #endif
 
+#if OPT_DEC_RECTOPS
+static int
+parse_int_param(const char **cp)
+{
+    int result = 0;
+    const char *s = *cp;
+    while (*s != '\0') {
+	if (*s == ';') {
+	    ++s;
+	    break;
+	} else if (*s >= '0' && *s <= '9') {
+	    result = (result * 10) + (*s++ - '0');
+	} else {
+	    s += strlen(s);
+	}
+    }
+    TRACE(("parse-int %s ->%d, %#x->%s\n", *cp, result, result, s));
+    *cp = s;
+    return result;
+}
+
+static int
+parse_chr_param(const char **cp)
+{
+    int result = 0;
+    const char *s = *cp;
+    if (*s != '\0') {
+	if ((result = CharOf(*s++)) != 0) {
+	    if (*s == ';') {
+		++s;
+	    } else if (*s != '\0') {
+		result = 0;
+	    }
+	}
+    }
+    TRACE(("parse-chr %s ->%d, %#x->%s\n", *cp, result, result, s));
+    *cp = s;
+    return result;
+}
+
+static void
+restore_DECCIR(XtermWidget xw, const char *cp)
+{
+    TScreen *screen = TScreenOf(xw);
+    int value;
+
+    /* row */
+    if ((value = parse_int_param(&cp)) <= 0 || value > MaxRows(screen))
+	return;
+    screen->cur_row = (value - 1);
+
+    /* column */
+    if ((value = parse_int_param(&cp)) <= 0 || value > MaxCols(screen))
+	return;
+    screen->cur_col = (value - 1);
+
+    /* page */
+    if ((value = parse_int_param(&cp)) != 1)
+	return;
+
+    /* rendition */
+    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
+	return;
+    UIntClr(xw->flags, (INVERSE | BLINK | UNDERLINE | BOLD));
+    xw->flags |= (value & 8) ? INVERSE : 0;
+    xw->flags |= (value & 4) ? BLINK : 0;
+    xw->flags |= (value & 2) ? UNDERLINE : 0;
+    xw->flags |= (value & 1) ? BOLD : 0;
+
+    /* attributes */
+    if (((value = parse_chr_param(&cp)) & 0xfe) != 0x40)
+	return;
+    screen->protected_mode &= ~DEC_PROTECT;
+    screen->protected_mode |= (value & 1) ? DEC_PROTECT : 0;
+
+    /* flags */
+    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
+	return;
+    screen->do_wrap = (value & 8) ? True : False;
+    screen->curss = ((value & 4) ? 3 : ((value & 2) ? 2 : 0));
+    UIntClr(xw->flags, ORIGIN);
+    xw->flags |= (value & 1) ? ORIGIN : 0;
+
+    if ((value = parse_chr_param(&cp)) < '0' || value > '3')
+	return;
+    screen->curgl = (Char) (value - '0');
+
+    if ((value = parse_chr_param(&cp)) < '0' || value > '3')
+	return;
+    screen->curgr = (Char) (value - '0');
+
+    /* character-set size */
+    if ((value = parse_chr_param(&cp)) != 0x4f)		/* works for xterm */
+	return;
+
+    /* SCS designators */
+    for (value = 0; value < 4; ++value) {
+	if (*cp == '%') {
+	    xtermDecodeSCS(xw, value, '%', *++cp);
+	} else if (*cp != '\0') {
+	    xtermDecodeSCS(xw, value, '\0', *cp);
+	} else {
+	    return;
+	}
+	cp++;
+    }
+
+    TRACE(("...done DECCIR\n"));
+}
+
+static void
+restore_DECTABSR(XtermWidget xw, const char *cp)
+{
+    int stop = 0;
+    Bool fail = False;
+
+    TabZonk(xw->tabs);
+    while (*cp != '\0' && !fail) {
+	if ((*cp) >= '0' && (*cp) <= '9') {
+	    stop = (stop * 10) + ((*cp) - '0');
+	} else if (*cp == '/') {
+	    --stop;
+	    if (OkTAB(stop)) {
+		TabSet(xw->tabs, stop);
+		stop = 0;
+	    } else {
+		fail = True;
+	    }
+	} else {
+	    fail = True;
+	}
+	++cp;
+    }
+    --stop;
+    if (OkTAB(stop))
+	TabSet(xw->tabs, stop);
+
+    TRACE(("...done DECTABSR\n"));
+}
+#endif
+
 void
 do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 {
@@ -4241,6 +4382,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     const char *cp = (const char *) dcsbuf;
     Bool okay;
     ANSI params;
+#if OPT_DEC_RECTOPS
+    char psarg = '0';
+#endif
 
     TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
 
@@ -4253,7 +4397,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	okay = True;
 
 	cp++;
-	if (*cp++ == 'q') {
+	if (*cp == 'q') {
+	    cp++;
 	    if (!strcmp(cp, "\"q")) {	/* DECSCA */
 		TRACE(("DECRQSS -> DECSCA\n"));
 		sprintf(reply, "%d%s",
@@ -4309,9 +4454,6 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			((screen->max_row > 24) ? screen->max_row : 24),
 			cp);
 		TRACE(("reply DECSLPP\n"));
-	    } else if (!strcmp(cp, "$t")) {	/* DECRSPS */
-		TRACE(("reply DECRSPS - not implemented\n"));
-		okay = False;
 	    } else if (!strcmp(cp, "$|")) {	/* DECSCPP */
 		TRACE(("reply DECSCPP\n"));
 		sprintf(reply, "%d%s",
@@ -4398,6 +4540,28 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		unparseputc1(xw, ANSI_ST);
 	    }
 	    break;
+	}
+	break;
+#endif
+#if OPT_DEC_RECTOPS
+    case '1':
+	/* FALLTHRU */
+    case '2':
+	psarg = *cp++;
+	/* FALLTHRU */
+    case 't':
+	if (screen->vtXX_level >= 3) {
+	    cp += 2;		/* skip "$t" */
+	    switch (psarg) {
+	    case '1':
+		TRACE(("DECRSPS (DECCIR)\n"));
+		restore_DECCIR(xw, cp);
+		break;
+	    case '2':
+		TRACE(("DECRSPS (DECTABSR)\n"));
+		restore_DECTABSR(xw, cp);
+		break;
+	    }
 	}
 	break;
 #endif

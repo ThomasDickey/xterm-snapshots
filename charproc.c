@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1566 2018/07/17 23:31:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1567 2018/07/21 00:31:49 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1620,10 +1620,9 @@ encode_scs(DECNRCM_codes value)
 }
 #endif
 
-static void
-decode_scs(XtermWidget xw, int which, int prefix, int suffix)
+void
+xtermDecodeSCS(XtermWidget xw, int which, int prefix, int suffix)
 {
-
     TScreen *screen = TScreenOf(xw);
     Cardinal n;
     DECNRCM_codes result = nrc_Unknown;
@@ -3452,7 +3451,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-	    decode_scs(xw, sp->scstype, 0, (int) c);
+	    xtermDecodeSCS(xw, sp->scstype, 0, (int) c);
 	    ResetState(sp);
 	    break;
 
@@ -4495,7 +4494,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_PERCENT:
 	    TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-	    decode_scs(xw, sp->scstype, '%', (int) c);
+	    xtermDecodeSCS(xw, sp->scstype, '%', (int) c);
 	    ResetState(sp);
 	    break;
 #endif

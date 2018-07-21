@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.45 2018/07/03 00:01:38 tom Exp $ */
+/* $XTermId: tabs.c,v 1.46 2018/07/20 22:17:44 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2018 by Thomas E. Dickey
@@ -84,7 +84,7 @@ TabReset(Tabs tabs)
 void
 TabSet(Tabs tabs, int col)
 {
-    if (col >= 0 && col < MAX_TABS) {
+    if (OkTAB(col)) {
 	SET_TAB(tabs, col);
     }
 }
@@ -95,7 +95,7 @@ TabSet(Tabs tabs, int col)
 void
 TabClear(Tabs tabs, int col)
 {
-    if (col >= 0 && col < MAX_TABS) {
+    if (OkTAB(col)) {
 	CLR_TAB(tabs, col);
     }
 }
