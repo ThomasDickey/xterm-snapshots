@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.441 2018/07/21 00:57:41 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.443 2018/07/24 23:01:49 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/07/20
+.ds RF 2018/07/24
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -798,9 +798,10 @@ or
 \*(Dc\*0\*$\*r\*(Pt\*s\*(ST
 for invalid requests.
 .iP
-.IP \\*(Dc\\*$\\*t\\*(Pt\\*s\\*(ST
+.IP \\*(Dc\\*(Ps\\*s\\*$\\*t\\*(Pt\\*s\\*(ST
 Restore presentation status (DECRSPS), VT320 and up.
-The data string \*(Pt is the response from DECCIR or DECTABSR.
+The control can be converted from a response from DECCIR or DECTABSR
+by changing the first \*(``u\*('' to a \*(``t\*(''
   \*(Ps = \*1 \(-> DECCIR
   \*(Ps = \*2 \(-> DECTABSR
 .

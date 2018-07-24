@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.815 2018/07/21 01:06:23 tom Exp $ */
+/* $XTermId: misc.c,v 1.816 2018/07/23 09:18:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4548,10 +4548,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	/* FALLTHRU */
     case '2':
 	psarg = *cp++;
-	/* FALLTHRU */
-    case 't':
-	if (screen->vtXX_level >= 3) {
-	    cp += 2;		/* skip "$t" */
+	if ((*cp++ == '$')
+	    && (*cp++ == 't')
+	    && (screen->vtXX_level >= 3)) {
 	    switch (psarg) {
 	    case '1':
 		TRACE(("DECRSPS (DECCIR)\n"));
