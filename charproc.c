@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1567 2018/07/21 00:31:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1568 2018/07/24 23:09:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4263,8 +4263,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, '1');
 		    reply_char(count, '$');
 		    reply_char(count, 'u');
-		    reply.a_param[count++] = (ParmType) screen->cur_row;
-		    reply.a_param[count++] = (ParmType) screen->cur_col;
+		    reply.a_param[count++] = (ParmType) (screen->cur_row + 1);
+		    reply.a_param[count++] = (ParmType) (screen->cur_col + 1);
 		    reply.a_param[count++] = (ParmType) thispage;
 		    reply_char(count, ';');
 		    reply_char(count, (0x40
