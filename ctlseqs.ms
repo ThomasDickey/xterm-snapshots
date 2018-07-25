@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.443 2018/07/24 23:01:49 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.445 2018/07/25 15:20:57 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/07/24
+.ds RF 2018/07/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -781,14 +781,15 @@ The key codes correspond to the DEC function-key codes (e.g., F6=17).
 Request Status String (DECRQSS), VT420 and up.
 .br
 The string following the \*(``q\*('' is one of the following:
-  \*(c"\*q	\(-> DECSCA
+  \*m		\(-> SGR
   \*(c"\*p	\(-> DECSCL
+  \*(Sp\*q	\(-> DECSCUSR
+  \*(c"\*q	\(-> DECSCA
   \*r		\(-> DECSTBM
   \*(cs		\(-> DECSLRM
-  \*m		\(-> SGR
-  \*(Sp\*q	\(-> DECSCUSR
-  \*$\*|	\(-> DECSCPP
   \*t		\(-> DECSLPP
+  \*$\*|	\(-> DECSCPP
+  \**\*|	\(-> DECSNLS
 .br
 \fIxterm\fP responds with
 \*(Dc\*1\*$\*r\*(Pt\*s\*(ST
@@ -1987,6 +1988,9 @@ are the coordinates of the locator position in the \fI\*(xt\fP window,
 encoded as ASCII decimal.
 .br
 The \*(``\fIpage\fP\*('' parameter is not used by \*(xt.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\**\\*|
+Select number of lines per screen (DECSNLS), VT420 and up.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}

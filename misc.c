@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.816 2018/07/23 09:18:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.819 2018/07/25 16:39:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4066,6 +4066,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 		free(xw->work.user_keys[key].str);
 	    xw->work.user_keys[key].str = str;
 	    xw->work.user_keys[key].len = len;
+	    TRACE(("parse_decudk %d:%.*s\n", key, len, str));
 	} else {
 	    free(str);
 	}
@@ -4234,6 +4235,14 @@ parse_decdld(ANSI *params, const char *string)
 #endif
 
 #if OPT_DEC_RECTOPS
+static const char *
+skip_params(const char *cp)
+{
+    while (*cp == ';' || (*cp >= '0' && *cp <= '9'))
+	++cp;
+    return cp;
+}
+
 static int
 parse_int_param(const char **cp)
 {
@@ -4459,6 +4468,11 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s",
 			((xw->flags & IN132COLUMNS) ? 132 : 80),
 			cp);
+	    } else if (!strcmp(cp, "*|")) {	/* DECSNLS */
+		TRACE(("reply DECSNLS\n"));
+		sprintf(reply, "%d%s",
+			screen->max_row + 1,
+			cp);
 	    } else {
 		okay = False;
 	    }
@@ -4547,22 +4561,25 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     case '1':
 	/* FALLTHRU */
     case '2':
-	psarg = *cp++;
-	if ((*cp++ == '$')
-	    && (*cp++ == 't')
-	    && (screen->vtXX_level >= 3)) {
-	    switch (psarg) {
-	    case '1':
-		TRACE(("DECRSPS (DECCIR)\n"));
-		restore_DECCIR(xw, cp);
-		break;
-	    case '2':
-		TRACE(("DECRSPS (DECTABSR)\n"));
-		restore_DECTABSR(xw, cp);
-		break;
+	if (*skip_params(cp) == '$') {
+	    psarg = *cp++;
+	    if ((*cp++ == '$')
+		&& (*cp++ == 't')
+		&& (screen->vtXX_level >= 3)) {
+		switch (psarg) {
+		case '1':
+		    TRACE(("DECRSPS (DECCIR)\n"));
+		    restore_DECCIR(xw, cp);
+		    break;
+		case '2':
+		    TRACE(("DECRSPS (DECTABSR)\n"));
+		    restore_DECTABSR(xw, cp);
+		    break;
+		}
 	    }
+	    break;
 	}
-	break;
+	/* FALLTHRU */
 #endif
     default:
 	if (screen->terminal_id == 125 ||
@@ -5004,11 +5021,15 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 char *
 udk_lookup(XtermWidget xw, int keycode, int *len)
 {
+    char *result = NULL;
     if (keycode >= 0 && keycode < MAX_UDK) {
 	*len = xw->work.user_keys[keycode].len;
-	return xw->work.user_keys[keycode].str;
+	result = xw->work.user_keys[keycode].str;
+	TRACE(("udk_lookup(%d) = %.*s\n", keycode, *len, result));
+    } else {
+	TRACE(("udk_lookup(%d) = <null>\n", keycode));
     }
-    return 0;
+    return result;
 }
 
 #if OPT_REPORT_ICONS
