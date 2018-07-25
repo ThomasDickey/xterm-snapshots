@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1568 2018/07/24 23:09:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1569 2018/07/25 15:00:04 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4246,8 +4246,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			UIntSet(xw->flags, IN132COLUMNS);
 		    RequestResize(xw, -1, value, True);
 		}
-		ResetState(sp);
 	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECSNLS:
+	    if (screen->vtXX_level >= 4 && AllowWindowOps(xw, ewSetWinLines)) {
+		TRACE(("CASE_DECSNLS\n"));
+		value = zero_if_default(0);
+		if (value >= 1 && value <= 255) {
+		    RequestResize(xw, value, -1, True);
+		}
+	    }
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECRQPSR:

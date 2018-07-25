@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.51 2018/07/02 22:56:34 tom Exp $
+# $XTermId: VTparse.def,v 1.52 2018/07/25 14:53:00 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -202,3 +202,4 @@ CASE_GSETS_PERCENT
 CASE_GRAPHICS_ATTRIBUTES
 CASE_DECRQPSR
 CASE_DECSCPP
+CASE_DECSNLS
