@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.802 2018/07/21 00:32:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.804 2018/07/31 09:25:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -951,6 +951,7 @@ extern TInput *lookupTInput (XtermWidget /* xw */, Widget /* w */);
 #if OPT_ISO_COLORS
 extern void SGR_Background (XtermWidget /* xw */, int  /* color */);
 extern void SGR_Foreground (XtermWidget /* xw */, int  /* color */);
+extern void setExtendedColors (XtermWidget /* xw */);
 #endif
 
 #ifdef NO_LEAKS
@@ -1195,6 +1196,12 @@ extern void xtermOpenSession (void);
 extern Bool xtermEnvUTF8(void);
 #else
 #define xtermEnvUTF8() False
+#endif
+
+#if OPT_XTERM_SGR
+extern void xtermPushSGR (XtermWidget /* xw */, int /* value */);
+extern void xtermReportSGR (XtermWidget /* xw */, XTermRect * /* value */);
+extern void xtermPopSGR (XtermWidget /* xw */);
 #endif
 
 #ifdef ALLOWLOGGING

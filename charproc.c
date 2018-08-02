@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1569 2018/07/25 15:00:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1575 2018/07/31 20:30:01 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1107,6 +1107,13 @@ setExtendedBG(XtermWidget xw)
     SGR_Background(xw, bg);
 }
 
+void
+setExtendedColors(XtermWidget xw)
+{
+    setExtendedFG(xw);
+    setExtendedBG(xw);
+}
+
 static void
 reset_SGR_Foreground(XtermWidget xw)
 {
@@ -1361,6 +1368,9 @@ static const struct {
 	,DATA(vt52_table)
 	,DATA(vt52_esc_table)
 	,DATA(vt52_ignore_table)
+#endif
+#if OPT_XTERM_SGR
+	,DATA(csi_hash_table)
 #endif
 #undef DATA
 };
@@ -2321,6 +2331,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	    case CASE_CSI_DEC_DOLLAR_STATE:
 	    case CASE_CSI_DOLLAR_STATE:
+	    case CASE_CSI_HASH_STATE:
 	    case CASE_CSI_EX_STATE:
 	    case CASE_CSI_QUOTE_STATE:
 	    case CASE_CSI_SPACE_STATE:
@@ -2998,7 +3009,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			setExtendedFG(xw);
 		    });
 		    break;
-		case 5:	/* Blink                */
+		case 5:	/* Blink (less than 150 per minute) */
+		    /* FALLTHRU */
+		case 6:	/* Blink (150 per minute, or more) */
 		    UIntSet(xw->flags, BLINK);
 		    StartBlinking(screen);
 		    if_OPT_ISO_COLORS(screen, {
@@ -4369,6 +4382,44 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = eigtable;
 	    break;
 #endif /* OPT_DEC_RECTOPS */
+
+#if OPT_XTERM_SGR
+	case CASE_CSI_HASH_STATE:
+	    TRACE(("CASE_CSI_HASH_STATE\n"));
+	    /* csi hash (#) */
+	    sp->parsestate = csi_hash_table;
+	    break;
+
+	case CASE_XTERM_PUSH_SGR:
+	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
+	    if (nparam == 0 || (nparam == 1 && GetParam(0) == DEFAULT)) {
+		value = DEFAULT;
+	    } else if (nparam > 0) {
+		value = 0;
+		for (count = 0; count < nparam; ++count) {
+		    item = zero_if_default(count);
+		    if (item > 0 && item < MAX_PUSH_SGR) {
+			value |= (1 << (item - 1));
+		    }
+		}
+	    }
+	    xtermPushSGR(xw, value);
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_REPORT_SGR:
+	    TRACE(("CASE_XTERM_REPORT_SGR\n"));
+	    xtermParseRect(xw, ParamPair(0), &myRect);
+	    xtermReportSGR(xw, &myRect);
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_POP_SGR:
+	    TRACE(("CASE_XTERM_POP_SGR\n"));
+	    xtermPopSGR(xw);
+	    ResetState(sp);
+	    break;
+#endif
 
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
@@ -7183,7 +7234,6 @@ unparseputc1(XtermWidget xw, int c)
 void
 unparseseq(XtermWidget xw, ANSI *ap)
 {
-    char temp[8];
     int c;
 
     assert(ap->a_nparam < NPARAM);
@@ -7197,6 +7247,7 @@ unparseseq(XtermWidget xw, ANSI *ap)
 	|| c == ANSI_SS3) {
 	int i;
 	int inters;
+	char temp[8];
 
 	if (ap->a_pintro != 0)
 	    unparseputc(xw, ap->a_pintro);

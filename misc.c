@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.819 2018/07/25 16:39:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.828 2018/08/02 09:16:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4407,6 +4407,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 
 	cp++;
 	if (*cp == 'q') {
+	    *reply = '\0';
 	    cp++;
 	    if (!strcmp(cp, "\"q")) {	/* DECSCA */
 		TRACE(("DECRQSS -> DECSCA\n"));
@@ -4835,6 +4836,10 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    result = MdBool(screen->logging);
+#else
+	    result = ((MdBool(screen->logging) == mdMaybeSet)
+		      ? mdAlwaysSet
+		      : mdAlwaysReset);
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
@@ -6612,3 +6617,161 @@ xtermSetWinSize(XtermWidget xw)
 			   Width(screen));
 	}
 }
+
+#if OPT_XTERM_SGR
+
+#if OPT_TRACE
+static char *
+traceIFlags(IFlags flags)
+{
+    static char result[1000];
+    result[0] = '\0';
+#define DATA(name) if (flags & name) { strcat(result, " " #name); }
+    DATA(INVERSE);
+    DATA(UNDERLINE);
+    DATA(BOLD);
+    DATA(BLINK);
+    DATA(INVISIBLE);
+    DATA(BG_COLOR);
+    DATA(FG_COLOR);
+
+#if OPT_WIDE_ATTRS
+    DATA(ATR_FAINT);
+    DATA(ATR_ITALIC);
+    DATA(ATR_STRIKEOUT);
+    DATA(ATR_DBL_UNDER);
+    DATA(ATR_DIRECT_FG);
+    DATA(ATR_DIRECT_BG);
+#endif
+#undef DATA
+    return result;
+}
+
+static char *
+traceIStack(unsigned flags)
+{
+    static char result[1000];
+    result[0] = '\0';
+#define DATA(name) if (flags & (1 << (ps##name - 1))) { strcat(result, " " #name); }
+    DATA(INVERSE);
+    DATA(UNDERLINE);
+    DATA(BOLD);
+    DATA(BLINK);
+    DATA(INVISIBLE);
+    DATA(BG_COLOR);
+    DATA(FG_COLOR);
+
+#if OPT_WIDE_ATTRS
+    DATA(ATR_FAINT);
+    DATA(ATR_ITALIC);
+    DATA(ATR_STRIKEOUT);
+    DATA(ATR_DBL_UNDER);
+    DATA(ATR_DIRECT_FG);	/* FIXME - integrate with FG_COLOR */
+    DATA(ATR_DIRECT_BG);	/* FIXME - integrate with BG_COLOR */
+#endif
+#undef DATA
+    return result;
+}
+#endif
+
+void
+xtermPushSGR(XtermWidget xw, int value)
+{
+    SavedSGR *s = &(xw->saved_sgr);
+
+    TRACE(("xtermPushSGR %d mask %#x %s\n", s->used + 1, value, traceIStack(value)));
+
+    if (s->used < MAX_SAVED_SGR) {
+	s->stack[s->used].mask = (IFlags) value;
+#define PUSH_FLAG(name) \
+	    s->stack[s->used].name = xw->name;\
+	    TRACE(("...may pop %s 0x%04X %s\n", #name, xw->name, traceIFlags(xw->name)))
+#define PUSH_DATA(name) \
+	    s->stack[s->used].name = xw->name;\
+	    TRACE(("...may pop %s %d\n", #name, xw->name))
+	PUSH_FLAG(flags);
+#if OPT_ISO_COLORS
+	PUSH_DATA(sgr_foreground);
+	PUSH_DATA(sgr_background);
+#endif
+    }
+    s->used++;
+}
+
+void
+xtermReportSGR(XtermWidget xw, XTermRect *value)
+{
+    TRACE(("xtermReportSGR %d,%d - %d,%d\n",
+	   value->top, value->left,
+	   value->bottom, value->right));
+}
+
+void
+xtermPopSGR(XtermWidget xw)
+{
+    SavedSGR *s = &(xw->saved_sgr);
+
+    TRACE(("xtermPopSGR %d\n", s->used));
+
+    if (s->used > 0) {
+	if (s->used-- <= MAX_SAVED_SGR) {
+	    IFlags mask = s->stack[s->used].mask;
+	    Boolean changed = False;
+
+	    TRACE(("...mask  %#x %s\n", mask, traceIStack(mask)));
+	    TRACE(("...old:  %s\n", traceIFlags(xw->flags)));
+	    TRACE(("...new:  %s\n", traceIFlags(s->stack[s->used].flags)));
+#define POP_FLAG(name) \
+	    if ((1 << (ps##name - 1)) & mask) { \
+	    	if ((xw->flags & name) ^ (s->stack[s->used].flags & name)) { \
+		    changed = True; \
+		    UIntClr(xw->flags, name); \
+		    UIntSet(xw->flags, (s->stack[s->used].flags & name)); \
+		    TRACE(("...pop " #name " = %s\n", BtoS(xw->flags & name))); \
+		} \
+	    }
+#define POP_DATA(name,value) \
+	    if ((1 << (ps##name - 1)) & mask) { \
+	        Bool always = False; \
+	    	if ((xw->flags & name) ^ (s->stack[s->used].flags & name)) { \
+		    always = changed = True; \
+		    UIntClr(xw->flags, name); \
+		    UIntSet(xw->flags, (s->stack[s->used].flags & name)); \
+		    TRACE(("...pop " #name " = %s\n", BtoS(xw->flags & name))); \
+		} \
+		if (always || (xw->value != s->stack[s->used].value)) { \
+		    TRACE(("...pop " #name " %d => %d\n", xw->value, s->stack[s->used].value)); \
+		    xw->value = s->stack[s->used].value; \
+		    changed = True; \
+		} \
+	    }
+	    POP_FLAG(BOLD);
+	    POP_FLAG(UNDERLINE);
+	    POP_FLAG(BLINK);
+	    POP_FLAG(INVERSE);
+	    POP_FLAG(INVISIBLE);
+#if OPT_WIDE_ATTRS
+	    POP_FLAG(ATR_ITALIC);
+	    POP_FLAG(ATR_FAINT);
+	    POP_FLAG(ATR_STRIKEOUT);
+	    POP_FLAG(ATR_DBL_UNDER);
+#endif
+#if OPT_ISO_COLORS
+	    POP_DATA(FG_COLOR, sgr_foreground);
+	    POP_DATA(BG_COLOR, sgr_background);
+#if OPT_DIRECT_COLOR
+	    POP_FLAG(ATR_DIRECT_FG);
+	    POP_FLAG(ATR_DIRECT_BG);
+#endif
+	    if (changed) {
+		setExtendedColors(xw);
+	    }
+#endif
+	}
+	TRACE(("xtermP -> flags%s, fg=%d bg=%d\n",
+	       traceIFlags(xw->flags),
+	       xw->sgr_foreground,
+	       xw->sgr_background));
+    }
+}
+#endif /* OPT_XTERM_SGR */

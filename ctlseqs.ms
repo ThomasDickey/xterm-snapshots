@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.445 2018/07/25 15:20:57 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.451 2018/07/31 23:03:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/07/25
+.ds RF 2018/07/31
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -213,7 +213,7 @@
 .[] * *
 .[] + +
 .[] , ,
-.[] - -
+.[] - \-
 .[] . .
 .[] 0 0
 .[] 1 1
@@ -262,12 +262,12 @@
 .[] ]] ]
 .[] bS \\e
 .[] { {
-.[] ~ ~
+.[] ~ \(ti
 .[] ] ]
 .[] & &
-.[] ^ ^
+.[] ^ \(ha
 .[] _ _
-.[] qu \&'
+.[] qu \&\(aq
 .[] ` \`
 .[] a a
 .[] b b
@@ -299,7 +299,6 @@
 .[] } }
 .[] ! !
 .[] c" \(lq
-.[] c~ ~
 .[] Sc \fIc\fP
 .ds Cc \fIC\fP
 .ds Cb \fIC\v'.3m'\h'-.2m'\s-2b\s0\v'-.3m'\fP
@@ -561,7 +560,8 @@ Horizontal Tab (HT) (Ctrl-I).
 .
 .iP
 .IP \\*(Vt
-Vertical Tab (Ctrl-K).  This is treated the same as LF.
+Vertical Tab (Ctrl-K).
+This is treated the same as LF.
 .Ed
 .
 .Ss Controls beginning with \*(Es
@@ -610,7 +610,8 @@ DEC Screen Alignment Test (DECALN), VT100.
 .
 .iP
 .IP \\*(Es\\*%\\*@
-Select default character set.  That is ISO 8859-1 (ISO 2022).
+Select default character set.
+That is ISO 8859-1 (ISO 2022).
 .
 .iP
 .IP \\*(Es\\*%\\*G
@@ -715,8 +716,8 @@ Normal Keypad (DECKPNM), VT100.
 .
 .iP
 .IP \\*(Es\\*F
-Cursor to lower left corner of screen.  This is
-enabled by the \fBhpLowerleftBugCompat\fP resource.
+Cursor to lower left corner of screen.
+This is enabled by the \fBhpLowerleftBugCompat\fP resource.
 .
 .iP
 .IP \\*(Es\\*c
@@ -748,14 +749,15 @@ Invoke the G3 Character Set as GR (LS3R).
 Invoke the G2 Character Set as GR (LS2R).
 .
 .iP
-.IP \\*(Es\\*(c~
+.IP \\*(Es\\*~
 Invoke the G1 Character Set as GR (LS1R), VT100.
 .Ed
 .
 .Ss Application Program-Command functions
 .St
 .IP \\*(AP\\*(Pt\\*s\\*(ST
-None.  \fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
+None.
+\fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
 .
@@ -1499,7 +1501,7 @@ can change the form of the string sent from the modified F1 key.
 Disable modifiers which may be enabled via the
 \*(Cs\*>\*(Ps\*;\*(Ps\*s\*m
 sequence.
-This corresponds to a resource value of \*(``-1\*('',
+This corresponds to a resource value of \*(``\-1\*('',
 which cannot be set with the other sequence.
 .iP
 .IP
@@ -1689,7 +1691,8 @@ Window manipulation (from \fIdtterm\fP, as well as extensions by \fIxterm\fP).
 These controls may be disabled using the \fIallowWindowOps\fP resource.
 .iP
 \fIxterm\fP uses \fIExtended Window Manager Hints\fP (EWMH) to maximize
-the window.  Some window managers have incomplete support for EWMH.
+the window.
+Some window managers have incomplete support for EWMH.
 For instance, \fIfvwm\fP, \fIflwm\fP and \fIquartz-wm\fP advertise
 support for maximizing windows horizontally or vertically, but
 in fact equate those to the maximize operation.
@@ -1926,11 +1929,34 @@ Select Locator Events (DECSLE).
 .br
 Valid values for the first (and any additional parameters) are:
   \*(Ps = \*0 \(-> only respond to explicit host requests (DECRQLP).
-This is default. It also cancels any filter rectangle.
+This is default.
+It also cancels any filter rectangle.
   \*(Ps = \*1 \(-> report button down transitions.
   \*(Ps = \*2 \(-> do not report button down transitions.
   \*(Ps = \*3 \(-> report button up transitions.
   \*(Ps = \*4 \(-> do not report button up transitions.
+.
+.iP
+.IP \\*(Cs\\*#\\*{
+.br
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*#\\*{
+Push video attributes onto stack (XTPUSHSGR), xterm.
+The optional parameters correspond to the SGR encoding for video attributes,
+except for colors (which do not have a unique SGR code):
+  \*(Ps = \*1 \(-> Bold.
+  \*(Ps = \*2 \(-> Faint.
+  \*(Ps = \*3 \(-> Italicized.
+  \*(Ps = \*4 \(-> Underlined.
+  \*(Ps = \*5 \(-> Blink.
+  \*(Ps = \*7 \(-> Inverse.
+  \*(Ps = \*8 \(-> Invisible.
+  \*(Ps = \*9 \(-> Crossed-out characters.
+  \*(Ps = \*1\*0 \(-> Foreground color.
+  \*(Ps = \*1\*1 \(-> Background color.
+  \*(Ps = \*2\*1 \(-> Doubly-underlined.
+.IP
+If no parameters are given, all of the video attributes are saved.
+The stack is limited to 10 levels.
 .
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*{
@@ -1991,6 +2017,11 @@ The \*(``\fIpage\fP\*('' parameter is not used by \*(xt.
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\**\\*|
 Select number of lines per screen (DECSNLS), VT420 and up.
+.iP
+.IP \\*(Cs\\*#\\*}
+Pop video attributes from stack (XTPOPSGR), xterm.
+Popping restores the video-attributes which were saved using XTPUSHSGR
+to their previous state.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}
@@ -2175,14 +2206,17 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
   \*(Ps = \*1\*1\*9 \(-> Reset highlight foreground color.
 .sP
-  \*(Ps = \*I\*s\*;\fIc\fP \(-> Set icon to file. Sun shelltool, CDE dtterm.
+  \*(Ps = \*I\*s\*;\fIc\fP \(-> Set icon to file.
+Sun shelltool, CDE dtterm.
 .br
 The file is expected to be XPM format,
 and uses the same search logic as the \fBiconHint\fP resource.
 .sP
-  \*(Ps = \*l\*s\*;\fIc\fP \(-> Set window title. Sun shelltool, CDE dtterm.
+  \*(Ps = \*l\*s\*;\fIc\fP \(-> Set window title.
+Sun shelltool, CDE dtterm.
 .sP
-  \*(Ps = \*L\*s\*;\fIc\fP \(-> Set icon label. Sun shelltool, CDE dtterm.
+  \*(Ps = \*L\*s\*;\fIc\fP \(-> Set icon label.
+Sun shelltool, CDE dtterm.
 .Ed
 .
 .Ss Privacy Message
@@ -2329,18 +2363,18 @@ PF4	\*(S3\*S	\*(S3\*S	kf4	k4
 + \f1(add)\fP	\*+	\*(S3\*k	-	-
 , \f1(comma)\fP	\*,	\*(S3\*l	-	-
 - \f1(minus)\fP	\*-	\*(S3\*m	-	-
-\&. \f1(Delete)\fP	\*.	\*(Cs\*3\*(c~	-	-
+\&. \f1(Delete)\fP	\*.	\*(Cs\*3\*~	-	-
 / \f1(divide)\fP	\*/	\*(S3\*o	-	-
-0 \f1(Insert)\fP	\*0	\*(Cs\*2\*(c~	-	-
+0 \f1(Insert)\fP	\*0	\*(Cs\*2\*~	-	-
 1 \f1(End)\fP	\*1	\*(S3\*F	kc1	K4
 2 \f1(DownArrow)\fP	\*2	\*(Cs\*(cB	-	-
-3 \f1(PageDown)\fP	\*3	\*(Cs\*6\*(c~	kc3	K5
+3 \f1(PageDown)\fP	\*3	\*(Cs\*6\*~	kc3	K5
 4 \f1(LeftArrow)\fP	\*4	\*(Cs\*D	-	-
 5 \f1(Begin)\fP	\*5	\*(Cs\*E	kb2	K2
 6 \f1(RightArrow)\fP	\*6	\*(Cs\*C	-	-
 7 \f1(Home)\fP	\*7	\*(S3\*H	ka1	K1
 8 \f1(UpArrow)\fP	\*8	\*(Cs\*A	-	-
-9 \f1(PageUp)\fP	\*9	\*(Cs\*5\*(c~	ka3	K3
+9 \f1(PageUp)\fP	\*9	\*(Cs\*5\*~	ka3	K3
 = (equal)	\*=	\*(S3\*(XX	-	-
 _
 .TE
@@ -2358,14 +2392,14 @@ F1	\*(S3\*P
 F2	\*(S3\*Q
 F3	\*(S3\*R
 F4	\*(S3\*S
-F5	\*(Cs\*1\*5\*(c~
-F6	\*(Cs\*1\*7\*(c~
-F7	\*(Cs\*1\*8\*(c~
-F8	\*(Cs\*1\*9\*(c~
-F9	\*(Cs\*2\*0\*(c~
-F10	\*(Cs\*2\*1\*(c~
-F11	\*(Cs\*2\*3\*(c~
-F12	\*(Cs\*2\*4\*(c~
+F5	\*(Cs\*1\*5\*~
+F6	\*(Cs\*1\*7\*~
+F7	\*(Cs\*1\*8\*~
+F8	\*(Cs\*1\*9\*~
+F9	\*(Cs\*2\*0\*~
+F10	\*(Cs\*2\*1\*~
+F11	\*(Cs\*2\*3\*~
+F12	\*(Cs\*2\*4\*~
 _
 .TE
 .sP
@@ -2385,10 +2419,10 @@ _
 .TH
 .T&
 l | l .
-F1	\*(Cs\*1\*1\*(c~
-F2	\*(Cs\*1\*2\*(c~
-F3	\*(Cs\*1\*3\*(c~
-F4	\*(Cs\*1\*4\*(c~
+F1	\*(Cs\*1\*1\*~
+F2	\*(Cs\*1\*2\*~
+F3	\*(Cs\*1\*3\*~
+F4	\*(Cs\*1\*4\*~
 _
 .TE
 In normal mode, i.e., a Sun/PC keyboard
@@ -2426,7 +2460,7 @@ c | l .
 _
 .TE
 For example, shift-F5 would be sent as
-\*(Cs\*1\*5\*;\*2\*(c~
+\*(Cs\*1\*5\*;\*2\*~
 .LP
 If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
 recognized, making parameters 9 through 16.
@@ -2514,12 +2548,12 @@ _
 .TH
 .T&
 l | l | l .
-\f1Insert\fP	\*(Cs\*2\*(c~	\*(Cs\*2\*(c~
-\f1Delete\fP	\*(Cs\*3\*(c~	\*(Cs\*3\*(c~
-\f1Home\fP	\*(Cs\*1\*(c~	\*(Cs\*1\*(c~
-\f1End\fP	\*(Cs\*4\*(c~	\*(Cs\*4\*(c~
-\f1PageUp\fP	\*(Cs\*5\*(c~	\*(Cs\*5\*(c~
-\f1PageDown\fP	\*(Cs\*6\*(c~	\*(Cs\*6\*(c~
+\f1Insert\fP	\*(Cs\*2\*~	\*(Cs\*2\*~
+\f1Delete\fP	\*(Cs\*3\*~	\*(Cs\*3\*~
+\f1Home\fP	\*(Cs\*1\*~	\*(Cs\*1\*~
+\f1End\fP	\*(Cs\*4\*~	\*(Cs\*4\*~
+\f1PageUp\fP	\*(Cs\*5\*~	\*(Cs\*5\*~
+\f1PageDown\fP	\*(Cs\*6\*~	\*(Cs\*6\*~
 _
 .TE
 .LP
@@ -2533,14 +2567,14 @@ _
 .TH
 .T&
 l | l .
-F13	\*(Cs\*2\*5\*(c~
-F14	\*(Cs\*2\*6\*(c~
-F15	\*(Cs\*2\*8\*(c~
-F16	\*(Cs\*2\*9\*(c~
-F17	\*(Cs\*3\*1\*(c~
-F18	\*(Cs\*3\*2\*(c~
-F19	\*(Cs\*3\*3\*(c~
-F20	\*(Cs\*3\*4\*(c~
+F13	\*(Cs\*2\*5\*~
+F14	\*(Cs\*2\*6\*~
+F15	\*(Cs\*2\*8\*~
+F16	\*(Cs\*2\*9\*~
+F17	\*(Cs\*3\*1\*~
+F18	\*(Cs\*3\*2\*~
+F19	\*(Cs\*3\*3\*~
+F20	\*(Cs\*3\*4\*~
 _
 .TE
 .Sh "VT52-Style Function Keys"
@@ -3073,10 +3107,12 @@ Return Terminal Status (\*(Es Ctrl-E).
 PAGE (Clear Screen) (\*(Es Ctrl-L).
 .iP
 .IP \\*(Es\\*(So
-Begin 4015 APL mode (\*(Es Ctrl-N).  This is ignored by \fIxterm\fP.
+Begin 4015 APL mode (\*(Es Ctrl-N).
+This is ignored by \fIxterm\fP.
 .iP
 .IP \\*(Es\\*(Si
-End 4015 APL mode (\*(Es Ctrl-O).  This is ignored by \fIxterm\fP.
+End 4015 APL mode (\*(Es Ctrl-O).
+This is ignored by \fIxterm\fP.
 .iP
 .IP \\*(Es\\*(Eb
 COPY (Save Tektronix Codes to file COPY\fIyyyy-mm-dd.hh:mm:ss\fP).
@@ -3163,7 +3199,7 @@ Point Plot Mode (Ctrl-\e).
 Graph Mode (Ctrl-]).
 .iP
 .IP \\*(Rs
-Incremental Plot Mode (Ctrl-^).
+Incremental Plot Mode (Ctrl-\*^).
 .iP
 .IP \\*(Us
 Alpha Mode (Ctrl-_).
@@ -3406,7 +3442,8 @@ used by the X10.4 \fIxterm\fP and mentioned in its \fICHANGES\fP file:
 .iP
 .RS
 The window size is passed to the operating system via TIOCSWINSZ (4.3) or
-TIOCSSIZE (sun).  A SIGWINCH siganl is sent if the vt102 window is resized.
+TIOCSSIZE (sun).
+A SIGWINCH signal is sent if the vtXXX window is resized.
 .RE
 .IP
 While support for the Sun control-sequences remained in \fIresize\fP,
@@ -3485,11 +3522,17 @@ but that is coincidental.
 The latter was introduced in X10.4:
 .iP
 .RS
+.ft C
+.na
+.hy 0
 Most Dec Private mode settings can be save away internally using \\E[?ns,
 where n is the same number to set or reset the Dec Private mode.  The
 mode can be restored using \\E[?nr.  This can be used in termcap for vi, for
 example, to turn off saving of lines, but restore whatever the original
 state was on exit.
+.hy
+.ad
+.ft R
 .RE
 .IP
 while the SCOSC/SCORC pair was added in 1995 by XFree86
@@ -3501,11 +3544,18 @@ but does not specify what those colors are.
 That is implied by the description's mention of \fIHFT\fP:
 .iP
 .RS
-The \fIaixterm\fP command provides a standard terminal type for programs that
-do not interact directly with Enhanced X-Windows. This command provides
+.na
+.hy 0
+.ft C
+The aixterm command provides a standard terminal type for programs that
+do not interact directly with Enhanced X-Windows.
+This command provides
 an emulation for a VT102 terminal or a high function terminal (HFT).
 The VT102 mode is activated by the -v flag.
+.ft R
+.ad
 .RE
+.hy
 .IP
 Unlike \fIxterm\fP, there are no resource names for the 16 colors,
 leaving the reader to assume that the mapping is hard-coded.
