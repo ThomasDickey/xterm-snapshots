@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/07/25)
+               updated for XTerm Patch #334 (2018/07/31)
 
 
 
@@ -1290,11 +1290,31 @@ CSI Pm ' {
           Valid values for the first (and any additional parameters)
           are:
             Ps = 0  -> only respond to explicit host requests (DECRQLP).
-          This is default. It also cancels any filter rectangle.
+          This is default.  It also cancels any filter rectangle.
             Ps = 1  -> report button down transitions.
             Ps = 2  -> do not report button down transitions.
             Ps = 3  -> report button up transitions.
             Ps = 4  -> do not report button up transitions.
+
+CSI # {
+CSI Ps ; Ps # {
+          Push video attributes onto stack (XTPUSHSGR), xterm.  The
+          optional parameters correspond to the SGR encoding for video
+          attributes, except for colors (which do not have a unique SGR
+          code):
+            Ps = 1  -> Bold.
+            Ps = 2  -> Faint.
+            Ps = 3  -> Italicized.
+            Ps = 4  -> Underlined.
+            Ps = 5  -> Blink.
+            Ps = 7  -> Inverse.
+            Ps = 8  -> Invisible.
+            Ps = 9  -> Crossed-out characters.
+            Ps = 1 0  -> Foreground color.
+            Ps = 1 1  -> Background color.
+            Ps = 2 1  -> Doubly-underlined.
+          If no parameters are given, all of the video attributes are
+          saved.  The stack is limited to 10 levels.
 
 CSI Pt ; Pl ; Pb ; Pr $ {
           Selective Erase Rectangular Area (DECSERA), VT400 and up.
@@ -1348,6 +1368,10 @@ CSI Ps ' |
 
 CSI Ps * |
           Select number of lines per screen (DECSNLS), VT420 and up.
+
+CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
+          restores the video-attributes which were saved using XTPUSHSGR
+          to their previous state.
 
 CSI Pm ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
@@ -1512,13 +1536,13 @@ OSC Ps ; Pt ST
             Ps = 1 1 8  -> Reset Tektronix cursor color.
             Ps = 1 1 9  -> Reset highlight foreground color.
 
-            Ps = I  ; c -> Set icon to file. Sun shelltool, CDE dtterm.
+            Ps = I  ; c -> Set icon to file.  Sun shelltool, CDE dtterm.
           The file is expected to be XPM format, and uses the same
           search logic as the iconHint resource.
 
-            Ps = l  ; c -> Set window title. Sun shelltool, CDE dtterm.
+            Ps = l  ; c -> Set window title.  Sun shelltool, CDE dtterm.
 
-            Ps = L  ; c -> Set icon label. Sun shelltool, CDE dtterm.
+            Ps = L  ; c -> Set icon label.  Sun shelltool, CDE dtterm.
 
 
 Privacy Message
@@ -2337,7 +2361,7 @@ FS        Point Plot Mode (Ctrl-\).
 
 GS        Graph Mode (Ctrl-]).
 
-RS        Incremental Plot Mode (Ctrl-^).
+RS        Incremental Plot Mode (Ctrl-^ ).
 
 US        Alpha Mode (Ctrl-_).
 
@@ -2513,8 +2537,8 @@ o   Xterm supports control sequences for manipulating its window which
     used by the X10.4 xterm and mentioned in its CHANGES file:
 
         The window size is passed to the operating system via TIOCSWINSZ
-        (4.3) or TIOCSSIZE (sun).  A SIGWINCH siganl is sent if the
-        vt102 window is resized.
+        (4.3) or TIOCSSIZE (sun).  A SIGWINCH signal is sent if the
+        vtXXX window is resized.
 
     While support for the Sun control-sequences remained in resize, the
     next release of xterm (X11R1 in 1987) omitted the code for inter-
@@ -2585,27 +2609,27 @@ o   The control sequences for saving/restoring the cursor and for sav-
     tal.  The latter was introduced in X10.4:
 
         Most Dec Private mode settings can be save away internally using
-        \E[?ns, where n is the same number to set or reset the Dec Pri-
-        vate mode.  The mode can be restored using \E[?nr.  This can be
-        used in termcap for vi, for example, to turn off saving of
+        \E[?ns, where n is the same number to set or reset the Dec
+        Private mode.  The mode can be restored using \E[?nr.  This can
+        be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
+    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but does not specify what
-    those colors are.  That is implied by the description's mention of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
-        The aixterm command provides a standard terminal type for pro-
-        grams that do not interact directly with Enhanced X-Windows.
+        The aixterm command provides a standard terminal type for
+        programs that do not interact directly with Enhanced X-Windows.
         This command provides an emulation for a VT102 terminal or a
         high function terminal (HFT).  The VT102 mode is activated by
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to not conflict with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.

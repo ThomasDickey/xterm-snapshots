@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.76 2018/07/04 16:59:57 tom Exp $ */
+/* $XTermId: graphics.c,v 1.77 2018/07/26 01:32:33 tom Exp $ */
 
 /*
  * Copyright 2013-2017,2018 by Ross Combs
@@ -1789,11 +1789,11 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    unsigned ii;
-
     init_color_registers(getSharedRegisters(), screen->terminal_id);
 
     if (used_graphics) {
+	unsigned ii;
+
 	TRACE(("resetting all graphics\n"));
 	FOR_EACH_SLOT(ii) {
 	    deactivateSlot(ii);

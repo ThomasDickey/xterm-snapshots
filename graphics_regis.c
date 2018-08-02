@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.103 2018/07/04 20:09:50 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.104 2018/07/26 01:33:30 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -952,9 +952,9 @@ plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
 	double dx, dy, err;
 
 	xx += sx;
-	xx *= sx = x0 < x2 ? 1 : -1;	/* x step direction */
+	xx *= (sx = (x0 < x2) ? 1 : -1);	/* x step direction */
 	yy += sy;
-	yy *= sy = y0 < y2 ? 1 : -1;	/* y step direction */
+	yy *= (sy = (y0 < y2) ? 1 : -1);	/* y step direction */
 	xy = 2 * xx * yy;
 	xx *= xx;
 	yy *= yy;		/* differences 2nd degree */

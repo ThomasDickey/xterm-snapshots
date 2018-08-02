@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-333t
+MANIFEST for xterm, version xterm-333u
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -204,5 +204,6 @@ vttests/query-fonts.pl          script to demo/test font-querying
 vttests/query-status.pl         query DECRQSS status
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
+vttests/sgrPushPop.pl           Dan Thompson's script
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action

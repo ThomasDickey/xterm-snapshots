@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.895 2018/07/20 22:16:05 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.901 2018/08/01 23:16:32 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -799,6 +799,10 @@ typedef struct {
 #define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
 #endif
 
+#ifndef OPT_XTERM_SGR
+#define OPT_XTERM_SGR   1 /* true if xterm supports private SGR controls */
+#endif
+
 #ifndef OPT_ZICONBEEP
 #define OPT_ZICONBEEP   1 /* true if xterm supports "-ziconbeep" option */
 #endif
@@ -1215,6 +1219,39 @@ typedef enum {
     , epLAST
 } PasteControls;
 
+/*
+ * xterm uses these codes for the its push-SGR feature.  They match where
+ * possible the corresponding SGR coding.  The foreground and background colors
+ * do not fit into that scheme (because they are a set of ranges), so those are
+ * chosen arbitrarily -TD
+ */
+typedef enum {
+    psBOLD = 1
+#if OPT_WIDE_ATTRS
+    , psATR_FAINT = 2
+    , psATR_ITALIC = 3
+#endif
+    , psUNDERLINE = 4
+    , psBLINK = 5
+    , psINVERSE = 7
+    , psINVISIBLE = 8
+#if OPT_WIDE_ATTRS
+    , psATR_STRIKEOUT = 9
+#endif
+#if OPT_ISO_COLORS
+    , psFG_COLOR = 10
+    , psBG_COLOR = 11
+#endif
+#if OPT_WIDE_ATTRS
+#if OPT_DIRECT_COLOR
+    , psATR_DIRECT_FG = 12
+    , psATR_DIRECT_BG = 13
+#endif
+    , psATR_DBL_UNDER = 21
+#endif
+    , MAX_PUSH_SGR
+} PushSGR;
+
 typedef enum {
     etSetTcap = 1
     , etGetTcap
@@ -1259,6 +1296,8 @@ typedef enum {
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
+
+/***====================================================================***/
 
 #define	COLOR_DEFINED(s,w)	((s)->which & (unsigned) (1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
@@ -2964,6 +3003,21 @@ extern WidgetClass tekWidgetClass;
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];
 
+#if OPT_XTERM_SGR
+#define MAX_SAVED_SGR	10
+typedef	struct {
+    int		used;
+    struct	{
+	IFlags	mask;
+	IFlags	flags;
+#if OPT_ISO_COLORS
+	int	sgr_foreground;
+	int	sgr_background;
+#endif
+    } stack[MAX_SAVED_SGR];
+} SavedSGR;
+#endif
+
 typedef struct _XtermWidgetRec {
     CorePart	core;
     XSizeHints	hints;
@@ -2989,6 +3043,9 @@ typedef struct _XtermWidgetRec {
     Tabs	tabs;		/* tabstops of the terminal	*/
     Misc	misc;		/* miscellaneous parameters	*/
     Work	work;		/* workspace (no resources)	*/
+#if OPT_XTERM_SGR
+    SavedSGR	saved_sgr;
+#endif
 } XtermWidgetRec, *XtermWidget;
 
 #if OPT_TEK4014
