@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.828 2018/08/02 09:16:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.832 2018/08/04 00:19:27 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6652,7 +6652,7 @@ traceIStack(unsigned flags)
 {
     static char result[1000];
     result[0] = '\0';
-#define DATA(name) if (flags & (1 << (ps##name - 1))) { strcat(result, " " #name); }
+#define DATA(name) if (flags & xBIT(ps##name - 1)) { strcat(result, " " #name); }
     DATA(INVERSE);
     DATA(UNDERLINE);
     DATA(BOLD);
@@ -6701,9 +6701,67 @@ xtermPushSGR(XtermWidget xw, int value)
 void
 xtermReportSGR(XtermWidget xw, XTermRect *value)
 {
+    TScreen *screen = TScreenOf(xw);
+    ANSI reply;
+    CellData working;
+    int row, col;
+    int count;
+    Boolean first = True;
+
     TRACE(("xtermReportSGR %d,%d - %d,%d\n",
 	   value->top, value->left,
 	   value->bottom, value->right));
+
+    for (row = value->top - 1; row < value->bottom; ++row) {
+	LineData *ld = getLineData(screen, row);
+	if (ld == 0)
+	    continue;
+	for (col = value->left - 1; col < value->right; ++col) {
+	    if (first) {
+		first = False;
+		saveCellData(screen, &working, 0, ld, col);
+	    }
+	    working.attribs &= ld->attribs[col];
+#if OPT_ISO_COLORS
+	    if (working.attribs & FG_COLOR
+		&& GetCellColorFG(working.color)
+		!= GetCellColorFG(ld->color[col])) {
+		UIntClr(working.attribs, FG_COLOR);
+	    }
+	    if (working.attribs & BG_COLOR
+		&& GetCellColorBG(working.color)
+		!= GetCellColorBG(ld->color[col])) {
+		UIntClr(working.attribs, BG_COLOR);
+	    }
+#endif
+	}
+    }
+    memset(&reply, 0, sizeof(reply));
+    reply.a_type = ANSI_CSI;
+    count = 0;
+#define DATA(mask,code) \
+    	if (working.attribs & mask) \
+	    reply.a_param[count++] = code
+    DATA(BOLD, 1);
+    DATA(UNDERLINE, 4);
+    DATA(BLINK, 5);
+    DATA(INVERSE, 7);
+    /* FIXME BG_COLOR */
+    /* FIXME FG_COLOR */
+    DATA(INVISIBLE, 8);		/* FIXME doesn't work */
+
+#if OPT_WIDE_ATTRS
+    DATA(ATR_FAINT, 2);
+    DATA(ATR_ITALIC, 3);
+    DATA(ATR_STRIKEOUT, 9);
+    DATA(ATR_DBL_UNDER, 21);
+    /* FIXME ATR_DIRECT_FG */
+    /* FIXME ATR_DIRECT_BG */
+#endif
+#undef DATA
+    reply.a_nparam = count;
+    reply.a_final = 'm';
+    unparseseq(xw, &reply);
 }
 
 void
@@ -6722,7 +6780,7 @@ xtermPopSGR(XtermWidget xw)
 	    TRACE(("...old:  %s\n", traceIFlags(xw->flags)));
 	    TRACE(("...new:  %s\n", traceIFlags(s->stack[s->used].flags)));
 #define POP_FLAG(name) \
-	    if ((1 << (ps##name - 1)) & mask) { \
+	    if (xBIT(ps##name - 1) & mask) { \
 	    	if ((xw->flags & name) ^ (s->stack[s->used].flags & name)) { \
 		    changed = True; \
 		    UIntClr(xw->flags, name); \
@@ -6731,7 +6789,7 @@ xtermPopSGR(XtermWidget xw)
 		} \
 	    }
 #define POP_DATA(name,value) \
-	    if ((1 << (ps##name - 1)) & mask) { \
+	    if (xBIT(ps##name - 1) & mask) { \
 	        Bool always = False; \
 	    	if ((xw->flags & name) ^ (s->stack[s->used].flags & name)) { \
 		    always = changed = True; \
@@ -6751,6 +6809,9 @@ xtermPopSGR(XtermWidget xw)
 	    POP_FLAG(INVERSE);
 	    POP_FLAG(INVISIBLE);
 #if OPT_WIDE_ATTRS
+	    if (xBIT(psATR_ITALIC - 1) & mask) {
+		xtermUpdateItalics(xw, s->stack[s->used].flags, xw->flags);
+	    }
 	    POP_FLAG(ATR_ITALIC);
 	    POP_FLAG(ATR_FAINT);
 	    POP_FLAG(ATR_STRIKEOUT);

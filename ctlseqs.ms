@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.451 2018/07/31 23:03:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.452 2018/08/04 00:45:21 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/07/31
+.ds RF 2018/08/03
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1961,6 +1961,13 @@ The stack is limited to 10 levels.
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*{
 Selective Erase Rectangular Area (DECSERA), VT400 and up.
+  \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
+.
+.iP
+.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*#\\*|
+Report selected graphic rendition (XTREPORTSGR), xterm.
+The response is an SGR sequence which contains the attributes which
+are common to all cells in a rectangle.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
 .
 .iP
