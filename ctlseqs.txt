@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/07/31)
+               updated for XTerm Patch #334 (2018/08/03)
 
 
 
@@ -1318,6 +1318,12 @@ CSI Ps ; Ps # {
 
 CSI Pt ; Pl ; Pb ; Pr $ {
           Selective Erase Rectangular Area (DECSERA), VT400 and up.
+            Pt ; Pl ; Pb ; Pr denotes the rectangle.
+
+CSI Pt ; Pl ; Pb ; Pr # |
+          Report selected graphic rendition (XTREPORTSGR), xterm.  The
+          response is an SGR sequence which contains the attributes
+          which are common to all cells in a rectangle.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
 
 CSI Ps $ |

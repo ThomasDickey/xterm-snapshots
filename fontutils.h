@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.123 2018/07/04 17:23:03 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.124 2018/08/02 21:28:47 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -159,6 +159,7 @@ extern void setFaceName (XtermWidget /* xw */, const char * /*value */);
 #endif
 
 #if OPT_WIDE_ATTRS
+extern unsigned xtermUpdateItalics (XtermWidget /* xw */, unsigned /* new_attrs */, unsigned /* old_attrs */);
 extern void xtermLoadItalics (XtermWidget /* xw */);
 #endif
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: sgrPushPop.pl,v 1.9 2018/08/01 01:19:23 tom Exp $
+# $XTermId: sgrPushPop.pl,v 1.10 2018/08/02 21:09:46 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm, contributed by Dan Thompson
 #
@@ -56,12 +56,12 @@ $lib1Fmt = "\x1b[48;5;%sm\x1b[38;5;%sm%03.3d/%03.3d ";
 
 # lib2Fmt represents some intermediate library. Note that it contains no SGR
 # control sequences at all.
-$lib2Fmt = "I gathered this info from several outside sources: %s, %s, %s";
+$lib2Fmt = "Test stack: %s, %s, %s";
 
 # The following represent individual bits of colorized data that come from
 # other, "leaf-level" libraries.
 $redOnBlack    = $pushSgr . "\x1b[1;31m\x1b[40m" . "redOnBlack" . $popSgr;
-$blackOnYellow = $pushSgr . "\x1b[30m\x1b[43m" . "blackOnYellow" . $popSgr;
+$blackOnYellow = $pushSgr . "\x1b[30m\x1b[4;43m" . "blackOnYellow" . $popSgr;
 $blueOnGreen   = $pushSgr . "\x1b[34m\x1b[42m" . "blueOnGreen" . $popSgr;
 
 printf $pushSgr;
@@ -70,9 +70,11 @@ printf $pushSgr;
 
 for ( $bg = 0 ; $bg < 16 ; $bg++ ) {
     for ( $fg = 0 ; $fg < 16 ; $fg++ ) {
+        printf $pushSgr;
         printf $lib1Fmt, $fg, $bg, $fg, $bg;
         printf $lib2Fmt, $redOnBlack, $blackOnYellow, $blueOnGreen;
         print " something else";
+        printf $popSgr;    # keep the newline from bleeding color
         print "\n";
     }
     print "\n";

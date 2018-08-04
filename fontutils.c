@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.573 2018/07/04 17:22:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.574 2018/08/02 21:28:05 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -1162,6 +1162,20 @@ xtermUpdateFontGCs(XtermWidget xw, Bool italic)
 	}
     });
 }
+
+#if OPT_WIDE_ATTRS
+unsigned
+xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
+{
+    if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
+	xtermLoadItalics(xw);
+	xtermUpdateFontGCs(xw, True);
+    } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
+	xtermUpdateFontGCs(xw, False);
+    }
+    return new_attrs;
+}
+#endif
 
 #if OPT_TRACE
 static void

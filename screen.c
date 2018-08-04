@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.535 2018/07/17 20:39:03 tom Exp $ */
+/* $XTermId: screen.c,v 1.536 2018/08/02 21:28:05 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1414,20 +1414,6 @@ ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 		   (unsigned) FontHeight(screen));
 }
 
-#if OPT_WIDE_ATTRS
-static unsigned
-refreshFontGCs(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
-{
-    if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
-	xtermLoadItalics(xw);
-	xtermUpdateFontGCs(xw, True);
-    } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
-	xtermUpdateFontGCs(xw, False);
-    }
-    return new_attrs;
-}
-#endif
-
 /*
  * Repaints the area enclosed by the parameters.
  * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
@@ -1648,7 +1634,7 @@ ScrnRefresh(XtermWidget xw,
 	});
 
 #if OPT_WIDE_ATTRS
-	old_attrs = refreshFontGCs(xw, flags, old_attrs);
+	old_attrs = xtermUpdateItalics(xw, flags, old_attrs);
 #endif
 	gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 	gc_changes |= (flags & (FG_COLOR | BG_COLOR));
@@ -1731,7 +1717,7 @@ ScrnRefresh(XtermWidget xw,
 		});
 
 #if OPT_WIDE_ATTRS
-		old_attrs = refreshFontGCs(xw, flags, old_attrs);
+		old_attrs = xtermUpdateItalics(xw, flags, old_attrs);
 #endif
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 		gc_changes |= (flags & (FG_COLOR | BG_COLOR));
@@ -1795,7 +1781,7 @@ ScrnRefresh(XtermWidget xw,
      * ClearRight) will get the correct colors.
      */
 #if OPT_WIDE_ATTRS
-    (void) refreshFontGCs(xw, xw->flags, old_attrs);
+    (void) xtermUpdateItalics(xw, xw->flags, old_attrs);
 #endif
     if_OPT_ISO_COLORS(screen, {
 	if (gc_changes & FG_COLOR)
