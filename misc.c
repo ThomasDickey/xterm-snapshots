@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.832 2018/08/04 00:19:27 tom Exp $ */
+/* $XTermId: misc.c,v 1.834 2018/08/05 21:35:57 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6702,10 +6702,9 @@ void
 xtermReportSGR(XtermWidget xw, XTermRect *value)
 {
     TScreen *screen = TScreenOf(xw);
-    ANSI reply;
+    char reply[BUFSIZ];
     CellData working;
     int row, col;
-    int count;
     Boolean first = True;
 
     TRACE(("xtermReportSGR %d,%d - %d,%d\n",
@@ -6736,32 +6735,14 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 #endif
 	}
     }
-    memset(&reply, 0, sizeof(reply));
-    reply.a_type = ANSI_CSI;
-    count = 0;
-#define DATA(mask,code) \
-    	if (working.attribs & mask) \
-	    reply.a_param[count++] = code
-    DATA(BOLD, 1);
-    DATA(UNDERLINE, 4);
-    DATA(BLINK, 5);
-    DATA(INVERSE, 7);
-    /* FIXME BG_COLOR */
-    /* FIXME FG_COLOR */
-    DATA(INVISIBLE, 8);		/* FIXME doesn't work */
-
-#if OPT_WIDE_ATTRS
-    DATA(ATR_FAINT, 2);
-    DATA(ATR_ITALIC, 3);
-    DATA(ATR_STRIKEOUT, 9);
-    DATA(ATR_DBL_UNDER, 21);
-    /* FIXME ATR_DIRECT_FG */
-    /* FIXME ATR_DIRECT_BG */
-#endif
-#undef DATA
-    reply.a_nparam = count;
-    reply.a_final = 'm';
-    unparseseq(xw, &reply);
+    xtermFormatSGR(xw, reply,
+		   working.attribs,
+		   GetCellColorFG(working.color),
+		   GetCellColorBG(working.color));
+    unparseputc1(xw, ANSI_CSI);
+    unparseputs(xw, reply);
+    unparseputc(xw, 'm');
+    unparse_end(xw);
 }
 
 void
