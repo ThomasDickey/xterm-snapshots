@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1881 2018/07/31 22:17:54 tom Exp $
+  $XTermId: xterm.log.html,v 1.1882 2018/08/06 22:59:11 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -956,13 +956,21 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix a special case with faint video attribute incorrectly
+    combined with default color.</li>
+
+    <li>add private control <code>XTREPORTSGR</code> for reporting
+    video-attributes and color on a rectangle, and script
+    <code>report-sgr.pl</code> to demonstrate it.</li>
+
     <li>modify some of the markup in <code>ctlseqs.ms</code> to
     work around groff's reassignment of ASCII punctuation
     characters as documented in <em>groff_char(7)</em>.</li>
 
     <li>treat ECMA-48 SGR 6 the same as SGR 5.</li>
 
-    <li>add private controls for saving/restoring the current
+    <li>add private controls <code>XTPUSHSGR</code> and
+    <code>XTPOPSGR</code> for saving/restoring the current
     video-attributes on a stack (adapted from patch by Dan
     Thompson).</li>
 
