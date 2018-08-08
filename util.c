@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.760 2018/07/17 20:27:49 tom Exp $ */
+/* $XTermId: util.c,v 1.762 2018/08/08 01:37:44 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4684,7 +4684,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     if ((attr_flags & ATR_FAINT)) {
 	static Pixel last_in;
 	static Pixel last_out;
-	if (result != last_in) {
+	if ((result != last_in)
+	    && ((color >= 0)
+		|| (result != (Pixel) color))) {
 	    XColor work;
 	    work.pixel = result;
 	    last_in = result;

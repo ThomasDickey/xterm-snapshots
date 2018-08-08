@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: report-sgr.pl,v 1.19 2018/08/06 00:48:24 tom Exp $
+# $XTermId: report-sgr.pl,v 1.32 2018/08/08 09:15:39 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -33,7 +33,7 @@
 # -----------------------------------------------------------------------------
 # Test the report-sgr option of xterm.
 
-# TODO: improve f/F and b/B logic for direct-colors vs indexed-colors
+# TODO: add "-8" option, for 8-bit controls
 
 use strict;
 use warnings;
@@ -45,6 +45,8 @@ use Term::ReadKey;
 our ( $opt_colors, $opt_direct, $opt_help, $opt_man );
 
 our $csi = "\033[";
+our $osc = "\033]";
+our $st  = "\033\\";
 
 our @sgr_names = qw(
   Normal
@@ -63,10 +65,23 @@ our ( $row_max, $col_max );
 our ( $mark,    $top_row );
 
 our $cur_sgr = 0;
-our $cur_fg  = -1;
-our $cur_bg  = -1;
+
+# indexed colors, e.g., "ANSI"
+our %indexed_f = qw ( default 1 c 7 );
+our %indexed_b = qw ( default 1 c 0 );
+
+# direct colors
+our %direct_f = qw ( default 0 r 255 g 0 b 0 );
+our %direct_b = qw ( default 0 r 0 g 0 b 255 );
+
+our $which_value = "video-attributes";
+our $which_color = "red";
 
 our ( $row_1st, $col_1st, $row_now, $col_now );
+
+sub beep() {
+    printf "\a";
+}
 
 sub cup($$) {
     my $r = shift;
@@ -86,38 +101,64 @@ sub sgr($) {
     printf "%s%sm", $csi, $_[0];
 }
 
+sub same_rgb($$) {
+    my %c1     = %{ $_[0] };
+    my %c2     = %{ $_[1] };
+    my $result = 1;
+    $result = 0 if ( $c1{r} ne $c2{r} );
+    $result = 0 if ( $c1{g} ne $c2{g} );
+    $result = 0 if ( $c1{b} ne $c2{b} );
+    return $result;
+}
+
 sub color_name($) {
     my $code = shift;
     my $result;
-    if ( $code < 0 ) {
-        $result = "default";
+    if ($opt_direct) {
+        $result = $code;
     }
     else {
-        $result = $code;
+        if ( $code < 0 ) {
+            $result = "default";
+        }
+        else {
+            $result = $code;
+        }
     }
     return $result;
 }
 
 sub color_code($$) {
-    my $code   = shift;
     my $isfg   = shift;
     my $result = "";
     my $base   = $isfg ? 30 : 40;
     if ($opt_direct) {
-        $result = sprintf "%d:5:%d", $base + 8, $code;
+        $result = sprintf "%d:2", $base + 8;
+        if ($isfg) {
+            $result .= sprintf ":%d:%d:%d",    #
+              $direct_f{r},                    #
+              $direct_f{g},                    #
+              $direct_f{b};
+        }
+        else {
+            $result .= sprintf ":%d:%d:%d",    #
+              $direct_b{r},                    #
+              $direct_b{g},                    #
+              $direct_b{b};
+        }
     }
     else {
-        if ( $code < 0 ) {
+        my %data = $isfg ? %indexed_f : %indexed_b;
+        if ( &is_default( \%data ) ) {
             $result = $base + 9;
         }
         else {
             if ( $opt_colors <= 16 ) {
-                $base += 60 if ( $code >= 8 );
-                $result = $base + $code;
+                $base += 60 if ( $data{c} >= 8 );
+                $result = $base + $data{c};
             }
             else {
-                $result = sprintf "%d:2:%d:%d:%d", $base + 8, $code, $code,
-                  $code;
+                $result = sprintf "%d:5:%d", $base + 8, $data{c};
             }
         }
     }
@@ -202,56 +243,180 @@ sub show_status() {
     &cup( $row_now, $col_now );
 }
 
-sub set_cur_sgr($) {
-    my $inc = shift;
-    $cur_sgr = ( $cur_sgr + 10 + $inc ) % 10;
+sub toggle_default() {
+    if ($opt_direct) {
+        if ( $which_value =~ /^f/ ) {
+            $direct_f{default} = !$direct_f{default};
+        }
+        elsif ( $which_value =~ /^b/ ) {
+            $direct_b{default} = !$direct_b{default};
+        }
+        else {
+            &beep;
+        }
+    }
+    else {
+        if ( $which_value =~ /^f/ ) {
+            $indexed_f{default} = !$indexed_f{default};
+        }
+        elsif ( $which_value =~ /^b/ ) {
+            $indexed_b{default} = !$indexed_b{default};
+        }
+        else {
+            &beep;
+        }
+    }
+
     &show_example;
 }
 
-sub toggle_color($$) {
-    my $inc = shift;
-    my $cur = shift;
-    $cur =
-      ( ( $cur + 1 ) + ( $opt_colors + 1 ) + $inc ) % ( $opt_colors + 1 ) - 1;
-    return $cur;
+sub is_default($) {
+    my $result = 0;
+    my %data   = %{ $_[0] };
+    $result = ( $data{default} != 0 );
+    return $result;
 }
 
-sub set_cur_fg($) {
-    my $inc = shift;
-    $cur_fg = &toggle_color( $inc, $cur_fg );
+sub change_color($$) {
+    my $inc  = $_[0];
+    my %data = %{ $_[1] };
+    my $name = $_[2];
+    $data{$name} = ( $data{$name} + $opt_colors + $inc ) % $opt_colors;
+    return %data;
+}
+
+sub set_which_value($) {
+    $which_value = shift;
     &show_example;
 }
 
-sub set_cur_bg($) {
+sub set_which_color($) {
+    $which_color = shift;
+    &show_example;
+}
+
+sub change_value($) {
     my $inc = shift;
-    $cur_bg = &toggle_color( $inc, $cur_bg );
+    if ( $which_value =~ /^v/ ) {
+        $cur_sgr = ( $cur_sgr + 10 + $inc ) % 10;
+    }
+    elsif ( $which_value =~ /^f/ ) {
+        if ($opt_direct) {
+            %direct_f = &change_color( $inc, \%direct_f, "r" )
+              if ( $which_color =~ /^r/ );
+            %direct_f = &change_color( $inc, \%direct_f, "g" )
+              if ( $which_color =~ /^g/ );
+            %direct_f = &change_color( $inc, \%direct_f, "b" )
+              if ( $which_color =~ /^b/ );
+        }
+        else {
+            %indexed_f = &change_color( $inc, \%indexed_f, "c" );
+        }
+    }
+    elsif ( $which_value =~ /^b/ ) {
+        if ($opt_direct) {
+            %direct_b = &change_color( $inc, \%direct_b, "r" )
+              if ( $which_color =~ /^r/ );
+            %direct_b = &change_color( $inc, \%direct_b, "g" )
+              if ( $which_color =~ /^g/ );
+            %direct_b = &change_color( $inc, \%direct_b, "b" )
+              if ( $which_color =~ /^b/ );
+        }
+        else {
+            %indexed_b = &change_color( $inc, \%indexed_b, "c" );
+        }
+    }
     &show_example;
 }
 
 sub show_example() {
     &cup( $top_row, 1 );
     my $init = "0";
-    $init .= sprintf ";%s", &color_code( $cur_fg, 1 ) unless ( $cur_fg < 0 );
-    $init .= sprintf ";%s", &color_code( $cur_bg, 0 ) unless ( $cur_bg < 0 );
+    if ($opt_direct) {
+        $init .= sprintf ";%s", &color_code(1);
+        $init .= sprintf ";%s", &color_code(0);
+    }
+    else {
+        $init .= sprintf ";%s", &color_code(1)
+          unless ( &is_default( \%indexed_f ) );
+        $init .= sprintf ";%s", &color_code(0)
+          unless ( &is_default( \%indexed_b ) );
+    }
     &ed(0);
     for my $n ( 0 .. 9 ) {
         my $mode = $n;
         $mode = $init if ( $n == 0 );
         &cup( $n + $top_row, 1 );
-        &sgr( $cur_fg eq $cur_bg ? "0" : $init );
+        if ($opt_direct) {
+            &sgr($init);
+            &sgr( &same_rgb( \%direct_f, \%direct_b ) ? "0" : $init );
+        }
+        else {
+            &sgr( $indexed_f{c} eq $indexed_b{c} ? "0" : $init );
+        }
         printf "%s SGR %d: %-12s",    #
           ( $cur_sgr == $n ) ? "-->" : "   ",    #
           $n, $sgr_names[$n];
         $mode .= ";$cur_sgr" unless ( $cur_sgr eq "0" );
         &sgr($mode);
-        printf "abcdefghijklmnopqrstuvwxyz" . "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        printf                                   #
+          "abcdefghijklmnopqrstuvwxyz" .         #
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZ",          #
           "0123456789";
     }
     &sgr(0);
-    &cup( $top_row + 11, 1 );
+    my $end = $top_row + 11;
+    &cup( $end++, 1 );
+    printf 'Change %s with "<" or ">".',
+      ( $opt_direct and ( $which_value !~ /^v/ ) )
+      ? ( sprintf "%s(%s)", $which_value, $which_color )
+      : $which_value;
+    &cup( $end++, 1 );
     printf "Current SGR %d (%s)", $cur_sgr, $sgr_names[$cur_sgr];
-    printf ", fg=%s",             &color_name($cur_fg);
-    printf ", bg=%s",             &color_name($cur_bg);
+    if ($opt_direct) {
+        &cup( $end++, 1 );
+
+        printf "Colors: direct";
+        &cup( $end++, 1 );
+
+        if ( &is_default( \%direct_f ) ) {
+            printf "       fg( default )";
+        }
+        else {
+            printf "       fg( r=%s, g=%s, b=%s )",    #
+              &color_name( $direct_f{r} ),             #
+              &color_name( $direct_f{g} ),             #
+              &color_name( $direct_f{b} );
+        }
+        &cup( $end++, 1 );
+
+        if ( &is_default( \%direct_b ) ) {
+            printf "       bg( default )";
+        }
+        else {
+            printf "       bg( r=%s, g=%s, b=%s )",    #
+              &color_name( $direct_b{r} ),             #
+              &color_name( $direct_b{g} ),             #
+              &color_name( $direct_b{b} );
+        }
+    }
+    else {
+        &cup( $end++, 1 );
+        printf "Colors: indexed";
+        if ( &is_default( \%indexed_f ) ) {
+            printf ", fg=default";
+        }
+        else {
+            printf ", fg=%s", &color_name( $indexed_f{c} );
+        }
+        if ( &is_default( \%indexed_b ) ) {
+            printf ", bg=default";
+        }
+        else {
+            printf ", bg=%s", &color_name( $indexed_b{c} );
+        }
+    }
+    &cup( $end++, 1 );
     printf ' ("q" to quit, "?" for help)';
 }
 
@@ -272,14 +437,25 @@ sub init_screensize() {
     &cup( 1, 1 );
 }
 
+sub startup_screen() {
+    ReadMode 'ultra-raw', 'STDIN';
+}
+
+sub restore_screen() {
+    &sgr(0);
+    printf "%s102%s", $osc, $st if ($opt_direct);
+    &cup( $row_max, 1 );
+    ReadMode 'restore', 'STDIN';
+}
+
 GetOptions( 'colors=i', 'help|?', 'direct', 'man' ) || pod2usage(2);
 pod2usage(1) if $opt_help;
 pod2usage( -verbose => 2 ) if $opt_man;
 
-$opt_colors = 8 unless ($opt_colors);
+$opt_colors = ( $opt_direct ? 256 : 8 ) unless ($opt_colors);
 $opt_colors = 8 if ( $opt_colors < 8 );
 
-ReadMode 'ultra-raw', 'STDIN';
+&startup_screen;
 
 &init_screensize;
 
@@ -298,10 +474,9 @@ while (1) {
     &cup( $row_now, $col_now );
     $cmd = ReadKey 0;
     if ( $cmd eq "?" ) {
-        &cup( $row_max, 1 );
-        ReadMode 'restore', 'STDIN';
+        &restore_screen;
         system( $0 . " -man" );
-        ReadMode 'ultra-raw', 'STDIN';
+        &startup_screen;
         &show_example;
         $cmd = ReadKey 0;
     }
@@ -326,8 +501,7 @@ while (1) {
         $col_now++ if ( $col_now < $col_max );
     }
     elsif ( $cmd eq "q" ) {
-        &cup( $row_max, 1 );
-        ReadMode 'restore', 'STDIN';
+        &restore_screen;
         printf "\r\n...quit\r\n";
         last;
     }
@@ -335,25 +509,34 @@ while (1) {
         &cup( $row_now = $row_1st + $cur_sgr, $col_now = 24 );
     }
     elsif ( $cmd eq "v" ) {
-        &set_cur_sgr(1);
-    }
-    elsif ( $cmd eq "V" ) {
-        &set_cur_sgr(-1);
+        &set_which_value("video-attributes (SGR)");
     }
     elsif ( $cmd eq "f" ) {
-        &set_cur_fg(1);
-    }
-    elsif ( $cmd eq "F" ) {
-        &set_cur_fg(-1);
+        &set_which_value("foreground");
     }
     elsif ( $cmd eq "b" ) {
-        &set_cur_bg(1);
+        &set_which_value("background");
     }
-    elsif ( $cmd eq "B" ) {
-        &set_cur_bg(-1);
+    elsif ( $cmd eq "d" ) {
+        &toggle_default;
+    }
+    elsif ( $cmd eq "<" ) {
+        &change_value(-1);
+    }
+    elsif ( $cmd eq ">" ) {
+        &change_value(1);
+    }
+    elsif ( $opt_direct and ( $cmd eq "R" ) ) {
+        &set_which_color("red");
+    }
+    elsif ( $opt_direct and ( $cmd eq "G" ) ) {
+        &set_which_color("green");
+    }
+    elsif ( $opt_direct and ( $cmd eq "B" ) ) {
+        &set_which_color("blue");
     }
     else {
-        printf "\a";
+        &beep;
     }
 }
 
@@ -425,18 +608,46 @@ other corner.
 Move the cursor to the first cell of the test-data for the currently selected
 SGR code (the one with B<-->>).
 
-=item B<v> and B<V>
+=item B<v>
 
-Move the selector for SGR code forward or backward.  That code is combined
-with the codes for each test-string.
+Select the video-attribute mode.
 
-=item B<F> and B<f>
+=item B<f>
 
-Increase or decrease the foreground color value.
+Select the foreground-color mode.
 
-=item B<B> and B<b>
+=item B<b>
 
-Increase or decrease the background color value.
+Select the background-color mode.
+
+=item B<R>
+
+When direct-colors are chosen, select the red-component of
+the currently selected foreground or background mode.
+
+=item B<G>
+
+When direct-colors are chosen, select the green-component of
+the currently selected foreground or background mode.
+
+=item B<B>
+
+When direct-colors are chosen, select the blue-component of
+the currently selected foreground or background mode.
+
+=item B<d>
+
+Toggle between the selected colors and the terminal's default colors.
+
+=item B<<>
+
+Decrease the index of video-attribute to combine, or the color value
+depending on the selected mode.
+
+=item B<>>
+
+Increase the index of video-attribute to combine, or the color value
+depending on the selected mode.
 
 =item B<^L>
 
