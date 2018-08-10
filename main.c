@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.817 2018/08/10 13:30:37 tom Exp $ */
+/* $XTermId: main.c,v 1.820 2018/08/10 22:25:49 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -838,6 +838,7 @@ static XtResource application_resources[] =
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
+    Sres("validShells", "ValidShells", valid_shells, NULL),
     Bres("hold", "Hold", hold_screen, False),
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
     Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
@@ -3359,29 +3360,6 @@ find_utmp(struct UTMP_STR *tofind)
 #define USE_NO_DEV_TTY 0
 #endif
 
-#if defined(HAVE_GETUSERSHELL) && defined(HAVE_ENDUSERSHELL)
-static Boolean
-validShell(const char *pathname)
-{
-    Boolean result = False;
-
-    if (validProgram(pathname)) {
-	char *q;
-
-	while ((q = getusershell()) != 0) {
-	    TRACE(("...test \"%s\"\n", q));
-	    if (!strcmp(q, pathname)) {
-		result = True;
-		break;
-	    }
-	}
-	endusershell();
-    }
-
-    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
-    return result;
-}
-#else
 static int
 same_leaf(char *a, char *b)
 {
@@ -3411,53 +3389,128 @@ same_file(const char *a, const char *b)
     return result;
 }
 
+static int
+findValidShell(const char *haystack, const char *needle)
+{
+    int result = -1;
+    int count = -1;
+    const char *s, *t;
+    size_t have;
+    size_t want = strlen(needle);
+
+    TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
+
+    for (s = t = haystack; (s != 0) && (*s != '\0'); s = t) {
+	++count;
+	if ((t = strchr(s, '\n')) == 0) {
+	    t = s + strlen(s);
+	}
+	have = (size_t) (t - s);
+
+	if ((have >= want) && (*s != '#')) {
+	    char *p = malloc(have + 1);
+
+	    if (p != 0) {
+		char *q;
+
+		memcpy(p, s, have);
+		p[have] = '\0';
+		if ((q = x_strtrim(p)) != 0) {
+		    TRACE(("...test %s\n", q));
+		    if (!strcmp(q, needle)) {
+			result = count;
+		    } else if (same_leaf(q, (char *) needle) &&
+			       same_file(q, needle)) {
+			result = count;
+		    }
+		    free(q);
+		}
+		free(p);
+	    }
+	    if (result >= 0)
+		break;
+	}
+	while (*t == '\n') {
+	    ++t;
+	}
+    }
+    return result;
+}
+
+static int
+ourValidShell(const char *pathname)
+{
+    return findValidShell(x_strtrim(resource.valid_shells), pathname);
+}
+
+#if defined(HAVE_GETUSERSHELL) && defined(HAVE_ENDUSERSHELL)
+static Boolean
+validShell(const char *pathname)
+{
+    int result = -1;
+
+    if (validProgram(pathname)) {
+	char *q;
+	int count = -1;
+
+	TRACE(("validShell:getusershell\n"));
+	while ((q = getusershell()) != 0) {
+	    ++count;
+	    TRACE(("...test \"%s\"\n", q));
+	    if (!strcmp(q, pathname)) {
+		result = count;
+		break;
+	    }
+	}
+	endusershell();
+
+	if (result < 0)
+	    result = ourValidShell(pathname);
+    }
+
+    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
+    return (result >= 0);
+}
+#else
 /*
  * Only set $SHELL for paths found in the standard location.
  */
 static Boolean
 validShell(const char *pathname)
 {
-    Boolean result = False;
+    int result = -1;
     const char *ok_shells = "/etc/shells";
     char *blob;
     struct stat sb;
     size_t rc;
     FILE *fp;
 
-    if (validProgram(pathname)
-	&& stat(ok_shells, &sb) == 0
-	&& (sb.st_mode & S_IFMT) == S_IFREG
-	&& ((size_t) sb.st_size > 0)
-	&& ((size_t) sb.st_size < (((size_t) ~0) - 2))
-	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
-	if ((fp = fopen(ok_shells, "r")) != 0) {
-	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
-	    if (rc == (size_t) sb.st_size) {
-		char *p = blob;
-		char *q, *r;
-		blob[rc] = '\0';
-		while (!result && (q = strtok(p, "\n")) != 0) {
-		    if ((r = x_strtrim(q)) != 0) {
-			TRACE(("...test \"%s\"\n", q));
-			if (!strcmp(q, pathname)) {
-			    result = True;
-			} else if (same_leaf(q, (char *) pathname) &&
-				   same_file(q, pathname)) {
-			    result = True;
-			}
-			free(r);
-			if (result)
-			    break;
-		    }
-		    p = 0;
+    if (validProgram(pathname)) {
+
+	TRACE(("validShell:%s\n", ok_shells));
+
+	if (stat(ok_shells, &sb) == 0
+	    && (sb.st_mode & S_IFMT) == S_IFREG
+	    && ((size_t) sb.st_size > 0)
+	    && ((size_t) sb.st_size < (((size_t) ~0) - 2))
+	    && (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
+
+	    if ((fp = fopen(ok_shells, "r")) != 0) {
+		rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
+		fclose(fp);
+
+		if (rc == (size_t) sb.st_size) {
+		    blob[rc] = '\0';
+		    result = findValidShell(blob, pathname);
 		}
 	    }
-	    fclose(fp);
+	    free(blob);
 	}
-	free(blob);
+	if (result < 0)
+	    result = ourValidShell(pathname);
     }
     TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
-    return result;
+    return (result > 0);
 }
 #endif
 

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.748 2018/07/13 20:06:47 tom Exp $
+.\" $XTermId: xterm.man,v 1.749 2018/08/10 21:17:39 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1984,6 +1984,18 @@ in
 the system \fIutmp\fP log file.
 If true, \fI\*n\fP will not try.
 The default is \*(``false\*(''.
+.TP 8
+.B "validShells\fP (class\fB ValidShells\fP)"
+Augment (add to) the system's \fI/etc/shells\fP,
+when determining whether to set the \*(``SHELL\*('' environment
+variable when running a given program.
+.IP
+The resource value is a list of lines (separated by newlines).
+Each line holds one pathname.
+\fI\*N\fP ignores any line beginning with \*(``#\*(''
+after trimming leading/trailing whitespace from each line.
+.IP
+The default is an empty string.
 .TP 8
 .B "waitForMap\fP (class\fB WaitForMap\fP)"
 Specifies whether or not \fI\*n\fP should wait for the initial window map
@@ -7682,6 +7694,10 @@ The actual pathnames given may differ on your system.
 contains a list of valid shell programs,
 used by \fI\*n\fP to decide if the \*(``SHELL\*('' environment
 variable should be set for the process started by \fI\*n\fP.
+.IP
+On systems which have the \fIgetusershell\fP function,
+\fI\*n\fP will use that function rather than directly reading the file,
+since the file may not be present if the system uses default settings.
 .TP 5
 \fI/etc/utmp\fP
 the system logfile, which records user logins.
