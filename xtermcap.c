@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.49 2016/05/22 18:31:20 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.50 2018/08/10 14:55:03 tom Exp $ */
 
 /*
- * Copyright 2007-2014,2016 by Thomas E. Dickey
+ * Copyright 2007-2016,2018 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -180,6 +180,11 @@ static const TCAPINFO table[] = {
 # if OPT_TCAP_QUERY && OPT_ISO_COLORS
 	/* XK_COLORS is a fake code. */
 	DATA(	"Co",	"colors",	XK_COLORS,	0	),
+#  if OPT_DIRECT_COLOR
+	/* note - termcap cannot support RGB */
+	DATA(	"Co",	"RGB",		XK_RGB,		0	),
+
+#  endif
 # endif
 	DATA(	"TN",	"name",		XK_TCAPNAME,	0	),
 #if USE_EXTENDED_NAMES

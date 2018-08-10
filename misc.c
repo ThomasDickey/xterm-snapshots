@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.839 2018/08/10 12:34:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.842 2018/08/10 18:43:53 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2255,6 +2255,18 @@ maskToShift(unsigned long mask)
     return result;
 }
 
+static unsigned
+maskToWidth(unsigned long mask)
+{
+    unsigned result = 0;
+    while (mask != 0) {
+	if ((mask & 1) != 0)
+	    ++result;
+	mask >>= 1;
+    }
+    return result;
+}
+
 int
 getVisualInfo(XtermWidget xw)
 {
@@ -2284,6 +2296,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 
 	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
 	    XVisualInfo *vi = xw->visInfo;
+	    xw->rgb_widths[0] = maskToWidth(vi->red_mask);
+	    xw->rgb_widths[1] = maskToWidth(vi->green_mask);
+	    xw->rgb_widths[2] = maskToWidth(vi->blue_mask);
 	    xw->rgb_shifts[0] = maskToShift(vi->red_mask);
 	    xw->rgb_shifts[1] = maskToShift(vi->green_mask);
 	    xw->rgb_shifts[2] = maskToShift(vi->blue_mask);
@@ -4539,6 +4554,25 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			if (code == XK_COLORS) {
 			    unparseputn(xw, NUM_ANSI_COLORS);
 			} else
+#if OPT_DIRECT_COLOR
+			if (code == XK_RGB) {
+			    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
+				if (xw->rgb_widths[0] == xw->rgb_widths[1] &&
+				    xw->rgb_widths[1] == xw->rgb_widths[2]) {
+				    unparseputn(xw, xw->rgb_widths[0]);
+				} else {
+				    char temp[1024];
+				    sprintf(temp, "%d/%d/%d",
+					    xw->rgb_widths[0],
+					    xw->rgb_widths[1],
+					    xw->rgb_widths[2]);
+				    unparseputs(xw, temp);
+				}
+			    } else {
+				unparseputs(xw, "-1");
+			    }
+			} else
+#endif
 #endif
 			if (code == XK_TCAPNAME) {
 			    unparseputs(xw, resource.term_name);

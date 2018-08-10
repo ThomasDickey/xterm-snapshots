@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.453 2018/08/09 08:50:45 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.454 2018/08/10 18:09:11 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/09
+.ds RF 2018/08/10
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -825,13 +825,18 @@ encoded in hexadecimal (2 digits per character)
 separated by \*;
 which correspond to termcap or terminfo key names.
 .br
-Two special features are also recognized, which are not key names:
+A few special features are also recognized, which are not key names:
 .RS
 .bP
 \fICo\fP for termcap colors (or \fIcolors\fP for terminfo colors),
 and
 .bP
 \fITN\fP for termcap name (or \fIname\fP for terminfo name).
+.bP
+\fIRGB\fP for the ncurses direct-color extension.
+.br
+Only a terminfo name is provided,
+since termcap applications cannot use this information.
 .RE
 .br
 \fIxterm\fP responds with

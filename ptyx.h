@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.902 2018/08/09 22:35:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.905 2018/08/10 18:40:07 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1370,12 +1370,6 @@ typedef enum {
 		      (( (flags & INVERSE) && !hilite) || \
 		       (!(flags & INVERSE) &&  hilite)) ))
 
-/* Define a fake XK code, we need it for the fake color response in
- * xtermcapKeycode(). */
-#if OPT_TCAP_QUERY && OPT_ISO_COLORS
-# define XK_COLORS 0x0003
-#endif
-
 #else	/* !OPT_ISO_COLORS */
 
 #define TERM_COLOR_FLAGS(xw) 0
@@ -1387,7 +1381,16 @@ typedef enum {
 
 #endif	/* OPT_ISO_COLORS */
 
-# define XK_TCAPNAME 0x0004
+typedef enum {
+	XK_TCAPNAME = 3
+	/* Define fake XK codes, we need those for the fake color response in
+	 * xtermcapKeycode().
+	 */
+#if OPT_ISO_COLORS
+	, XK_COLORS
+	, XK_RGB
+#endif
+} TcapQuery;
 
 #if OPT_AIX_COLORS
 #define if_OPT_AIX_COLORS(screen, code) if(screen->colorMode) code
@@ -3027,6 +3030,7 @@ typedef struct _XtermWidgetRec {
     XVisualInfo *visInfo;
     int		numVisuals;
     unsigned	rgb_shifts[3];
+    unsigned	rgb_widths[3];
     Bool	has_rgb;
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
