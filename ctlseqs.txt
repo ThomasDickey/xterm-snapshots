@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/09)
+               updated for XTerm Patch #334 (2018/08/10)
 
 
 
@@ -374,10 +374,13 @@ DCS + q Pt ST
           the "q" is a list of names encoded in hexadecimal (2 digits
           per character) separated by ; which correspond to termcap or
           terminfo key names.
-          Two special features are also recognized, which are not key
+          A few special features are also recognized, which are not key
           names:
           o   Co for termcap colors (or colors for terminfo colors), and
           o   TN for termcap name (or name for terminfo name).
+          o   RGB for the ncurses direct-color extension.
+              Only a terminfo name is provided, since termcap applica-
+              tions cannot use this information.
           xterm responds with
           DCS 1 + r Pt ST for valid requests, adding to Pt an = , and
           the value of the corresponding string that xterm would send,
@@ -2622,12 +2625,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
+    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -2637,7 +2640,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

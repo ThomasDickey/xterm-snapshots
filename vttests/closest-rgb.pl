@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: closest-rgb.pl,v 1.9 2017/01/20 22:17:04 tom Exp $
+# $XTermId: closest-rgb.pl,v 1.11 2018/08/10 18:02:55 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2017 by Thomas E. Dickey
+# Copyright 2017,2018 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -45,14 +45,21 @@ our @namedRGB;
 our @xtermRGB;
 
 our ( $opt_f, $opt_i, $opt_n );
-&getopts('f:in:') || die(
-    "Usage: $0 [options]\n
+
+sub main::HELP_MESSAGE() {
+    printf STDERR <<EOF
+Usage: $0 [options]\n
 Options:\n
   -f FILE pathname for rgb.txt (default $namedRGB)
   -i      reverse comparison, look for rgb matches in xterm's palette
   -n NUM  number of colors in palette (default: 16)
-"
-);
+EOF
+      ;
+    exit 1;
+}
+
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+&getopts('f:in:') || &main::HELP_MESSAGE;
 $opt_f = $namedRGB unless ($opt_f);
 $opt_n = 16        unless ($opt_n);
 

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-333z
+MANIFEST for xterm, version xterm-333za
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -160,6 +160,7 @@ package/debian/source/format    build-script
 package/debian                  subdirectory
 package/debian/watch            build-script
 package/debian/xterm-dev.docs   build-script
+package/debian/xterm-dev.lintian-overrides  ignore useless warnings from lintian
 package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
 package/freebsd                 subdirectory
