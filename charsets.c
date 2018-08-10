@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.72 2018/04/22 16:30:15 tom Exp $ */
+/* $XTermId: charsets.c,v 1.73 2018/08/09 22:37:42 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -361,6 +361,7 @@ xtermCharSetIn(TScreen *screen, unsigned code, int charset)
 	   screen->curss,
 	   visibleUChar(code)));
 
+    (void) screen;
     switch (charset) {
     case nrc_British:		/* United Kingdom set (or Latin 1)      */
 	if (code == XK_sterling)

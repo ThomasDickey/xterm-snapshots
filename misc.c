@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.834 2018/08/05 21:35:57 tom Exp $ */
+/* $XTermId: misc.c,v 1.839 2018/08/10 12:34:30 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -761,6 +761,8 @@ init_colored_cursor(Display *dpy)
 		xterm_cursor_theme = filename;
 	    }
 #endif
+	    if (xterm_cursor_theme != filename)
+		free(filename);
 	    /*
 	     * Actually, Xcursor does what _we_ want just by steering its
 	     * search path away from home.  We are setting up the complete
@@ -1129,6 +1131,7 @@ AtomBell(XtermWidget xw, int which)
 	    DATA(MinorError),
 	    DATA(TerminalBell)
     };
+#undef DATA
     Cardinal n;
     Atom result = None;
 
@@ -3052,6 +3055,10 @@ xtermFormatSGR(XtermWidget xw, char *target, unsigned attr, int fg, int bg)
 	    sprintf(EndOf(msg), ";%d%d", bg2SGR(bg));
 	}
     });
+#else
+    (void) screen;
+    (void) fg;
+    (void) bg;
 #endif
     return target;
 }
@@ -4580,8 +4587,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    }
 	    break;
 	}
-	/* FALLTHRU */
 #endif
+	/* FALLTHRU */
     default:
 	if (screen->terminal_id == 125 ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
@@ -6679,7 +6686,8 @@ xtermPushSGR(XtermWidget xw, int value)
 {
     SavedSGR *s = &(xw->saved_sgr);
 
-    TRACE(("xtermPushSGR %d mask %#x %s\n", s->used + 1, value, traceIStack(value)));
+    TRACE(("xtermPushSGR %d mask %#x %s\n",
+	   s->used + 1, (unsigned) value, traceIStack((unsigned) value)));
 
     if (s->used < MAX_SAVED_SGR) {
 	s->stack[s->used].mask = (IFlags) value;
@@ -6698,6 +6706,8 @@ xtermPushSGR(XtermWidget xw, int value)
     s->used++;
 }
 
+#define IAttrClr(dst,bits) dst = dst & (IAttr) ~(bits)
+
 void
 xtermReportSGR(XtermWidget xw, XTermRect *value)
 {
@@ -6711,6 +6721,7 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 	   value->top, value->left,
 	   value->bottom, value->right));
 
+    memset(&working, 0, sizeof(working));
     for (row = value->top - 1; row < value->bottom; ++row) {
 	LineData *ld = getLineData(screen, row);
 	if (ld == 0)
@@ -6725,12 +6736,12 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 	    if (working.attribs & FG_COLOR
 		&& GetCellColorFG(working.color)
 		!= GetCellColorFG(ld->color[col])) {
-		UIntClr(working.attribs, FG_COLOR);
+		IAttrClr(working.attribs, FG_COLOR);
 	    }
 	    if (working.attribs & BG_COLOR
 		&& GetCellColorBG(working.color)
 		!= GetCellColorBG(ld->color[col])) {
-		UIntClr(working.attribs, BG_COLOR);
+		IAttrClr(working.attribs, BG_COLOR);
 	    }
 #endif
 	}
@@ -6808,6 +6819,8 @@ xtermPopSGR(XtermWidget xw)
 	    if (changed) {
 		setExtendedColors(xw);
 	    }
+#else
+	    (void) changed;
 #endif
 	}
 	TRACE(("xtermP -> flags%s, fg=%d bg=%d\n",

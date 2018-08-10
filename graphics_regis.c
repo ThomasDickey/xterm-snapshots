@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.104 2018/07/26 01:33:30 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.105 2018/08/10 12:56:44 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -1836,6 +1836,7 @@ find_best_xft_font_size(XtermWidget xw,
 		    font = XftFontOpenPattern(display, match);
 		    maybeXftCache(xw, font);
 		}
+		XftPatternDestroy(pat);
 	    }
 	}
 	if (!font) {

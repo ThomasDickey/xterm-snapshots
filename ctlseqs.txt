@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/03)
+               updated for XTerm Patch #334 (2018/08/09)
 
 
 
@@ -2439,8 +2439,10 @@ o   Sometimes the manuals are simply incorrect.  For example, testing a
     DEC VT420 in 1996 showed that the documented code for a valid or
     invalid response to DECRQSS was reversed.
 
-    The test results were incorporated into vttest program.  At the
-    time, DEC STD 070 was not available, but it also agrees with vttest.
+    The VT420 test results were incorporated into vttest program.  At
+    the time, DEC STD 070 was not available, but it also agrees with
+    vttest.  Later, documentation for the DEC VT525 was shown to have
+    the same flaw.
 
 o   Not all details are clear even in DEC STD 070 (which is more than
     twice the length of the VT520 programmer's reference manual, and

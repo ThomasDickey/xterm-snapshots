@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.452 2018/08/04 00:45:21 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.453 2018/08/09 08:50:45 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/03
+.ds RF 2018/08/09
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3294,9 +3294,10 @@ Sometimes the manuals are simply incorrect.
 For example, testing a DEC VT420 in 1996 showed that the documented
 code for a valid or invalid response to \fBDECRQSS\fP was reversed.
 .IP
-The test results were incorporated into \fIvttest\fP program.
+The VT420 test results were incorporated into \fIvttest\fP program.
 At the time, DEC STD 070 was not available,
 but it also agrees with \fIvttest\fP.
+Later, documentation for the DEC VT525 was shown to have the same flaw.
 .bP
 Not all details are clear even in DEC STD 070
 (which is more than twice the length of the

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1575 2018/07/31 20:30:01 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1578 2018/08/10 00:10:05 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1432,6 +1432,90 @@ check_tables(void)
 		    ;
 		} else {
 		    TRACE(("  %3d: %d vs %d\n", ch, st_l, st_r));
+		}
+	    }
+	}
+    }
+}
+
+static void
+check_bitmasks(void)
+{
+#define dMSK 0x100
+#define DATA(mode,name) { mode, name, #name }
+#define DMSK(what) (dMSK | (what))
+#define DGRP(offs) (1 << ((offs) - 1))
+    static struct {
+	int mode;
+	int code;
+	Const char *name;
+    } table[] = {
+	DATA(DGRP(1), INVERSE),
+	    DATA(DGRP(1), UNDERLINE),
+	    DATA(DGRP(1), BOLD),
+	    DATA(DGRP(1), BLINK),
+	    DATA(DMSK(DGRP(1)), SGR_MASK),
+	    DATA(DGRP(2), BG_COLOR),
+	    DATA(DGRP(2), FG_COLOR),
+	    DATA(DGRP(2), PROTECTED),
+	    DATA(DGRP(4), CHARDRAWN),
+#if OPT_WIDE_ATTRS
+	    DATA(DGRP(2), ATR_FAINT),
+	    DATA(DGRP(2), ATR_ITALIC),
+	    DATA(DGRP(2), ATR_STRIKEOUT),
+	    DATA(DGRP(2), ATR_DBL_UNDER),
+	    DATA(DGRP(2), ATR_DIRECT_FG),
+	    DATA(DGRP(2), ATR_DIRECT_BG),
+#endif
+	    DATA(DMSK(DGRP(2)), SGR_MASK2),
+	    DATA(DGRP(3), WRAPAROUND),
+	    DATA(DGRP(3), REVERSEWRAP),
+	    DATA(DGRP(3), REVERSE_VIDEO),
+	    DATA(DGRP(3), LINEFEED),
+	    DATA(DGRP(3), ORIGIN),
+	    DATA(DGRP(3), INSERT),
+	    DATA(DGRP(3), SMOOTHSCROLL),
+	    DATA(DGRP(3), IN132COLUMNS),
+	    DATA(DGRP(3), INVISIBLE),
+	    DATA(DMSK(DGRP(3)), ATTRIBUTES),
+	    DATA(DGRP(5), NATIONAL),
+	    DATA(DGRP(5), LEFT_RIGHT),
+	    DATA(DGRP(5), NOCLEAR_COLM),
+	    DATA(DGRP(4), NOBACKGROUND),
+	    DATA(DGRP(4), NOTRANSLATION),
+	    DATA(DGRP(4), DOUBLEWFONT),
+	    DATA(DGRP(4), DOUBLEHFONT),
+	    DATA(DGRP(4), CHARBYCHAR),
+	    DATA(DGRP(4), NORESOLUTION),
+	    DATA(DMSK(DGRP(1) | DGRP(2) | DGRP(4)), DRAWX_MASK),
+	    DATA(-1, EOF)
+    };
+#undef DATA
+    int j, k;
+    TRACE(("** check_bitmasks:\n"));
+    for (j = 0; table[j].mode >= 0; ++j) {
+	TRACE(("%4X %8X %s\n", table[j].mode, table[j].code, table[j].name));
+	if (table[j].mode & dMSK) {
+	    int mask = dMSK;
+	    for (k = 0; table[k].mode >= 0; ++k) {
+		if (j == k)
+		    continue;
+		if (table[k].mode & dMSK)
+		    continue;
+		if ((table[j].mode & table[k].mode) != 0)
+		    mask |= table[k].mode;
+	    }
+	    if (mask != table[j].mode) {
+		TRACE(("...expected %08X\n", mask));
+	    }
+	} else {
+	    for (k = 0; table[k].mode >= 0; ++k) {
+		if (j == k)
+		    continue;
+		if (table[k].mode & dMSK)
+		    continue;
+		if ((table[j].code & table[k].code) != 0) {
+		    TRACE(("...same bits %s\n", table[k].name));
 		}
 	    }
 	}
@@ -4392,10 +4476,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_XTERM_PUSH_SGR:
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
+	    value = 0;
 	    if (nparam == 0 || (nparam == 1 && GetParam(0) == DEFAULT)) {
 		value = DEFAULT;
 	    } else if (nparam > 0) {
-		value = 0;
 		for (count = 0; count < nparam; ++count) {
 		    item = zero_if_default(count);
 		    if (item > 0 && item < MAX_PUSH_SGR) {
@@ -8275,6 +8359,7 @@ VTInitialize(Widget wrequest,
     TScreen *screen = TScreenOf(wnew);
 
 #if OPT_TRACE
+    check_bitmasks();
     check_tables();
 #endif
 
