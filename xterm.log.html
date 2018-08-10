@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1883 2018/08/09 01:13:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.1886 2018/08/10 14:34:27 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -956,6 +956,15 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix some warnings from gcc8 and clang --analyze.</li>
+
+    <li>update note about incorrect documentation for DECRQSS to
+    include VT525 (report by Markus Schmidt).</li>
+
+    <li>correct check for default-values in rectangular parsing; a
+    zero counts as a missing or default parameter (report by Markus
+    Schmidt).</li>
+
     <li>correct some ranges in the <code>ambiguous[]</code> table
     in wcwidth (adapted from patch by KUGA Tsutomu).</li>
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.901 2018/08/01 23:16:32 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.902 2018/08/09 22:35:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1678,7 +1678,7 @@ typedef unsigned CellColor;
 #define hasDirectBG(flags)	((flags) & ATR_DIRECT_BG)
 #define setDirectFG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_FG); else UIntClr(flags, ATR_DIRECT_BG)
 #define setDirectBG(flags,test)	if (test) UIntSet(flags, ATR_DIRECT_BG); else UIntClr(flags, ATR_DIRECT_BG)
-#else
+#elif OPT_ISO_COLORS
 #define clrDirectFG(flags)	/* nothing */
 #define clrDirectBG(flags)	/* nothing */
 #define GetCellColorFG(data)	((data) & COLOR_MASK)
@@ -1687,6 +1687,9 @@ typedef unsigned CellColor;
 #define hasDirectBG(flags)	0
 #define setDirectFG(flags,test)	(void)(test)
 #define setDirectBG(flags,test)	(void)(test)
+#else
+#define GetCellColorFG(data)	7
+#define GetCellColorBG(data)	0
 #endif
 extern CellColor blank_cell_color;
 

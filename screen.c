@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.536 2018/08/02 21:28:05 tom Exp $ */
+/* $XTermId: screen.c,v 1.537 2018/08/09 08:23:24 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2322,7 +2322,7 @@ limitedParseCol(XtermWidget xw, int col)
 }
 
 #define LimitedParse(num, func, dft) \
-	func(xw, (nparams > num) ? params[num] : dft)
+	func(xw, (nparams > num && params[num] > 0) ? params[num] : dft)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as

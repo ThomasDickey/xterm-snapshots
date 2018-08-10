@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.816 2018/06/28 21:33:35 tom Exp $ */
+/* $XTermId: main.c,v 1.817 2018/08/10 13:30:37 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -807,7 +807,8 @@ static sigjmp_buf env;
 #define SetUtmpHost(dst, screen) \
 	{ \
 	    char host[sizeof(dst) + 1]; \
-	    strncpy(host, DisplayString(screen->display), sizeof(host)); \
+	    strncpy(host, DisplayString(screen->display), sizeof(host) - 1); \
+	    host[sizeof(dst)] = '\0'; \
 	    TRACE(("DisplayString(%s)\n", host)); \
 	    if (!resource.utmpDisplayId) { \
 		char *endptr = strrchr(host, ':'); \
@@ -3124,6 +3125,10 @@ typedef struct {
     char buffer[1024];
 } handshake_t;
 
+/* the buffer is large enough that we can always have a trailing null */
+#define copy_handshake(dst, src) \
+	strncpy(dst.buffer, src, sizeof(dst.buffer) - 1)[sizeof(dst.buffer) - 1] = '\0'
+
 #if OPT_TRACE
 static void
 trace_handshake(const char *tag, handshake_t * data)
@@ -3184,7 +3189,7 @@ HsSysError(int error)
     handshake.status = PTY_FATALERROR;
     handshake.error = errno;
     handshake.fatal_error = error;
-    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer) - 1);
+    copy_handshake(handshake, ttydev);
 
     if (resource.ptyHandshake && (cp_pipe[1] >= 0)) {
 	TRACE(("HsSysError errno=%d, error=%d device \"%s\"\n",
@@ -4071,7 +4076,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    /* let our master know that the open failed */
 		    handshake.status = PTY_BAD;
 		    handshake.error = errno;
-		    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		    copy_handshake(handshake, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(cp_pipe[1],
 				    (const char *) &handshake,
@@ -4682,7 +4687,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    if (resource.ptyHandshake) {
 		handshake.status = UTMP_ADDED;
 		handshake.error = 0;
-		strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		copy_handshake(handshake, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1], (char *) &handshake, sizeof(handshake)));
 	    }
@@ -4716,7 +4721,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		 */
 		handshake.status = PTY_GOOD;
 		handshake.error = 0;
-		(void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		copy_handshake(handshake, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1],
 				(const char *) &handshake,
@@ -4986,7 +4991,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
-		    (void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
+		    copy_handshake(handshake, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(pc_pipe[1],
 				    (const char *) &handshake,
