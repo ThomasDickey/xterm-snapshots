@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.133 2018/04/27 23:47:42 tom Exp $ */
+/* $XTermId: data.h,v 1.134 2018/08/10 19:52:54 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -155,6 +155,7 @@ typedef struct XTERM_RESOURCE {
     char *icon_name;
     char *term_name;
     char *tty_modes;
+    char *valid_shells;
 
     int minBufSize;
     int maxBufSize;
