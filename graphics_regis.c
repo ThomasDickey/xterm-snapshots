@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.105 2018/08/10 12:56:44 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.106 2018/08/11 14:38:58 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -5510,8 +5510,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   fragment_to_tempstr(&suboptionarg)));
 		    if (!fragment_consumed(&suboptionarg)) {
 			name = pop_fragment(&suboptionarg);
-			if (islower(name))
-			    name = (char) toupper(name);
+			if (islower(CharOf(name)))
+			    name = (char) toupper(CharOf(name));
 
 			skip_regis_whitespace(&suboptionarg);
 			if (!fragment_consumed(&optionarg)) {
@@ -6663,8 +6663,8 @@ expand_macrographs(RegisDataFragment *input, RegisGraphicsContext const *context
     if (operator != '@')
 	return 0;
     name = get_fragment(input, 1U);
-    if (islower(name))
-	name = (char) toupper(name);
+    if (islower(CharOf(name)))
+	name = (char) toupper(CharOf(name));
     if (name < 'A' || name > 'Z')
 	return 0;
 
@@ -7192,8 +7192,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		int len = 0;
 
 		name = pop_fragment(input);
-		if (islower(name))
-		    name = (char) toupper(name);
+		if (islower(CharOf(name)))
+		    name = (char) toupper(CharOf(name));
 		TRACE(("defining macrograph for \"%c\"\n", name));
 		if (name < 'A' || name > 'Z') {
 		    TRACE(("DATA_ERROR: invalid macrograph name\n"));

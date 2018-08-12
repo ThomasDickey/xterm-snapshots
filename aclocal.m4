@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.422 2018/06/28 08:10:16 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.423 2018/08/12 08:58:46 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -613,11 +613,16 @@ stropts.h \
 )
 
 cf_func_grantpt="grantpt ptsname"
+cf_prefer_openpt=no
 case $host_os in
-(xdarwin[[0-9]].*)
+(darwin[[0-9]].*)
 	;;
 (openbsd[[0-9]].*)
 	# The POSIX entrypoints exist, but have never worked.
+	;;
+(linux*)
+	cf_func_grantpt="$cf_func_grantpt posix_openpt"
+	cf_prefer_openpt=yes
 	;;
 (*)
 	cf_func_grantpt="$cf_func_grantpt posix_openpt"
@@ -720,7 +725,7 @@ dnl
 dnl There is no configure run-test for openpty, since older implementations do
 dnl not always run properly as a non-root user.  For that reason, we also allow
 dnl the configure script to suppress this check entirely with $disable_openpty.
-if test "x$ac_cv_func_posix_openpt" = "xyes" ; then
+if test "x$cf_prefer_posix_openpt" = "xyes" && test "x$ac_cv_func_posix_openpt" = "xyes" ; then
 	CF_VERBOSE(prefer posix_openpt over openpty)
 elif test "x$disable_openpty" != "xyes" || test -z "$cf_grantpt_opts" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
