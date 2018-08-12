@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.50 2018/08/10 14:55:03 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.51 2018/08/12 17:23:53 tom Exp $ */
 
 /*
  * Copyright 2007-2016,2018 by Thomas E. Dickey
@@ -230,7 +230,7 @@ loadTermcapStrings(TScreen *screen)
     if (screen->tcap_fkeys == 0) {
 	Cardinal want = XtNumber(table);
 	Cardinal have;
-#ifdef USE_TERMCAP
+#if !USE_TERMINFO
 	char *area = screen->tcap_area;
 #endif
 
@@ -241,7 +241,7 @@ loadTermcapStrings(TScreen *screen)
 		char name[80];
 		char *fkey;
 
-#ifndef USE_TERMCAP
+#if USE_TERMINFO
 		fkey = tigetstr(strcpy(name, table[have].ti));
 #else
 		fkey = tgetstr(strcpy(name, table[have].tc), &area);
@@ -545,12 +545,12 @@ get_tcap_buffer(XtermWidget xw)
 char *
 get_tcap_erase(XtermWidget xw GCC_UNUSED)
 {
-#ifdef USE_TERMCAP
+#if !USE_TERMINFO
     char *area = TScreenOf(xw)->tcap_area;
 #endif
     char *fkey;
 
-#ifndef USE_TERMCAP
+#if USE_TERMINFO
     fkey = tigetstr("kbs");
 #else
     fkey = tgetstr("kb", &area);

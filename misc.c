@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.842 2018/08/10 18:43:53 tom Exp $ */
+/* $XTermId: misc.c,v 1.844 2018/08/12 18:25:41 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4343,7 +4343,7 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
 	return;
     screen->do_wrap = (value & 8) ? True : False;
-    screen->curss = ((value & 4) ? 3 : ((value & 2) ? 2 : 0));
+    screen->curss = (Char) ((value & 4) ? 3 : ((value & 2) ? 2 : 0));
     UIntClr(xw->flags, ORIGIN);
     xw->flags |= (value & 1) ? ORIGIN : 0;
 
@@ -6699,16 +6699,20 @@ traceIStack(unsigned flags)
     DATA(BOLD);
     DATA(BLINK);
     DATA(INVISIBLE);
+#if OPT_ISO_COLORS
     DATA(BG_COLOR);
     DATA(FG_COLOR);
+#endif
 
 #if OPT_WIDE_ATTRS
     DATA(ATR_FAINT);
     DATA(ATR_ITALIC);
     DATA(ATR_STRIKEOUT);
     DATA(ATR_DBL_UNDER);
+#if OPT_DIRECT_COLOR
     DATA(ATR_DIRECT_FG);	/* FIXME - integrate with FG_COLOR */
     DATA(ATR_DIRECT_BG);	/* FIXME - integrate with BG_COLOR */
+#endif
 #endif
 #undef DATA
     return result;
@@ -6857,10 +6861,15 @@ xtermPopSGR(XtermWidget xw)
 	    (void) changed;
 #endif
 	}
+#if OPT_ISO_COLORS
 	TRACE(("xtermP -> flags%s, fg=%d bg=%d\n",
 	       traceIFlags(xw->flags),
 	       xw->sgr_foreground,
 	       xw->sgr_background));
+#else
+	TRACE(("xtermP -> flags%s\n",
+	       traceIFlags(xw->flags)));
+#endif
     }
 }
 #endif /* OPT_XTERM_SGR */

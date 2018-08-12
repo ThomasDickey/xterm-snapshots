@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.19 2018/07/07 18:33:42 tom Exp $
+-- $XTermId: THANKS,v 1.20 2018/08/10 23:33:05 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -54,6 +54,7 @@ Chuck Blake
 Colum Paget
 D Roland Walker
 Dan Church
+Dan Thompson
 Daniel Colascione
 Daniel Drake
 Daniel Jacobowitz
@@ -115,6 +116,7 @@ Julien Cristau
 Juliusz Chroboczek
 Jungshik Shin
 Jürgen Keil
+KUGA Tsutomu
 Kean Johnston
 Keith Packard
 Ken Martin

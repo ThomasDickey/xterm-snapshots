@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1889 2018/08/10 20:59:04 tom Exp $
+  $XTermId: xterm.log.html,v 1.1891 2018/08/12 10:38:14 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -956,6 +956,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify <code>Imakefile</code> to reflect the fact that
+    NetBSD no longer has a working termcap emulation.</li>
+
     <li>add resource-setting <code>validShells</code> which can be
     used to augment the system's <code>/etc/shell</code> (prompted
     by discussion with Paul Lampert).</li>
@@ -970,12 +973,13 @@
 
     <li>fix some warnings from gcc8 and clang --analyze.</li>
 
-    <li>update note about incorrect documentation for DECRQSS to
-    include VT525 (report by Markus Schmidt).</li>
+    <li>update note about incorrect documentation for
+    <code>DECRQSS</code> to include VT525 (report by Markus
+    Schmidt).</li>
 
     <li>correct check for default-values in rectangular parsing; a
-    zero counts as a missing or default parameter (report by Markus
-    Schmidt).</li>
+    zero counts as a missing or default parameter (report/testcase
+    by Markus Schmidt).</li>
 
     <li>correct some ranges in the <code>ambiguous[]</code> table
     in wcwidth (adapted from patch by KUGA Tsutomu).</li>
@@ -1011,7 +1015,7 @@
 
     <li>fix a couple of cases where double-sized VT100 characters
     were not clipped, seen in Joe Smith's <a href=
-    "http://www.inwap.com/pdp10/vt100test.txt">VT100 torture
+    "http://www.inwap.com/pdp10/#Tymnet">VT100 torture
     test</a>.</li>
 
     <li>color the inner border using the same
