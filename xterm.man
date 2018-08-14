@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.749 2018/08/10 21:17:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.750 2018/08/13 23:35:34 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1404,8 +1404,11 @@ The corresponding resource name is \fBborderColor\fP.
 \fI\*N\fP's VT100 window has two borders:
 the \fIinner\fP border \fBinternalBorder\fP
 and the \fIouter\fP border \fBborderWidth\fP, managed by the X Toolkit.
-At startup, if the \fBborderColor\fP matches the foreground color,
-\fI\*n\fP will use the actual background color for the inner border.
+.IP
+Normally \fI\*n\fP fills the inner border using the VT100 window's
+background color.
+If the \fBcolorInnerBorder\fP resource is enabled,
+then \fI\*n\fP may fill the inner border using the \fBborderColor\fP resource.
 .TP 8
 .B \-bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
@@ -2653,6 +2656,19 @@ Setting \fBcolorMode\fR off disables all colors, including italic.
 .bP
 The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP.
 .RE
+.TP 8
+.B "colorInnerBorder\fP (class\fB ColorInnerBorder\fP)"
+Normally, \fI\*n\fP fills the VT100 window's inner border
+using the background color.
+.IP
+If the \fBcolorInnerBorder\fP resource is enabled,
+at startup \fI\*n\fP will compare the \fBborderColor\fP and the
+window's background color.
+If those are different, \fI\*n\fP will use the \fBborderColor\fP 
+resource to fill the inner border.
+Otherwise, it will use the window's background color.
+.IP
+The default is \*(``false\*(''.
 .TP 8
 .B "colorMode\fP (class\fB ColorMode\fP)"
 Specifies whether or not recognition of ANSI (ISO-6429)
