@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1578 2018/08/10 00:10:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1579 2018/08/14 00:01:50 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -441,6 +441,7 @@ static XtResource xterm_resources[] =
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
     Bres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll, False),
+    Bres(XtNcolorInnerBorder, XtCColorInnerBorder, misc.color_inner_border, False),
     Bres(XtNcurses, XtCCurses, screen.curses, False),
     Bres(XtNcutNewline, XtCCutNewline, screen.cutNewline, True),
     Bres(XtNcutToBeginningOfLine, XtCCutToBeginningOfLine,
@@ -8712,6 +8713,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.titeInhibit);
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.cdXtraScroll);
+    init_Bres(misc.color_inner_border);
     init_Bres(misc.dynamicColors);
 
 #if OPT_DEC_CHRSET
@@ -9814,7 +9816,8 @@ initBorderGC(XtermWidget xw, VTwin *win)
 	   xw->core.border_pixel,
 	   T_COLOR(screen, TEXT_FG),
 	   T_COLOR(screen, TEXT_BG)));
-    if (xw->core.background_pixel != xw->core.border_pixel) {
+    if (xw->misc.color_inner_border
+	&& (xw->core.background_pixel != xw->core.border_pixel)) {
 	/*
 	 * By default, try to match the inner window's background.
 	 */

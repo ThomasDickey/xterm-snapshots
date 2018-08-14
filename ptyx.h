@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.905 2018/08/10 18:40:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.906 2018/08/13 23:55:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2864,6 +2864,7 @@ typedef struct _Misc {
 #ifdef ALLOWLOGGING
     Boolean log_on;
 #endif
+    Boolean color_inner_border;
     Boolean login_shell;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
