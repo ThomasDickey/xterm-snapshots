@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.456 2018/08/21 00:49:56 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.459 2018/08/21 22:56:46 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/20
+.ds RF 2018/08/21
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -491,6 +491,16 @@ These control characters are used in the vtXXX emulation.
 .
 .Sh "VT100 Mode"
 .LP
+In this document, \*(``VT100\*('' refers not only to VT100/VT102,
+but also to the succession of upward-compatible terminals produced
+by DEC (Digital Equipment Corporation)
+from the mid-1970s for about twenty years.
+For brevity, the document refers to the related models:
+  \*(``VT200\*('' as VT220/VT240,
+  \*(``VT300\*('' as VT320/VT340,
+  \*(``VT400\*('' as VT420, and
+  \*(``VT500\*('' as VT510/VT520/VT525.
+.LP
 Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals
 (i.e., VT220, VT320, VT420, VT510),
@@ -622,73 +632,84 @@ Select UTF-8 character set, ISO 2022.
 Designate G0 Character Set, VT100, ISO 2022.
 .br
 Final character \*(Cc for designating 94-character sets.
-In this list, \*0, \*A and \*(cB apply to VT100 and up,
-the remainder to VT220 and up.
+In this list,
+.RS
+.bP
+\*0, \*A and \*(cB were introduced in the VT100,
+.bP
+most were introduced in the VT200 series,
+.bP
+a few were introduced in the VT300 series.
+.RE
+.br
 The VT220 character sets,
 together with the Portuguese character set are activated by
 the National Replacement Character controls.
 The \*A is a special case, since it is
 also activated by the VT300-control for British Latin-1
 separately from the National Replacement Character controls.
-  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set.
-  \*(Cc = \*< \(-> DEC Supplementary (VT200).
-  \*(Cc = \*%\*5 \(-> DEC Supplementary Graphics (VT300).
-  \*(Cc = \*> \(-> DEC Technical (VT300).
-  \*(Cc = \*A \(-> United Kingdom (UK).
-  \*(Cc = \*(cB \(-> United States (USASCII).
-  \*(Cc = \*4 \(-> Dutch.
-  \*(Cc = \*C or \*5 \(-> Finnish.
-  \*(Cc = \*R or \*f \(-> French.
-  \*(Cc = \*Q or \*9 \(-> French Canadian (VT200, VT300).
-  \*(Cc = \*K \(-> German.
-  \*(Cc = \*Y \(-> Italian.
-  \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish.
-  \*(Cc = \*%\*6 \(-> Portuguese (VT300).
-  \*(Cc = \*Z \(-> Spanish.
-  \*(Cc = \*H or \*7 \(-> Swedish.
-  \*(Cc = \*= \(-> Swiss.
+.br
+The valid final characters \*(Cc for this control are:
+  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
+  \*(Cc = \*< \(-> DEC Supplementary, VT200.
+  \*(Cc = \*%\*5 \(-> DEC Supplementary Graphics, VT300.
+  \*(Cc = \*> \(-> DEC Technical, VT300.
+  \*(Cc = \*A \(-> United Kingdom (UK), VT100.
+  \*(Cc = \*(cB \(-> United States (USASCII), VT100.
+  \*(Cc = \*4 \(-> Dutch, VT200.
+  \*(Cc = \*C or \*5 \(-> Finnish, VT200.
+  \*(Cc = \*R or \*f \(-> French, VT200.
+  \*(Cc = \*Q or \*9 \(-> French Canadian, VT200.
+  \*(Cc = \*K \(-> German, VT200.
+  \*(Cc = \*Y \(-> Italian, VT200.
+  \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish, VT200.
+  \*(Cc = \*%\*6 \(-> Portuguese, VT300.
+  \*(Cc = \*Z \(-> Spanish, VT200.
+  \*(Cc = \*H or \*7 \(-> Swedish, VT200.
+  \*(Cc = \*= \(-> Swiss, VT200.
 .\" VT3xx and VT5xx (see vttest) add more selections, not implemented here.
 .iP
 .IP \\*(Es\\*)\\*(Cc
-Designate G1 Character Set (ISO 2022, VT100).
+Designate G1 Character Set, ISO 2022, VT100.
 .br
 The same character sets apply as for \*(Es\*(((\*(Cc.
 .
 .iP
 .IP \\*(Es\\**\\*(Cc
-Designate G2 Character Set (ISO 2022, VT220).
+Designate G2 Character Set, ISO 2022, VT220.
 .br
 The same character sets apply as for \*(Es\*(((\*(Cc.
 .
 .iP
 .IP \\*(Es\\*+\\*(Cc
-Designate G3 Character Set (ISO 2022, VT220).
+Designate G3 Character Set, ISO 2022, VT220.
 .br
 The same character sets apply as for \*(Es\*(((\*(Cc.
 .
 .iP
 .IP \\*(Es\\*-\\*(Cc
-Designate G1 Character Set (VT300).
+Designate G1 Character Set, VT300.
 .br
-The same character sets apply as for \*(Es\*(((\*(Cc.
+These controls apply only to 96-character sets.
+The valid final characters \*(Cc for this control are:
+  \*(Cc = \*A \(-> ISO Latin-1 Supplemental (VT300).
+.\" VT5xx would implement these:
+.\"  \*(Cc = \*F \(-> ISO Greek Supplemental (VT500).
+.\"  \*(Cc = \*H \(-> ISO Hebrew Supplemental (VT500).
+.\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental (VT500).
+.\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic (VT500).
 .
 .iP
 .IP \\*(Es\\*.\\*(Cc
-Designate G2 Character Set (VT300).
+Designate G2 Character Set, VT300.
 .br
-The same character sets apply as for \*(Es\*(((\*(Cc.
+The same character sets apply as for \*(Es\*-\*(Cc.
 .
 .iP
 .IP \\*(Es\\*/\\*(Cc
-Designate G3 Character Set (VT300).
+Designate G3 Character Set, VT300.
 .br
-These work for 96-character sets only.
-  \*(Cc = \*A \(-> ISO Latin-1 Supplemental.
-.\" VT5xx would implement these:
-.\"  \*(Cc = \*F \(-> ISO Greek Supplemental
-.\"  \*(Cc = \*H \(-> ISO Hebrew Supplemental
-.\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental
-.\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic
+The same character sets apply as for \*(Es\*-\*(Cc.
 .
 .iP
 .IP \\*(Es\\*6
