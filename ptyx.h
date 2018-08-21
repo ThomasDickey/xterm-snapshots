@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.906 2018/08/13 23:55:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.910 2018/08/21 00:01:54 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -457,6 +457,16 @@ typedef struct {
 	int width;
 	int height;
 } BitmapBits;
+
+/* bit-assignments for extensions to DECRQCRA */
+typedef enum {
+    csDEC = 0
+    ,csPOSITIVE = xBIT(0)
+    ,csATTRIBS = xBIT(1)
+    ,csNOTRIM = xBIT(2)
+    ,csDRAWN = xBIT(3)
+    ,csBYTE = xBIT(4)
+} CSBITS;
 
 #define	SAVELINES		64      /* default # lines to save      */
 #define SCROLLLINES 1			/* default # lines to scroll    */
@@ -2161,6 +2171,8 @@ typedef struct {
 #endif
 #if OPT_DEC_RECTOPS
 	int		cur_decsace;	/* parameter for DECSACE	*/
+	int		checksum_ext;	/* extensions for DECRQCRA	*/
+	int		checksum_ext0;	/* initial checksumExtension	*/
 #endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/

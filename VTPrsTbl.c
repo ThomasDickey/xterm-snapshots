@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.87 2018/07/30 21:10:53 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.89 2018/08/20 23:28:18 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2518,7 +2518,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_XTERM_CHECKSUM,
 CASE_GROUND_STATE,
 CASE_XTERM_PUSH_SGR,
 /*	|		}		~		DEL	*/
@@ -2678,7 +2678,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	oslash		ugrave		uacute		ucircumflex	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_XTERM_CHECKSUM,
 CASE_GROUND_STATE,
 CASE_XTERM_PUSH_SGR,
 /*	udiaeresis	yacute		thorn		ydiaeresis	*/

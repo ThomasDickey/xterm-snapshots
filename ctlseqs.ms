@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.454 2018/08/10 18:09:11 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.456 2018/08/21 00:49:56 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/10
+.ds RF 2018/08/20
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1894,6 +1894,16 @@ Select Attribute Change Extent (DECSACE), VT420 and up.
 Fill Rectangular Area (DECFRA), VT420 and up.
   \*(Pc is the character to use.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
+.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\*#\\*y
+Select checksum extension (XTCHECKSUM), xterm.
+The bits of \*(Ps modify the calculation of the checksum returned by DECRQCRA:
+  \*0 \(-> do not negate the result.
+  \*1 \(-> do not report the VT100 video attributes.
+  \*2 \(-> do not omit checksum for trailing blanks.
+  \*3 \(-> omit checksum for cells not explicitly initialized.
+  \*4 \(-> do not mask cell value to 8 bits or ignore combining characters.
 .
 .iP
 .IP \\*(Cs\\*(Pi\\*s\\*;\\*(Pg\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\**\\*y

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1580 2018/08/16 09:04:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1583 2018/08/20 22:33:51 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -607,6 +607,10 @@ static XtResource xterm_resources[] =
 #if OPT_DEC_CHRSET
     Bres(XtNfontDoublesize, XtCFontDoublesize, screen.font_doublesize, True),
     Ires(XtNcacheDoublesize, XtCCacheDoublesize, screen.cache_doublesize, NUM_CHRSET),
+#endif
+
+#if OPT_DEC_RECTOPS
+    Ires(XtNchecksumExtension, XtCChecksumExtension, screen.checksum_ext0, csDEC),
 #endif
 
 #if OPT_HIGHLIGHT_COLOR
@@ -8833,6 +8837,10 @@ VTInitialize(Widget wrequest,
 	   screen->font_doublesize ? "" : " not",
 	   screen->cache_doublesize));
 #endif
+#if OPT_DEC_RECTOPS
+    init_Ires(screen.checksum_ext0);
+    screen->checksum_ext = screen->checksum_ext0;
+#endif
 
 #if OPT_ISO_COLORS
     init_Ires(screen.veryBoldColors);
@@ -11548,6 +11556,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #if OPT_MOD_FKEYS
     /* Reset modifier-resources to initial state */
     xw->keyboard.modify_now = xw->keyboard.modify_1st;
+#endif
+#if OPT_DEC_RECTOPS
+    screen->checksum_ext = screen->checksum_ext0;
 #endif
 
     /* Reset DECSCA */

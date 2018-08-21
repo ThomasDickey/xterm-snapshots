@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.805 2018/08/13 23:55:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.806 2018/08/20 09:28:48 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -416,6 +416,7 @@ extern char **environ;
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcdXtraScroll		"cdXtraScroll"
 #define XtNcharClass		"charClass"
+#define XtNchecksumExtension	"checksumExtension"
 #define XtNcjkWidth		"cjkWidth"
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
@@ -616,6 +617,7 @@ extern char **environ;
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCdXtraScroll		"CdXtraScroll"
 #define XtCCharClass		"CharClass"
+#define XtCChecksumExtension	"ChecksumExtension"
 #define XtCCjkWidth		"CjkWidth"
 #define XtCColorAttrMode	"ColorAttrMode"
 #define XtCColorInnerBorder	"ColorInnerBorder"
