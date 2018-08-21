@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.537 2018/08/09 08:23:24 tom Exp $ */
+/* $XTermId: screen.c,v 1.549 2018/08/21 00:51:58 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2713,8 +2713,18 @@ xtermCheckRect(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     XTermRect target;
     LineData *ld;
+    int total = 0;
+    int trimmed = 0;
+    int mode = screen->checksum_ext;
 
-    *result = 0;
+    TRACE(("xtermCheckRect: %s%s%s%s%s%s\n",
+	   (mode == csDEC) ? "DEC" : "checksumExtension",
+	   (mode & csPOSITIVE) ? " !negative" : "",
+	   (mode & csATTRIBS) ? " !attribs" : "",
+	   (mode & csNOTRIM) ? " !trimmed" : "",
+	   (mode & csDRAWN) ? " !drawn" : "",
+	   (mode & csBYTE) ? " !byte" : ""));
+
     if (nparam > 2) {
 	nparam -= 2;
 	params += 2;
@@ -2724,6 +2734,8 @@ xtermCheckRect(XtermWidget xw,
 	int top = target.top - 1;
 	int bottom = target.bottom - 1;
 	int row, col;
+	Boolean first = True;
+	int embedded = 0;
 
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
@@ -2733,20 +2745,50 @@ xtermCheckRect(XtermWidget xw,
 	    if (ld == 0)
 		continue;
 	    for (col = left; col <= right && col < ld->lineSize; ++col) {
-		if (ld->attribs[col] & CHARDRAWN) {
-		    *result += (int) ld->charData[col];
+		int ch = ((ld->attribs[col] & CHARDRAWN)
+			  ? (int) ld->charData[col]
+			  : ' ');
+		if (!(mode & csBYTE)) {
+		    ch &= 0xff;
+		}
+		if (!(mode & csATTRIBS)) {
+		    if (ld->attribs[col] & UNDERLINE)
+			ch += 0x10;
+		    if (ld->attribs[col] & INVERSE)
+			ch += 0x20;
+		    if (ld->attribs[col] & BLINK)
+			ch += 0x40;
+		    if (ld->attribs[col] & BOLD)
+			ch += 0x80;
+		}
+		if (first || (ch != ' ') || (ld->attribs[col] & DRAWX_MASK)) {
+		    trimmed += ch + embedded;
+		    embedded = 0;
+		} else if (ch == ' ') {
+		    embedded += ch;
+		}
+		if ((ld->attribs[col] & CHARDRAWN)) {
+		    total += ch;
 		    if_OPT_WIDE_CHARS(screen, {
-			size_t off;
-			for_each_combData(off, ld) {
-			    *result += (int) ld->combData[off][col];
+			if (!(mode & csBYTE)) {
+			    size_t off;
+			    for_each_combData(off, ld) {
+				total += (int) ld->combData[off][col];
+			    }
 			}
 		    })
-		} else {
-		    *result += ' ';
+		} else if (!(mode & csDRAWN)) {
+		    total += ch;
 		}
+		first = ((mode & csNOTRIM) != 0) ? True : False;
 	    }
 	}
     }
+    if (!(mode & csNOTRIM))
+	total = trimmed;
+    if (!(mode & csPOSITIVE))
+	total = -total;
+    *result = total;
 }
 #endif /* OPT_DEC_RECTOPS */
 

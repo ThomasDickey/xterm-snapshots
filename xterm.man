@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.750 2018/08/13 23:35:34 tom Exp $
+.\" $XTermId: xterm.man,v 1.753 2018/08/21 00:49:32 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -2506,6 +2506,33 @@ Specifies comma-separated lists of character class bindings of the form
 These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
 See the \fBCHARACTER CLASSES\fP section.
+.TP 8
+.B "checksumExtension\fP (class\fB ChecksumExtension\fP)"
+DEC VT420 and up support a control sequence \fBDECRQCRA\fP which reports
+the checksum of the characters in a rectangle.
+\fI\*N\fP supports this, with extensions that can be configured with
+bits of the \fBchecksumExtension\fP:
+.RS
+.TP 5
+0
+do not negate the result.
+.TP 5
+1
+do not report the VT100 video attributes.
+.TP 5
+2
+do not omit checksum for trailing blanks.
+.TP 5
+3
+omit checksum for cells not explicitly initialized.
+.TP 5
+4
+do not mask cell value to 8 bits or ignore combining characters.
+.RE
+.IP
+With the default value (0),
+\fI\*n\fP matches the behavior of DEC's terminals.
+To use all extensions, set all bits, \*(``-1\*('' for example.
 .TP 8
 .B "cjkWidth\fP (class\fB CjkWidth\fP)"
 Specifies whether \fI\*n\fP should follow
