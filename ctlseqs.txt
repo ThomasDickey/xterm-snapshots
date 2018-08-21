@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/20)
+               updated for XTerm Patch #334 (2018/08/21)
 
 
 
@@ -159,6 +159,15 @@ These control characters are used in the vtXXX emulation.
 
 VT100 Mode
 
+In this document, "VT100" refers not only to VT100/VT102, but also to
+the succession of upward-compatible terminals produced by DEC (Digital
+Equipment Corporation) from the mid-1970s for about twenty years.  For
+brevity, the document refers to the related models:
+  "VT200" as VT220/VT240,
+  "VT300" as VT320/VT340,
+  "VT400" as VT420, and
+  "VT500" as VT510/VT520/VT525.
+
 Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals (i.e., VT220, VT320,
 VT420, VT510), as well as ECMA-48 and aixterm color controls.  The only
@@ -237,49 +246,53 @@ ESC % G   Select UTF-8 character set, ISO 2022.
 
 ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
           Final character C for designating 94-character sets.  In this
-          list, 0 , A  and B  apply to VT100 and up, the remainder to
-          VT220 and up.  The VT220 character sets, together with the
-          Portuguese character set are activated by the National
-          Replacement Character controls.  The A  is a special case,
-          since it is also activated by the VT300-control for British
-          Latin-1 separately from the National Replacement Character
-          controls.
-            C = 0  -> DEC Special Character and Line Drawing Set.
-            C = <  -> DEC Supplementary (VT200).
-            C = % 5  -> DEC Supplementary Graphics (VT300).
-            C = >  -> DEC Technical (VT300).
-            C = A  -> United Kingdom (UK).
-            C = B  -> United States (USASCII).
-            C = 4  -> Dutch.
-            C = C  or 5  -> Finnish.
-            C = R  or f  -> French.
-            C = Q  or 9  -> French Canadian (VT200, VT300).
-            C = K  -> German.
-            C = Y  -> Italian.
-            C = ` , E  or 6  -> Norwegian/Danish.
-            C = % 6  -> Portuguese (VT300).
-            C = Z  -> Spanish.
-            C = H  or 7  -> Swedish.
-            C = =  -> Swiss.
+          list,
+          o   0 , A  and B  were introduced in the VT100,
+          o   most were introduced in the VT200 series,
+          o   a few were introduced in the VT300 series.
+          The VT220 character sets, together with the Portuguese charac-
+          ter set are activated by the National Replacement Character
+          controls.  The A  is a special case, since it is also acti-
+          vated by the VT300-control for British Latin-1 separately from
+          the National Replacement Character controls.
+          The valid final characters C for this control are:
+            C = 0  -> DEC Special Character and Line Drawing Set, VT100.
+            C = <  -> DEC Supplementary, VT200.
+            C = % 5  -> DEC Supplementary Graphics, VT300.
+            C = >  -> DEC Technical, VT300.
+            C = A  -> United Kingdom (UK), VT100.
+            C = B  -> United States (USASCII), VT100.
+            C = 4  -> Dutch, VT200.
+            C = C  or 5  -> Finnish, VT200.
+            C = R  or f  -> French, VT200.
+            C = Q  or 9  -> French Canadian, VT200.
+            C = K  -> German, VT200.
+            C = Y  -> Italian, VT200.
+            C = ` , E  or 6  -> Norwegian/Danish, VT200.
+            C = % 6  -> Portuguese, VT300.
+            C = Z  -> Spanish, VT200.
+            C = H  or 7  -> Swedish, VT200.
+            C = =  -> Swiss, VT200.
 
-ESC ) C   Designate G1 Character Set (ISO 2022, VT100).
+ESC ) C   Designate G1 Character Set, ISO 2022, VT100.
           The same character sets apply as for ESC ( C.
 
-ESC * C   Designate G2 Character Set (ISO 2022, VT220).
+ESC * C   Designate G2 Character Set, ISO 2022, VT220.
           The same character sets apply as for ESC ( C.
 
-ESC + C   Designate G3 Character Set (ISO 2022, VT220).
+ESC + C   Designate G3 Character Set, ISO 2022, VT220.
           The same character sets apply as for ESC ( C.
 
-ESC - C   Designate G1 Character Set (VT300).
-          The same character sets apply as for ESC ( C.
+ESC - C   Designate G1 Character Set, VT300.
+          These controls apply only to 96-character sets.  The valid
+          final characters C for this control are:
+            C = A  -> ISO Latin-1 Supplemental (VT300).
 
-ESC . C   Designate G2 Character Set (VT300).
-          The same character sets apply as for ESC ( C.
+ESC . C   Designate G2 Character Set, VT300.
+          The same character sets apply as for ESC - C.
 
-ESC / C   Designate G3 Character Set (VT300).
-          These work for 96-character sets only.
-            C = A  -> ISO Latin-1 Supplemental.
+ESC / C   Designate G3 Character Set, VT300.
+          The same character sets apply as for ESC - C.
 
 ESC 6     Back Index (DECBI), VT420 and up.
 
