@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.89 2018/08/20 23:28:18 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.90 2018/08/23 00:14:20 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6331,13 +6331,13 @@ CASE_GSETS,
 CASE_GSETS,
 /*	8		9		:		;	*/
 CASE_GROUND_STATE,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	<		=		>		?	*/
 CASE_GSETS,
 CASE_GSETS,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 /*	@		A		B		C	*/
 CASE_GROUND_STATE,
@@ -6380,7 +6380,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -6491,13 +6491,13 @@ CASE_GSETS,
 CASE_GSETS,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_GROUND_STATE,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_GSETS,
 CASE_GSETS,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
 CASE_GROUND_STATE,
@@ -6540,7 +6540,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -6665,22 +6665,22 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	@		A		B		C	*/
 CASE_GROUND_STATE,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	D		E		F		G	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*	H		I		J		K	*/
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	L		M		N		O	*/
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	P		Q		R		S	*/
@@ -6825,22 +6825,22 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
 CASE_GROUND_STATE,
-CASE_GSETS,
+CASE_GSETS3,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Adiaeresis      Aring           AE              Ccedilla        */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*      Egrave          Eacute          Ecircumflex     Ediaeresis      */
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Igrave          Iacute          Icircumflex     Idiaeresis      */
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Eth             Ntilde          Ograve          Oacute          */

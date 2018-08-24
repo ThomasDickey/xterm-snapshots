@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-335c
+MANIFEST for xterm, version xterm-335d
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -46,6 +46,7 @@ doublechr.c                     VT100 double-size character support
 error.h                         error-code definitions for 'xterm'
 fontutils.c                     xterm functions for (re)loading fonts
 fontutils.h                     interface of fontutils.c
+gen-charsets.pl                 script to convert codepages into code
 gen-pc-fkeys.pl                 script to generate extended function-key terminfo
 graphics.c                      graphics support functions for 'xterm'
 graphics.h                      interface of graphics.c
