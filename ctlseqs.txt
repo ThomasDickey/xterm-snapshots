@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/21)
+               updated for XTerm Patch #334 (2018/08/23)
 
 
 
@@ -202,11 +202,13 @@ FF        Form Feed or New Page (NP).  (FF  is Ctrl-L).  FF  is treated
 
 LF        Line Feed or New Line (NL).  (LF  is Ctrl-J).
 
-SI        Shift In (Ctrl-O) -> Switch to Standard Character Set.  This
-          invokes the G0 character set (the default).
+SI        Switch to Standard Character Set (Ctrl-O is Shift In or LS0).
+          This invokes the G0 character set (the default) as GL.
+          VT200 and up implement LS0.
 
-SO        Shift Out (Ctrl-N) -> Switch to Alternate Character Set.  This
-          invokes the G1 character set.
+SO        Switch to Alternate Character Set (Ctrl-N is Shift Out or
+          LS1).  This invokes the G1 character set as GL.
+          VT200 and up implement LS1.
 
 SP        Space.
 
@@ -287,6 +289,10 @@ ESC - C   Designate G1 Character Set, VT300.
           These controls apply only to 96-character sets.  The valid
           final characters C for this control are:
             C = A  -> ISO Latin-1 Supplemental (VT300).
+            C = F  -> ISO Greek Supplemental (VT500).
+            C = H  -> ISO Hebrew Supplemental (VT500).
+            C = L  -> ISO Latin-Cyrillic (VT500).
+            C = M  -> ISO Latin-5 Supplemental (VT500).
 
 ESC . C   Designate G2 Character Set, VT300.
           The same character sets apply as for ESC - C.
@@ -316,9 +322,9 @@ ESC l     Memory Lock (per HP terminals).  Locks memory above the cur-
 
 ESC m     Memory Unlock (per HP terminals).
 
-ESC n     Invoke the G2 Character Set as GL (LS2).
+ESC n     Invoke the G2 Character Set as GL (LS2) as GL.
 
-ESC o     Invoke the G3 Character Set as GL (LS3).
+ESC o     Invoke the G3 Character Set as GL (LS3) as GL.
 
 ESC |     Invoke the G3 Character Set as GR (LS3R).
 

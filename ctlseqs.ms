@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.459 2018/08/21 22:56:46 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.462 2018/08/23 22:25:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/21
+.ds RF 2018/08/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -552,13 +552,17 @@ Line Feed or New Line (NL).
 .
 .iP
 .IP \\*(Si
-Shift In (Ctrl-O) \(-> Switch to \fIStandard Character Set\fP.
-This invokes the G0 character set (the default).
+Switch to \fIStandard Character Set\fP (Ctrl-O is Shift In or LS0).
+This invokes the G0 character set (the default) as GL.
+.br
+VT200 and up implement LS0.
 .
 .iP
 .IP \\*(So
-Shift Out (Ctrl-N) \(-> Switch to \fIAlternate Character Set\fP.
-This invokes the G1 character set.
+Switch to \fIAlternate Character Set\fP (Ctrl-N is Shift Out or LS1).
+This invokes the G1 character set as GL.
+.br
+VT200 and up implement LS1.
 .
 .iP
 .IP \\*(Sp
@@ -693,11 +697,10 @@ Designate G1 Character Set, VT300.
 These controls apply only to 96-character sets.
 The valid final characters \*(Cc for this control are:
   \*(Cc = \*A \(-> ISO Latin-1 Supplemental (VT300).
-.\" VT5xx would implement these:
-.\"  \*(Cc = \*F \(-> ISO Greek Supplemental (VT500).
-.\"  \*(Cc = \*H \(-> ISO Hebrew Supplemental (VT500).
-.\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental (VT500).
-.\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic (VT500).
+  \*(Cc = \*F \(-> ISO Greek Supplemental (VT500).
+  \*(Cc = \*H \(-> ISO Hebrew Supplemental (VT500).
+  \*(Cc = \*L \(-> ISO Latin-Cyrillic (VT500).
+  \*(Cc = \*M \(-> ISO Latin-5 Supplemental (VT500).
 .
 .iP
 .IP \\*(Es\\*.\\*(Cc
@@ -755,11 +758,11 @@ Memory Unlock (per HP terminals).
 .
 .iP
 .IP \\*(Es\\*n
-Invoke the G2 Character Set as GL (LS2).
+Invoke the G2 Character Set as GL (LS2) as GL.
 .
 .iP
 .IP \\*(Es\\*o
-Invoke the G3 Character Set as GL (LS3).
+Invoke the G3 Character Set as GL (LS3) as GL.
 .
 .iP
 .IP \\*(Es\\*|

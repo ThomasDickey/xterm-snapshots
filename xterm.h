@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.806 2018/08/20 09:28:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.807 2018/08/24 01:16:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -963,7 +963,7 @@ extern void noleaks_charproc (void);
 #endif
 
 /* charsets.c */
-extern unsigned xtermCharSetIn (TScreen * /* screen */, unsigned  /* code */, int  /* charset */);
+extern unsigned xtermCharSetIn (XtermWidget /* xw */, unsigned  /* code */, int  /* charset */);
 extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */

@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.55 2018/08/20 23:17:20 tom Exp $
+# $XTermId: VTparse.def,v 1.56 2018/08/22 09:20:38 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -208,3 +208,5 @@ CASE_XTERM_PUSH_SGR
 CASE_XTERM_REPORT_SGR
 CASE_XTERM_POP_SGR
 CASE_XTERM_CHECKSUM
+CASE_GSETS3
+CASE_GSETS5

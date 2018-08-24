@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1583 2018/08/20 22:33:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1588 2018/08/24 09:08:20 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1680,16 +1680,17 @@ static struct {
     { nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
-#if 0
-    /* VT5xx (not implemented) */
-    { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
-    { nrc_Greek,             '"', '?', 5, 9, 0 },
+    /* VT5xx */
     { nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
-    { nrc_Hebrew,            '"', '4', 5, 9, 0 },
-    { nrc_Hebrew2,           '%', '=', 5, 9, 1 },
     { nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
     { nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
     { nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
+    /* VT5xx (not implemented) */
+#if 0
+    { nrc_Greek,             '"', '?', 5, 9, 0 },
+    { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
+    { nrc_Hebrew,            '"', '4', 5, 9, 0 },
+    { nrc_Hebrew2,           '%', '=', 5, 9, 1 },
     { nrc_Russian,           '&', '5', 5, 9, 1 },
     { nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
     { nrc_Turkish,           '%', '0', 5, 9, 0 },
@@ -3551,9 +3552,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
+	case CASE_GSETS5:
+	    if (screen->terminal_id < 500) {
+		ResetState(sp);
+		break;
+	    }
+	    /* FALLTHRU */
+	case CASE_GSETS3:
+	    if (screen->terminal_id < 300) {
+		ResetState(sp);
+		break;
+	    }
+	    /* FALLTHRU */
 	case CASE_GSETS:
-	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-	    xtermDecodeSCS(xw, sp->scstype, 0, (int) c);
+	    if (screen->terminal_id >= 200 || strchr("012AB", c) != 0) {
+		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, 0, (int) c);
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -4644,8 +4659,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS_PERCENT:
-	    TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-	    xtermDecodeSCS(xw, sp->scstype, '%', (int) c);
+	    if (screen->terminal_id >= 300) {
+		TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, '%', (int) c);
+	    }
 	    ResetState(sp);
 	    break;
 #endif
