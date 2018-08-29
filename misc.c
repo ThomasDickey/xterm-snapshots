@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.844 2018/08/12 18:25:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.845 2018/08/25 00:54:35 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4347,20 +4347,20 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     UIntClr(xw->flags, ORIGIN);
     xw->flags |= (value & 1) ? ORIGIN : 0;
 
-    if ((value = parse_chr_param(&cp)) < '0' || value > '3')
+    if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
 	return;
-    screen->curgl = (Char) (value - '0');
+    screen->curgl = (Char) value;
 
-    if ((value = parse_chr_param(&cp)) < '0' || value > '3')
+    if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
 	return;
-    screen->curgr = (Char) (value - '0');
+    screen->curgr = (Char) value;
 
     /* character-set size */
     if ((value = parse_chr_param(&cp)) != 0x4f)		/* works for xterm */
 	return;
 
     /* SCS designators */
-    for (value = 0; value < 4; ++value) {
+    for (value = 0; value < NUM_GSETS; ++value) {
 	if (*cp == '%') {
 	    xtermDecodeSCS(xw, value, '%', *++cp);
 	} else if (*cp != '\0') {

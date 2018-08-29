@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.78 2018/08/24 01:17:29 tom Exp $ */
+/* $XTermId: charsets.c,v 1.80 2018/08/29 00:04:06 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -217,6 +217,7 @@
  * a hidden step in the terminal emulator which relies upon UTF-8.
  */
 #define map_SCS_DEC_Supp_Graphic(code,dft) \
+	begin_CODEPAGE(); \
 	switch (code) { \
 	    XXX(0x24, 0x2e2e); \
 	    XXX(0x26, 0x2e2e); \
@@ -238,11 +239,13 @@
 	    XXX(0x7e, 0x2e2e); \
 	    XXX(0x7f, 0x2e2e); \
 	    default: dft; break; \
-	}
+	} \
+	end_CODEPAGE()
 
 #if OPT_WIDE_CHARS
 	/* derived from http://www.vt100.net/charsets/technical.html */
 #define map_SCS_DEC_Technical(code) \
+	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x21, 0x23b7);	/* RADICAL SYMBOL BOTTOM Centred left to right, so that it joins up with 02/02 */ \
 	    UNI(0x22, 0x250c);	/* BOX DRAWINGS LIGHT DOWN AND RIGHT */ \
@@ -338,7 +341,8 @@
 	    UNI(0x7c, 0x2191);	/* UPWARDS ARROW */ \
 	    UNI(0x7d, 0x2192);	/* RIGHTWARDS ARROW */ \
 	    UNI(0x7e, 0x2193);	/* DOWNWARDS ARROW */ \
-	}
+	} \
+	end_CODEPAGE()
 	/*
 	 * A "codepage" is treated different from the NRC mode: it is always
 	 * enabled.  Reuse the UNI() macros by temporarily setting its state.

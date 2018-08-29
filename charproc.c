@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1588 2018/08/24 09:08:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1590 2018/08/25 10:27:29 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1163,15 +1163,39 @@ setItalicFont(XtermWidget xw, Bool enable)
 }
 #endif
 
+static void
+initCharset(TScreen *screen, int which, DECNRCM_codes code)
+{
+    screen->gsets[which] = code;
+}
+
+void
+saveCharsets(TScreen *screen, DECNRCM_codes * target)
+{
+    int g;
+    for (g = 0; g < NUM_GSETS; ++g) {
+	target[g] = screen->gsets[g];
+    }
+}
+
+void
+restoreCharsets(TScreen *screen, DECNRCM_codes * source)
+{
+    int g;
+    for (g = 0; g < NUM_GSETS; ++g) {
+	screen->gsets[g] = source[g];
+    }
+}
+
 void
 resetCharsets(TScreen *screen)
 {
     TRACE(("resetCharsets\n"));
 
-    screen->gsets[0] = nrc_ASCII;
-    screen->gsets[1] = nrc_ASCII;
-    screen->gsets[2] = nrc_ASCII;
-    screen->gsets[3] = nrc_ASCII;
+    initCharset(screen, 0, nrc_ASCII);
+    initCharset(screen, 1, nrc_ASCII);
+    initCharset(screen, 2, nrc_ASCII);
+    initCharset(screen, 3, nrc_ASCII);
 
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
@@ -1179,7 +1203,7 @@ resetCharsets(TScreen *screen)
 
 #if OPT_VT52_MODE
     if (screen->vtXX_level == 0)
-	screen->gsets[1] = nrc_DEC_Spec_Graphic;	/* Graphics */
+	initCharset(screen, 1, nrc_DEC_Spec_Graphic);	/* Graphics */
 #endif
 }
 
@@ -1218,13 +1242,13 @@ set_ansi_conformance(TScreen *screen, int level)
 	case 1:
 	    /* FALLTHRU */
 	case 2:
-	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
-	    screen->gsets[1] = nrc_ASCII;	/* G1 is ISO Latin-1 */
+	    initCharset(screen, 0, nrc_ASCII);	/* G0 is ASCII */
+	    initCharset(screen, 1, nrc_ASCII);	/* G1 is ISO Latin-1 */
 	    screen->curgl = 0;
 	    screen->curgr = 1;
 	    break;
 	case 3:
-	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
+	    initCharset(screen, 0, nrc_ASCII);	/* G0 is ASCII */
 	    screen->curgl = 0;
 	    break;
 	}
@@ -1739,7 +1763,7 @@ xtermDecodeSCS(XtermWidget xw, int which, int prefix, int suffix)
 	}
     }
     if (result != nrc_Unknown) {
-	screen->gsets[which] = result;
+	initCharset(screen, which, result);
 	TRACE(("setting G%d to %s\n", which, visibleScsCode((int) result)));
     } else {
 	TRACE(("...unknown GSET\n"));
@@ -3743,7 +3767,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
 		screen->curss = screen->vt52_save_curss;
-		memmove(screen->gsets, screen->vt52_save_gsets, sizeof(screen->gsets));
+		restoreCharsets(screen, screen->vt52_save_gsets);
 	    }
 	    break;
 #endif
@@ -4419,7 +4443,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, ';');
 		    reply_char(count, 0x4f);	/* assert all 96's */
 		    reply_char(count, ';');
-		    for (item = 0; item < 4; ++item) {
+		    for (item = 0; item < NUM_GSETS; ++item) {
 			char *temp = encode_scs(screen->gsets[item]);
 			while (*temp != '\0') {
 			    reply_char(count, *temp++);
@@ -5800,7 +5824,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->vt52_save_curgl = screen->curgl;
 		screen->vt52_save_curgr = screen->curgr;
 		screen->vt52_save_curss = screen->curss;
-		memmove(screen->vt52_save_gsets, screen->gsets, sizeof(screen->gsets));
+		saveCharsets(screen, screen->vt52_save_gsets);
 		resetCharsets(screen);
 		InitParams();	/* ignore the remaining params, if any */
 	    }

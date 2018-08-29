@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.753 2018/08/21 00:49:32 tom Exp $
+.\" $XTermId: xterm.man,v 1.754 2018/08/26 22:10:03 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -4154,7 +4154,7 @@ see which iconified windows have sounded a bell.
 .B "precompose\fP (class\fB Precompose\fP)"
 Tells \fI\*n\fP whether to precompose UTF-8 data into Normalization Form C,
 which combines commonly-used accents onto base characters.
-If it does not do this, accents are left as separatate characters.
+If it does not do this, accents are left as separate characters.
 The default is \*(``true\*(''.
 .TP 8
 .B "preeditType\fP (class\fB PreeditType\fP)"
