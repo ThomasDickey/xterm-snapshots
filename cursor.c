@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.73 2018/04/10 00:11:42 tom Exp $ */
+/* $XTermId: cursor.c,v 1.74 2018/08/25 00:28:05 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -333,7 +333,7 @@ CursorSave(XtermWidget xw)
     sc->cur_background = xw->cur_background;
     sc->sgr_foreground = xw->sgr_foreground;
 #endif
-    memmove(sc->gsets, screen->gsets, sizeof(screen->gsets));
+    saveCharsets(screen, sc->gsets);
 }
 
 /*
@@ -355,7 +355,7 @@ CursorRestore(XtermWidget xw)
      * In that case, we'll reset the character sets.
      */
     if (sc->saved) {
-	memmove(screen->gsets, sc->gsets, sizeof(screen->gsets));
+	restoreCharsets(screen, sc->gsets);
 	screen->curgl = sc->curgl;
 	screen->curgr = sc->curgr;
     } else {

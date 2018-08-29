@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.807 2018/08/24 01:16:23 tom Exp $ */
+/* $XTermId: xterm.h,v 1.809 2018/08/25 10:27:29 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -926,6 +926,8 @@ extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
+extern void restoreCharsets (TScreen * /* screen */, DECNRCM_codes * /* source */);
+extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
 extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
 extern void set_lr_margins (TScreen * /* screen */, int  /* left */, int  /* right */);

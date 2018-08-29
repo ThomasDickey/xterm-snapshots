@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.910 2018/08/21 00:01:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.912 2018/08/25 10:26:53 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1976,6 +1976,8 @@ typedef struct {
 	char		*names[NCOLORS];
 } ScrnColors;
 
+#define NUM_GSETS 4
+
 typedef struct {
 	Boolean		saved;
 	int		row;
@@ -1983,7 +1985,7 @@ typedef struct {
 	IFlags		flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
-	int		gsets[4];
+	DECNRCM_codes	gsets[NUM_GSETS];
 	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
 	int		cur_foreground;  /* current foreground color	*/
@@ -2471,7 +2473,7 @@ typedef struct {
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	int		gsets[4];	/* G0 through G3.		*/
+	DECNRCM_codes	gsets[NUM_GSETS]; /* G0 through G3.		*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
@@ -2533,7 +2535,7 @@ typedef struct {
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
-	int		vt52_save_gsets[4];
+	DECNRCM_codes	vt52_save_gsets[NUM_GSETS];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH
