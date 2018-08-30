@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.80 2018/08/29 00:04:06 tom Exp $ */
+/* $XTermId: charsets.c,v 1.86 2018/08/30 00:57:20 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -37,6 +37,7 @@
 
 #include <X11/keysym.h>
 
+#define BLANK ' '
 #define UNDEF 0x2426		/* rendered as a backwards "?" */
 
 /*
@@ -58,6 +59,19 @@
  *
  * The latter reference, though easier to read, has a few errors and omissions.
  */
+
+/*
+ * A "codepage" is treated different from the NRC mode:  it is always enabled.
+ * Reuse the UNI() macros by temporarily setting its state.
+ */
+#define begin_CODEPAGE() \
+	if (!(xw->flags & NATIONAL)) { \
+	    screen->utf8_nrc_mode++; \
+	}
+#define end_CODEPAGE() \
+	if (!(xw->flags & NATIONAL)) { \
+	    screen->utf8_nrc_mode--; \
+	}
 
 #define map_NRCS_Dutch(code) \
 	switch (code) { \
@@ -212,11 +226,12 @@
  * with luit, subject to the limitation that select/paste will give meaningless
  * results in terms of the application which uses these mappings.
  *
- * Since the VT320, etc, use only 8-bit encodings, there is no plausible
- * argument to be made that these mappings "use" UTF-8, even though there is
- * a hidden step in the terminal emulator which relies upon UTF-8.
+ * Since the codepages introduced with VT320, etc, use 8-bit encodings, there
+ * is no plausible argument to be made that these mappings "use" UTF-8, even
+ * though there is a hidden step in the terminal emulator which relies upon
+ * UTF-8.
  */
-#define map_SCS_DEC_Supp_Graphic(code,dft) \
+#define map_DEC_Supp_Graphic(code,dft) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    XXX(0x24, 0x2e2e); \
@@ -244,7 +259,7 @@
 
 #if OPT_WIDE_CHARS
 	/* derived from http://www.vt100.net/charsets/technical.html */
-#define map_SCS_DEC_Technical(code) \
+#define map_DEC_Technical(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x21, 0x23b7);	/* RADICAL SYMBOL BOTTOM Centred left to right, so that it joins up with 02/02 */ \
@@ -344,18 +359,6 @@
 	} \
 	end_CODEPAGE()
 	/*
-	 * A "codepage" is treated different from the NRC mode: it is always
-	 * enabled.  Reuse the UNI() macros by temporarily setting its state.
-	 */
-#define begin_CODEPAGE() \
-	if (!(xw->flags & NATIONAL)) { \
-	    screen->utf8_nrc_mode++; \
-	}
-#define end_CODEPAGE() \
-	if (!(xw->flags & NATIONAL)) { \
-	    screen->utf8_nrc_mode--; \
-	}
-	/*
 	 * According to
 	 *  Digital ANSI-Compliant Printing Protocol
 	 *  Level 2 Programming Reference Manual
@@ -371,7 +374,7 @@
 	 * These are derived from the data at
 	 *  ftp://www.unicode.org/Public/MAPPINGS/ISO8859/
 	 */
-#define map_SCS_ISO_Latin_Cyrillic(code) \
+#define map_ISO_Latin_Cyrillic(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
@@ -472,7 +475,7 @@
 	    UNI(0x7f, 0x045f);	/* CYRILLIC SMALL LETTER DZHE */ \
 	} \
 	end_CODEPAGE()
-#define map_SCS_ISO_Greek(code)	\
+#define map_ISO_Greek_Supp(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
@@ -572,7 +575,7 @@
 	    UNI(0x7e, 0x03ce);	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
 	} \
 	end_CODEPAGE()
-#define map_SCS_ISO_Hebrew(code) \
+#define map_ISO_Hebrew(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
@@ -672,7 +675,7 @@
 	    UNI(0x7e, 0x200f);	/* RIGHT-TO-LEFT MARK */ \
 	} \
 	end_CODEPAGE()
-#define map_SCS_ISO_Latin_5(code) \
+#define map_ISO_Latin_5(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
 	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
@@ -773,12 +776,145 @@
 	    UNI(0x7f, 0x00ff);	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
 	} \
 	end_CODEPAGE()
+#define map_DEC_Greek_Supp(code)	\
+	begin_CODEPAGE(); \
+	switch (code) { \
+	    MAP(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
+	    UNI(0x21, 0x00a1);	/* LEFT SINGLE QUOTATION MARK */ \
+	    UNI(0x22, 0x00a2);	/* RIGHT SINGLE QUOTATION MARK */ \
+	    UNI(0x23, 0x00a3);	/* POUND SIGN */ \
+	    XXX(0x24, UNDEF);	/* EURO SIGN */ \
+	    UNI(0x25, 0x00a5);	/* YEN SIGN */ \
+	    XXX(0x26, UNDEF);	/* BROKEN BAR */ \
+	    UNI(0x27, 0x00a7);	/* SECTION SIGN */ \
+	    UNI(0x28, 0x00a4);	/* CURRENCY SIGN */ \
+	    UNI(0x29, 0x00a9);	/* COPYRIGHT SIGN */ \
+	    UNI(0x2a, 0x00aa);	/* FEMININE ORDINAL INDICATOR */ \
+	    UNI(0x2b, 0x00ab);	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    XXX(0x2c, UNDEF);	/* reserved */ \
+	    XXX(0x2d, UNDEF);	/* reserved */ \
+	    XXX(0x2e, UNDEF);	/* reserved */ \
+	    XXX(0x2f, UNDEF);	/* reserved */ \
+	    UNI(0x30, 0x00b0);	/* DEGREE SIGN */ \
+	    UNI(0x31, 0x00b1);	/* PLUS-MINUS SIGN */ \
+	    UNI(0x32, 0x00b2);	/* SUPERSCRIPT TWO */ \
+	    UNI(0x33, 0x00b3);	/* SUPERSCRIPT THREE */ \
+	    XXX(0x34, UNDEF);	/* reserved */ \
+	    UNI(0x35, 0x00b5);	/* MICRO SIGN */ \
+	    UNI(0x36, 0x00b6);	/* PILCROW SIGN */ \
+	    UNI(0x37, 0x00b7);	/* MIDDLE DOT */ \
+	    XXX(0x38, UNDEF);	/* reserved */ \
+	    UNI(0x39, 0x00b9);	/* SUPERSCRIPT ONE */ \
+	    UNI(0x3a, 0x00ba);	/* MASCULINE ORDINAL INDICATOR */ \
+	    UNI(0x3b, 0x00bb);	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    UNI(0x3c, 0x00bc);	/* VULGAR FRACTION ONE QUARTER */ \
+	    UNI(0x3d, 0x00bd);	/* VULGAR FRACTION ONE HALF */ \
+	    XXX(0x3e, UNDEF);	/* reserved */ \
+	    UNI(0x3f, 0x00BF);  /* INVERTED QUESTION MARK */ \
+	    UNI(0x40, 0x03ca);	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA */ \
+	    UNI(0x41, 0x0391);	/* GREEK CAPITAL LETTER ALPHA */ \
+	    UNI(0x42, 0x0392);	/* GREEK CAPITAL LETTER BETA */ \
+	    UNI(0x43, 0x0393);	/* GREEK CAPITAL LETTER GAMMA */ \
+	    UNI(0x44, 0x0394);	/* GREEK CAPITAL LETTER DELTA */ \
+	    UNI(0x45, 0x0395);	/* GREEK CAPITAL LETTER EPSILON */ \
+	    UNI(0x46, 0x0396);	/* GREEK CAPITAL LETTER ZETA */ \
+	    UNI(0x47, 0x0397);	/* GREEK CAPITAL LETTER ETA */ \
+	    UNI(0x48, 0x0398);	/* GREEK CAPITAL LETTER THETA */ \
+	    UNI(0x49, 0x0399);	/* GREEK CAPITAL LETTER IOTA */ \
+	    UNI(0x4a, 0x039a);	/* GREEK CAPITAL LETTER KAPPA */ \
+	    UNI(0x4b, 0x039b);	/* GREEK CAPITAL LETTER LAMDA */ \
+	    UNI(0x4c, 0x039c);	/* GREEK CAPITAL LETTER MU */ \
+	    UNI(0x4d, 0x039d);	/* GREEK CAPITAL LETTER NU */ \
+	    UNI(0x4e, 0x039e);	/* GREEK CAPITAL LETTER XI */ \
+	    UNI(0x4f, 0x039f);	/* GREEK CAPITAL LETTER OMICRON */ \
+	    XXX(0x50, UNDEF);	/* reserved */ \
+	    UNI(0x51, 0x03a0);	/* GREEK CAPITAL LETTER PI */ \
+	    UNI(0x52, 0x03a1);	/* GREEK CAPITAL LETTER RHO */ \
+	    UNI(0x53, 0x03a3);	/* GREEK CAPITAL LETTER SIGMA */ \
+	    UNI(0x54, 0x03a4);	/* GREEK CAPITAL LETTER TAU */ \
+	    UNI(0x55, 0x03a5);	/* GREEK CAPITAL LETTER UPSILON */ \
+	    UNI(0x56, 0x03a6);	/* GREEK CAPITAL LETTER PHI */ \
+	    UNI(0x57, 0x03a7);	/* GREEK CAPITAL LETTER CHI */ \
+	    UNI(0x58, 0x03a8);	/* GREEK CAPITAL LETTER PSI */ \
+	    UNI(0x59, 0x03a9);	/* GREEK CAPITAL LETTER OMEGA */ \
+	    UNI(0x5a, 0x03ac);	/* GREEK SMALL LETTER ALPHA WITH TONOS */ \
+	    UNI(0x5b, 0x03ad);	/* GREEK SMALL LETTER EPSILON WITH TONOS */ \
+	    UNI(0x5c, 0x03ae);	/* GREEK SMALL LETTER ETA WITH TONOS */ \
+	    UNI(0x5d, 0x03af);	/* GREEK SMALL LETTER IOTA WITH TONOS */ \
+	    XXX(0x5e, UNDEF);	/* reserved */ \
+	    UNI(0x5f, 0x03cc);	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
+	    UNI(0x60, 0x03cb);	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA */ \
+	    UNI(0x61, 0x03b1);	/* GREEK SMALL LETTER ALPHA */ \
+	    UNI(0x62, 0x03b2);	/* GREEK SMALL LETTER BETA */ \
+	    UNI(0x63, 0x03b3);	/* GREEK SMALL LETTER GAMMA */ \
+	    UNI(0x64, 0x03b4);	/* GREEK SMALL LETTER DELTA */ \
+	    UNI(0x65, 0x03b5);	/* GREEK SMALL LETTER EPSILON */ \
+	    UNI(0x66, 0x03b6);	/* GREEK SMALL LETTER ZETA */ \
+	    UNI(0x67, 0x03b7);	/* GREEK SMALL LETTER ETA */ \
+	    UNI(0x68, 0x03b8);	/* GREEK SMALL LETTER THETA */ \
+	    UNI(0x69, 0x03b9);	/* GREEK SMALL LETTER IOTA */ \
+	    UNI(0x6a, 0x03ba);	/* GREEK SMALL LETTER KAPPA */ \
+	    UNI(0x6b, 0x03bb);	/* GREEK SMALL LETTER LAMDA */ \
+	    UNI(0x6c, 0x03bc);	/* GREEK SMALL LETTER MU */ \
+	    UNI(0x6d, 0x03bd);	/* GREEK SMALL LETTER NU */ \
+	    UNI(0x6e, 0x03be);	/* GREEK SMALL LETTER XI */ \
+	    UNI(0x6f, 0x03bf);	/* GREEK SMALL LETTER OMICRON */ \
+	    XXX(0x70, UNDEF);	/* reserved */ \
+	    UNI(0x71, 0x03c0);	/* GREEK SMALL LETTER PI */ \
+	    UNI(0x72, 0x03c1);	/* GREEK SMALL LETTER RHO */ \
+	    UNI(0x73, 0x03c3);	/* GREEK SMALL LETTER SIGMA */ \
+	    UNI(0x74, 0x03c4);	/* GREEK SMALL LETTER TAU */ \
+	    UNI(0x75, 0x03c5);	/* GREEK SMALL LETTER UPSILON */ \
+	    UNI(0x76, 0x03c6);	/* GREEK SMALL LETTER PHI */ \
+	    UNI(0x77, 0x03c7);	/* GREEK SMALL LETTER CHI */ \
+	    UNI(0x78, 0x03c8);	/* GREEK SMALL LETTER PSI */ \
+	    UNI(0x79, 0x03c9);	/* GREEK SMALL LETTER OMEGA */ \
+	    UNI(0x7a, 0x03c2);	/* GREEK SMALL LETTER FINAL SIGMA */ \
+	    UNI(0x7b, 0x03cd);	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
+	    UNI(0x7c, 0x03ce);	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
+	    UNI(0x7d, 0x0384);	/* GREEK TONOS */ \
+	    XXX(0x7e, UNDEF);	/* reserved */ \
+	} \
+	end_CODEPAGE()
+	/*
+	 * mentioned, but not documented in VT510 manual, etc., this uses
+	 * the ELOT927 table from Kermit 95:
+	 */
+#define map_NRCS_Greek(code) \
+	switch (code) { \
+	    MAP(0x61, 0x0391); /* CAPITAL GREEK LETTER ALPHA */ \
+	    MAP(0x62, 0x0392); /* CAPITAL GREEK LETTER BETA */ \
+	    MAP(0x63, 0x0393); /* CAPITAL GREEK LETTER GAMMA */ \
+	    MAP(0x64, 0x0394); /* CAPITAL GREEK LETTER DELTA */ \
+	    MAP(0x65, 0x0395); /* CAPITAL GREEK LETTER EPSILON */ \
+	    MAP(0x66, 0x0396); /* CAPITAL GREEK LETTER ZETA */ \
+	    MAP(0x67, 0x0397); /* CAPITAL GREEK LETTER ETA */ \
+	    MAP(0x68, 0x0398); /* CAPITAL GREEK LETTER THETA */ \
+	    MAP(0x69, 0x0399); /* CAPITAL GREEK LETTER IOTA */ \
+	    MAP(0x6a, 0x039a); /* CAPITAL GREEK LETTER KAPPA */ \
+	    MAP(0x6b, 0x039b); /* CAPITAL GREEK LETTER LAMDA */ \
+	    MAP(0x6c, 0x039c); /* CAPITAL GREEK LETTER MU */ \
+	    MAP(0x6d, 0x039d); /* CAPITAL GREEK LETTER NU */ \
+	    MAP(0x6e, 0x03a7); /* CAPITAL GREEK LETTER KSI (CHI) */ \
+	    MAP(0x6f, 0x039f); /* CAPITAL GREEK LETTER OMICRON */ \
+	    MAP(0x70, 0x03a0); /* CAPITAL GREEK LETTER PI */ \
+	    MAP(0x71, 0x03a1); /* CAPITAL GREEK LETTER RHO */ \
+	    MAP(0x72, 0x03a3); /* CAPITAL GREEK LETTER SIGMA */ \
+	    MAP(0x73, 0x03a4); /* CAPITAL GREEK LETTER TAU */ \
+	    MAP(0x74, 0x03a5); /* CAPITAL GREEK LETTER UPSILON */ \
+	    MAP(0x75, 0x03a6); /* CAPITAL GREEK LETTER FI (PHI) */ \
+	    MAP(0x76, 0x039e); /* CAPITAL GREEK LETTER XI */ \
+	    MAP(0x77, 0x03a8); /* CAPITAL GREEK LETTER PSI */ \
+	    MAP(0x78, 0x03a9); /* CAPITAL GREEK LETTER OMEGA */ \
+	    XXX(0x79, BLANK);  /* unused */ \
+	    XXX(0x7a, BLANK);  /* unused */ \
+	}
 #else
-#define map_SCS_DEC_Technical(code)	/* nothing */
-#define map_SCS_ISO_Greek(code)	/* nothing */
-#define map_SCS_ISO_Hebrew(code)	/* nothing */
-#define map_SCS_ISO_Latin_5(code)	/* nothing */
-#define map_SCS_ISO_Latin_Cyrillic(code)	/* nothing */
+#define map_DEC_Technical(code)	/* nothing */
+#define map_ISO_Greek_Supp(code)	/* nothing */
+#define map_ISO_Hebrew(code)	/* nothing */
+#define map_ISO_Latin_5(code)	/* nothing */
+#define map_ISO_Latin_Cyrillic(code)	/* nothing */
 #endif /* OPT_WIDE_CHARS */
 
 /*
@@ -824,15 +960,15 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	break;
 
     case nrc_DEC_Supp:
-	map_SCS_DEC_Supp_Graphic(code, code &= 0x7f);
+	map_DEC_Supp_Graphic(code, code &= 0x7f);
 	break;
 
     case nrc_DEC_Supp_Graphic:
-	map_SCS_DEC_Supp_Graphic(code, code |= 0x80);
+	map_DEC_Supp_Graphic(code, code |= 0x80);
 	break;
 
     case nrc_DEC_Technical:
-	map_SCS_DEC_Technical(code);
+	map_DEC_Technical(code);
 	break;
 
     case nrc_Dutch:
@@ -857,8 +993,16 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	map_NRCS_German(code);
 	break;
 
-    case nrc_Greek_Supp:
-	map_SCS_ISO_Greek(code);
+    case nrc_Greek:
+	map_NRCS_Greek(code);	/* FIXME - ELOT? */
+	break;
+
+    case nrc_DEC_Greek_Supp:
+	map_DEC_Greek_Supp(code);
+	break;
+
+    case nrc_ISO_Greek_Supp:
+	map_ISO_Greek_Supp(code);
 	break;
 
     case nrc_Hebrew:
@@ -866,20 +1010,20 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	/* FIXME */
 	break;
 
-    case nrc_Hebrew_Supp:
-	map_SCS_ISO_Hebrew(code);
+    case nrc_ISO_Hebrew_Supp:
+	map_ISO_Hebrew(code);
 	break;
 
     case nrc_Italian:
 	map_NRCS_Italian(code);
 	break;
 
-    case nrc_Latin_5_Supp:
-	map_SCS_ISO_Latin_5(code);
+    case nrc_ISO_Latin_5_Supp:
+	map_ISO_Latin_5(code);
 	break;
 
-    case nrc_Latin_Cyrillic:
-	map_SCS_ISO_Latin_Cyrillic(code);
+    case nrc_ISO_Latin_Cyrillic:
+	map_ISO_Latin_Cyrillic(code);
 	break;
 
     case nrc_Norwegian_Danish:
@@ -1019,15 +1163,15 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    break;
 
 	case nrc_DEC_Supp:
-	    map_SCS_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
+	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;
 
 	case nrc_DEC_Supp_Graphic:
-	    map_SCS_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
+	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;
 
 	case nrc_DEC_Technical:
-	    map_SCS_DEC_Technical(chr = seven);
+	    map_DEC_Technical(chr = seven);
 	    break;
 
 	case nrc_Dutch:
@@ -1053,8 +1197,16 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    map_NRCS_German(chr = seven);
 	    break;
 
-	case nrc_Greek_Supp:
-	    map_SCS_ISO_Greek(chr = seven);
+	case nrc_Greek:
+	    map_NRCS_Greek(chr = seven);	/* FIXME - ELOT? */
+	    break;
+
+	case nrc_DEC_Greek_Supp:
+	    map_DEC_Greek_Supp(chr = seven);
+	    break;
+
+	case nrc_ISO_Greek_Supp:
+	    map_ISO_Greek_Supp(chr = seven);
 	    break;
 
 	case nrc_Hebrew:
@@ -1062,20 +1214,20 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    /* FIXME */
 	    break;
 
-	case nrc_Hebrew_Supp:
-	    map_SCS_ISO_Hebrew(chr = seven);
+	case nrc_ISO_Hebrew_Supp:
+	    map_ISO_Hebrew(chr = seven);
 	    break;
 
 	case nrc_Italian:
 	    map_NRCS_Italian(chr = seven);
 	    break;
 
-	case nrc_Latin_5_Supp:
-	    map_SCS_ISO_Latin_5(chr = seven);
+	case nrc_ISO_Latin_5_Supp:
+	    map_ISO_Latin_5(chr = seven);
 	    break;
 
-	case nrc_Latin_Cyrillic:
-	    map_SCS_ISO_Latin_Cyrillic(chr = seven);
+	case nrc_ISO_Latin_Cyrillic:
+	    map_ISO_Latin_Cyrillic(chr = seven);
 	    break;
 
 	case nrc_Norwegian_Danish:

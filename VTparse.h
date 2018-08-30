@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.67 2018/07/30 20:48:46 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.68 2018/08/29 09:18:37 tom Exp $ */
 
 /*
  * Copyright 1996-2016,2018 by Thomas E. Dickey
@@ -82,6 +82,7 @@ extern Const PARSE_T vt52_ignore_table[];
 #if OPT_WIDE_CHARS
 extern Const PARSE_T esc_pct_table[];
 extern Const PARSE_T scs_pct_table[];
+extern Const PARSE_T scs_2qt_table[];
 #endif
 
 #if OPT_XTERM_SGR
