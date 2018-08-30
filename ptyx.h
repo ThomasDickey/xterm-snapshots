@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.912 2018/08/25 10:26:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.915 2018/08/29 23:11:53 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1018,13 +1018,14 @@ typedef enum {
     ,nrc_French_Canadian2	/* vt3xx */
     ,nrc_German			/* vt2xx */
     ,nrc_Greek			/* vt5xx */
-    ,nrc_Greek_Supp		/* vt5xx */
+    ,nrc_DEC_Greek_Supp		/* vt5xx */
+    ,nrc_ISO_Greek_Supp		/* vt5xx */
     ,nrc_Hebrew			/* vt5xx */
     ,nrc_Hebrew2		/* vt5xx */
-    ,nrc_Hebrew_Supp		/* vt5xx */
+    ,nrc_ISO_Hebrew_Supp	/* vt5xx */
     ,nrc_Italian		/* vt2xx */
-    ,nrc_Latin_5_Supp		/* vt5xx */
-    ,nrc_Latin_Cyrillic		/* vt5xx */
+    ,nrc_ISO_Latin_5_Supp	/* vt5xx */
+    ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
     ,nrc_Norwegian_Danish	/* vt3xx */
     ,nrc_Norwegian_Danish2	/* vt2xx */
     ,nrc_Norwegian_Danish3	/* vt2xx */

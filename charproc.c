@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1590 2018/08/25 10:27:29 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1593 2018/08/29 23:11:53 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1392,6 +1392,7 @@ static const struct {
 #if OPT_WIDE_CHARS
 	,DATA(esc_pct_table)
 	,DATA(scs_pct_table)
+	,DATA(scs_2qt_table)
 #endif
 #if OPT_VT52_MODE
 	,DATA(vt52_table)
@@ -1705,13 +1706,14 @@ static struct {
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
     /* VT5xx */
-    { nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
-    { nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
-    { nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
-    { nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
+    { nrc_Greek,             '"', '>', 5, 9, 1 },
+    { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 1 },
+    { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0 },
+    { nrc_ISO_Hebrew_Supp,   0,   'H', 5, 9, 0 },
+    { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0 },
+    { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0 },
     /* VT5xx (not implemented) */
 #if 0
-    { nrc_Greek,             '"', '?', 5, 9, 0 },
     { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
     { nrc_Hebrew,            '"', '4', 5, 9, 0 },
     { nrc_Hebrew2,           '%', '=', 5, 9, 1 },
@@ -4673,6 +4675,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       (screen->utf8_mode == uAlways)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_SCS_DQUOTE:
+	    TRACE(("CASE_SCS_DQUOTE\n"));
+	    sp->parsestate = scs_2qt_table;
+	    break;
+
+	case CASE_GSETS_DQUOTE:
+	    if (screen->terminal_id >= 500) {
+		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, '"', (int) c);
 	    }
 	    ResetState(sp);
 	    break;

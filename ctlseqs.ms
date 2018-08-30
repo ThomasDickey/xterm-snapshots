@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.462 2018/08/23 22:25:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.463 2018/08/30 01:17:42 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/23
+.ds RF 2018/08/29
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -263,6 +263,7 @@
 .[] bS \\e
 .[] { {
 .[] ~ \(ti
+.[] Dq \(dq
 .[] ] ]
 .[] & &
 .[] ^ \(ha
@@ -657,6 +658,8 @@ The valid final characters \*(Cc for this control are:
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
   \*(Cc = \*< \(-> DEC Supplementary, VT200.
   \*(Cc = \*%\*5 \(-> DEC Supplementary Graphics, VT300.
+  \*(Cc = \*(Dq\*> \(-> Greek, VT500.
+  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
   \*(Cc = \*> \(-> DEC Technical, VT300.
   \*(Cc = \*A \(-> United Kingdom (UK), VT100.
   \*(Cc = \*(cB \(-> United States (USASCII), VT100.
