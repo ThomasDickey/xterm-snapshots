@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.463 2018/08/30 01:17:42 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.466 2018/08/31 00:23:21 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #334
-.ds RF 2018/08/29
+.ds RF 2018/08/30
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -644,23 +644,23 @@ In this list,
 .bP
 most were introduced in the VT200 series,
 .bP
-a few were introduced in the VT300 series.
+a few were introduced in the VT300 series, and
+.bP
+a few more were introduced in the VT500 series.
 .RE
 .br
 The VT220 character sets,
-together with the Portuguese character set are activated by
-the National Replacement Character controls.
-The \*A is a special case, since it is
-also activated by the VT300-control for British Latin-1
-separately from the National Replacement Character controls.
+together with a few others (such as Portuguese) are activated by
+the National Replacement Character Set (NRCS) controls.
+The term \*(``replacement\*('' says that the character set is formed
+by replacing some of the characters in a set
+(termed the \fIMultinational Character Set\fP)
+with more useful ones for a given language.
+The ASCII and DEC Supplemental character sets make up the two
+halves of the Multinational Character set,
+initially mapped to GL and GR.
 .br
 The valid final characters \*(Cc for this control are:
-  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
-  \*(Cc = \*< \(-> DEC Supplementary, VT200.
-  \*(Cc = \*%\*5 \(-> DEC Supplementary Graphics, VT300.
-  \*(Cc = \*(Dq\*> \(-> Greek, VT500.
-  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
-  \*(Cc = \*> \(-> DEC Technical, VT300.
   \*(Cc = \*A \(-> United Kingdom (UK), VT100.
   \*(Cc = \*(cB \(-> United States (USASCII), VT100.
   \*(Cc = \*4 \(-> Dutch, VT200.
@@ -668,12 +668,26 @@ The valid final characters \*(Cc for this control are:
   \*(Cc = \*R or \*f \(-> French, VT200.
   \*(Cc = \*Q or \*9 \(-> French Canadian, VT200.
   \*(Cc = \*K \(-> German, VT200.
+  \*(Cc = \*(Dq\*> \(-> Greek, VT500.
   \*(Cc = \*Y \(-> Italian, VT200.
   \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish, VT200.
   \*(Cc = \*%\*6 \(-> Portuguese, VT300.
+  \*(Cc = \*%\*= \(-> Hebrew, VT500.
   \*(Cc = \*Z \(-> Spanish, VT200.
   \*(Cc = \*H or \*7 \(-> Swedish, VT200.
   \*(Cc = \*= \(-> Swiss, VT200.
+.br
+The final character \*A is a special case,
+since the same final character is
+used by the VT300-control for the 96-character British Latin-1.
+.br
+There are a few other 94-character sets not documented as NRCS:
+  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
+  \*(Cc = \*< \(-> DEC Supplemental, VT200.
+  \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
+  \*(Cc = \*%\*= \(-> DEC Hebrew, VT500.
+  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
+  \*(Cc = \*> \(-> DEC Technical, VT300.
 .\" VT3xx and VT5xx (see vttest) add more selections, not implemented here.
 .iP
 .IP \\*(Es\\*)\\*(Cc
@@ -698,6 +712,8 @@ The same character sets apply as for \*(Es\*(((\*(Cc.
 Designate G1 Character Set, VT300.
 .br
 These controls apply only to 96-character sets.
+Unlike the 94-character sets, these can have different values than
+ASCII space and DEL for the mapping of 0x20 and 0x7f.
 The valid final characters \*(Cc for this control are:
   \*(Cc = \*A \(-> ISO Latin-1 Supplemental (VT300).
   \*(Cc = \*F \(-> ISO Greek Supplemental (VT500).

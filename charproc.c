@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1593 2018/08/29 23:11:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1596 2018/08/31 09:47:28 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1707,7 +1707,9 @@ static struct {
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
     /* VT5xx */
     { nrc_Greek,             '"', '>', 5, 9, 1 },
+    { nrc_Hebrew,            '%', '=', 5, 9, 1 },
     { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 1 },
+    { nrc_DEC_Hebrew_Supp,   '"', '4', 5, 9, 0 },
     { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0 },
     { nrc_ISO_Hebrew_Supp,   0,   'H', 5, 9, 0 },
     { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0 },
@@ -1715,8 +1717,6 @@ static struct {
     /* VT5xx (not implemented) */
 #if 0
     { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
-    { nrc_Hebrew,            '"', '4', 5, 9, 0 },
-    { nrc_Hebrew2,           '%', '=', 5, 9, 1 },
     { nrc_Russian,           '&', '5', 5, 9, 1 },
     { nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
     { nrc_Turkish,           '%', '0', 5, 9, 0 },
@@ -3579,19 +3579,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS5:
-	    if (screen->terminal_id < 500) {
+	    if (screen->vtXX_level < 5) {
 		ResetState(sp);
 		break;
 	    }
 	    /* FALLTHRU */
 	case CASE_GSETS3:
-	    if (screen->terminal_id < 300) {
+	    if (screen->vtXX_level < 3) {
 		ResetState(sp);
 		break;
 	    }
 	    /* FALLTHRU */
 	case CASE_GSETS:
-	    if (screen->terminal_id >= 200 || strchr("012AB", c) != 0) {
+	    if (screen->vtXX_level >= 2 || strchr("012AB", (int) c) != 0) {
 		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
 		xtermDecodeSCS(xw, sp->scstype, 0, (int) c);
 	    }
@@ -4685,7 +4685,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS_DQUOTE:
-	    if (screen->terminal_id >= 500) {
+	    if (screen->vtXX_level >= 5) {
 		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
 		xtermDecodeSCS(xw, sp->scstype, '"', (int) c);
 	    }
@@ -4698,7 +4698,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS_PERCENT:
-	    if (screen->terminal_id >= 300) {
+	    if (screen->vtXX_level >= 3) {
 		TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
 		xtermDecodeSCS(xw, sp->scstype, '%', (int) c);
 	    }

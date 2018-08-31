@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/29)
+               updated for XTerm Patch #334 (2018/08/30)
 
 
 
@@ -251,19 +251,17 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
           list,
           o   0 , A  and B  were introduced in the VT100,
           o   most were introduced in the VT200 series,
-          o   a few were introduced in the VT300 series.
-          The VT220 character sets, together with the Portuguese charac-
-          ter set are activated by the National Replacement Character
-          controls.  The A  is a special case, since it is also acti-
-          vated by the VT300-control for British Latin-1 separately from
-          the National Replacement Character controls.
+          o   a few were introduced in the VT300 series, and
+          o   a few more were introduced in the VT500 series.
+          The VT220 character sets, together with a few others (such as
+          Portuguese) are activated by the National Replacement Charac-
+          ter Set (NRCS) controls.  The term "replacement" says that the
+          character set is formed by replacing some of the characters in
+          a set (termed the Multinational Character Set) with more use-
+          ful ones for a given language.  The ASCII and DEC Supplemental
+          character sets make up the two halves of the Multinational
+          Character set, initially mapped to GL and GR.
           The valid final characters C for this control are:
-            C = 0  -> DEC Special Character and Line Drawing Set, VT100.
-            C = <  -> DEC Supplementary, VT200.
-            C = % 5  -> DEC Supplementary Graphics, VT300.
-            C = " >  -> Greek, VT500.
-            C = " ?  -> DEC Greek, VT500.
-            C = >  -> DEC Technical, VT300.
             C = A  -> United Kingdom (UK), VT100.
             C = B  -> United States (USASCII), VT100.
             C = 4  -> Dutch, VT200.
@@ -271,12 +269,25 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
             C = R  or f  -> French, VT200.
             C = Q  or 9  -> French Canadian, VT200.
             C = K  -> German, VT200.
+            C = " >  -> Greek, VT500.
             C = Y  -> Italian, VT200.
             C = ` , E  or 6  -> Norwegian/Danish, VT200.
             C = % 6  -> Portuguese, VT300.
+            C = % =  -> Hebrew, VT500.
             C = Z  -> Spanish, VT200.
             C = H  or 7  -> Swedish, VT200.
             C = =  -> Swiss, VT200.
+          The final character A  is a special case, since the same final
+          character is used by the VT300-control for the 96-character
+          British Latin-1.
+          There are a few other 94-character sets not documented as
+          NRCS:
+            C = 0  -> DEC Special Character and Line Drawing Set, VT100.
+            C = <  -> DEC Supplemental, VT200.
+            C = % 5  -> DEC Supplemental Graphics, VT300.
+            C = % =  -> DEC Hebrew, VT500.
+            C = " ?  -> DEC Greek, VT500.
+            C = >  -> DEC Technical, VT300.
 
 ESC ) C   Designate G1 Character Set, ISO 2022, VT100.
           The same character sets apply as for ESC ( C.
@@ -288,7 +299,9 @@ ESC + C   Designate G3 Character Set, ISO 2022, VT220.
           The same character sets apply as for ESC ( C.
 
 ESC - C   Designate G1 Character Set, VT300.
-          These controls apply only to 96-character sets.  The valid
+          These controls apply only to 96-character sets.  Unlike the
+          94-character sets, these can have different values than ASCII
+          space and DEL for the mapping of 0x20 and 0x7f.  The valid
           final characters C for this control are:
             C = A  -> ISO Latin-1 Supplemental (VT300).
             C = F  -> ISO Greek Supplemental (VT500).
