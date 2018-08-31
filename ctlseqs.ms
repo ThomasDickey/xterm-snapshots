@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.466 2018/08/31 00:23:21 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.472 2018/08/31 16:28:31 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #334
-.ds RF 2018/08/30
+.ds LF Patch #336
+.ds RF 2018/08/31
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -119,6 +119,7 @@
 .\" Subsection header
 .de Ss
 .iP
+.if t .sp
 .LP
 .B
 \\$*
@@ -669,13 +670,14 @@ The valid final characters \*(Cc for this control are:
   \*(Cc = \*Q or \*9 \(-> French Canadian, VT200.
   \*(Cc = \*K \(-> German, VT200.
   \*(Cc = \*(Dq\*> \(-> Greek, VT500.
+  \*(Cc = \*%\*= \(-> Hebrew, VT500.
   \*(Cc = \*Y \(-> Italian, VT200.
   \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish, VT200.
   \*(Cc = \*%\*6 \(-> Portuguese, VT300.
-  \*(Cc = \*%\*= \(-> Hebrew, VT500.
   \*(Cc = \*Z \(-> Spanish, VT200.
   \*(Cc = \*H or \*7 \(-> Swedish, VT200.
   \*(Cc = \*= \(-> Swiss, VT200.
+  \*(Cc = \*%\*2 \(-> Turkish, VT500.
 .br
 The final character \*A is a special case,
 since the same final character is
@@ -684,11 +686,17 @@ used by the VT300-control for the 96-character British Latin-1.
 There are a few other 94-character sets not documented as NRCS:
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
   \*(Cc = \*< \(-> DEC Supplemental, VT200.
-  \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
-  \*(Cc = \*%\*= \(-> DEC Hebrew, VT500.
-  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
   \*(Cc = \*> \(-> DEC Technical, VT300.
-.\" VT3xx and VT5xx (see vttest) add more selections, not implemented here.
+  \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
+  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
+  \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
+  \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
+.br
+The VT520 reference manual lists a few more,
+but no documentation has been found for the mappings:
+  \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
+  \*(Cc = \*&\*5 \(-> DEC Russian, VT500.
+  \*(Cc = \*%\*3 \(-> SCS NRCS, VT500.
 .iP
 .IP \\*(Es\\*)\\*(Cc
 Designate G1 Character Set, ISO 2022, VT100.
@@ -803,7 +811,7 @@ None.
 \fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
-.
+.\"
 .Ss Device-Control functions
 .St
 .IP \\*(Dc\\*(Ps\\*s\\*;\\*(Ps\\*s\\*|\\*(Pt\\*s\\*(ST
@@ -2012,6 +2020,7 @@ except for colors (which do not have a unique SGR code):
   \*(Ps = \*1\*0 \(-> Foreground color.
   \*(Ps = \*1\*1 \(-> Background color.
   \*(Ps = \*2\*1 \(-> Doubly-underlined.
+.iP
 .IP
 If no parameters are given, all of the video attributes are saved.
 The stack is limited to 10 levels.
@@ -3461,6 +3470,13 @@ Digital Equipment Corporation
 .br
 Digital Equipment Corporation
 (EK-VT520-RM A01, July 1994).
+.bP
+\fIDigital ANSI-Compliant Printing Protocol\fP
+.br
+\fILevel 2 Programming Reference Manual\fP
+.br
+Digital Equipment Corporation
+(EK-PPLV2-PM. B01, August 1994).
 .bP
 \fI4014 and 4014-1 Computer Display Terminal\fP
 .br

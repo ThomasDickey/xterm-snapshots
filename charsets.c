@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.93 2018/08/31 09:38:51 tom Exp $ */
+/* $XTermId: charsets.c,v 1.100 2018/08/31 15:34:02 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -58,6 +58,23 @@
  *		character set to the national character set.
  *
  * The latter reference, though easier to read, has a few errors and omissions.
+ *
+ * According to
+ *  Digital ANSI-Compliant Printing Protocol
+ *  Level 2 Programming Reference Manual
+ *  EK–PPLV2–PM. B01
+ *
+ * the supplementary character sets Greek, Hebrew, Latin-5 and Latin/Cyrillic
+ * are standardized by ISO:
+ *  ISO Greek is 8859-7
+ *  ISO Hebrew is 8859-8
+ *  ISO Latin-5 is 8859-9
+ *  ISO Latin/Cyrillic is 8859-5
+ *
+ * These are derived from the data at
+ *  ftp://www.unicode.org/Public/MAPPINGS/ISO8859/
+ *
+ * Note: the "figure A-xx" comments refer to EK–PPLV2–PM. 
  */
 
 /*
@@ -74,10 +91,15 @@
 	    screen->utf8_nrc_mode--; \
 	}
 #else
-#define begin_CODEPAGE() /* nothing */
-#define end_CODEPAGE() /* nothing */
+#define begin_CODEPAGE()	/* nothing */
+#define end_CODEPAGE()		/* nothing */
 #endif
 
+/*
+ * xterm's original implementation of NRCS in 1998 was before Unicode became
+ * prevalent.  Most of the necessary mappings could be done using definitions
+ * from X11/keysymdef.h
+ */
 #define map_NRCS_Dutch(code) \
 	switch (code) { \
 	    MAP(0x23, XK_sterling); \
@@ -363,22 +385,7 @@
 	    UNI(0x7e, 0x2193);	/* DOWNWARDS ARROW */ \
 	} \
 	end_CODEPAGE()
-	/*
-	 * According to
-	 *  Digital ANSI-Compliant Printing Protocol
-	 *  Level 2 Programming Reference Manual
-	 *  EK–PPLV2–PM. B01
-	 *
-	 * the supplementary character sets Greek, Hebrew, Latin-5 and
-	 * Latin/Cyrillic are standardized by ISO:
-	 *  ISO Greek is 8859-7
-	 *  ISO Hebrew is 8859-8
-	 *  ISO Latin-5 is 8859-9
-	 *  ISO Latin/Cyrillic is 8859-5
-	 *
-	 * These are derived from the data at
-	 *  ftp://www.unicode.org/Public/MAPPINGS/ISO8859/
-	 */
+	/* ISO Latin/Cyrillic is 8859-5 */
 #define map_ISO_Latin_Cyrillic(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -480,6 +487,7 @@
 	    UNI(0x7f, 0x045f);	/* CYRILLIC SMALL LETTER DZHE */ \
 	} \
 	end_CODEPAGE()
+	/* ISO Greek is 8859-7 */
 #define map_ISO_Greek_Supp(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -580,6 +588,7 @@
 	    UNI(0x7e, 0x03ce);	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
 	} \
 	end_CODEPAGE()
+	/* figure A-23 "ISO Latin-Hebrew Supplemental Character Set" */
 #define map_ISO_Hebrew(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -680,6 +689,7 @@
 	    UNI(0x7e, 0x200f);	/* RIGHT-TO-LEFT MARK */ \
 	} \
 	end_CODEPAGE()
+	/* ISO Latin-5 is 8859-9 */
 #define map_ISO_Latin_5(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -781,6 +791,7 @@
 	    UNI(0x7f, 0x00ff);	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
 	} \
 	end_CODEPAGE()
+	/* figure A-24 "DEC Greek Supplemental Character Set" */
 #define map_DEC_Greek_Supp(code)	\
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -881,6 +892,7 @@
 	    XXX(0x7e, UNDEF);	/* reserved */ \
 	} \
 	end_CODEPAGE()
+	/* figure A-22 "DEC Hebrew Supplemental Character Set" */
 #define map_DEC_Hebrew_Supp(code) \
 	begin_CODEPAGE(); \
 	switch (code) { \
@@ -980,6 +992,106 @@
 	    XXX(0x7e, UNDEF);	/* reserved */ \
 	} \
 	end_CODEPAGE()
+	/* figure A-27 "DEC 8-Bit Turkish Supplemental Character Set" */
+#define map_DEC_Turkish_Supp(code) \
+	begin_CODEPAGE(); \
+	switch (code) { \
+	    UNI(0x21, 0x00A1);	/* INVERTED EXCLAMATION MARK */ \
+	    UNI(0x22, 0x00A2);	/* CENT SIGN */ \
+	    UNI(0x23, 0x00A3);	/* POUND SIGN */ \
+	    XXX(0x24, UNDEF);	/* reserved */ \
+	    UNI(0x25, 0x00A5);	/* YEN SIGN */ \
+	    XXX(0x26, UNDEF);	/* reserved */ \
+	    UNI(0x27, 0x00A7);	/* SECTION SIGN */ \
+	    UNI(0x28, 0x00A8);	/* DIAERESIS */ \
+	    UNI(0x29, 0x00A9);	/* COPYRIGHT SIGN */ \
+	    UNI(0x2A, 0x00AA);	/* FEMININE ORDINAL INDICATOR */ \
+	    UNI(0x2B, 0x00AB);	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    XXX(0x2C, UNDEF);	/* reserved */ \
+	    XXX(0x2D, UNDEF);	/* reserved */ \
+	    UNI(0x2E, 0x0130);	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
+	    XXX(0x2F, UNDEF);	/* reserved */ \
+	    UNI(0x30, 0x00B0);	/* DEGREE SIGN */ \
+	    UNI(0x31, 0x00B1);	/* PLUS-MINUS SIGN */ \
+	    UNI(0x32, 0x00B2);	/* SUPERSCRIPT TWO */ \
+	    UNI(0x33, 0x00B3);	/* SUPERSCRIPT THREE */ \
+	    XXX(0x34, UNDEF);	/* reserved */ \
+	    UNI(0x35, 0x00B5);	/* MICRO SIGN */ \
+	    UNI(0x36, 0x00B6);	/* PILCROW SIGN */ \
+	    UNI(0x37, 0x00B7);	/* MIDDLE DOT */ \
+	    XXX(0x38, UNDEF);	/* reserved */ \
+	    UNI(0x39, 0x00B9);	/* SUPERSCRIPT ONE */ \
+	    UNI(0x3A, 0x00BA);	/* MASCULINE ORDINAL INDICATOR */ \
+	    UNI(0x3B, 0x00BB);	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    UNI(0x3C, 0x00BC);	/* VULGAR FRACTION ONE QUARTER */ \
+	    UNI(0x3D, 0x00BD);	/* VULGAR FRACTION ONE HALF */ \
+	    UNI(0x3E, 0x0131);	/* LATIN SMALL LETTER DOTLESS I */ \
+	    UNI(0x3F, 0x00BF);	/* INVERTED QUESTION MARK */ \
+	    UNI(0x40, 0x00C0);	/* LATIN CAPITAL LETTER A WITH GRAVE */ \
+	    UNI(0x41, 0x00C1);	/* LATIN CAPITAL LETTER A WITH ACUTE */ \
+	    UNI(0x42, 0x00C2);	/* LATIN CAPITAL LETTER A WITH CIRCUMFLEX */ \
+	    UNI(0x43, 0x00C3);	/* LATIN CAPITAL LETTER A WITH TILDE */ \
+	    UNI(0x44, 0x00C4);	/* LATIN CAPITAL LETTER A WITH DIAERESIS */ \
+	    UNI(0x45, 0x00C5);	/* LATIN CAPITAL LETTER A WITH RING ABOVE */ \
+	    UNI(0x46, 0x00C6);	/* LATIN CAPITAL LETTER AE */ \
+	    UNI(0x47, 0x00C7);	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
+	    UNI(0x48, 0x00C8);	/* LATIN CAPITAL LETTER E WITH GRAVE */ \
+	    UNI(0x49, 0x00C9);	/* LATIN CAPITAL LETTER E WITH ACUTE */ \
+	    UNI(0x4A, 0x00CA);	/* LATIN CAPITAL LETTER E WITH CIRCUMFLEX */ \
+	    UNI(0x4B, 0x00CB);	/* LATIN CAPITAL LETTER E WITH DIAERESIS */ \
+	    UNI(0x4C, 0x00CC);	/* LATIN CAPITAL LETTER I WITH GRAVE */ \
+	    UNI(0x4D, 0x00CD);	/* LATIN CAPITAL LETTER I WITH ACUTE */ \
+	    UNI(0x4E, 0x00CE);	/* LATIN CAPITAL LETTER I WITH CIRCUMFLEX */ \
+	    UNI(0x4F, 0x00CF);	/* LATIN CAPITAL LETTER I WITH DIAERESIS */ \
+	    UNI(0x50, 0x011E);	/* LATIN CAPITAL LETTER G WITH BREVE */ \
+	    UNI(0x51, 0x00D1);	/* LATIN CAPITAL LETTER N WITH TILDE */ \
+	    UNI(0x52, 0x00D2);	/* LATIN CAPITAL LETTER O WITH GRAVE */ \
+	    UNI(0x53, 0x00D3);	/* LATIN CAPITAL LETTER O WITH ACUTE */ \
+	    UNI(0x54, 0x00D4);	/* LATIN CAPITAL LETTER O WITH CIRCUMFLEX */ \
+	    UNI(0x55, 0x00D5);	/* LATIN CAPITAL LETTER O WITH TILDE */ \
+	    UNI(0x56, 0x00D6);	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
+	    UNI(0x57, 0x0152);	/* LATIN CAPITAL LIGATURE OE */ \
+	    UNI(0x58, 0x00D8);	/* LATIN CAPITAL LETTER O WITH STROKE */ \
+	    UNI(0x59, 0x00D9);	/* LATIN CAPITAL LETTER U WITH GRAVE */ \
+	    UNI(0x5A, 0x00DA);	/* LATIN CAPITAL LETTER U WITH ACUTE */ \
+	    UNI(0x5B, 0x00DB);	/* LATIN CAPITAL LETTER U WITH CIRCUMFLEX */ \
+	    UNI(0x5C, 0x00DC);	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
+	    UNI(0x5D, 0x0178);	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
+	    UNI(0x5E, 0x015E);	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    UNI(0x5F, 0x00DF);	/* LATIN SMALL LETTER SHARP S */ \
+	    UNI(0x60, 0x00E0);	/* LATIN SMALL LETTER A WITH GRAVE */ \
+	    UNI(0x61, 0x00E1);	/* LATIN SMALL LETTER A WITH ACUTE */ \
+	    UNI(0x62, 0x00E2);	/* LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
+	    UNI(0x63, 0x00E3);	/* LATIN SMALL LETTER A WITH TILDE */ \
+	    UNI(0x64, 0x00E4);	/* LATIN SMALL LETTER A WITH DIAERESIS */ \
+	    UNI(0x65, 0x00E5);	/* LATIN SMALL LETTER A WITH RING ABOVE */ \
+	    UNI(0x66, 0x00E6);	/* LATIN SMALL LETTER AE */ \
+	    UNI(0x67, 0x00E7);	/* LATIN SMALL LETTER C WITH CEDILLA */ \
+	    UNI(0x68, 0x00E8);	/* LATIN SMALL LETTER E WITH GRAVE */ \
+	    UNI(0x69, 0x00E9);	/* LATIN SMALL LETTER E WITH ACUTE */ \
+	    UNI(0x6A, 0x00EA);	/* LATIN SMALL LETTER E WITH CIRCUMFLEX */ \
+	    UNI(0x6B, 0x00EB);	/* LATIN SMALL LETTER E WITH DIAERESIS */ \
+	    UNI(0x6C, 0x00EC);	/* LATIN SMALL LETTER I WITH GRAVE */ \
+	    UNI(0x6D, 0x00ED);	/* LATIN SMALL LETTER I WITH ACUTE */ \
+	    UNI(0x6E, 0x00EE);	/* LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
+	    UNI(0x6F, 0x00EF);	/* LATIN SMALL LETTER I WITH DIAERESIS */ \
+	    UNI(0x70, 0x011F);	/* LATIN SMALL LETTER G WITH BREVE */ \
+	    UNI(0x71, 0x00F1);	/* LATIN SMALL LETTER N WITH TILDE */ \
+	    UNI(0x72, 0x00F2);	/* LATIN SMALL LETTER O WITH GRAVE */ \
+	    UNI(0x73, 0x00F3);	/* LATIN SMALL LETTER O WITH ACUTE */ \
+	    UNI(0x74, 0x00F4);	/* LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
+	    UNI(0x75, 0x00F5);	/* LATIN SMALL LETTER O WITH TILDE */ \
+	    UNI(0x76, 0x00F6);	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
+	    UNI(0x77, 0x0153);	/* LATIN SMALL LIGATURE OE */ \
+	    UNI(0x78, 0x00F8);	/* LATIN SMALL LETTER O WITH STROKE */ \
+	    UNI(0x79, 0x00F9);	/* LATIN SMALL LETTER U WITH GRAVE */ \
+	    UNI(0x7A, 0x00FA);	/* LATIN SMALL LETTER U WITH ACUTE */ \
+	    UNI(0x7B, 0x00FB);	/* LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
+	    UNI(0x7C, 0x00FC);	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
+	    UNI(0x7D, 0x00FF);	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
+	    UNI(0x7E, 0x015F);	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	} \
+	end_CODEPAGE()
 	/*
 	 * mentioned, but not documented in VT510 manual, etc., this uses
 	 * the ELOT927 table from Kermit 95:
@@ -1013,6 +1125,7 @@
 	    XXX(0x79, BLANK);  /* unused */ \
 	    XXX(0x7a, BLANK);  /* unused */ \
 	}
+	/* figure A-21 "DEC 7-Bit Hebrew Character Set" */
 #define map_NRCS_Hebrew(code) \
 	switch (code) { \
 	    UNI(0x60, 0x05d0);	/* HEBREW LETTER ALEF */ \
@@ -1043,16 +1156,33 @@
 	    UNI(0x79, 0x05e9);	/* HEBREW LETTER SHIN */ \
 	    UNI(0x7a, 0x05ea);	/* HEBREW LETTER TAV */ \
 	}
+	/* figure A-26 "DEC 7-Bit Turkish Character Set" */
+#define map_NRCS_Turkish(code) \
+	switch (code) { \
+	    UNI(0x26, 0x011f);	/* LATIN SMALL LETTER G WITH BREVE */ \
+	    UNI(0x40, 0x0130);	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
+	    UNI(0x5b, 0x015e);	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    UNI(0x5c, 0x00d6);	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
+	    UNI(0x5d, 0x00c7);	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
+	    UNI(0x5e, 0x00dC);	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
+	    UNI(0x60, 0x011e);	/* LATIN CAPITAL LETTER G WITH BREVE */ \
+	    UNI(0x7b, 0x015f);	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    UNI(0x7c, 0x00f6);	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
+	    UNI(0x7d, 0x00e7);	/* LATIN SMALL LETTER C WITH CEDILLA */ \
+	    UNI(0x7e, 0x00fc);	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
+	}
 #else
 #define map_DEC_Greek_Supp(code)	/* nothing */
 #define map_DEC_Hebrew_Supp(code)	/* nothing */
-#define map_DEC_Technical(code)		/* nothing */
+#define map_DEC_Technical(code)	/* nothing */
+#define map_DEC_Turkish_Supp(code)	/* nothing */
 #define map_ISO_Greek_Supp(code)	/* nothing */
-#define map_ISO_Hebrew(code)		/* nothing */
-#define map_ISO_Latin_5(code)		/* nothing */
+#define map_ISO_Hebrew(code)	/* nothing */
+#define map_ISO_Latin_5(code)	/* nothing */
 #define map_ISO_Latin_Cyrillic(code)	/* nothing */
-#define map_NRCS_Greek(code)		/* nothing */
-#define map_NRCS_Hebrew(code)		/* nothing */
+#define map_NRCS_Greek(code)	/* nothing */
+#define map_NRCS_Hebrew(code)	/* nothing */
+#define map_NRCS_Turkish(code)	/* nothing */
 #endif /* OPT_WIDE_CHARS */
 
 /*
@@ -1195,8 +1325,11 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	break;
 
     case nrc_Turkish:
-    case nrc_Turkish2:
-	/* FIXME */
+	map_NRCS_Turkish(code);
+	break;
+
+    case nrc_DEC_Turkish_Supp:
+	map_DEC_Turkish_Supp(code);
 	break;
 
     default:			/* any character sets we don't recognize */
@@ -1402,8 +1535,11 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    break;
 
 	case nrc_Turkish:
-	case nrc_Turkish2:
-	    /* FIXME */
+	    map_NRCS_Turkish(chr = seven);
+	    break;
+
+	case nrc_DEC_Turkish_Supp:
+	    map_DEC_Turkish_Supp(chr = seven);
 	    break;
 
 	default:		/* any character sets we don't recognize */

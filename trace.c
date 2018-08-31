@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.180 2018/08/30 23:52:41 tom Exp $ */
+/* $XTermId: trace.c,v 1.181 2018/08/31 13:06:10 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -287,8 +287,8 @@ visibleScsCode(int chrset)
 	MAP("7", nrc_Swedish);
 	MAP("H", nrc_Swedish2);
 	MAP("=", nrc_Swiss);
-	MAP("%0", nrc_Turkish);
-	MAP("%2", nrc_Turkish2);
+	MAP("%2", nrc_Turkish);
+	MAP("%0", nrc_DEC_Turkish_Supp);
 	MAP("<UNK>", nrc_Unknown);
     }
 #undef MAP

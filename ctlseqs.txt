@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #334 (2018/08/30)
+               updated for XTerm Patch #336 (2018/08/31)
 
 
 
@@ -270,13 +270,14 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
             C = Q  or 9  -> French Canadian, VT200.
             C = K  -> German, VT200.
             C = " >  -> Greek, VT500.
+            C = % =  -> Hebrew, VT500.
             C = Y  -> Italian, VT200.
             C = ` , E  or 6  -> Norwegian/Danish, VT200.
             C = % 6  -> Portuguese, VT300.
-            C = % =  -> Hebrew, VT500.
             C = Z  -> Spanish, VT200.
             C = H  or 7  -> Swedish, VT200.
             C = =  -> Swiss, VT200.
+            C = % 2  -> Turkish, VT500.
           The final character A  is a special case, since the same final
           character is used by the VT300-control for the 96-character
           British Latin-1.
@@ -284,10 +285,16 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
           NRCS:
             C = 0  -> DEC Special Character and Line Drawing Set, VT100.
             C = <  -> DEC Supplemental, VT200.
-            C = % 5  -> DEC Supplemental Graphics, VT300.
-            C = % =  -> DEC Hebrew, VT500.
-            C = " ?  -> DEC Greek, VT500.
             C = >  -> DEC Technical, VT300.
+            C = % 5  -> DEC Supplemental Graphics, VT300.
+            C = " ?  -> DEC Greek, VT500.
+            C = " 4  -> DEC Hebrew, VT500.
+            C = % 0  -> DEC Turkish, VT500.
+          The VT520 reference manual lists a few more, but no documenta-
+          tion has been found for the mappings:
+            C = & 4  -> DEC Cyrillic, VT500.
+            C = & 5  -> DEC Russian, VT500.
+            C = % 3  -> SCS NRCS, VT500.
 
 ESC ) C   Designate G1 Character Set, ISO 2022, VT100.
           The same character sets apply as for ESC ( C.
@@ -1360,6 +1367,7 @@ CSI Ps ; Ps # {
             Ps = 1 0  -> Foreground color.
             Ps = 1 1  -> Background color.
             Ps = 2 1  -> Doubly-underlined.
+
           If no parameters are given, all of the video attributes are
           saved.  The stack is limited to 10 levels.
 
@@ -2552,6 +2560,10 @@ o   VT520/VT525 Video Terminal
     Programmer Information.
     Digital Equipment Corporation (EK-VT520-RM A01, July 1994).
 
+o   Digital ANSI-Compliant Printing Protocol
+    Level 2 Programming Reference Manual
+    Digital Equipment Corporation (EK-PPLV2-PM. B01, August 1994).
+
 o   4014 and 4014-1 Computer Display Terminal
     User's Manual.
     Tektronix, Inc.  (070-1647-00, November 1979).
@@ -2669,12 +2681,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
+    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -2684,7 +2696,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.
