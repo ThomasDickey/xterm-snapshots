@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.86 2018/08/30 00:57:20 tom Exp $ */
+/* $XTermId: charsets.c,v 1.93 2018/08/31 09:38:51 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -38,7 +38,7 @@
 #include <X11/keysym.h>
 
 #define BLANK ' '
-#define UNDEF 0x2426		/* rendered as a backwards "?" */
+#define UNDEF 0x2e2e		/* rendered as a backwards "?" (alt: 0x2426) */
 
 /*
  * This module performs translation as needed to support the DEC VT220 national
@@ -64,6 +64,7 @@
  * A "codepage" is treated different from the NRC mode:  it is always enabled.
  * Reuse the UNI() macros by temporarily setting its state.
  */
+#if OPT_WIDE_CHARS
 #define begin_CODEPAGE() \
 	if (!(xw->flags & NATIONAL)) { \
 	    screen->utf8_nrc_mode++; \
@@ -72,6 +73,10 @@
 	if (!(xw->flags & NATIONAL)) { \
 	    screen->utf8_nrc_mode--; \
 	}
+#else
+#define begin_CODEPAGE() /* nothing */
+#define end_CODEPAGE() /* nothing */
+#endif
 
 #define map_NRCS_Dutch(code) \
 	switch (code) { \
@@ -234,25 +239,25 @@
 #define map_DEC_Supp_Graphic(code,dft) \
 	begin_CODEPAGE(); \
 	switch (code) { \
-	    XXX(0x24, 0x2e2e); \
-	    XXX(0x26, 0x2e2e); \
+	    XXX(0x24, UNDEF); \
+	    XXX(0x26, UNDEF); \
 	    MAP(0x28, 0xa4); \
-	    XXX(0x2c, 0x2e2e); \
-	    XXX(0x2d, 0x2e2e); \
-	    XXX(0x2e, 0x2e2e); \
-	    XXX(0x2f, 0x2e2e); \
-	    XXX(0x34, 0x2e2e); \
-	    XXX(0x38, 0x2e2e); \
-	    XXX(0x3e, 0x2e2e); \
-	    XXX(0x50, 0x2e2e); \
+	    XXX(0x2c, UNDEF); \
+	    XXX(0x2d, UNDEF); \
+	    XXX(0x2e, UNDEF); \
+	    XXX(0x2f, UNDEF); \
+	    XXX(0x34, UNDEF); \
+	    XXX(0x38, UNDEF); \
+	    XXX(0x3e, UNDEF); \
+	    XXX(0x50, UNDEF); \
 	    UNI(0x57, 0x0152); \
 	    MAP(0x5d, 0x0178); \
-	    XXX(0x5e, 0x2e2e); \
-	    XXX(0x70, 0x2e2e); \
+	    XXX(0x5e, UNDEF); \
+	    XXX(0x70, UNDEF); \
 	    UNI(0x77, 0x0153); \
 	    MAP(0x7d, 0xff); \
-	    XXX(0x7e, 0x2e2e); \
-	    XXX(0x7f, 0x2e2e); \
+	    XXX(0x7e, UNDEF); \
+	    XXX(0x7f, UNDEF); \
 	    default: dft; break; \
 	} \
 	end_CODEPAGE()
@@ -876,6 +881,105 @@
 	    XXX(0x7e, UNDEF);	/* reserved */ \
 	} \
 	end_CODEPAGE()
+#define map_DEC_Hebrew_Supp(code) \
+	begin_CODEPAGE(); \
+	switch (code) { \
+	    UNI(0x21, 0x00a1);	/* INVERTED EXCLAMATION MARK */ \
+	    UNI(0x22, 0x00a2);	/* CENT SIGN */ \
+	    UNI(0x23, 0x00a3);	/* POUND SIGN */ \
+	    XXX(0x24, UNDEF);	/* CURRENCY SIGN */ \
+	    UNI(0x25, 0x00a5);	/* YEN SIGN */ \
+	    XXX(0x26, UNDEF);	/* BROKEN BAR */ \
+	    UNI(0x27, 0x00a7);	/* SECTION SIGN */ \
+	    UNI(0x28, 0x00a8);	/* DIAERESIS */ \
+	    UNI(0x29, 0x00a9);	/* COPYRIGHT SIGN */ \
+	    UNI(0x2a, 0x00d7);	/* MULTIPLICATION SIGN */ \
+	    UNI(0x2b, 0x00ab);	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    XXX(0x2c, UNDEF);	/* NOT SIGN */ \
+	    XXX(0x2d, UNDEF);	/* SOFT HYPHEN */ \
+	    XXX(0x2e, UNDEF);	/* REGISTERED SIGN */ \
+	    XXX(0x2f, UNDEF);	/* MACRON */ \
+	    UNI(0x30, 0x00b0);	/* DEGREE SIGN */ \
+	    UNI(0x31, 0x00b1);	/* PLUS-MINUS SIGN */ \
+	    UNI(0x32, 0x00b2);	/* SUPERSCRIPT TWO */ \
+	    UNI(0x33, 0x00b3);	/* SUPERSCRIPT THREE */ \
+	    XXX(0x34, UNDEF);	/* ACUTE ACCENT */ \
+	    UNI(0x35, 0x00b5);	/* MICRO SIGN */ \
+	    UNI(0x36, 0x00b6);	/* PILCROW SIGN */ \
+	    UNI(0x37, 0x00b7);	/* MIDDLE DOT */ \
+	    XXX(0x38, UNDEF);	/* CEDILLA */ \
+	    UNI(0x39, 0x00b9);	/* SUPERSCRIPT ONE */ \
+	    UNI(0x3a, 0x00f7);	/* DIVISION SIGN */ \
+	    UNI(0x3b, 0x00bb);	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
+	    UNI(0x3c, 0x00bc);	/* VULGAR FRACTION ONE QUARTER */ \
+	    UNI(0x3d, 0x00bd);	/* VULGAR FRACTION ONE HALF */ \
+	    XXX(0x3e, UNDEF);	/* VULGAR FRACTION THREE QUARTERS */ \
+	    UNI(0x3f, 0x00bf);	/* INVERTED QUESTION MARK */ \
+	    XXX(0x40, UNDEF);	/* reserved */ \
+	    XXX(0x41, UNDEF);	/* reserved */ \
+	    XXX(0x42, UNDEF);	/* reserved */ \
+	    XXX(0x43, UNDEF);	/* reserved */ \
+	    XXX(0x44, UNDEF);	/* reserved */ \
+	    XXX(0x45, UNDEF);	/* reserved */ \
+	    XXX(0x46, UNDEF);	/* reserved */ \
+	    XXX(0x47, UNDEF);	/* reserved */ \
+	    XXX(0x48, UNDEF);	/* reserved */ \
+	    XXX(0x49, UNDEF);	/* reserved */ \
+	    XXX(0x4a, UNDEF);	/* reserved */ \
+	    XXX(0x4b, UNDEF);	/* reserved */ \
+	    XXX(0x4c, UNDEF);	/* reserved */ \
+	    XXX(0x4d, UNDEF);	/* reserved */ \
+	    XXX(0x4e, UNDEF);	/* reserved */ \
+	    XXX(0x4f, UNDEF);	/* reserved */ \
+	    XXX(0x50, UNDEF);	/* reserved */ \
+	    XXX(0x51, UNDEF);	/* reserved */ \
+	    XXX(0x52, UNDEF);	/* reserved */ \
+	    XXX(0x53, UNDEF);	/* reserved */ \
+	    XXX(0x54, UNDEF);	/* reserved */ \
+	    XXX(0x55, UNDEF);	/* reserved */ \
+	    XXX(0x56, UNDEF);	/* reserved */ \
+	    XXX(0x57, UNDEF);	/* reserved */ \
+	    XXX(0x58, UNDEF);	/* reserved */ \
+	    XXX(0x59, UNDEF);	/* reserved */ \
+	    XXX(0x5a, UNDEF);	/* reserved */ \
+	    XXX(0x5b, UNDEF);	/* reserved */ \
+	    XXX(0x5c, UNDEF);	/* reserved */ \
+	    XXX(0x5d, UNDEF);	/* reserved */ \
+	    XXX(0x5e, UNDEF);	/* reserved */ \
+	    XXX(0x5f, UNDEF);	/* reserved */ \
+	    UNI(0x60, 0x05d0);	/* HEBREW LETTER ALEF */ \
+	    UNI(0x61, 0x05d1);	/* HEBREW LETTER BET */ \
+	    UNI(0x62, 0x05d2);	/* HEBREW LETTER GIMEL */ \
+	    UNI(0x63, 0x05d3);	/* HEBREW LETTER DALET */ \
+	    UNI(0x64, 0x05d4);	/* HEBREW LETTER HE */ \
+	    UNI(0x65, 0x05d5);	/* HEBREW LETTER VAV */ \
+	    UNI(0x66, 0x05d6);	/* HEBREW LETTER ZAYIN */ \
+	    UNI(0x67, 0x05d7);	/* HEBREW LETTER HET */ \
+	    UNI(0x68, 0x05d8);	/* HEBREW LETTER TET */ \
+	    UNI(0x69, 0x05d9);	/* HEBREW LETTER YOD */ \
+	    UNI(0x6a, 0x05da);	/* HEBREW LETTER FINAL KAF */ \
+	    UNI(0x6b, 0x05db);	/* HEBREW LETTER KAF */ \
+	    UNI(0x6c, 0x05dc);	/* HEBREW LETTER LAMED */ \
+	    UNI(0x6d, 0x05dd);	/* HEBREW LETTER FINAL MEM */ \
+	    UNI(0x6e, 0x05de);	/* HEBREW LETTER MEM */ \
+	    UNI(0x6f, 0x05df);	/* HEBREW LETTER FINAL NUN */ \
+	    UNI(0x70, 0x05e0);	/* HEBREW LETTER NUN */ \
+	    UNI(0x71, 0x05e1);	/* HEBREW LETTER SAMEKH */ \
+	    UNI(0x72, 0x05e2);	/* HEBREW LETTER AYIN */ \
+	    UNI(0x73, 0x05e3);	/* HEBREW LETTER FINAL PE */ \
+	    UNI(0x74, 0x05e4);	/* HEBREW LETTER PE */ \
+	    UNI(0x75, 0x05e5);	/* HEBREW LETTER FINAL TSADI */ \
+	    UNI(0x76, 0x05e6);	/* HEBREW LETTER TSADI */ \
+	    UNI(0x77, 0x05e7);	/* HEBREW LETTER QOF */ \
+	    UNI(0x78, 0x05e8);	/* HEBREW LETTER RESH */ \
+	    UNI(0x79, 0x05e9);	/* HEBREW LETTER SHIN */ \
+	    UNI(0x7a, 0x05ea);	/* HEBREW LETTER TAV */ \
+	    XXX(0x7b, UNDEF);	/* reserved */ \
+	    XXX(0x7c, UNDEF);	/* reserved */ \
+	    XXX(0x7d, UNDEF);	/* reserved */ \
+	    XXX(0x7e, UNDEF);	/* reserved */ \
+	} \
+	end_CODEPAGE()
 	/*
 	 * mentioned, but not documented in VT510 manual, etc., this uses
 	 * the ELOT927 table from Kermit 95:
@@ -909,12 +1013,46 @@
 	    XXX(0x79, BLANK);  /* unused */ \
 	    XXX(0x7a, BLANK);  /* unused */ \
 	}
+#define map_NRCS_Hebrew(code) \
+	switch (code) { \
+	    UNI(0x60, 0x05d0);	/* HEBREW LETTER ALEF */ \
+	    UNI(0x61, 0x05d1);	/* HEBREW LETTER BET */ \
+	    UNI(0x62, 0x05d2);	/* HEBREW LETTER GIMEL */ \
+	    UNI(0x63, 0x05d3);	/* HEBREW LETTER DALET */ \
+	    UNI(0x64, 0x05d4);	/* HEBREW LETTER HE */ \
+	    UNI(0x65, 0x05d5);	/* HEBREW LETTER VAV */ \
+	    UNI(0x66, 0x05d6);	/* HEBREW LETTER ZAYIN */ \
+	    UNI(0x67, 0x05d7);	/* HEBREW LETTER HET */ \
+	    UNI(0x68, 0x05d8);	/* HEBREW LETTER TET */ \
+	    UNI(0x69, 0x05d9);	/* HEBREW LETTER YOD */ \
+	    UNI(0x6a, 0x05da);	/* HEBREW LETTER FINAL KAF */ \
+	    UNI(0x6b, 0x05db);	/* HEBREW LETTER KAF */ \
+	    UNI(0x6c, 0x05dc);	/* HEBREW LETTER LAMED */ \
+	    UNI(0x6d, 0x05dd);	/* HEBREW LETTER FINAL MEM */ \
+	    UNI(0x6e, 0x05de);	/* HEBREW LETTER MEM */ \
+	    UNI(0x6f, 0x05df);	/* HEBREW LETTER FINAL NUN */ \
+	    UNI(0x70, 0x05e0);	/* HEBREW LETTER NUN */ \
+	    UNI(0x71, 0x05e1);	/* HEBREW LETTER SAMEKH */ \
+	    UNI(0x72, 0x05e2);	/* HEBREW LETTER AYIN */ \
+	    UNI(0x73, 0x05e3);	/* HEBREW LETTER FINAL PE */ \
+	    UNI(0x74, 0x05e4);	/* HEBREW LETTER PE */ \
+	    UNI(0x75, 0x05e5);	/* HEBREW LETTER FINAL TSADI */ \
+	    UNI(0x76, 0x05e6);	/* HEBREW LETTER TSADI */ \
+	    UNI(0x77, 0x05e7);	/* HEBREW LETTER QOF */ \
+	    UNI(0x78, 0x05e8);	/* HEBREW LETTER RESH */ \
+	    UNI(0x79, 0x05e9);	/* HEBREW LETTER SHIN */ \
+	    UNI(0x7a, 0x05ea);	/* HEBREW LETTER TAV */ \
+	}
 #else
-#define map_DEC_Technical(code)	/* nothing */
+#define map_DEC_Greek_Supp(code)	/* nothing */
+#define map_DEC_Hebrew_Supp(code)	/* nothing */
+#define map_DEC_Technical(code)		/* nothing */
 #define map_ISO_Greek_Supp(code)	/* nothing */
-#define map_ISO_Hebrew(code)	/* nothing */
-#define map_ISO_Latin_5(code)	/* nothing */
+#define map_ISO_Hebrew(code)		/* nothing */
+#define map_ISO_Latin_5(code)		/* nothing */
 #define map_ISO_Latin_Cyrillic(code)	/* nothing */
+#define map_NRCS_Greek(code)		/* nothing */
+#define map_NRCS_Hebrew(code)		/* nothing */
 #endif /* OPT_WIDE_CHARS */
 
 /*
@@ -1005,9 +1143,12 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	map_ISO_Greek_Supp(code);
 	break;
 
+    case nrc_DEC_Hebrew_Supp:
+	map_DEC_Hebrew_Supp(code);
+	break;
+
     case nrc_Hebrew:
-    case nrc_Hebrew2:
-	/* FIXME */
+	map_NRCS_Hebrew(code);
 	break;
 
     case nrc_ISO_Hebrew_Supp:
@@ -1209,9 +1350,12 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    map_ISO_Greek_Supp(chr = seven);
 	    break;
 
+	case nrc_DEC_Hebrew_Supp:
+	    map_DEC_Hebrew_Supp(chr = seven);
+	    break;
+
 	case nrc_Hebrew:
-	case nrc_Hebrew2:
-	    /* FIXME */
+	    map_NRCS_Hebrew(chr = seven);
 	    break;
 
 	case nrc_ISO_Hebrew_Supp:

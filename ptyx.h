@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.915 2018/08/29 23:11:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.916 2018/08/30 23:52:41 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1020,8 +1020,8 @@ typedef enum {
     ,nrc_Greek			/* vt5xx */
     ,nrc_DEC_Greek_Supp		/* vt5xx */
     ,nrc_ISO_Greek_Supp		/* vt5xx */
+    ,nrc_DEC_Hebrew_Supp	/* vt5xx */
     ,nrc_Hebrew			/* vt5xx */
-    ,nrc_Hebrew2		/* vt5xx */
     ,nrc_ISO_Hebrew_Supp	/* vt5xx */
     ,nrc_Italian		/* vt2xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */

@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.91 2018/08/29 09:21:38 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.92 2018/08/31 00:09:12 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -7626,7 +7626,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	4		5		6		7	*/
-CASE_GROUND_STATE,
+CASE_GSETS_DQUOTE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -7786,7 +7786,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      acute           mu              paragraph       periodcentered  */
-CASE_GROUND_STATE,
+CASE_GSETS_DQUOTE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -7798,8 +7798,8 @@ CASE_GROUND_STATE,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS_DQUOTE,
+CASE_GSETS_DQUOTE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.179 2018/08/29 23:11:53 tom Exp $ */
+/* $XTermId: trace.c,v 1.180 2018/08/30 23:52:41 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -271,8 +271,8 @@ visibleScsCode(int chrset)
 	MAP("\"?", nrc_DEC_Greek_Supp);
 	MAP("\">", nrc_Greek);
 	MAP("F", nrc_ISO_Greek_Supp);
-	MAP("\"4", nrc_Hebrew);
-	MAP("%=", nrc_Hebrew2);
+	MAP("\"4", nrc_DEC_Hebrew_Supp);
+	MAP("%=", nrc_Hebrew);
 	MAP("H", nrc_ISO_Hebrew_Supp);
 	MAP("Y", nrc_Italian);
 	MAP("M", nrc_ISO_Latin_5_Supp);
