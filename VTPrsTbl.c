@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.92 2018/08/31 00:09:12 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.93 2018/08/31 13:50:21 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -7297,9 +7297,9 @@ CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 /*	0		1		2		3	*/
+CASE_GSETS5,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*	4		5		6		7	*/
 CASE_GROUND_STATE,
@@ -7457,9 +7457,9 @@ CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 /*      degree          plusminus       twosuperior     threesuperior   */
+CASE_GSETS5,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*      acute           mu              paragraph       periodcentered  */
 CASE_GROUND_STATE,

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.916 2018/08/30 23:52:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.917 2018/08/31 13:05:52 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1036,8 +1036,8 @@ typedef enum {
     ,nrc_Swedish		/* vt2xx */
     ,nrc_Swedish2		/* vt2xx */
     ,nrc_Swiss			/* vt2xx */
+    ,nrc_DEC_Turkish_Supp	/* vt5xx */
     ,nrc_Turkish		/* vt5xx */
-    ,nrc_Turkish2		/* vt5xx */
     ,nrc_Unknown
 } DECNRCM_codes;
 
