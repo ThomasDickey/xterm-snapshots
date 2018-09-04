@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.549 2018/08/21 00:51:58 tom Exp $ */
+/* $XTermId: screen.c,v 1.555 2018/09/04 23:01:00 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2717,13 +2717,14 @@ xtermCheckRect(XtermWidget xw,
     int trimmed = 0;
     int mode = screen->checksum_ext;
 
-    TRACE(("xtermCheckRect: %s%s%s%s%s%s\n",
+    TRACE(("xtermCheckRect: %s%s%s%s%s%s%s\n",
 	   (mode == csDEC) ? "DEC" : "checksumExtension",
 	   (mode & csPOSITIVE) ? " !negative" : "",
 	   (mode & csATTRIBS) ? " !attribs" : "",
 	   (mode & csNOTRIM) ? " !trimmed" : "",
 	   (mode & csDRAWN) ? " !drawn" : "",
-	   (mode & csBYTE) ? " !byte" : ""));
+	   (mode & csBYTE) ? " !byte" : "",
+	   (mode & cs8TH) ? " !7bit" : ""));
 
     if (nparam > 2) {
 	nparam -= 2;
@@ -2736,6 +2737,7 @@ xtermCheckRect(XtermWidget xw,
 	int row, col;
 	Boolean first = True;
 	int embedded = 0;
+	DECNRCM_codes my_GR = screen->gsets[(int) screen->curgr];
 
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
@@ -2749,7 +2751,13 @@ xtermCheckRect(XtermWidget xw,
 			  ? (int) ld->charData[col]
 			  : ' ');
 		if (!(mode & csBYTE)) {
-		    ch &= 0xff;
+		    unsigned c2 = (unsigned) ch;
+		    if (c2 > 0x7f && my_GR != nrc_ASCII) {
+			c2 = xtermCharSetIn(xw, c2, my_GR);
+			if (!(mode & cs8TH) && (c2 < 0x80))
+			    c2 |= 0x80;
+		    }
+		    ch = (c2 & 0xff);
 		}
 		if (!(mode & csATTRIBS)) {
 		    if (ld->attribs[col] & UNDERLINE)
@@ -2770,6 +2778,7 @@ xtermCheckRect(XtermWidget xw,
 		if ((ld->attribs[col] & CHARDRAWN)) {
 		    total += ch;
 		    if_OPT_WIDE_CHARS(screen, {
+			/* FIXME - not counted if trimming blanks */
 			if (!(mode & csBYTE)) {
 			    size_t off;
 			    for_each_combData(off, ld) {
@@ -2781,6 +2790,10 @@ xtermCheckRect(XtermWidget xw,
 		    total += ch;
 		}
 		first = ((mode & csNOTRIM) != 0) ? True : False;
+	    }
+	    if (!(mode & csNOTRIM)) {
+		embedded = 0;
+		first = False;
 	    }
 	}
     }
