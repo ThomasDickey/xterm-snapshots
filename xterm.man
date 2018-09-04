@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.754 2018/08/26 22:10:03 tom Exp $
+.\" $XTermId: xterm.man,v 1.755 2018/09/04 08:38:28 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -2528,6 +2528,9 @@ omit checksum for cells not explicitly initialized.
 .TP 5
 4
 do not mask cell value to 8 bits or ignore combining characters.
+.TP 5
+5
+do not mask cell value to 7 bits.
 .RE
 .IP
 With the default value (0),

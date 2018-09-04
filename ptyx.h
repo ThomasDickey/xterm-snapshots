@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.917 2018/08/31 13:05:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.918 2018/09/04 08:43:56 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -466,6 +466,7 @@ typedef enum {
     ,csNOTRIM = xBIT(2)
     ,csDRAWN = xBIT(3)
     ,csBYTE = xBIT(4)
+    ,cs8TH = xBIT(5)
 } CSBITS;
 
 #define	SAVELINES		64      /* default # lines to save      */

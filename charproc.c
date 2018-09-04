@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1598 2018/08/31 13:45:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1599 2018/08/31 19:45:02 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1709,7 +1709,7 @@ static struct {
     { nrc_Greek,             '"', '>', 5, 9, 1 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1 },
     { nrc_Turkish,	     '%', '2', 5, 9, 1 },
-    { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 1 },
+    { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0 },
     { nrc_DEC_Hebrew_Supp,   '"', '4', 5, 9, 0 },
     { nrc_DEC_Turkish_Supp,  '%', '0', 5, 9, 0 },
     { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0 },
