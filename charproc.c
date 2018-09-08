@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1599 2018/08/31 19:45:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1600 2018/09/08 00:22:31 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5380,7 +5380,7 @@ WrapLine(XtermWidget xw)
  */
 void
 dotext(XtermWidget xw,
-       int charset,
+       DECNRCM_codes charset,
        IChar *buf,		/* start of characters to process */
        Cardinal len)		/* end */
 {

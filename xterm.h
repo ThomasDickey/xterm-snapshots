@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.809 2018/08/25 10:27:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.810 2018/09/08 00:25:02 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -919,7 +919,7 @@ extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
 extern void VTRun (XtermWidget /* xw */);
-extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
+extern void dotext (XtermWidget /* xw */, DECNRCM_codes /* charset */, IChar * /* buf */, Cardinal  /* len */);
 extern void getKeymapResources(Widget /* w */, const char * /*mapName */, const char * /* mapClass */, const char * /* type */, void * /* result */, size_t /* size */);
 extern void initBorderGC (XtermWidget /* xw */, VTwin * /* win */);
 extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /* value */);
@@ -965,8 +965,8 @@ extern void noleaks_charproc (void);
 #endif
 
 /* charsets.c */
-extern unsigned xtermCharSetIn (XtermWidget /* xw */, unsigned  /* code */, int  /* charset */);
-extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
+extern unsigned xtermCharSetIn (XtermWidget /* xw */, unsigned  /* code */, DECNRCM_codes /* charset */);
+extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, DECNRCM_codes /* charset */);
 
 /* cursor.c */
 extern int CursorCol (XtermWidget /* xw */);

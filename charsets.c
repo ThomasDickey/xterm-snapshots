@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.100 2018/08/31 15:34:02 tom Exp $ */
+/* $XTermId: charsets.c,v 1.102 2018/09/08 00:39:23 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -1189,7 +1189,7 @@
  * Translate an input keysym to the corresponding NRC keysym.
  */
 unsigned
-xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
+xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 {
     TScreen *screen = TScreenOf(xw);
 #define MAP(to, from) case from: code = to; break
@@ -1332,6 +1332,11 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
 	map_DEC_Turkish_Supp(code);
 	break;
 
+    case nrc_British_Latin_1:
+    case nrc_Cyrillic:
+    case nrc_French_Canadian2:
+    case nrc_Russian:
+    case nrc_Unknown:
     default:			/* any character sets we don't recognize */
 	break;
     }
@@ -1349,12 +1354,12 @@ xtermCharSetIn(XtermWidget xw, unsigned code, int charset)
  * DEC graphic characters in cells 0-31, and otherwise is ISO-8859-1.
  */
 int
-xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
+xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 {
     IChar *s;
     TScreen *screen = TScreenOf(xw);
     int count = 0;
-    int rightset = screen->gsets[(int) (screen->curgr)];
+    DECNRCM_codes rightset = screen->gsets[(int) (screen->curgr)];
 
 #define MAP(from, to) case from: chr = to; break
 
