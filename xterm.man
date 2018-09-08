@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.755 2018/09/04 08:38:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.758 2018/09/07 09:17:55 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1930,28 +1930,54 @@ The default is
 \*(``true\*(''.
 .TP 8
 .B "ttyModes\fP (class\fB TtyModes\fP)"
-Specifies a string containing terminal setting keywords and the characters
-to which they may be bound.
+Specifies a string containing terminal setting keywords.
+Except where noted, they may be bound to \fIcharacters\fP.
+Other keywords set \fImodes\fP.
+Not all keywords are supported on a given system.
 Allowable keywords include:
-brk,
-dsusp,
-eof,
-eol,
-eol2,
-erase,
-erase2,
-flush,
-intr,
-kill,
-lnext,
-quit,
-rprnt,
-start,
-status,
-stop,
-susp,
-swtch and
-weras.
+.TS
+l l l
+_ _ _
+l l l.
+\fBKeyword\fR	\fBPOSIX?\fR	\fBNotes\fR
+brk	no	T{
+\fICHAR\fP may send an \*(``interrupt\*('' signal,
+as well as ending the input-line.
+T}
+dsusp	no	T{
+\fICHAR\fP will send a terminal \*(``stop\*('' signal after input is flushed.
+T}
+eof	yes	T{
+\fICHAR\fP will terminate input (i.e., an end of file).
+T}
+eol	yes	\fICHAR\fP will end the line.
+eol2	no	alternate \fICHAR\fP for ending the line.
+erase	yes	\fICHAR\fP will erase the last character typed.
+erase2	no	T{
+alternate \fICHAR\fP for erasing the last input-character.
+T}
+flush	no	T{
+\fICHAR\fP will cause output to be discarded until another \fBflush\fP character is typed.
+T}
+intr	yes	\fICHAR\fP will send an \*(``interrupt\*('' signal.
+kill	yes	\fICHAR\fP will erase the current line.
+lnext	no	\fICHAR\fP will enter the next character quoted.
+quit	yes	\fPCHAR\fP will send a \*(``quit\*('' signal.
+rprnt	no	\fICHAR\fP will redraw the current line.
+start	yes	T{
+\fICHAR\fP will \fIrestart\fP the output after stopping it.
+T}
+status	no	T{
+\fICHAR\fP will cause a system-generated status line to be printed.
+T}
+stop	yes	\fICHAR\fP will stop the output.
+susp	yes	\fICHAR\fP will send a terminal \*(``stop\*('' signal
+swtch	no	\fICHAR\fP will switch to a different shell layer.
+tabs	yes	\fIMode\fP disables tab-expansion.
+-tabs	yes	\fIMode\fP enables tab-expansion.
+weras	no	\fICHAR\fP will erase the last word typed.
+.TE
+.IP
 Control characters may be specified as ^char (e.g., ^c or ^u)
 and \fB^?\fP may be used to indicate delete (127).
 Use \fB^\-\fP to denote \fIundef\fP.
@@ -1959,10 +1985,12 @@ Use \fB\\034\fP to represent \fB^\\\fP, since a literal backslash in
 an X resource escapes the next character.
 .IP
 This is very useful for overriding
-the default terminal settings without having to do an \fIstty\fP every time
+the default terminal settings without having to run \fIstty\fP every time
 an \fI\*n\fP is started.
 Note, however, that the \fIstty\fP program on a given host may use different
 keywords; \fI\*n\fR's table is built in.
+The \fIPOSIX\fP column in the table indicates which keywords
+are supported by a standard \fIstty\fP program.
 .IP
 If the \fBttyModes\fP resource specifies a value for \fBerase\fP,
 that overrides the \fBptyInitialErase\fP resource setting,
