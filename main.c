@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.837 2018/09/08 00:39:03 tom Exp $ */
+/* $XTermId: main.c,v 1.839 2018/09/08 19:18:17 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -705,7 +705,15 @@ static struct {
 #endif
 
 #ifndef TAB3
+#if defined(OXTABS)
+#define TAB3 OXTABS
+#elif defined(XTABS)
 #define TAB3 XTABS
+#endif
+#endif
+
+#ifndef TABDLY
+#define TABDLY (TAB0|TAB3)
 #endif
 
 #define isTtyMode(p,q) (ttyChars[p].myMode == q && ttyModes[q].set)
@@ -4293,8 +4301,10 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			    TMODE(ttyChars[nn].myMode,
 				  tio.c_cc[ttyChars[nn].sysMode]);
 			} else if (isTabMode(nn)) {
-			    tio.c_oflag &= ~TABDLY;
-			    tio.c_oflag |= ttyModes[ttyChars[nn].myMode].value;
+			    unsigned tmp = tio.c_oflag;
+			    tmp = tmp & (unsigned) ~TABDLY;
+			    tmp |= (unsigned) ttyModes[ttyChars[nn].myMode].value;
+			    tio.c_oflag = tmp;
 			}
 		    }
 #ifdef HAS_LTCHARS
@@ -5571,7 +5581,7 @@ parse_tty_modes(char *s)
 
 	/* check if this needs a parameter */
 	found = False;
-	for (k = c = 0; k < XtNumber(ttyChars); ++k) {
+	for (k = 0, c = 0; k < XtNumber(ttyChars); ++k) {
 	    if ((int) j == ttyChars[k].myMode) {
 		if (ttyChars[k].sysMode < 0) {
 		    found = True;

@@ -5,6 +5,8 @@ xterm-dev: command-in-menu-file-and-desktop-file xterm-dev usr/share/menu/xterm-
 xterm-dev: command-in-menu-file-and-desktop-file uxterm-dev usr/share/menu/xterm-dev:14
 
 # The lintian warning is incorrect: there is no portable path for Perl.
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=906901
+#	https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=904409
 xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/256colors.pl (#!/usr/bin/env != /usr/bin/perl)
 xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/256colors2.pl (#!/usr/bin/env != /usr/bin/perl)
 xterm-dev: wrong-path-for-interpreter usr/share/doc/xterm-dev/examples/vttests/88colors.pl (#!/usr/bin/env != /usr/bin/perl)

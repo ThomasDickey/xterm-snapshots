@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.106 2018/08/11 14:38:58 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.107 2018/09/09 15:31:01 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -7478,7 +7478,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	    if (need_refresh) {
 		TRACE(("refreshing after %u iterations and %ldms\n",
 		       iterations,
-		       DiffTime(curr_tv) - DiffTime(prev_tv)));
+		       (long) (DiffTime(curr_tv) - DiffTime(prev_tv))));
 		context->force_refresh = 0;
 		prev_tv = curr_tv;
 		iterations = 0U;
