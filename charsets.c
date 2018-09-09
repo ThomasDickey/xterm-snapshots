@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.102 2018/09/08 00:39:23 tom Exp $ */
+/* $XTermId: charsets.c,v 1.103 2018/09/08 14:17:50 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -1216,9 +1216,6 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	code &= 0x7f;
 	break;
 
-#if OPT_XMC_GLITCH
-    case nrc_Unknown:
-#endif
     case nrc_DEC_Alt_Chars:
     case nrc_DEC_Alt_Graphics:
     case nrc_ASCII:
@@ -1380,7 +1377,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
     for (s = buf; s < ptr; ++s) {
 	int eight = CharOf(E2A(*s));
 	int seven = eight & 0x7f;
-	int cs = (eight >= 128) ? rightset : leftset;
+	DECNRCM_codes cs = (eight >= 128) ? rightset : leftset;
 	int chr = eight;
 
 	count++;
@@ -1420,9 +1417,6 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    }
 	    break;
 
-#if OPT_XMC_GLITCH
-	case nrc_Unknown:
-#endif
 	case nrc_DEC_Alt_Chars:
 	case nrc_DEC_Alt_Graphics:
 	case nrc_ASCII:
@@ -1547,6 +1541,9 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    map_DEC_Turkish_Supp(chr = seven);
 	    break;
 
+	case nrc_Cyrillic:
+	case nrc_Russian:
+	case nrc_Unknown:
 	default:		/* any character sets we don't recognize */
 	    count--;
 	    break;

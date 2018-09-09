@@ -1,4 +1,4 @@
-/* $XTermId: keysym2ucs.c,v 1.17 2018/06/29 00:55:04 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.19 2018/09/09 17:35:05 tom Exp $
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -34,7 +34,7 @@
  */
 
 #ifndef KEYSYM2UCS_INCLUDED
-  
+
 #include "keysym2ucs.h"
 #define VISIBLE /* */
 
@@ -847,23 +847,23 @@ long keysym2ucs(KeySym keysym)
     /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
         (keysym >= 0x00a0 && keysym <= 0x00ff))
-        return keysym;
+        return (long) keysym;
 
     /* also check for directly encoded 24-bit UCS characters */
     if ((keysym & 0xff000000) == 0x01000000)
-	return keysym & 0x00ffffff;
+        return (long) (keysym & 0x00ffffff);
 
     /* binary search in table */
     while (max >= min) {
-	int mid = (min + max) / 2;
-	if (keysymtab[mid].keysym < keysym)
-	    min = mid + 1;
-	else if (keysymtab[mid].keysym > keysym)
-	    max = mid - 1;
-	else {
-	    /* found it */
-	    return keysymtab[mid].ucs;
-	}
+        int mid = (min + max) / 2;
+        if (keysymtab[mid].keysym < keysym)
+            min = mid + 1;
+        else if (keysymtab[mid].keysym > keysym)
+            max = mid - 1;
+        else {
+            /* found it */
+            return keysymtab[mid].ucs;
+        }
     }
 
     /* no matching Unicode value found */
