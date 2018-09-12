@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.758 2018/09/07 09:17:55 tom Exp $
+.\" $XTermId: xterm.man,v 1.759 2018/09/09 20:06:30 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -2549,7 +2549,7 @@ do not negate the result.
 do not report the VT100 video attributes.
 .TP 5
 2
-do not omit checksum for trailing blanks.
+do not omit checksum for blanks.
 .TP 5
 3
 omit checksum for cells not explicitly initialized.
