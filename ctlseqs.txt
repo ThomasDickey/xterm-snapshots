@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/09/04)
+               updated for XTerm Patch #336 (2018/09/11)
 
 
 
@@ -858,23 +858,24 @@ CSI ? Pm l
             Ps = 2 0 0 4  -> Reset bracketed paste mode, xterm.
 
 CSI Pm m  Character Attributes (SGR).
-            Ps = 0  -> Normal (default).
-            Ps = 1  -> Bold.
-            Ps = 2  -> Faint, decreased intensity (ECMA-48).
-            Ps = 3  -> Italicized (ECMA-48).
-            Ps = 4  -> Underlined.
-            Ps = 5  -> Blink (appears as Bold in X11R6 xterm).
-            Ps = 7  -> Inverse.
-            Ps = 8  -> Invisible, i.e., hidden (VT300).
-            Ps = 9  -> Crossed-out characters (ECMA-48).
-            Ps = 2 1  -> Doubly-underlined (ECMA-48).
-            Ps = 2 2  -> Normal (neither bold nor faint).
-            Ps = 2 3  -> Not italicized (ECMA-48).
-            Ps = 2 4  -> Not underlined.
-            Ps = 2 5  -> Steady (not blinking).
-            Ps = 2 7  -> Positive (not inverse).
-            Ps = 2 8  -> Visible, i.e., not hidden (VT300).
-            Ps = 2 9  -> Not crossed-out (ECMA-48).
+            Ps = 0  -> Normal (default), VT100.
+            Ps = 1  -> Bold, VT100.
+            Ps = 2  -> Faint, decreased intensity, ECMA-48 2nd.
+            Ps = 3  -> Italicized, ECMA-48 2nd.
+            Ps = 4  -> Underlined, VT100.
+            Ps = 5  -> Blink, VT100.
+          This appears as Bold in X11R6 xterm.
+            Ps = 7  -> Inverse, VT100.
+            Ps = 8  -> Invisible, i.e., hidden, ECMA-48 2nd, VT300.
+            Ps = 9  -> Crossed-out characters, ECMA-48 3rd.
+            Ps = 2 1  -> Doubly-underlined, ECMA-48 3rd.
+            Ps = 2 2  -> Normal (neither bold nor faint), ECMA-48 3rd.
+            Ps = 2 3  -> Not italicized, ECMA-48 3rd.
+            Ps = 2 4  -> Not underlined, ECMA-48 3rd.
+            Ps = 2 5  -> Steady (not blinking), ECMA-48 3rd.
+            Ps = 2 7  -> Positive (not inverse), ECMA-48 3rd.
+            Ps = 2 8  -> Visible, i.e., not hidden, ECMA-48 3rd, VT300.
+            Ps = 2 9  -> Not crossed-out, ECMA-48 3rd.
             Ps = 3 0  -> Set foreground color to Black.
             Ps = 3 1  -> Set foreground color to Red.
             Ps = 3 2  -> Set foreground color to Green.
@@ -883,7 +884,7 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 3 5  -> Set foreground color to Magenta.
             Ps = 3 6  -> Set foreground color to Cyan.
             Ps = 3 7  -> Set foreground color to White.
-            Ps = 3 9  -> Set foreground color to default (original).
+            Ps = 3 9  -> Set foreground color to default, ECMA-48 3rd.
             Ps = 4 0  -> Set background color to Black.
             Ps = 4 1  -> Set background color to Red.
             Ps = 4 2  -> Set background color to Green.
@@ -892,7 +893,31 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 4 5  -> Set background color to Magenta.
             Ps = 4 6  -> Set background color to Cyan.
             Ps = 4 7  -> Set background color to White.
-            Ps = 4 9  -> Set background color to default (original).
+            Ps = 4 9  -> Set background color to default, ECMA-48 3rd.
+
+          Some of the above note the edition of ECMA-48 which first
+          describes a feature.  In its successive editions from 1979 to
+          1991 (2nd 1979, 3rd 1984, 4th 1986, and 5th 1991), ECMA-48
+          listed codes through 6 5 (skipping several toward the end of
+          the range).  Most of the ECMA-48 codes not implemented in
+          xterm were never implemented in a hardware terminal.  Several
+          (such as 3 9  and 4 9 ) are either noted in ECMA-48 as imple-
+          mentation defined, or described in vague terms.
+
+          The successive editions of ECMA-48 give little attention to
+          changes from one edition to the next, except to comment on
+          features which have become obsolete.  ECMA-48 1st (1976) is
+          unavailable; there is no reliable source of information which
+          states whether "ANSI" color was defined in that edition, or
+          later (1979).  The VT100 (1978) implemented the most commonly
+          used non-color video attributes which are given in the 2nd
+          edition.
+
+          While 8-color support is described in ECMA-48 2nd edition, the
+          VT500 series (introduced in 1993) were the first DEC terminals
+          implementing "ANSI" color.  The DEC terminal's use of color is
+          known to differ from xterm; useful documentation on this
+          series became available too late to influence xterm.
 
           If 16-color support is compiled, the following aixterm con-
           trols apply.  Assume that xterm's resources are set so that
@@ -921,7 +946,7 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 1 0 0  -> Set foreground and background color to
           default.
 
-          Xterm maintains a color palette whose entries are identified
+          XTerm maintains a color palette whose entries are identified
           by an index beginning with zero.  If 88- or 256-color support
           is compiled, the following apply:
           o   All parameters are decimal integers.
@@ -931,7 +956,8 @@ CSI Pm m  Character Attributes (SGR).
               in this control to be replaced by colons (but after the
               first colon, colons must be used).
 
-          These ISO-8613-6 controls are supported:
+          These ISO-8613-6 controls (marked in ECMA-48 5th edition as
+          "reserved for future standardization") are supported by xterm:
             Pm = 3 8 ; 2 ; Pi ; Pr ; Pg ; Pb -> Set foreground color to
           the closest match in xterm's palette for the given RGB
           Pr/Pg/Pb.  The color space identifier Pi is ignored.
@@ -1308,7 +1334,7 @@ CSI Ps # y
           modify the calculation of the checksum returned by DECRQCRA:
             0  -> do not negate the result.
             1  -> do not report the VT100 video attributes.
-            2  -> do not omit checksum for trailing blanks.
+            2  -> do not omit checksum for blanks.
             3  -> omit checksum for cells not explicitly initialized.
             4  -> do not mask cell value to 8 bits or ignore combining
           characters.
@@ -1963,12 +1989,12 @@ xterm-hp terminfo entry for details.
 
 The Alternate Screen Buffer
 
-Xterm maintains two screen buffers.  The Normal Screen Buffer allows you
+XTerm maintains two screen buffers.  The Normal Screen Buffer allows you
 to scroll back to view saved lines of output up to the maximum set by
 the saveLines resource.  The Alternate Screen Buffer is exactly as large
 as the display, contains no additional saved lines.  When the Alternate
 Screen Buffer is active, you cannot scroll back to view saved lines.
-Xterm provides control sequences and menu entries for switching between
+XTerm provides control sequences and menu entries for switching between
 the two.
 
 Most full-screen applications use terminfo or termcap to obtain strings
@@ -2205,7 +2231,7 @@ when the terminal gains focus, and CSI O  when it loses focus.
 Extended coordinates
 
 The original X10 mouse protocol limits the Cx and Cy ordinates to 223
-(=255 - 32).  Xterm supports more than one scheme for extending this
+(=255 - 32).  XTerm supports more than one scheme for extending this
 range, by changing the protocol encoding:
 
 UTF-8 (1005)
@@ -2595,7 +2621,7 @@ tors.  Documentation for these and other terminal emulators which have
 influenced xterm are generally available only in less-accessible and
 less-detailed manual pages.
 
-o   Xterm supports control sequences for manipulating its window which
+o   XTerm supports control sequences for manipulating its window which
     were implemented by Sun's shelltool program.  This was part of Sun-
     View (SunOS 3.0, 1986).  The change-notes for xterm's resize program
     in X10.4 (1986) mention its use of these "Sun tty emulation escape
@@ -2682,12 +2708,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
+    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -2697,7 +2723,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

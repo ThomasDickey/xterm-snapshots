@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.555 2018/09/04 23:01:00 tom Exp $ */
+/* $XTermId: screen.c,v 1.556 2018/09/09 18:44:51 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2773,7 +2773,8 @@ xtermCheckRect(XtermWidget xw,
 		    trimmed += ch + embedded;
 		    embedded = 0;
 		} else if (ch == ' ') {
-		    embedded += ch;
+		    if ((mode & csNOTRIM))
+			embedded += ch;
 		}
 		if ((ld->attribs[col] & CHARDRAWN)) {
 		    total += ch;
