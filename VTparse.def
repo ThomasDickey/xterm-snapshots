@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.57 2018/08/29 09:20:59 tom Exp $
+# $XTermId: VTparse.def,v 1.58 2018/09/13 08:36:56 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -102,7 +102,6 @@ CASE_LS1R
 CASE_PRINT
 CASE_XTERM_SAVE
 CASE_XTERM_RESTORE
-CASE_XTERM_TITLE
 CASE_DECID
 CASE_HP_MEM_LOCK
 CASE_HP_MEM_UNLOCK
