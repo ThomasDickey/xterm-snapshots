@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1600 2018/09/08 00:22:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1603 2018/09/13 22:47:10 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2533,6 +2533,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_VT52_CUP - VT52 cursor addressing\n"));
 	    sp->vt52_cup = True;
 	    InitParams();
+	    ResetState(sp);
 	    break;
 
 	case CASE_VT52_IGNORE:
@@ -4520,6 +4521,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = csi_hash_table;
 	    break;
 
+	case CASE_XTERM_CHECKSUM:
+#if OPT_DEC_RECTOPS
+	    if (screen->vtXX_level >= 4 && AllowWindowOps(xw, ewSetChecksum)) {
+		TRACE(("CASE_XTERM_CHECKSUM\n"));
+		screen->checksum_ext = zero_if_default(0);
+	    }
+#endif
+	    ResetState(sp);
+	    break;
+
 	case CASE_XTERM_PUSH_SGR:
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
 	    value = 0;
@@ -4719,7 +4730,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		for (value = 1; value <= 5; ++value)
 		    set_mod_fkeys(xw, value, DEFAULT, True);
 	    }
+	    ResetState(sp);
 	    break;
+
 	case CASE_SET_MOD_FKEYS0:
 	    TRACE(("CASE_SET_MOD_FKEYS0\n"));
 	    if (nparam >= 1 && GetParam(0) != DEFAULT) {
@@ -4727,6 +4740,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    } else {
 		xw->keyboard.modify_now.function_keys = -1;
 	    }
+	    ResetState(sp);
 	    break;
 #endif
 	case CASE_HIDE_POINTER:
@@ -4736,6 +4750,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    } else {
 		screen->pointer_mode = DEF_POINTER_MODE;
 	    }
+	    ResetState(sp);
 	    break;
 
 	case CASE_SM_TITLE:
@@ -4750,6 +4765,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		screen->title_modes = DEF_TITLE_MODES;
 	    }
 	    TRACE(("...title_modes %#x\n", screen->title_modes));
+	    ResetState(sp);
 	    break;
 
 	case CASE_RM_TITLE:
@@ -4764,6 +4780,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		screen->title_modes = DEF_TITLE_MODES;
 	    }
 	    TRACE(("...title_modes %#x\n", screen->title_modes));
+	    ResetState(sp);
 	    break;
 
 	case CASE_CSI_IGNORE:
@@ -8353,6 +8370,7 @@ VTInitialize(Widget wrequest,
 	,DATA(GetSelection)
 	,DATA(SetSelection)
 	,DATA(GetChecksum)
+	,DATA(SetChecksum)
 	,DATA_END
     };
 #undef DATA
