@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.762 2018/08/08 01:37:44 tom Exp $ */
+/* $XTermId: util.c,v 1.765 2018/09/15 01:31:14 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -580,6 +580,7 @@ xtermScroll(XtermWidget xw, int amount)
     int i;
     int refreshtop = 0;
     int refreshheight;
+    Boolean save_wrap = screen->do_wrap;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
     Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
@@ -646,8 +647,7 @@ xtermScroll(XtermWidget xw, int amount)
 	    ScrollSelection(screen, -(amount), False);
 	    if (amount == i) {
 		ClearScreen(xw);
-		screen->cursor_busy -= 1;
-		return;
+		goto done;
 	    }
 
 	    shift = INX2ROW(screen, 0);
@@ -743,6 +743,8 @@ xtermScroll(XtermWidget xw, int amount)
 		    False);
     }
 
+  done:
+    screen->do_wrap = save_wrap;
     screen->cursor_busy -= 1;
     return;
 }

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1603 2018/09/13 22:47:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1604 2018/09/14 19:30:22 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5392,8 +5392,12 @@ WrapLine(XtermWidget xw)
 }
 
 /*
- * process a string of characters according to the character set indicated
- * by charset.  worry about end of line conditions (wraparound if selected).
+ * Process a string of characters according to the character set indicated by
+ * charset.  Worry about end of line conditions (wraparound if selected).
+ *
+ * It is possible to use CUP, etc., to move outside margins.  In that case, the
+ * right-margin is ineffective until the text (may) wrap and get within the
+ * margins.
  */
 void
 dotext(XtermWidget xw,
@@ -5409,15 +5413,8 @@ dotext(XtermWidget xw,
     int next_col, this_col;	/* must be signed */
 #endif
     Cardinal offset;
-    int right = ScrnRightMargin(xw);
+    int rmargin = ScrnRightMargin(xw);
 
-    /*
-     * It is possible to use CUP, etc., to move outside margins.  In that
-     * case, the right-margin is ineffective.
-     */
-    if (screen->cur_col > right) {
-	right = screen->max_col;
-    }
 #if OPT_WIDE_CHARS
     if (screen->vt100_graphics)
 #endif
@@ -5438,23 +5435,28 @@ dotext(XtermWidget xw,
     for (offset = 0;
 	 offset < len && (chars_chomped > 0 || screen->do_wrap);
 	 offset += chars_chomped) {
-	int width_available = right + 1 - screen->cur_col;
 	int width_here = 0;
-	Boolean force_wrap;
-	Boolean need_wrap;
-	Boolean did_wrap;
 	int last_chomp = 0;
-	chars_chomped = 0;
+	Boolean force_wrap;
 
+	chars_chomped = 0;
 	do {
+	    int right = ((screen->cur_col > rmargin)
+			 ? screen->max_col
+			 : rmargin);
+	    int width_available = right + 1 - screen->cur_col;
+	    Boolean need_wrap = False;
+	    Boolean did_wrap = False;
+
 	    force_wrap = False;
-	    need_wrap = False;
-	    did_wrap = False;
 
 	    if (screen->do_wrap) {
 		screen->do_wrap = False;
 		if ((xw->flags & WRAPAROUND)) {
 		    WrapLine(xw);
+		    right = ((screen->cur_col > rmargin)
+			     ? screen->max_col
+			     : rmargin);
 		    width_available = right + 1 - screen->cur_col;
 		    next_col = screen->cur_col;
 		    did_wrap = True;
@@ -5573,6 +5575,9 @@ dotext(XtermWidget xw,
 #if OPT_DEC_CHRSET
 	CLineData *ld = getLineData(screen, screen->cur_row);
 #endif
+	int right = ((screen->cur_col > rmargin)
+		     ? screen->max_col
+		     : rmargin);
 
 	int last_col = LineMaxCol(screen, ld);
 	if (last_col > right)
