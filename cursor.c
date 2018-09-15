@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.74 2018/08/25 00:28:05 tom Exp $ */
+/* $XTermId: cursor.c,v 1.75 2018/09/15 00:48:57 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -364,11 +364,16 @@ CursorRestore(XtermWidget xw)
 
     UIntClr(xw->flags, DECSC_FLAGS);
     UIntSet(xw->flags, sc->flags & DECSC_FLAGS);
-    CursorSet(screen,
-	      ((xw->flags & ORIGIN)
-	       ? sc->row - screen->top_marg
-	       : sc->row),
-	      sc->col, xw->flags);
+    if ((xw->flags & ORIGIN)) {
+	CursorSet(screen,
+		  sc->row - screen->top_marg,
+		  ((xw->flags & LEFT_RIGHT)
+		   ? sc->col - screen->lft_marg
+		   : sc->col),
+		  xw->flags);
+    } else {
+	CursorSet(screen, sc->row, sc->col, xw->flags);
+    }
     screen->do_wrap = sc->wrap_flag;	/* after CursorSet/ResetWrap */
 
 #if OPT_ISO_COLORS
