@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1604 2018/09/14 19:30:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1606 2018/09/16 20:42:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3028,7 +3028,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		unparseputc1(xw, ANSI_DCS);
 		unparseputc(xw, '!');
 		unparseputc(xw, '|');
-		unparseputc(xw, '0');
+		/* report the "terminal unit id" as 4 pairs of hexadecimal
+		 * digits -- meaningless for a terminal emulator, but some
+		 * host may care about the format.
+		 */
+		for (count = 0; count < 8; ++count) {
+		    unparseputc(xw, '0');
+		}
 		unparseputc1(xw, ANSI_ST);
 		unparse_end(xw);
 	    }
@@ -12216,76 +12222,78 @@ VTInitTranslations(void)
 	const char *name;
 	const char *value;
     } table[] = {
-	{
-	    False,
-	    "default",
-"\
-          Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
-           Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
-         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
-         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
-"
-	},
+#define DATA(name,value) { False, name, value }
 #if OPT_MAXIMIZE
-	{
-	    False,
-	    "fullscreen",
+	DATA("fullscreen",
 "\
                  Alt <Key>Return:fullscreen() \n\
 "
-	},
+	),
 #endif
 #if OPT_SCROLL_LOCK
-	{
-	    False,
-	    "scroll-lock",
+	DATA("scroll-lock",
 "\
         <KeyRelease> Scroll_Lock:scroll-lock() \n\
 "
-	},
+	),
 #endif
 #if OPT_SHIFT_FONTS
-	{
-	    False,
-	    "shift-fonts",
+	DATA("shift-fonts",
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \n\
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \n\
 "
-	},
+	),
 #endif
-	/* PROCURA added "Meta <Btn2Down>:clear-saved-lines()" */
-	{
-	    False,
-	    "default",
+	DATA("keypress",
 "\
                 ~Meta <KeyPress>:insert-seven-bit() \n\
                  Meta <KeyPress>:insert-eight-bit() \n\
+"
+	),
+	DATA("paging",
+"\
+          Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
+           Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
+"
+	),
+	DATA("popup-menu",
+"\
                 !Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
            !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
  !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \n\
      ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
-                ~Meta <Btn1Down>:select-start() \n\
-              ~Meta <Btn1Motion>:select-extend() \n\
                 !Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
            !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
  !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \n\
      ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
-          ~Ctrl ~Meta <Btn2Down>:ignore() \n\
-                 Meta <Btn2Down>:clear-saved-lines() \n\
-            ~Ctrl ~Meta <Btn2Up>:insert-selection(SELECT, CUT_BUFFER0) \n\
                 !Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
            !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
  !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \n\
      ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+"
+	),
+	/* PROCURA added "Meta <Btn2Down>:clear-saved-lines()" */
+	DATA("reset",
+"\
+                 Meta <Btn2Down>:clear-saved-lines() \n\
+"
+	),
+	DATA("select",
+"\
+                ~Meta <Btn1Down>:select-start() \n\
+              ~Meta <Btn1Motion>:select-extend() \n\
+          ~Ctrl ~Meta <Btn2Down>:ignore() \n\
+            ~Ctrl ~Meta <Btn2Up>:insert-selection(SELECT, CUT_BUFFER0) \n\
           ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
               ~Meta <Btn3Motion>:select-extend() \n\
+                         <BtnUp>:select-end(SELECT, CUT_BUFFER0) \n\
+         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
+         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
-	},
-	{
-	    False,
-	    "wheel-mouse",
+	),
+	DATA("wheel-mouse",
 "\
                  Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
             Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
@@ -12298,16 +12306,14 @@ VTInitTranslations(void)
        @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
                       <Btn5Down>:scroll-forw(5,line,m)     \n\
 "
-	},
-	{
-	    False,
-	    "default",
+	),
+	DATA("default",
 "\
-                         <BtnUp>:select-end(SELECT, CUT_BUFFER0) \n\
-                       <BtnDown>:ignore() \
+                       <BtnDown>:ignore() \n\
 "
-	}
+	)
     };
+#undef DATA
     /* *INDENT-ON* */
 
     char *result = 0;

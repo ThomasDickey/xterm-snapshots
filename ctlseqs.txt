@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/09/11)
+               updated for XTerm Patch #336 (2018/09/16)
 
 
 
@@ -435,7 +435,13 @@ Functions using CSI , ordered by the final character(s)
 
 CSI Ps @  Insert Ps (Blank) Character(s) (default = 1) (ICH).
 
+CSI Ps SP @
+          Shift left Ps columns(s) (default = 1) (SL), ECMA-48.
+
 CSI Ps A  Cursor Up Ps Times (default = 1) (CUU).
+
+CSI Ps SP A
+          Shift right Ps columns(s) (default = 1) (SR), ECMA-48.
 
 CSI Ps B  Cursor Down Ps Times (default = 1) (CUD).
 
@@ -592,6 +598,12 @@ CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 2 1  -> Horizontal scrolling.
             Ps = 2 2  -> ANSI color, e.g., VT525.
             Ps = 2 9  -> ANSI text locator (i.e., DEC Locator mode).
+
+CSI = Ps c
+          Send Device Attributes (Tertiary DA).
+            Ps = 0  -> report Terminal Unit ID (default), VT400.  XTerm
+          uses zeros for the site code and serial number in its DECRPTUI
+          response.
 
 CSI > Ps c
           Send Device Attributes (Secondary DA).

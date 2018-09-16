@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.760 2018/09/13 09:21:34 tom Exp $
+.\" $XTermId: xterm.man,v 1.762 2018/09/16 17:12:04 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -1769,13 +1769,48 @@ Selectively omit one or more parts of \fI\*n\fP's default translations
 at startup.
 The resource value is a comma-separated list of keywords,
 which may be abbreviated:
-\*(``fullscreen\*('',
-\*(``scroll-lock\*('',
-\*(``shift-fonts\*('' or
-\*(``wheel-mouse\*(''.
-\fI\*N\fP also recognizes \*(``default\*('',
-but omitting that will make the program unusable
-unless you provide a similar definition in your resource settings.
+.RS
+.TP
+default
+ignore (mouse) button-down events which were not handled by other translations
+.TP
+fullscreen
+assigns a key-binding to the \fBfullscreen()\fP action.
+.TP
+keypress
+assigns keypresses by default to the
+\fBinsert-seven-bit()\fP and
+\fBinsert-eight-bit()\fP actions.
+.TP
+paging
+assigns key bindings to the
+\fBscroll-back()\fP and
+\fBscroll-forw()\fP actions.
+.TP
+popup-menu
+assigns mouse-buttons with the \fIcontrol\fP modifier to the popup-menus.
+.TP
+reset
+assigns mouse-button 2
+with the \fImeta\fP modifier to the \fBclear-saved-lines\fP action.
+.TP
+scroll-lock
+assigns a key-binding to the \fBscroll-lock()\fP action.
+.TP
+select
+assigns mouse- and keypress-combinations
+to actions which manipulate the selection.
+.TP
+shift-fonts
+assigns key-bindings to
+\fBlarger-vt-font()\fP and
+\fBsmaller-vt-font()\fP actions.
+.TP
+wheel-mouse
+assigns buttons 4 and 5 with different modifiers to the
+\fBscroll-back()\fP and
+\fBscroll-forw()\fP actions.
+.RE
 .TP 8
 .B ptyHandshake\fP (class\fB PtyHandshake\fP)
 If \*(``true\*('', \fI\*n\fP will perform handshaking during initialization
