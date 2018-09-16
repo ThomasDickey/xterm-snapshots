@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.556 2018/09/09 18:44:51 tom Exp $ */
+/* $XTermId: screen.c,v 1.557 2018/09/16 23:43:43 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -711,20 +711,25 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 {
     (void) screen;
 
+    TraceScreen(term, 0);
     if (len > 0) {
 	int n;
 	int last = col + len;
+#if OPT_WIDE_CHARS
+	int fix_l = -1;
+	int fix_r = -1;
+#endif
 
 	if_OPT_WIDE_CHARS(screen, {
 	    if (col > 0 &&
 		((dst->charData[col] == HIDDEN_CHAR) ^
 		 (src->charData[col] == HIDDEN_CHAR))) {
-		dst->charData[col - 1] = ' ';
+		fix_l = col - 1;
 	    }
 	    if (last < src->lineSize &&
 		((dst->charData[last] == HIDDEN_CHAR) ^
 		 (src->charData[last] == HIDDEN_CHAR))) {
-		dst->charData[last] = ' ';
+		fix_l = last - 1;
 	    }
 	});
 
@@ -732,6 +737,12 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 	    dst->charData[n] = src->charData[n];
 	    dst->attribs[n] = src->attribs[n];
 	}
+	if_OPT_WIDE_CHARS(screen, {
+	    if (fix_l >= 0)
+		dst->charData[fix_l] = ' ';
+	    if (fix_r >= 0)
+		dst->charData[fix_r] = ' ';
+	});
 
 	if_OPT_ISO_COLORS(screen, {
 	    for (n = col; n < last; ++n) {
@@ -747,6 +758,7 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 	    }
 	});
     }
+    TraceScreen(term, 0);
 }
 
 static void
