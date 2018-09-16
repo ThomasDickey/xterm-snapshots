@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.919 2018/09/13 09:20:16 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.920 2018/09/16 17:18:16 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3399,6 +3399,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
+
+#ifndef TRACE_EVENT
+#define TRACE_EVENT(t,e,s,n) /*nothing*/
 #endif
 
 #ifndef TRACE_FOCUS

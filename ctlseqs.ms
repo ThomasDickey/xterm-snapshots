@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.478 2018/09/11 23:42:54 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.481 2018/09/16 21:58:34 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #336
-.ds RF 2018/09/11
+.ds RF 2018/09/16
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -909,8 +909,16 @@ The strings are encoded in hexadecimal (2 digits per character).
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH).
 .
 .iP
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*@
+Shift left \*(Ps columns(s) (default = 1) (SL), ECMA-48.
+.
+.iP
 .IP \\*(Cs\\*(Ps\\*s\\*A
 Cursor Up \*(Ps Times (default = 1) (CUU).
+.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*A
+Shift right \*(Ps columns(s) (default = 1) (SR), ECMA-48.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(cB
@@ -1118,6 +1126,12 @@ telling the host what features the terminal supports:
   \*(Ps = \*2\*1 \(-> Horizontal scrolling.
   \*(Ps = \*2\*2 \(-> ANSI color, e.g., VT525.
   \*(Ps = \*2\*9 \(-> ANSI text locator (i.e., DEC Locator mode).
+.
+.iP
+.IP \\*(Cs\\*=\\*(Ps\\*s\\*c
+Send Device Attributes (Tertiary DA).
+  \*(Ps = \*0 \(-> report Terminal Unit ID (default), VT400.
+\*(XT uses zeros for the site code and serial number in its DECRPTUI response.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*c

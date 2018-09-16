@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.182 2018/09/08 00:24:33 tom Exp $ */
+/* $XTermId: trace.c,v 1.185 2018/09/15 22:50:51 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -676,6 +676,99 @@ TraceScreen(XtermWidget xw, int whichBuf)
     } else {
 	TRACE(("TraceScreen %d is nil\n", whichBuf));
     }
+}
+
+static char *
+formatEventMask(char *target, int source, Boolean buttons)
+{
+#define DATA(name) { name ## Mask, #name }
+    static struct {
+	int mask;
+	const char *name;
+    } table[] = {
+	DATA(Shift),
+	    DATA(Lock),
+	    DATA(Control),
+	    DATA(Mod1),
+	    DATA(Mod2),
+	    DATA(Mod3),
+	    DATA(Mod4),
+	    DATA(Mod5),
+	    DATA(Button1),
+	    DATA(Button2),
+	    DATA(Button3),
+	    DATA(Button4),
+	    DATA(Button5),
+    };
+#undef DATA
+    Cardinal n;
+    char marker = L_CURL;
+    char *base = target;
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (!buttons && (table[n].mask >= Button1Mask))
+	    continue;
+	if ((table[n].mask & source)) {
+	    UIntClr(source, table[n].mask);
+	    sprintf(target, "%c%s", marker, table[n].name);
+	    target += strlen(target);
+	    marker = '|';
+	}
+    }
+
+    if (source != 0) {
+	sprintf(target, "%c?%#x", marker, source);
+	target += strlen(target);
+	marker = '|';
+    }
+
+    if (marker == L_CURL)
+	*target++ = L_CURL;
+    *target++ = R_CURL;
+
+    *target = '\0';
+    return base;
+}
+
+void
+TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
+{
+    char mask_buffer[160];
+
+    TRACE(("Event #%lu %s: %s",
+	   ev->xany.serial,
+	   tag,
+	   visibleEventType(ev->type)));
+
+    switch (ev->type) {
+    case KeyPress:
+	/* FALLTHRU */
+    case KeyRelease:
+	TRACE((" keycode 0x%04X %s",
+	       ev->xkey.keycode,
+	       formatEventMask(mask_buffer, ev->xkey.state, False)));
+	break;
+    case ButtonPress:
+	/* FALLTHRU */
+    case ButtonRelease:
+	TRACE((" button %u %s",
+	       ev->xbutton.button,
+	       formatEventMask(mask_buffer, ev->xbutton.state, True)));
+	break;
+    case MotionNotify:
+	TRACE((" (%d,%d)",
+	       ev->xmotion.y_root,
+	       ev->xmotion.x_root));
+	break;
+    case EnterNotify:
+    case LeaveNotify:
+    case FocusIn:
+    case FocusOut:
+    default:
+	TRACE((" FIXME"));
+	break;
+    }
+    TRACE(("\n"));
 }
 
 void
