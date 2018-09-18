@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.185 2018/09/15 22:50:51 tom Exp $ */
+/* $XTermId: trace.c,v 1.186 2018/09/18 01:09:22 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -35,6 +35,7 @@
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+#include <xstrings.h>
 #include <version.h>
 
 #if OPT_TRACE
@@ -597,7 +598,11 @@ TraceAtomName(Display *dpy, Atom atom)
 {
     static char *result;
     free(result);
-    result = XGetAtomName(dpy, atom);
+    if (atom != 0) {
+	result = XGetAtomName(dpy, atom);
+    } else {
+	result = x_strdup("NONE");
+    }
     return result;
 }
 

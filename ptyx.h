@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.920 2018/09/16 17:18:16 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.921 2018/09/18 00:54:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2581,11 +2581,17 @@ typedef struct {
 	Boolean		keepClipboard;	/* retain data sent to clipboard */
 	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
+
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	unsigned long	selection_length; /* number of significant bytes */
+
 	Char		*clipboard_data; /* the current clipboard */
 	unsigned long	clipboard_size; /*  size of allocated buffer */
+
+	Atom		owned_atom;	/* last XtOwnSelection atom */
+	Time		owned_time;	/* timestamp for last XtOwnSelection */
+
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;

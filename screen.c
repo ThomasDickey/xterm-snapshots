@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.557 2018/09/16 23:43:43 tom Exp $ */
+/* $XTermId: screen.c,v 1.559 2018/09/18 01:23:59 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -711,7 +711,6 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 {
     (void) screen;
 
-    TraceScreen(term, 0);
     if (len > 0) {
 	int n;
 	int last = col + len;
@@ -758,7 +757,6 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 	    }
 	});
     }
-    TraceScreen(term, 0);
 }
 
 static void
@@ -852,6 +850,7 @@ void
 ScrnDisownSelection(XtermWidget xw)
 {
     if (ScrnHaveSelection(TScreenOf(xw))) {
+	TRACE(("ScrnDisownSelection\n"));
 	if (TScreenOf(xw)->keepSelection) {
 	    UnhiliteSelection(xw);
 	} else {

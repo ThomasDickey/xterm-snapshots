@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.535 2018/09/16 00:15:54 tom Exp $ */
+/* $XTermId: button.c,v 1.540 2018/09/18 01:12:14 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2629,7 +2629,6 @@ SelectSet(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
 
-    TRACE_EVENT("SelectSet", event, params, &num_params);
     /* Only do select stuff if non-null select */
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
 	SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
@@ -4125,7 +4124,8 @@ ConvertSelection(Widget w,
 
     screen = TScreenOf(xw);
 
-    TRACE(("ConvertSelection %s\n",
+    TRACE(("ConvertSelection %s -> %s\n",
+	   TraceAtomName(screen->display, *selection),
 	   visibleSelectionTarget(dpy, *target)));
 
     if (keepClipboard(*selection)) {
@@ -4337,6 +4337,22 @@ SelectionDone(Widget w GCC_UNUSED,
 }
 
 static void
+_DisownSelection(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->owned_atom != 0
+	&& screen->owned_time != 0) {
+	TRACE(("XtDisownSelection(%s, @%ld)\n",
+	       TraceAtomName(screen->display, screen->owned_atom),
+	       (long) screen->owned_time));
+	XtDisownSelection((Widget) xw, screen->owned_atom, screen->owned_time);
+	screen->owned_atom = 0;
+	screen->owned_time = 0;
+    }
+}
+
+static void
 _OwnSelection(XtermWidget xw,
 	      String *selections,
 	      Cardinal count)
@@ -4400,8 +4416,16 @@ _OwnSelection(XtermWidget xw,
 	    screen->clipboard_data = buf;
 	    screen->clipboard_size = screen->selection_length;
 	} else if (screen->selection_length == 0) {
-	    XtDisownSelection((Widget) xw, atoms[i], screen->selection_time);
-	} else if (!screen->replyToEmacs) {
+	    _DisownSelection(xw);
+	} else if (!screen->replyToEmacs && atoms[i] != 0) {
+	    if (screen->owned_atom != atoms[i]) {
+		_DisownSelection(xw);
+	    }
+	    TRACE(("XtOwnSelection(%s, @%ld)\n",
+		   TraceAtomName(screen->display, atoms[i]),
+		   (long) screen->selection_time));
+	    screen->owned_atom = atoms[i];
+	    screen->owned_time = screen->selection_time;
 	    have_selection |=
 		XtOwnSelection((Widget) xw, atoms[i],
 			       screen->selection_time,
