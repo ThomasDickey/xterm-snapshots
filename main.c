@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.839 2018/09/08 19:18:17 tom Exp $ */
+/* $XTermId: main.c,v 1.840 2018/09/19 20:18:32 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -4301,7 +4301,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 			    TMODE(ttyChars[nn].myMode,
 				  tio.c_cc[ttyChars[nn].sysMode]);
 			} else if (isTabMode(nn)) {
-			    unsigned tmp = tio.c_oflag;
+			    unsigned tmp = (unsigned) tio.c_oflag;
 			    tmp = tmp & (unsigned) ~TABDLY;
 			    tmp |= (unsigned) ttyModes[ttyChars[nn].myMode].value;
 			    tio.c_oflag = tmp;
