@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1606 2018/09/16 20:42:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1607 2018/09/20 22:31:09 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -12223,6 +12223,12 @@ VTInitTranslations(void)
 	const char *value;
     } table[] = {
 #define DATA(name,value) { False, name, value }
+	DATA("select",
+"\
+         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
+         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
+"
+	),
 #if OPT_MAXIMIZE
 	DATA("fullscreen",
 "\
@@ -12289,8 +12295,6 @@ VTInitTranslations(void)
           ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
               ~Meta <Btn3Motion>:select-extend() \n\
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \n\
-         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
-         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
 	),
 	DATA("wheel-mouse",
@@ -12356,7 +12360,7 @@ VTInitTranslations(void)
 				     (unsigned) len) == 0) {
 		    table[item].wanted = False;
 		    TRACE(("omit(%s):\n%s\n", table[item].name, table[item].value));
-		    break;
+		    /* continue: "select", for instance is two chunks */
 		}
 	    }
 	    free(value);
