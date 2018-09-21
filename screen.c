@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.559 2018/09/18 01:23:59 tom Exp $ */
+/* $XTermId: screen.c,v 1.564 2018/09/21 22:26:00 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -703,13 +703,26 @@ ChangeToWide(XtermWidget xw)
 }
 #endif
 
+#define ClearCell(d) \
+	do { \
+	    dst->charData[d] = ' '; \
+	    dst->attribs[d] = src->attribs[d]; \
+	    if_OPT_ISO_COLORS(screen, { \
+		dst->color[d] = src->color[d]; \
+	    )}; \
+	    if_OPT_WIDE_CHARS(screen, { \
+		dst->combSize = 0; \
+	    }); \
+	} while (0)
+
 /*
  * Copy cells, no side-effects.
  */
 void
-CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
+CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Boolean down)
 {
     (void) screen;
+    (void) down;
 
     if (len > 0) {
 	int n;
@@ -719,16 +732,46 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 	int fix_r = -1;
 #endif
 
+	/*
+	 * If the copy overwrites a double-width character which has one half
+	 * outside the margin, then we will replace both cells with blanks.
+	 */
 	if_OPT_WIDE_CHARS(screen, {
-	    if (col > 0 &&
-		((dst->charData[col] == HIDDEN_CHAR) ^
-		 (src->charData[col] == HIDDEN_CHAR))) {
-		fix_l = col - 1;
+	    if (col > 0) {
+		if (dst->charData[col] == HIDDEN_CHAR) {
+		    if (down) {
+			ClearCell(col - 1);
+			ClearCell(col);
+		    } else {
+			if (src->charData[col] != HIDDEN_CHAR) {
+			    ClearCell(col - 1);
+			    ClearCell(col);
+			} else {
+			    fix_l = col - 1;
+			}
+		    }
+		} else if (src->charData[col] == HIDDEN_CHAR) {
+		    ClearCell(col - 1);
+		    ClearCell(col);
+		    ++col;
+		}
 	    }
-	    if (last < src->lineSize &&
-		((dst->charData[last] == HIDDEN_CHAR) ^
-		 (src->charData[last] == HIDDEN_CHAR))) {
-		fix_l = last - 1;
+	    if (last < src->lineSize) {
+		if (dst->charData[last] == HIDDEN_CHAR) {
+		    if (down) {
+			ClearCell(last - 1);
+			ClearCell(last);
+		    } else {
+			if (src->charData[last] != HIDDEN_CHAR) {
+			    ClearCell(last);
+			} else {
+			    fix_r = last - 1;
+			}
+		    }
+		} else if (src->charData[last] == HIDDEN_CHAR) {
+		    last--;
+		    ClearCell(last);
+		}
 	    }
 	});
 
@@ -736,24 +779,30 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 	    dst->charData[n] = src->charData[n];
 	    dst->attribs[n] = src->attribs[n];
 	}
-	if_OPT_WIDE_CHARS(screen, {
-	    if (fix_l >= 0)
-		dst->charData[fix_l] = ' ';
-	    if (fix_r >= 0)
-		dst->charData[fix_r] = ' ';
-	});
 
 	if_OPT_ISO_COLORS(screen, {
 	    for (n = col; n < last; ++n) {
 		dst->color[n] = src->color[n];
 	    }
 	});
+
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    for (n = col; n < last; ++n) {
 		for_each_combData(off, src) {
 		    dst->combData[off][n] = src->combData[off][n];
 		}
+	    }
+	});
+
+	if_OPT_WIDE_CHARS(screen, {
+	    if (fix_l >= 0) {
+		ClearCell(fix_l);
+		ClearCell(fix_l + 1);
+	    }
+	    if (fix_r >= 0) {
+		ClearCell(fix_r);
+		ClearCell(fix_r + 1);
 	    }
 	});
     }

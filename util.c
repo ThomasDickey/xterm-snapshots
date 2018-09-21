@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.765 2018/09/15 01:31:14 tom Exp $ */
+/* $XTermId: util.c,v 1.768 2018/09/21 20:48:20 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -517,7 +517,7 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 	for (row = top; row <= screen->bot_marg - amount; ++row) {
 	    if ((src = getLineData(screen, row + amount)) != 0
 		&& (dst = getLineData(screen, row)) != 0) {
-		CopyCells(screen, src, dst, left, length);
+		CopyCells(screen, src, dst, left, length, False);
 	    }
 	}
 	while (row <= screen->bot_marg) {
@@ -528,7 +528,7 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 	for (row = screen->bot_marg; row >= top - amount; --row) {
 	    if ((src = getLineData(screen, row + amount)) != 0
 		&& (dst = getLineData(screen, row)) != 0) {
-		CopyCells(screen, src, dst, left, length);
+		CopyCells(screen, src, dst, left, length, True);
 	    }
 	}
 	while (row >= top) {
