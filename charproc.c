@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1607 2018/09/20 22:31:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1608 2018/09/21 18:18:27 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -12252,16 +12252,17 @@ VTInitTranslations(void)
 "
 	),
 #endif
-	DATA("keypress",
-"\
-                ~Meta <KeyPress>:insert-seven-bit() \n\
-                 Meta <KeyPress>:insert-eight-bit() \n\
-"
-	),
 	DATA("paging",
 "\
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
+"
+	),
+	/* This must be the last set mentioning "KeyPress" */
+	DATA("keypress",
+"\
+                ~Meta <KeyPress>:insert-seven-bit() \n\
+                 Meta <KeyPress>:insert-eight-bit() \n\
 "
 	),
 	DATA("popup-menu",
