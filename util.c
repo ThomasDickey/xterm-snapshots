@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.768 2018/09/21 20:48:20 tom Exp $ */
+/* $XTermId: util.c,v 1.769 2018/11/15 22:40:11 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5064,7 +5064,7 @@ extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 	result = (int) check;
     } else {
 	for (n = 0; n < limit; ++n) {
-	    if (x_strcasecmp(value, table[n].name) == 0) {
+	    if (table[n].name != 0 && x_strcasecmp(value, table[n].name) == 0) {
 		result = table[n].code;
 		break;
 	    }

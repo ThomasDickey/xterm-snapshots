@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.103 2018/09/08 14:17:50 tom Exp $ */
+/* $XTermId: charsets.c,v 1.104 2018/09/23 16:48:58 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -1430,6 +1430,8 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 		else
 #endif
 		    chr = seven - 0x5f;
+	    } else if (chr == 0x5f) {
+		chr = 0;
 	    } else {
 		chr = seven;
 	    }
