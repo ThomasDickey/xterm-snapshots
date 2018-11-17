@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/09/16)
+               updated for XTerm Patch #336 (2018/11/16)
 
 
 
@@ -2161,6 +2161,15 @@ window, as if the scrollbar was used.  However if Alternate Scroll mode
 is set, then cursor up/down controls are sent when the terminal is dis-
 playing the Alternate Screen Buffer.  The initial state of Alternate
 Scroll mode is set using the alternateScroll resource.
+
+
+Other buttons
+
+Additional buttons are encoded like the wheel mice, by adding 64.  The
+encoding is unambiguous for buttons 6 and 7, which are seen for some
+tiltable wheel mice.  However, it is not possible to use these buttons
+in xterm's translation resource because their names are not in the X
+Toolkit's symbol table.
 
 
 Highlight tracking

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.540 2018/09/18 01:12:14 tom Exp $ */
+/* $XTermId: button.c,v 1.541 2018/11/16 01:13:07 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4627,7 +4627,7 @@ BtnCode(XButtonEvent *event, int button)
     if (event->type == MotionNotify)
 	result += 32;
 
-    if (button < 0 || button > 5) {
+    if (button < 0) {
 	result += 3;
     } else {
 	if (button > 3)
