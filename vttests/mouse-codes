@@ -1,0 +1,120 @@
+#!/usr/bin/env perl
+# $XTermId: mouse-codes,v 1.1 2018/11/16 13:54:43 tom Exp $
+# -----------------------------------------------------------------------------
+# this file is part of xterm
+#
+# Copyright 2018 by Thomas E. Dickey
+#
+#                         All Rights Reserved
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the name(s) of the above copyright
+# holders shall not be used in advertising or otherwise to promote the
+# sale, use or other dealings in this Software without prior written
+# authorization.
+# -----------------------------------------------------------------------------
+# Imitate xterm's BtnCode() function, to enumerate the possible inputs (button,
+# event state) versus output (xterm mouse-code).
+use strict;
+use warnings;
+use diagnostics;
+
+# Typically,
+# -	Buttons 1, 2, and 3 are left-to-right assignments on a 3-button mouse.
+# -	Buttons 4 and 5 are (by convention) assigned to a wheel mouse's
+#	up/down events.
+# -	Buttons 6 and 7 may happen to work, e.g., as left/right events from a
+#	tiltable wheel mouse.  There is no explicit support for these (there
+#	are no related symbols in Xt), so it is not possible to use them in the
+#	translations resource.
+our $maxbutton = 7;
+
+# xterm uses code 3 internally for release-events.
+sub ButtonName($) {
+    my $code   = shift;
+    my $result = "";
+    if ( $code < 0 ) {
+        $result = "release";
+    }
+    else {
+        $result = sprintf "Button%d", ( $code > 3 ) ? $code : ( $code + 1 );
+    }
+    return $result;
+}
+
+# Combine the modifier state as bits:
+#  shift key   -> 1
+#  meta key    -> 2 (Mod1 came from X11R1, but was adapted from X10)
+#  control key -> 4
+our $maxstates = 7;
+
+sub KeyState($) {
+    my $mask   = shift;
+    my $result = "";
+    $result .= " + shift"   if ( ( $mask & 1 ) != 0 );
+    $result .= " + meta"    if ( ( $mask & 2 ) != 0 );
+    $result .= " + control" if ( ( $mask & 4 ) != 0 );
+    return $result;
+}
+
+sub Motion($) {
+    my $code   = shift;
+    my $result = "";
+    $result = " + motion" if ( $code != 0 );
+    return $result;
+}
+
+sub report() {
+    my $button;
+    my $states;
+    my $motion;
+    my %encoded;
+    for $states ( 0 .. $maxstates ) {
+        for $motion ( 0 .. 1 ) {
+            for $button ( -1 .. $maxbutton ) {
+                next if ( $button == 3 );
+                my $result = ( 32 + ( $states << 2 ) );
+                $result += 32 if ( $motion != 0 );
+                if ( $button < 0 ) {
+                    $result += 3;
+                }
+                else {
+                    $result += ( 64 - 4 ) if ( $button > 3 );
+                    $result += $button;
+                }
+                my $code   = sprintf "%3d",    $result;
+                my $report = sprintf "%s%s%s", &ButtonName($button),
+                  &KeyState($states), &Motion($motion);
+                printf "OOPS %s ->%s versus %s\n", $code, $report,
+                  $encoded{$code}
+                  if ( defined $encoded{$code} );
+                $encoded{$code} = $report;
+            }
+        }
+    }
+    foreach my $code ( sort keys %encoded ) {
+        printf "%s = %s\n", $code, $encoded{$code};
+    }
+}
+
+&report;
+
+1;

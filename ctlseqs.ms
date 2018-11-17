@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.481 2018/09/16 21:58:34 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.482 2018/11/17 02:08:08 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #336
-.ds RF 2018/09/16
+.ds RF 2018/11/16
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2962,6 +2962,14 @@ then cursor up/down controls are sent when the terminal is displaying
 the \fIAlternate Screen Buffer\fP.
 The initial state of \fIAlternate Scroll\fP mode is set
 using the \fBalternateScroll\fP resource.
+.Ss Other buttons
+.LP
+Additional buttons are encoded like the wheel mice, by adding 64.
+The encoding is unambiguous for buttons 6 and 7,
+which are seen for some tiltable wheel mice.
+However, it is not possible to use these buttons in \fI\*(xt\fP's
+\fBtranslation\fP resource because their names are not in the X Toolkit's
+symbol table.
 .Ss Highlight tracking
 .LP
 Mouse highlight tracking notifies a program of a button press, receives a
