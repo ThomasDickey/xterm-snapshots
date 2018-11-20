@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.541 2018/11/16 01:13:07 tom Exp $ */
+/* $XTermId: button.c,v 1.554 2018/11/20 02:04:14 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -156,6 +156,7 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
+static int TargetToSelection(TScreen *screen, String name);
 static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
 static void EditorButton(XtermWidget xw, XButtonEvent *event);
 static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
@@ -163,7 +164,7 @@ static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
 static void ExtendExtend(XtermWidget xw, const CELL *cell);
 static void PointToCELL(TScreen *screen, int y, int x, CELL *cell);
 static void ReHiliteText(XtermWidget xw, CELL *first, CELL *last);
-static void SaltTextAway(XtermWidget xw, CELL *cellc, CELL *cell);
+static void SaltTextAway(XtermWidget xw, int which, CELL *cellc, CELL *cell);
 static void SelectSet(XtermWidget xw, XEvent *event, String *params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
 static void StartSelect(XtermWidget xw, const CELL *cell);
@@ -1143,7 +1144,11 @@ do_select_end(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
 
     screen->selection_time = event->xbutton.time;
-    TRACE(("do_select_end @%ld\n", screen->selection_time));
+
+    TRACE(("do_select_end %s @%ld\n",
+	   visibleEventMode(screen->eventMode),
+	   screen->selection_time));
+
     switch (screen->eventMode) {
     case NORMAL:
 	(void) SendMousePosition(xw, event);
@@ -1167,7 +1172,7 @@ HandleSelectEnd(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TRACE_EVENT("HandleSelectEnd", event, params, num_params);
+	TRACE(("HandleSelectEnd\n"));
 	do_select_end(xw, event, params, num_params, False);
     }
 }
@@ -1181,7 +1186,7 @@ HandleKeyboardSelectEnd(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TRACE_EVENT("HandleKeyboardSelectEnd", event, params, num_params);
+	TRACE(("HandleKeyboardSelectEnd\n"));
 	do_select_end(xw, event, params, num_params, True);
     }
 }
@@ -1564,6 +1569,37 @@ _SelectionTargets(Widget w)
 }
 
 #define isSELECT(value) (!strcmp(value, "SELECT"))
+
+static int
+DefaultSelection(TScreen *screen)
+{
+    return (screen->selectToClipboard ? 1 : 0);
+}
+
+static int
+TargetToSelection(TScreen *screen, String name)
+{
+    int result = -1;
+    int cutb;
+
+    if (isSELECT(name)) {
+	result = DefaultSelection(screen);
+    } else if (!strcmp(name, "PRIMARY")) {
+	result = 0;
+    } else if (!strcmp(name, "CLIPBOARD")) {
+	result = 1;
+    } else if (sscanf(name, "CUT_BUFFER%d", &cutb) == 1) {
+	if (cutb >= 0 && cutb <= 7) {
+	    result = cutb + 2;
+	} else {
+	    xtermWarning("unexpected cut-buffer code: %d\n", cutb);
+	}
+    } else {
+	xtermWarning("unexpected selection target: %s\n", name);
+    }
+    TRACE2(("TargetToSelection(%s) ->%d\n", name, result));
+    return result;
+}
 
 static void
 UnmapSelections(XtermWidget xw)
@@ -2629,9 +2665,15 @@ SelectSet(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("SelectSet\n"));
     /* Only do select stuff if non-null select */
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
-	SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
+	Cardinal n;
+	for (n = 0; n < num_params; ++n) {
+	    SaltTextAway(xw,
+			 TargetToSelection(screen, params[n]),
+			 &(screen->startSel), &(screen->endSel));
+	}
 	_OwnSelection(xw, params, num_params);
     } else {
 	ScrnDisownSelection(xw);
@@ -3810,16 +3852,28 @@ ReHiliteText(XtermWidget xw,
  */
 static void
 SaltTextAway(XtermWidget xw,
+	     int which,
 	     CELL *cellc,
 	     CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
-    int i, j = 0;
+    SelectedCells *scp;
+    int i;
     int eol;
+    int need = 0;
     Char *line;
     Char *lp;
     CELL first = *cellc;
     CELL last = *cell;
+
+    if (which < 0 || which >= MAX_SELECTIONS) {
+	TRACE(("SaltTextAway - which selection?\n"));
+	return;
+    }
+    scp = &(screen->selected_cells[which]);
+
+    TRACE(("SaltTextAway which=%d, first=%d,%d, last=%d,%d\n",
+	   which, first.row, first.col, last.row, last.col));
 
     if (isSameRow(&first, &last) && first.col > last.col) {
 	int tmp;
@@ -3830,37 +3884,38 @@ SaltTextAway(XtermWidget xw,
     /* first we need to know how long the string is before we can save it */
 
     if (isSameRow(&last, &first)) {
-	j = Length(screen, first.row, first.col, last.col);
+	need = Length(screen, first.row, first.col, last.col);
     } else {			/* two cases, cut is on same line, cut spans multiple lines */
-	j += Length(screen, first.row, first.col, screen->max_col) + 1;
+	need += Length(screen, first.row, first.col, screen->max_col) + 1;
 	for (i = first.row + 1; i < last.row; i++)
-	    j += Length(screen, i, 0, screen->max_col) + 1;
+	    need += Length(screen, i, 0, screen->max_col) + 1;
 	if (last.col >= 0)
-	    j += Length(screen, last.row, 0, last.col);
+	    need += Length(screen, last.row, 0, last.col);
     }
 
     /* UTF-8 may require more space */
     if_OPT_WIDE_CHARS(screen, {
-	j *= 4;
+	need *= 4;
     });
 
     /* now get some memory to save it in */
-
-    if (screen->selection_size <= j) {
-	if ((line = (Char *) malloc((size_t) j + 1)) == 0)
-	    SysError(ERROR_BMALLOC2);
-	XtFree((char *) screen->selection_data);
-	screen->selection_data = line;
-	screen->selection_size = j + 1;
-    } else {
-	line = screen->selection_data;
-    }
-
-    if ((line == 0)
-	|| (j < 0))
+    if (need < 0)
 	return;
 
-    line[j] = '\0';		/* make sure it is null terminated */
+    if (scp->data_limit <= (unsigned) need) {
+	if ((line = (Char *) malloc((size_t) need + 1)) == 0)
+	    SysError(ERROR_BMALLOC2);
+	XtFree((char *) scp->data_buffer);
+	scp->data_buffer = line;
+	scp->data_limit = need + 1;
+    } else {
+	line = scp->data_buffer;
+    }
+
+    if (line == 0)
+	return;
+
+    line[need] = '\0';		/* make sure it is null terminated */
     lp = line;			/* lp points to where to save the text */
     if (isSameRow(&last, &first)) {
 	lp = SaveText(screen, last.row, first.col, last.col, lp, &eol);
@@ -3878,55 +3933,57 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%d:%s\n", (int) (lp - line),
+    TRACE(("Salted TEXT:%u:%s\n", (unsigned) (lp - line),
 	   visibleChars(line, (unsigned) (lp - line))));
 
-    screen->selection_length = (unsigned long) (lp - line);
+    scp->data_length = (size_t) (lp - line);
 }
 
 #if OPT_PASTE64
 void
-ClearSelectionBuffer(TScreen *screen)
+ClearSelectionBuffer(TScreen *screen, String selection)
 {
-    screen->selection_length = 0;
+    int which = TargetToSelection(screen, selection);
+    SelectedCells *scp = &(screen->selected_cells[which >= 0 ? which : 0]);
+    if (scp->data_buffer) {
+	XtFree((char *) (scp->data_buffer));
+	scp->data_buffer = 0;
+    }
+    scp->data_length = 0;
     screen->base64_count = 0;
 }
 
 static void
-AppendStrToSelectionBuffer(TScreen *screen, Char *text, size_t len)
+AppendStrToSelectionBuffer(SelectedCells * scp, Char *text, size_t len)
 {
     if (len != 0) {
-	int j = (int) (screen->selection_length + len);		/* New length */
-	int k = j + (j >> 2) + 80;	/* New size if we grow buffer: grow by ~50% */
-	if (j + 1 >= screen->selection_size) {
-	    if (!screen->selection_length) {
-		/* New buffer */
-		Char *line;
-		if ((line = (Char *) malloc((size_t) k)) == 0)
-		    SysError(ERROR_BMALLOC2);
-		XtFree((char *) screen->selection_data);
-		screen->selection_data = line;
+	size_t j = (scp->data_length + len);
+	size_t k = j + (j >> 2) + 80;
+	if (j + 1 >= scp->data_limit) {
+	    Char *line;
+	    if (!scp->data_length) {
+		line = (Char *) malloc(k);
 	    } else {
-		/* Realloc buffer */
-		screen->selection_data = (Char *)
-		    realloc(screen->selection_data,
-			    (size_t) k);
-		if (screen->selection_data == 0)
-		    SysError(ERROR_BMALLOC2);
+		line = (Char *) realloc(scp->data_buffer, k);
 	    }
-	    screen->selection_size = k;
+	    if (line == 0)
+		SysError(ERROR_BMALLOC2);
+	    scp->data_buffer = line;
+	    scp->data_limit = k;
 	}
-	if (screen->selection_data != 0) {
-	    memcpy(screen->selection_data + screen->selection_length, text, len);
-	    screen->selection_length += len;
-	    screen->selection_data[screen->selection_length] = 0;
+	if (scp->data_buffer != 0) {
+	    memcpy(scp->data_buffer + scp->data_length, text, len);
+	    scp->data_length += len;
+	    scp->data_buffer[scp->data_length] = 0;
 	}
     }
 }
 
 void
-AppendToSelectionBuffer(TScreen *screen, unsigned c)
+AppendToSelectionBuffer(TScreen *screen, unsigned c, String selection)
 {
+    int which = TargetToSelection(screen, selection);
+    SelectedCells *scp = &(screen->selected_cells[which >= 0 ? which : 0]);
     unsigned six;
     Char ch;
 
@@ -3954,21 +4011,21 @@ AppendToSelectionBuffer(TScreen *screen, unsigned c)
     case 2:
 	ch = CharOf((screen->base64_accu << 6) + six);
 	screen->base64_count = 0;
-	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
+	AppendStrToSelectionBuffer(scp, &ch, (size_t) 1);
 	break;
 
     case 4:
 	ch = CharOf((screen->base64_accu << 4) + (six >> 2));
 	screen->base64_accu = (six & 0x3);
 	screen->base64_count = 2;
-	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
+	AppendStrToSelectionBuffer(scp, &ch, (size_t) 1);
 	break;
 
     case 6:
 	ch = CharOf((screen->base64_accu << 2) + (six >> 4));
 	screen->base64_accu = (six & 0xF);
 	screen->base64_count = 4;
-	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
+	AppendStrToSelectionBuffer(scp, &ch, (size_t) 1);
 	break;
     }
 }
@@ -3986,11 +4043,10 @@ CompleteSelection(XtermWidget xw, String *args, Cardinal len)
 
 static Bool
 _ConvertSelectionHelper(Widget w,
+			SelectedCells * scp,
 			Atom *type,
 			XtPointer *value,
 			unsigned long *length,
-			Char *data,
-			unsigned long remaining,
 			int *format,
 			int (*conversion_function) (Display *,
 						    char **, int,
@@ -4006,26 +4062,26 @@ _ConvertSelectionHelper(Widget w,
     *format = 0;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
 	Display *dpy = XtDisplay(w);
 	XTextProperty textprop;
 	int out_n = 0;
 	char *result = 0;
-	char *the_data = (char *) data;
+	char *the_data = (char *) scp->data_buffer;
 	char *the_next;
+	unsigned long remaining = scp->data_length;
 
 	TRACE(("converting %ld:'%s'\n",
-	       (long) screen->selection_length,
-	       visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
+	       (long) scp->data_length,
+	       visibleChars(scp->data_buffer, (unsigned) scp->data_length)));
 	/*
 	 * For most selections, we can convert in one pass.  It is possible
 	 * that some applications contain embedded nulls, e.g., using xterm's
 	 * paste64 feature.  For those cases, we will build up the result in
 	 * parts.
 	 */
-	if (memchr(the_data, 0, screen->selection_length) != 0) {
+	if (memchr(the_data, 0, scp->data_length) != 0) {
 	    TRACE(("selection contains embedded nulls\n"));
-	    result = calloc(screen->selection_length + 1, sizeof(char));
+	    result = calloc(scp->data_length + 1, sizeof(char));
 	}
 
       next_try:
@@ -4098,8 +4154,10 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
     return result;
 }
 
+#define CLIPBOARD_ATOM XInternAtom(screen->display, "CLIPBOARD", False)
+
 #define keepClipboard(atom) ((screen->keepClipboard) && \
-	 (atom == XInternAtom(screen->display, "CLIPBOARD", False)))
+	 (atom == CLIPBOARD_ATOM))
 
 static Boolean
 ConvertSelection(Widget w,
@@ -4112,6 +4170,7 @@ ConvertSelection(Widget w,
 {
     Display *dpy = XtDisplay(w);
     TScreen *screen;
+    SelectedCells *scp;
     Bool result = False;
 
     Char *data;
@@ -4130,17 +4189,17 @@ ConvertSelection(Widget w,
 
     if (keepClipboard(*selection)) {
 	TRACE(("asked for clipboard\n"));
-	data = screen->clipboard_data;
-	data_length = screen->clipboard_size;
+	scp = &(screen->selected_cells[1]);
     } else {
 	TRACE(("asked for selection\n"));
-	data = screen->selection_data;
-	data_length = screen->selection_length;
+	scp = &(screen->selected_cells[*selection == CLIPBOARD_ATOM]);
     }
 
+    data = scp->data_buffer;
+    data_length = scp->data_length;
     if (data == NULL) {
-	TRACE(("...FIXME: no selection_data\n"));
-	return False;		/* can this happen? */
+	TRACE(("...no selection-data\n"));
+	return False;
     }
 
     if (*target == XA_TARGETS(dpy)) {
@@ -4186,33 +4245,29 @@ ConvertSelection(Widget w,
 #if OPT_WIDE_CHARS
     else if (screen->wide_chars && *target == XA_STRING) {
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStringStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_UTF8_STRING(dpy)) {
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XUTF8StringStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_TEXT(dpy)) {
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStdICCTextStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_COMPOUND_TEXT(dpy)) {
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XCompoundTextStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
@@ -4227,24 +4282,22 @@ ConvertSelection(Widget w,
 	   with no conversion into the selection.  Yes, this breaks
 	   the ICCCM in non-Latin-1 locales. */
 	*type = XA_STRING;
-	*value = (XtPointer) screen->selection_data;
-	*length = screen->selection_length;
+	*value = (XtPointer) data;
+	*length = data_length;
 	*format = 8;
 	result = True;
 	TRACE(("...raw 8-bit data:%d\n", result));
     } else if (*target == XA_TEXT(dpy)) {	/* not wide_chars */
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    XmbTextListToTextProperty,
 				    XStdICCTextStyle);
 	TRACE(("...XmbTextListToTextProperty(StdICC):%d\n", result));
     } else if (*target == XA_COMPOUND_TEXT(dpy)) {	/* not wide_chars */
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    XmbTextListToTextProperty,
 				    XCompoundTextStyle);
 	TRACE(("...XmbTextListToTextProperty(Compound):%d\n", result));
@@ -4252,9 +4305,8 @@ ConvertSelection(Widget w,
 #ifdef X_HAVE_UTF8_STRING
     else if (*target == XA_UTF8_STRING(dpy)) {	/* not wide_chars */
 	result =
-	    _ConvertSelectionHelper(w,
-				    type, value, length, data,
-				    data_length, format,
+	    _ConvertSelectionHelper(w, scp,
+				    type, value, length, format,
 				    XmbTextListToTextProperty,
 				    XUTF8StringStyle);
 	TRACE(("...XmbTextListToTextProperty(UTF8):%d\n", result));
@@ -4268,7 +4320,7 @@ ConvertSelection(Widget w,
 	TRACE(("...list of values:%d\n", result));
     } else if (*target == XA_LENGTH(dpy)) {
 	/* This value is wrong if we have UTF-8 text */
-	result = SaveConvertedLength(value, screen->selection_length);
+	result = SaveConvertedLength(value, scp->data_length);
 	*type = XA_INTEGER;
 	*length = 1;
 	*format = 32;
@@ -4337,22 +4389,6 @@ SelectionDone(Widget w GCC_UNUSED,
 }
 
 static void
-_DisownSelection(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    if (screen->owned_atom != 0
-	&& screen->owned_time != 0) {
-	TRACE(("XtDisownSelection(%s, @%ld)\n",
-	       TraceAtomName(screen->display, screen->owned_atom),
-	       (long) screen->owned_time));
-	XtDisownSelection((Widget) xw, screen->owned_atom, screen->owned_time);
-	screen->owned_atom = 0;
-	screen->owned_time = 0;
-    }
-}
-
-static void
 _OwnSelection(XtermWidget xw,
 	      String *selections,
 	      Cardinal count)
@@ -4361,13 +4397,12 @@ _OwnSelection(XtermWidget xw,
     Atom *atoms = screen->selection_atoms;
     Cardinal i;
     Bool have_selection = False;
+    SelectedCells *scp;
 
     if (count == 0)
 	return;
 
-    TRACE(("_OwnSelection count %d, length %ld value %s\n", count,
-	   screen->selection_length,
-	   visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
+    TRACE(("_OwnSelection count %d\n", count));
     selections = MapSelections(xw, selections, count);
 
     if (count > screen->sel_atoms_size) {
@@ -4382,19 +4417,20 @@ _OwnSelection(XtermWidget xw,
 	if (cutbuffer >= 0) {
 	    unsigned long limit =
 	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
-	    if (screen->selection_length > limit) {
+	    scp = &(screen->selected_cells[cutbuffer + 2]);
+	    if (scp->data_length > limit) {
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-		       screen->selection_length, cutbuffer));
+		       scp->data_length, cutbuffer));
 		xtermWarning("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-			     screen->selection_length, cutbuffer);
+			     scp->data_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
 		 * broken as not even the corresponding paste code in xterm
 		 * understood this!  So now it converts to Latin1 first.
 		 *   Robert Brady, 2000-09-05
 		 */
-		unsigned long length = screen->selection_length;
-		Char *data = screen->selection_data;
+		unsigned long length = scp->data_length;
+		Char *data = scp->data_buffer;
 		if_OPT_WIDE_CHARS((screen), {
 		    data = UTF8toLatin1(screen, data, length, &length);
 		});
@@ -4407,30 +4443,40 @@ _OwnSelection(XtermWidget xw,
 	} else if (keepClipboard(atoms[i])) {
 	    Char *buf;
 	    TRACE(("saving selection to clipboard buffer\n"));
-	    if ((buf = (Char *) malloc((size_t) screen->selection_length))
-		== 0)
+	    scp = &(screen->selected_cells[1]);
+	    if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
 		SysError(ERROR_BMALLOC2);
 
 	    XtFree((char *) screen->clipboard_data);
-	    memcpy(buf, screen->selection_data, screen->selection_length);
+	    memcpy(buf, scp->data_buffer, scp->data_length);
 	    screen->clipboard_data = buf;
-	    screen->clipboard_size = screen->selection_length;
-	} else if (screen->selection_length == 0) {
-	    _DisownSelection(xw);
-	} else if (!screen->replyToEmacs && atoms[i] != 0) {
-	    if (screen->owned_atom != atoms[i]) {
-		_DisownSelection(xw);
+	    screen->clipboard_size = scp->data_length;
+	} else {
+	    int which = (atoms[i] == CLIPBOARD_ATOM) ? 1 : 0;
+	    scp = &(screen->selected_cells[which]);
+	    if (scp->data_length == 0) {
+		TRACE(("XtDisownSelection(%s, @%ld)\n",
+		       TraceAtomName(screen->display, atoms[i]),
+		       (long) screen->selection_time));
+		XtDisownSelection((Widget) xw,
+				  atoms[i],
+				  screen->selection_time);
+	    } else if (!screen->replyToEmacs && atoms[i] != 0) {
+		TRACE(("XtOwnSelection(%s, @%ld)\n",
+		       TraceAtomName(screen->display, atoms[i]),
+		       (long) screen->selection_time));
+		have_selection |=
+		    XtOwnSelection((Widget) xw, atoms[i],
+				   screen->selection_time,
+				   ConvertSelection,
+				   LoseSelection,
+				   SelectionDone);
 	    }
-	    TRACE(("XtOwnSelection(%s, @%ld)\n",
-		   TraceAtomName(screen->display, atoms[i]),
-		   (long) screen->selection_time));
-	    screen->owned_atom = atoms[i];
-	    screen->owned_time = screen->selection_time;
-	    have_selection |=
-		XtOwnSelection((Widget) xw, atoms[i],
-			       screen->selection_time,
-			       ConvertSelection, LoseSelection, SelectionDone);
 	}
+	TRACE(("... _OwnSelection used length %ld value %s\n",
+	       scp->data_length,
+	       visibleChars(scp->data_buffer,
+			    (unsigned) scp->data_length)));
     }
     if (!screen->replyToEmacs)
 	screen->selection_count = count;
@@ -4991,18 +5037,14 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 #if OPT_SELECT_REGEX
     char *saveExpr = screen->selectExpr[noClick];
 #endif
-
-    Char *save_selection_data = screen->selection_data;
-    int save_selection_size = screen->selection_size;
-    unsigned long save_selection_length = screen->selection_length;
+    SelectedCells *scp = &(screen->selected_cells[0]);
+    SelectedCells save_selection = *scp;
 
     char *result = 0;
 
     TRACE(("getDataFromScreen %s\n", method));
 
-    screen->selection_data = 0;
-    screen->selection_size = 0;
-    screen->selection_length = 0;
+    memset(scp, 0, sizeof(*scp));
 
     screen->numberOfClicks = 1;
     lookupSelectUnit(xw, noClick, method);
@@ -5027,18 +5069,20 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
     }
 
     ComputeSelect(xw, start, finish, False);
-    SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
+    SaltTextAway(xw,
+		 TargetToSelection(screen, "PRIMARY"),
+		 &(screen->startSel), &(screen->endSel));
 
-    if (screen->selection_length && screen->selection_data) {
-	TRACE(("...getDataFromScreen selection_data %.*s\n",
-	       (int) screen->selection_length,
-	       screen->selection_data));
-	result = malloc(screen->selection_length + 1);
+    if (scp->data_limit && scp->data_buffer) {
+	TRACE(("...getDataFromScreen selection-data %.*s\n",
+	       (int) scp->data_limit,
+	       scp->data_buffer));
+	result = malloc(scp->data_limit + 1);
 	if (result) {
-	    memcpy(result, screen->selection_data, screen->selection_length);
-	    result[screen->selection_length] = 0;
+	    memcpy(result, scp->data_buffer, scp->data_limit);
+	    result[scp->data_limit] = 0;
 	}
-	free(screen->selection_data);
+	free(scp->data_buffer);
     }
 
     TRACE(("...getDataFromScreen restoring previous selection\n"));
@@ -5058,9 +5102,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
     screen->selectExpr[noClick] = saveExpr;
 #endif
 
-    screen->selection_data = save_selection_data;
-    screen->selection_size = save_selection_size;
-    screen->selection_length = save_selection_length;
+    screen->selected_cells[0] = save_selection;
 
     TrackText(xw, &save_old_start, &save_old_end);
 

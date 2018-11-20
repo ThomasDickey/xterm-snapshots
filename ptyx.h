@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.921 2018/09/18 00:54:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.928 2018/11/19 09:34:31 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -339,6 +339,15 @@ typedef struct {
     int row;
     int col;
 } CELL;
+
+typedef struct {
+    CELL   cell_1st;			/* copy of screen->startSel */
+    CELL   cell_end;			/* copy of screen->endSel */
+    Char  *data_buffer;			/* the current selection */
+    size_t data_limit;			/* size of allocated buffer */
+    size_t data_length;			/* number of significant bytes */
+    Time   timestamp;			/* copy of screen->selection_time */
+} SelectedCells;
 
 #define isSameRow(a,b)		((a)->row == (b)->row)
 #define isSameCol(a,b)		((a)->col == (b)->col)
@@ -2582,21 +2591,16 @@ typedef struct {
 	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 
-	Char		*selection_data; /* the current selection */
-	int		selection_size; /* size of allocated buffer */
-	unsigned long	selection_length; /* number of significant bytes */
-
 	Char		*clipboard_data; /* the current clipboard */
 	unsigned long	clipboard_size; /*  size of allocated buffer */
-
-	Atom		owned_atom;	/* last XtOwnSelection atom */
-	Time		owned_time;	/* timestamp for last XtOwnSelection */
 
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
 	unsigned	lastButton;
 
+#define MAX_SELECTIONS	12
+	SelectedCells	selected_cells[MAX_SELECTIONS]; /* primary/clipboard */
 	CELL		rawPos;		/* raw position for selection start */
 	CELL		startRaw;	/* area before selectUnit processing */
 	CELL		endRaw;		/* " " */

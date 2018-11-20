@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.186 2018/09/18 01:09:22 tom Exp $ */
+/* $XTermId: trace.c,v 1.187 2018/11/18 21:49:06 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -324,6 +324,27 @@ visibleChars(const Char *buf, unsigned len)
 	used = 0;
     }
     return NonNull(result);
+}
+
+const char *
+visibleEventMode(EventMode value)
+{
+    const char *result;
+    switch (value) {
+    case NORMAL:
+	result = "NORMAL";
+	break;
+    case LEFTEXTENSION:
+	result = "LEFTEXTENSION";
+	break;
+    case RIGHTEXTENSION:
+	result = "RIGHTEXTENSION";
+	break;
+    default:
+	result = "?";
+	break;
+    }
+    return result;
 }
 
 const char *
@@ -767,6 +788,10 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	break;
     case EnterNotify:
     case LeaveNotify:
+	TRACE((" (%d,%d)",
+	       ev->xcrossing.y_root,
+	       ev->xcrossing.x_root));
+	break;
     case FocusIn:
     case FocusOut:
     default:
@@ -774,6 +799,12 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	break;
     }
     TRACE(("\n"));
+    if (params != 0 && *num_params != 0) {
+	Cardinal n;
+	for (n = 0; n < *num_params; ++n) {
+	    TRACE(("  param[%d] = %s\n", n, params[n]));
+	}
+    }
 }
 
 void

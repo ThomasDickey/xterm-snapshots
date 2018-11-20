@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.83 2018/09/15 20:19:38 tom Exp $ */
+/* $XTermId: trace.h,v 1.84 2018/11/18 21:45:18 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -62,6 +62,7 @@ extern	void	TraceClose (void);
 #endif
 
 extern	const char * visibleChars(const Char * /* buf */, unsigned /* len */);
+extern	const char * visibleEventMode(EventMode);
 extern	const char * visibleIChars(const IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleUChar(unsigned);
 extern	const char * visibleDblChrset(unsigned /* chrset */);
