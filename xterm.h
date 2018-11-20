@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.811 2018/09/20 23:50:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.812 2018/11/20 01:35:38 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -860,8 +860,8 @@ extern void SendFocusButton(XtermWidget /* xw */, XFocusChangeEvent * /* event *
 #endif
 
 #if OPT_PASTE64
-extern void AppendToSelectionBuffer (TScreen * /* screen */, unsigned  /* c */);
-extern void ClearSelectionBuffer (TScreen * /* screen */);
+extern void AppendToSelectionBuffer (TScreen * /* screen */, unsigned  /* c */, String /* selection */);
+extern void ClearSelectionBuffer (TScreen * /* screen */, String /* selection */);
 extern void CompleteSelection (XtermWidget  /* xw */, String * /* args */, Cardinal  /* len */);
 extern void xtermGetSelection (Widget  /* w */, Time  /* ev_time */, String * /* params */, Cardinal  /* num_params */, Atom * /* targets */);
 #endif

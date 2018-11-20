@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1608 2018/09/21 18:18:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1611 2018/11/20 09:48:42 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -9751,7 +9751,9 @@ VTDestroy(Widget w GCC_UNUSED)
     if (screen->selection_atoms)
 	XtFree((void *) (screen->selection_atoms));
 
-    XtFree((void *) (screen->selection_data));
+    for (n = 0; n < MAX_SELECTIONS; ++n) {
+	free(screen->selected_cells[n].data_buffer);
+    }
 
     TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);

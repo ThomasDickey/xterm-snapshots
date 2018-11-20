@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.845 2018/08/25 00:54:35 tom Exp $ */
+/* $XTermId: misc.c,v 1.846 2018/11/20 01:51:59 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3165,12 +3165,20 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 		    }
 		} else {
 		    if (AllowWindowOps(xw, ewSetSelection)) {
-			TRACE(("Setting selection with %s\n", buf));
+			char *old = buf;
+
+			TRACE(("Setting selection(%s) with %s\n", used, buf));
 			screen->selection_time =
 			    XtLastTimestampProcessed(TScreenOf(xw)->display);
-			ClearSelectionBuffer(screen);
-			while (*buf != '\0')
-			    AppendToSelectionBuffer(screen, CharOf(*buf++));
+
+			for (j = 0, buf = old; j < n; ++j) {
+			    ClearSelectionBuffer(screen, select_args[j]);
+			    while (*buf != '\0') {
+				AppendToSelectionBuffer(screen,
+							CharOf(*buf++),
+							select_args[j]);
+			    }
+			}
 			CompleteSelection(xw, select_args, n);
 		    }
 		    free(select_args);
