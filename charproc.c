@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1611 2018/11/20 09:48:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1612 2018/11/21 00:15:26 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5823,7 +5823,7 @@ really_set_mousemode(XtermWidget xw,
 
 #define set_mousemode(mode) really_set_mousemode(xw, IsSM(), mode)
 
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 #define set_mouseflag(f)		\
 	(IsSM()				\
 	 ? SCREEN_FLAG_set(screen, f)	\
@@ -6228,6 +6228,11 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_keyboard_type(xw, keyboardIsVT220, IsSM());
 	    break;
 #endif
+#if OPT_PASTE64 || OPT_READLINE
+	case srm_PASTE_IN_BRACKET:
+	    set_mouseflag(paste_brackets);
+	    break;
+#endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
 	    set_mouseflag(click1_moves);
@@ -6237,9 +6242,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_DBUTTON3_DELETE:
 	    set_mouseflag(dclick3_deletes);
-	    break;
-	case srm_PASTE_IN_BRACKET:
-	    set_mouseflag(paste_brackets);
 	    break;
 	case srm_PASTE_QUOTE:
 	    set_mouseflag(paste_quotes);
@@ -6502,6 +6504,11 @@ savemodes(XtermWidget xw)
 		CursorSave(xw);
 	    }
 	    break;
+#if OPT_PASTE64 || OPT_READLINE
+	case srm_PASTE_IN_BRACKET:
+	    SCREEN_FLAG_save(screen, paste_brackets);
+	    break;
+#endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_save(screen, click1_moves);
@@ -6511,9 +6518,6 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_save(screen, dclick3_deletes);
-	    break;
-	case srm_PASTE_IN_BRACKET:
-	    SCREEN_FLAG_save(screen, paste_brackets);
 	    break;
 	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_save(screen, paste_quotes);
@@ -6848,6 +6852,11 @@ restoremodes(XtermWidget xw)
 	case srm_LEGACY_FKEYS:
 	    xw->keyboard.type = (xtermKeyboardType) screen->save_modes[DP_KEYBOARD_TYPE];
 	    break;
+#if OPT_PASTE64 || OPT_READLINE
+	case srm_PASTE_IN_BRACKET:
+	    SCREEN_FLAG_restore(screen, paste_brackets);
+	    break;
+#endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_restore(screen, click1_moves);
@@ -6857,9 +6866,6 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_restore(screen, dclick3_deletes);
-	    break;
-	case srm_PASTE_IN_BRACKET:
-	    SCREEN_FLAG_restore(screen, paste_brackets);
 	    break;
 	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_restore(screen, paste_quotes);
@@ -11737,11 +11743,13 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #if OPT_DEC_RECTOPS
 	screen->cur_decsace = 0;
 #endif
+#if OPT_PASTE64 || OPT_READLINE
+	screen->paste_brackets = OFF;
+#endif
 #if OPT_READLINE
 	screen->click1_moves = OFF;
 	screen->paste_moves = OFF;
 	screen->dclick3_deletes = OFF;
-	screen->paste_brackets = OFF;
 	screen->paste_quotes = OFF;
 	screen->paste_literal_nl = OFF;
 #endif /* OPT_READLINE */

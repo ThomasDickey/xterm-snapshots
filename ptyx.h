@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.928 2018/11/19 09:34:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.929 2018/11/21 00:19:07 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -850,12 +850,6 @@ typedef enum {
 #define OPT_COLOR_RES2 0
 #endif
 
-#if OPT_PASTE64 && !OPT_READLINE
-/* OPT_PASTE64 uses logic from OPT_READLINE */
-#undef  OPT_READLINE
-#define OPT_READLINE 1
-#endif
-
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support PC colors */
 #undef  OPT_PC_COLORS
@@ -981,7 +975,7 @@ typedef struct {
 #if OPT_PASTE64
     Cardinal base64_paste;
 #endif
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
     unsigned paste_brackets;
 #endif
 } InternalSelect;
@@ -1149,11 +1143,13 @@ typedef enum {
 #if OPT_GRAPHICS
     ,srm_PRIVATE_COLOR_REGISTERS = 1070
 #endif
+#if OPT_PASTE64 || OPT_READLINE
+    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
+#endif
 #if OPT_READLINE
     ,srm_BUTTON1_MOVE_POINT = SET_BUTTON1_MOVE_POINT
     ,srm_BUTTON2_MOVE_POINT = SET_BUTTON2_MOVE_POINT
     ,srm_DBUTTON3_DELETE = SET_DBUTTON3_DELETE
-    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
     ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
     ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
 #endif				/* OPT_READLINE */
@@ -2242,13 +2238,16 @@ typedef struct {
 	unsigned	base64_count;
 	unsigned	base64_pad;
 #endif
+#if OPT_PASTE64 || OPT_READLINE
+	unsigned	paste_brackets;
+	/* not part of bracketed-paste, these are here to simplify ifdefs */
+	unsigned	dclick3_deletes;
+	unsigned	paste_literal_nl;
+#endif
 #if OPT_READLINE
 	unsigned	click1_moves;
 	unsigned	paste_moves;
-	unsigned	dclick3_deletes;
-	unsigned	paste_brackets;
 	unsigned	paste_quotes;
-	unsigned	paste_literal_nl;
 #endif	/* OPT_READLINE */
 #if OPT_DEC_LOCATOR
 	Boolean		locator_reset;	/* turn mouse off after 1 report? */
@@ -2729,7 +2728,7 @@ typedef struct _TekScreen {
 	char		tcapbuf[TERMCAP_SIZE];
 } TekScreen;
 
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 #define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
 #define SCREEN_FLAG_set(screenp,f)	((screenp)->f |= 1)
 #define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= (unsigned) ~1L)

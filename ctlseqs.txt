@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/11/16)
+               updated for XTerm Patch #336 (2018/11/20)
 
 
 
@@ -1588,12 +1588,14 @@ OSC Ps ; Pt ST
           selection and cut buffer 0.
 
           The second parameter, Pd, gives the selection data.  Normally
-          this is a string encoded in base64.  The data becomes the new
-          selection, which is then available for pasting by other appli-
-          cations.
+          this is a string encoded in base64 (RFC-4648).  The data
+          becomes the new selection, which is then available for pasting
+          by other applications.
 
           If the second parameter is a ? , xterm replies to the host
-          with the selection data encoded using the same protocol.
+          with the selection data encoded using the same protocol.  It
+          uses the first selection found by asking successively for each
+          item from the list of selection parameters.
 
           If the second parameter is neither a base64 string nor ? ,
           then the selection is cleared.

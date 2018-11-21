@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.846 2018/11/20 01:51:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.847 2018/11/21 00:02:08 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5025,6 +5025,11 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(xw->keyboard.type == keyboardIsVT220);
 	    break;
 #endif
+#if OPT_PASTE64 || OPT_READLINE
+	case srm_PASTE_IN_BRACKET:
+	    result = MdBool(SCREEN_FLAG(screen, paste_brackets));
+	    break;
+#endif
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
 	    result = MdBool(SCREEN_FLAG(screen, click1_moves));
@@ -5034,9 +5039,6 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case srm_DBUTTON3_DELETE:
 	    result = MdBool(SCREEN_FLAG(screen, dclick3_deletes));
-	    break;
-	case srm_PASTE_IN_BRACKET:
-	    result = MdBool(SCREEN_FLAG(screen, paste_brackets));
 	    break;
 	case srm_PASTE_QUOTE:
 	    result = MdBool(SCREEN_FLAG(screen, paste_quotes));
