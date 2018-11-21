@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.482 2018/11/17 02:08:08 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.483 2018/11/21 02:08:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #336
-.ds RF 2018/11/16
+.ds RF 2018/11/20
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2276,13 +2276,16 @@ If the parameter is empty, \fI\*(xt\fP uses \*(cs\*0,
 to specify the configurable primary/clipboard selection and cut buffer 0.
 .sP
 The second parameter, \*(Pd, gives the selection data.
-Normally this is a string encoded in base64.
+Normally this is a string encoded in base64 (RFC-4648).
 The data becomes the new selection,
 which is then available for pasting by other applications.
 .sP
 If the second parameter is a \*?,
 \fI\*(xt\fP replies to the host with the selection
 data encoded using the same protocol.
+It uses the first selection
+found by asking successively
+for each item from the list of selection parameters.
 .sP
 If the second parameter is neither a base64 string nor \*?,
 then the selection is cleared.

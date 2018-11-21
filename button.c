@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.554 2018/11/20 02:04:14 tom Exp $ */
+/* $XTermId: button.c,v 1.556 2018/11/21 02:30:07 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -948,7 +948,6 @@ readlineExtend(XtermWidget xw, XEvent *event)
 	}
     }
 }
-
 #endif /* OPT_READLINE */
 
 /* ^XM-G<line+' '><col+' '> */
@@ -1705,7 +1704,7 @@ CutBuffer(Atom code)
 	cutbuffer = -1;
 	break;
     }
-    TRACE(("CutBuffer(%d) = %d\n", (int) code, cutbuffer));
+    TRACE2(("CutBuffer(%d) = %d\n", (int) code, cutbuffer));
     return cutbuffer;
 }
 
@@ -2079,7 +2078,7 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 #endif
 }
 
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 static void
 _WriteKey(TScreen *screen, const Char *in)
 {
@@ -2262,7 +2261,7 @@ SelectionReceived(Widget w,
 	    /* EMPTY */ ;
 	} else
 #endif
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
 	    _WriteKey(screen, (const Char *) "200");
 	}
@@ -2282,7 +2281,7 @@ SelectionReceived(Widget w,
 #if OPT_PASTE64
 		screen->base64_paste = mydata->base64_paste;
 #endif
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 		screen->paste_brackets = mydata->paste_brackets;
 #endif
 		if (buffer != 0) {
@@ -2311,7 +2310,7 @@ SelectionReceived(Widget w,
 	    FinishPaste64(xw);
 	} else
 #endif
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
 	    _WriteKey(screen, (const Char *) "201");
 	}
@@ -3907,7 +3906,7 @@ SaltTextAway(XtermWidget xw,
 	    SysError(ERROR_BMALLOC2);
 	XtFree((char *) scp->data_buffer);
 	scp->data_buffer = line;
-	scp->data_limit = need + 1;
+	scp->data_limit = (size_t) (need + 1);
     } else {
 	line = scp->data_buffer;
     }
@@ -5003,7 +5002,7 @@ doSelectionFormat(XtermWidget xw,
     mydata->base64_paste = screen->base64_paste;
     screen->base64_paste = 0;
 #endif
-#if OPT_READLINE
+#if OPT_PASTE64 || OPT_READLINE
     mydata->paste_brackets = screen->paste_brackets;
     SCREEN_FLAG_unset(screen, paste_brackets);
 #endif

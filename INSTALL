@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.177 2018/11/15 10:22:07 Larry.Hynes Exp $
+-- $XTermId: INSTALL,v 1.178 2018/11/21 01:04:02 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2017,2018 by Thomas E. Dickey
 --
@@ -262,9 +262,10 @@ The options (in alphabetic order):
   --disable-paste64       disable support for bracketed paste mode
 
 	Do not compile-in code to support experimental bracketed paste mode,
-	i.e., provide functions for setting/getting the selection data.
+	along with functions for setting/getting the selection data, termed
+	"paste64".
 
-	(see ctlseqs.ms description of OSC 52).
+	(see ctlseqs.ms description of OSC 52, and DECSET 2004).
 
   --disable-pty-handshake disable support for pty handshakes
 
@@ -519,7 +520,8 @@ The options (in alphabetic order):
 	this puts xterm into a mode that sends special function-key strings to
 	bracket the data.
 
-	(See --enable-paste64, which fits xterm's protocol better).
+	(The "paste64" feature, which fits xterm's protocol better, is
+	configured by default).
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 
