@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/11/20)
+               updated for XTerm Patch #336 (2018/11/21)
 
 
 
@@ -90,10 +90,28 @@ o   Single-byte controls can be handled separately from multi-byte con-
 o   Some controls (such as OSC ) introduce a string mode, which is ended
     on a ST  (string terminator).
 
-    Again, the terminal should accept single-byte controls within the
-    string.  However, xterm has a resource setting brokenLinuxOSC to
-    allow recovery from applications which rely upon malformed palette
-    sequences used by the Linux console.
+    ECMA-48 describes only correct behavior, telling what types of char-
+    acters are expected at each stage of the control sequences.  It says
+    that the action taken in error recovery is implementation-dependent.
+    XTerm decodes control sequences using a state machine.  It handles
+    errors in decoding i.e., unexpected characters, by resetting to the
+    initial (ground) state.  That is different from the treatment of
+    unimplemented (but correctly formatted) features.
+
+    If an application does not send the string terminator, that is also
+    an error from the standpoint of a user.  To accommodate users of
+    those applications, xterm has resource settings which allow work-
+    arounds:
+
+    o   The Linux console's palette sequences do not use a string termi-
+        nator.  The brokenLinuxOSC resource setting tells xterm to
+        ignore those particular sequences.
+
+    o   The terminal should accept single-byte controls within the
+        string.  But some applications omit a string terminator, like
+        the Linux console.  The brokenStringTerm resource setting tells
+        xterm to exit string mode if it decodes a common control charac-
+        ter such as carriage return before the string terminator.
 
 
 C1 (8-Bit) Control Characters
