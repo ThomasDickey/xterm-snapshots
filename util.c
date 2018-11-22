@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.769 2018/11/15 22:40:11 tom Exp $ */
+/* $XTermId: util.c,v 1.770 2018/11/22 19:26:20 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2237,7 +2237,14 @@ set_background(XtermWidget xw, int color GCC_UNUSED)
     TScreen *screen = TScreenOf(xw);
     Pixel c = getXtermBG(xw, xw->flags, color);
 
+#if OPT_WIDE_ATTRS
+    TRACE(("set_background(%d) %#lx %s\n", color, c,
+	   ((xw->flags & ATR_DIRECT_BG)
+	    ? "direct"
+	    : "indexed")));
+#else
     TRACE(("set_background(%d) %#lx\n", color, c));
+#endif
     XSetWindowBackground(screen->display, VShellWindow(xw), c);
     XSetWindowBackground(screen->display, VWindow(screen), c);
     initBorderGC(xw, WhichVWin(screen));
@@ -4650,11 +4657,12 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
     Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
 
 #if OPT_ISO_COLORS
-    if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
-	result = (Pixel) color;
-    }) if ((attr_flags & BG_COLOR) &&
-	   (color >= 0 && color < MAXCOLORS)) {
-	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
+    if (color >= 0) {
+	if_OPT_DIRECT_COLOR2_else(TScreenOf(xw), (attr_flags & ATR_DIRECT_BG), {
+	    result = (Pixel) color;
+	}) if ((attr_flags & BG_COLOR) && (color < MAXCOLORS)) {
+	    result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
+	}
     }
 #else
     (void) attr_flags;

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.243 2018/05/03 00:30:44 tom Exp $
+## $XTermId: Makefile.in,v 1.244 2018/11/22 14:36:02 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -103,6 +103,13 @@ EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
+AUTO_SOURCE	= \
+		builtin_icons.h \
+		VTparse.cin \
+		Tekparse.cin \
+		VTparse.hin \
+		Tekparse.hin
+
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
 		  linedata.c main.c menu.c misc.c \
@@ -136,10 +143,12 @@ all :	$(PROGRAMS)
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
 .def.cin :
-	$(AWK) '/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' < $< >$@
+	@echo "making $@ from $<"
+	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "{ %d, \"%s\" },\n", n++, $$1; }' < $< >$@
 
 .def.hin :
-	$(AWK) '/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
+	@echo "making $@ from $<"
+	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 .man.$(manext) :
 	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
@@ -515,7 +524,9 @@ mostlyclean :
 	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS) builtin_icons.h *.cin *parse.hin
+	-$(RM) $(PROGRAMS) $(AUTO_SOURCE)
+
+sources : $(AUTO_SOURCE)
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
