@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.483 2018/11/21 02:08:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.485 2018/11/22 02:19:21 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #336
-.ds RF 2018/11/20
+.ds RF 2018/11/21
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -425,10 +425,34 @@ sequence because those cannot alter the meaning of the control sequence.
 Some controls (such as \*(Os) introduce a string mode,
 which is ended on a \*(ST (string terminator).
 .IP
-Again, the terminal should accept single-byte controls within the string.
-However, \fI\*(xt\fP has a resource setting \fBbrokenLinuxOSC\fP to allow
-recovery from applications which rely upon malformed palette sequences
-used by the Linux console.
+ECMA-48 describes only correct behavior,
+telling what types of characters are expected
+at each stage of the control sequences.
+It says that the action taken in error recovery is implementation-dependent.
+\fI\*(XT\fP decodes control sequences using a state machine.
+It handles errors in decoding
+i.e., unexpected characters,
+by resetting to the initial (ground) state.
+That is different from the treatment of unimplemented
+(but correctly formatted) features.
+.IP
+If an application does not send the string terminator, that is also an error
+from the standpoint of a user.
+To accommodate users of those applications, \fI\*(xt\fP has resource
+settings which allow workarounds:
+.RS
+.bP
+The Linux console's palette sequences do not use a string terminator.
+The \fBbrokenLinuxOSC\fP resource setting tells \fI\*(xt\fP to ignore
+those particular sequences.
+.bP
+The terminal should accept single-byte controls within the string.
+But some applications omit a string terminator,
+like the Linux console.
+The \fBbrokenStringTerm\fP resource setting tells \fI\*(xt\fP to exit
+string mode if it decodes a common control character such as carriage return
+before the string terminator.
+.RE
 .
 .Sh "C1 (8-Bit) Control Characters"
 .LP

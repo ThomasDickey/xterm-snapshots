@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1612 2018/11/21 00:15:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1615 2018/11/22 12:14:54 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1881,7 +1881,7 @@ get_subparam(int p, int s)
  * to be effective (more than $100 then, more than $200 in 2012)
  *
  * We overlooked the detail about ":" as a subparameter delimiter (documented
- * in 5.4.t2 in ECMA-48).  Some discussion in KDE in mid-2006 led Lars Doelle
+ * in 5.4.2 in ECMA-48).  Some discussion in KDE in mid-2006 led Lars Doelle
  * to discuss the issue with me.  Lars' initial concern dealt with the fact
  * that a sequence such as
  *	CSI 38 ; 5 ; 1 m
@@ -1913,6 +1913,31 @@ get_subparam(int p, int s)
  *
  * By the way - all of the parameters are decimal integers, and missing
  * parameters represent a default value.  ISO-8613-6 is clear about that.
+ *
+ * Aside from ISO-8613-3, there is no standard use of ":" as a delimiter.
+ * ECMA-48 says only:
+ *
+ *	5.4.2 Parameter string format
+ *
+ *	A parameter string which does not start with a bit combination in the
+ *	range 03/12 to 03/15 shall have the following format:
+ *
+ *	    a) A parameter string consists of one or more parameter
+ *	       sub-strings, each of which represents a number in decimal
+ *	       notation.
+ *
+ *	    b) Each parameter sub-string consists of one or more bit
+ *	       combinations from 03/00 to 03/10; the bit combinations from
+ *	       03/00 to 03/09 represent the digits ZERO to NINE; bit
+ *	       combination 03/10 may be used as a separator in a parameter
+ *	       sub-string, for example, to separate the fractional part of a
+ *	       decimal number from the integer part of that number.
+ *
+ * That is, there is no mention in ECMA-48 of the possibility that a parameter
+ * string might be a list of parameters, as done in ISO-8613-3 (nor does
+ * ECMA-48 provide an example where the ":" separator might be used).  Because
+ * of this, xterm treats other cases than those needed for ISO-8613-3 as an
+ * error, and stops interpreting the sequence.
  */
 #define extended_colors_limit(n) ((n) == 5 ? 1 : ((n) == 2 ? 3 : 0))
 static Boolean
@@ -3065,6 +3090,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SGR:
 	    for (item = 0; item < nparam; ++item) {
 		int op = GetParam(item);
+		int skip;
 
 		if_OPT_XMC_GLITCH(screen, {
 		    Mark_XMC(xw, op);
@@ -3075,7 +3101,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * Only SGR 38/48 accept subparameters, and in those cases
 		 * the values will not be seen at this point.
 		 */
-		if (param_has_subparams(item)) {
+		if ((skip = param_has_subparams(item))) {
 		    switch (op) {
 		    case 38:
 			/* FALLTHRU */
@@ -3086,8 +3112,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			/* FALLTHRU */
 		    default:
 			TRACE(("...unexpected subparameter in SGR\n"));
-			op = 9999;
-			ResetState(sp);
+			item += skip;	/* ignore this */
+			op = 9999;	/* will never use this, anyway */
 			break;
 		    }
 		}
