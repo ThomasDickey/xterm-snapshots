@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.929 2018/11/21 00:19:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.930 2018/11/22 18:51:26 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1329,7 +1329,12 @@ typedef enum {
 /***====================================================================***/
 
 #if OPT_ISO_COLORS
-#define TERM_COLOR_FLAGS(xw)	((xw)->flags & (FG_COLOR|BG_COLOR))
+#if OPT_WIDE_ATTRS
+#define COLOR_FLAGS		(FG_COLOR | BG_COLOR | ATR_DIRECT_FG | ATR_DIRECT_BG)
+#else
+#define COLOR_FLAGS		(FG_COLOR | BG_COLOR)
+#endif
+#define TERM_COLOR_FLAGS(xw)	((xw)->flags & COLOR_FLAGS)
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
