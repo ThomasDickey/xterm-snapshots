@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.65 2018/04/30 00:59:01 tom Exp $ */
+/* $XTermId: main.h,v 1.66 2018/11/24 15:12:26 tom Exp $ */
 
 /*
  * Copyright 2000-2016,2018 by Thomas E. Dickey
@@ -92,7 +92,7 @@
 #endif
 
 #ifndef DEFFACESIZE
-#define DEFFACESIZE		"14.0"
+#define DEFFACESIZE		"8.0"
 #endif
 
 #ifndef DEF_ALLOW_COLOR
