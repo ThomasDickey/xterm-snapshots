@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.187 2018/11/18 21:49:06 tom Exp $ */
+/* $XTermId: trace.c,v 1.188 2018/11/24 01:53:53 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -705,11 +705,11 @@ TraceScreen(XtermWidget xw, int whichBuf)
 }
 
 static char *
-formatEventMask(char *target, int source, Boolean buttons)
+formatEventMask(char *target, unsigned source, Boolean buttons)
 {
 #define DATA(name) { name ## Mask, #name }
     static struct {
-	int mask;
+	unsigned mask;
 	const char *name;
     } table[] = {
 	DATA(Shift),

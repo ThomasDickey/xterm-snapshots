@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.930 2018/11/22 18:51:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.934 2018/11/23 21:31:54 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -341,12 +341,9 @@ typedef struct {
 } CELL;
 
 typedef struct {
-    CELL   cell_1st;			/* copy of screen->startSel */
-    CELL   cell_end;			/* copy of screen->endSel */
     Char  *data_buffer;			/* the current selection */
     size_t data_limit;			/* size of allocated buffer */
     size_t data_length;			/* number of significant bytes */
-    Time   timestamp;			/* copy of screen->selection_time */
 } SelectedCells;
 
 #define isSameRow(a,b)		((a)->row == (b)->row)
@@ -1834,8 +1831,17 @@ typedef enum {
 	if ((xw)->work.render_font == erDefault) \
 	    (xw)->work.render_font = erFalse
 
+#define MAX_XFT_CACHE	10
 typedef struct {
 	XftFont *	font;
+	unsigned	wc;
+} XTermXftCache;
+
+typedef struct {
+	XftFont *	font;
+	XftPattern *	pattern;
+	XftFontSet *	fontset;
+	XTermXftCache   cache[MAX_XFT_CACHE];
 	FontMap		map;
 } XTermXftFonts;
 

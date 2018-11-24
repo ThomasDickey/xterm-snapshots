@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.770 2018/11/22 19:26:20 tom Exp $ */
+/* $XTermId: util.c,v 1.776 2018/11/24 02:17:57 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3447,7 +3447,7 @@ fixupItalics(XtermWidget xw,
 #endif
 
 #define SetMissing(tag) \
-	TRACE(("%s %s: missing %d\n", __FILE__, tag, missing)); \
+	TRACE(("%s %s: missing %d %04X\n", __FILE__, tag, missing, ch)); \
 	missing = 1
 
 /*
@@ -3670,6 +3670,8 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
 		int needed = CharWidth(ch);
 		XftFont *currFont = pickXftFont(needed, font, wfont);
+		XftFont *tempFont = 0;
+#define CURR_TEMP (tempFont ? tempFont : currFont)
 
 		if (xtermIsDecGraphic(ch)) {
 		    /*
@@ -3699,13 +3701,15 @@ drawXtermText(XtermWidget xw,
 			    if (screen->force_box_chars
 				|| screen->broken_box_chars
 				|| xtermXftMissing(xw, currFont, ch)) {
-				ch = part;
 				SetMissing("case 2");
+				ch = part;
 			    }
 			} else if (xtermXftMissing(xw, currFont, ch)) {
-			    XftFont *test = pickXftFont(needed, font0, wfont0);
+			    XftFont *test = findXftGlyph(xw, currFont, ch);
+			    if (test == 0)
+				test = pickXftFont(needed, font0, wfont0);
 			    if (!xtermXftMissing(xw, test, ch)) {
-				currFont = test;
+				tempFont = test;
 				replace = True;
 				filler = needed - 1;
 			    } else if ((part = AsciiEquivs(ch)) != ch) {
@@ -3720,6 +3724,7 @@ drawXtermText(XtermWidget xw,
 		}
 #else
 		XftFont *currFont = font;
+#define CURR_TEMP (currFont)
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
@@ -3769,7 +3774,7 @@ drawXtermText(XtermWidget xw,
 			IChar ch2 = (IChar) ch;
 			int nc = drawClippedXftString(xw,
 						      attr_flags,
-						      currFont,
+						      CURR_TEMP,
 						      getXftColor(xw, values.foreground),
 						      curX,
 						      y,
@@ -3781,7 +3786,7 @@ drawXtermText(XtermWidget xw,
 			    ch2 = ' ';
 			    nc = drawClippedXftString(xw,
 						      attr_flags,
-						      currFont,
+						      CURR_TEMP,
 						      getXftColor(xw, values.foreground),
 						      curX,
 						      y,
