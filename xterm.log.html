@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1944 2018/11/23 19:53:36 tom Exp $
+  $XTermId: xterm.log.html,v 1.1945 2018/11/24 16:04:33 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -964,6 +964,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>change default <code>faceSize</code> to 8.0, to simplify
+    switching back/forth between bitmap fonts and TrueType. This
+    was originally (mis)set to 14.0 in <a href="#xterm_148">patch
+    #148</a>.</li>
+
     <li>add fallback support in Xft configuration for missing
     glyphs (prompted by discussion with Mike Burns).</li>
 
@@ -1751,7 +1756,7 @@
     </li>
 
     <li>fix a bug introduced by the changes to font information in
-    <a href="#xterm-328">patch #328</a>. When processing the
+    <a href="#xterm_328">patch #328</a>. When processing the
     "checkfont" option of the <code>locale</code> resource, the
     program referred to the <em>request</em> data, to an array
     which was only allocated in the <em>new/result</em> widget

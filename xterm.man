@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.762 2018/09/16 17:12:04 tom Exp $
+.\" $XTermId: xterm.man,v 1.763 2018/11/24 15:28:33 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -3354,17 +3354,19 @@ If the application uses double-wide characters and this resource is not given,
 .B "faceSize\fP (class\fB FaceSize\fP)"
 Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fI\*n\fR.
-The default is \*(``14.0\*(''
+The default is \*(``8.0\*(''
 On the \fBVT\ Fonts\fP menu, this corresponds to the \fIDefault\fP entry.
 .IP
-Although the default is \*(``14.0\*('',
+Although the default is \*(``8.0\*('',
 this may not be the same as the pointsize for the default bitmap font,
 i.e., that assigned with the \fB\-fn\fP option,
 or the \fBfont\fP resource.
-For example, the \*(``fixed\*('' font usually has a pointsize of \*(``8.0\*(''.
-If you set \fBfaceSize\fP to match the size of the bitmap font,
-then switching between bitmap and TrueType fonts via the font menu
-will give comparable sizes for the window.
+The default value of \fBfaceSize\fP is chosen
+to match the size of the \*(``fixed\*('' font,
+making switching between bitmap and TrueType fonts via the font menu
+give comparable sizes for the window.
+If your \fB\-fn\fP option uses a different pointsize,
+you might want to adjust the \fBfaceSize\fP resource to match.
 .IP
 You can specify the pointsize for TrueType fonts selected with the other
 size-related menu entries such as Medium, Huge, etc., by using one of

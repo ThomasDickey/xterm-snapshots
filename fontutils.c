@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.586 2018/11/24 01:34:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.587 2018/11/24 13:43:09 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -3614,7 +3614,8 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
     const char *tag = 0;
 
     for (n = 0; n < XtNumber(table); ++n) {
-	XTermXftFonts *check = (XTermXftFonts *) ((char *) screen + table[n]);
+	XTermXftFonts *check = (XTermXftFonts *) ((void *) ((char *) screen
+							    + table[n]));
 	if (check[fontnum].font == given) {
 	    which = &check[fontnum];
 	    tag = whichFontEnum(n);
