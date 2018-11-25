@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.934 2018/11/23 21:31:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.935 2018/11/25 13:55:19 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -474,9 +474,6 @@ typedef enum {
     ,csBYTE = xBIT(4)
     ,cs8TH = xBIT(5)
 } CSBITS;
-
-#define	SAVELINES		64      /* default # lines to save      */
-#define SCROLLLINES 1			/* default # lines to scroll    */
 
 #define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp
 
