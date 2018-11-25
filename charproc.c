@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1615 2018/11/22 12:14:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1616 2018/11/25 13:55:14 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -501,9 +501,9 @@ static XtResource xterm_resources[] =
     Ires(XtNtitleModes, XtCTitleModes, screen.title_modes, DEF_TITLE_MODES),
     Ires(XtNnextEventDelay, XtCNextEventDelay, screen.nextEventDelay, 1),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
-    Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
+    Ires(XtNsaveLines, XtCSaveLines, screen.savelines, DEF_SAVE_LINES),
     Ires(XtNscrollBarBorder, XtCScrollBarBorder, screen.scrollBarBorder, 1),
-    Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, SCROLLLINES),
+    Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, DEF_SCROLL_LINES),
 
     Sres(XtNinitialFont, XtCInitialFont, screen.initial_font, NULL),
     Sres(XtNfont1, XtCFont1, screen.MenuFontName(fontMenu_font1), NULL),
