@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.587 2018/11/24 13:43:09 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.591 2018/11/26 00:44:18 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2393,6 +2393,7 @@ reportXftFonts(XtermWidget xw,
 		source = 0;
 	    }
 	}
+	fflush(stdout);
     }
 }
 #else
@@ -2817,8 +2818,23 @@ void
 xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 {
     if (pub->font != 0) {
+	Cardinal n;
+
 	XftFontClose(screen->display, pub->font);
 	pub->font = 0;
+
+	if (pub->pattern) {
+	    XftPatternDestroy(pub->pattern);
+	}
+	if (pub->fontset) {
+	    XftFontSetDestroy(pub->fontset);
+	}
+
+	for (n = 0; n < MAX_XFT_CACHE; ++n) {
+	    if (pub->cache[n].font) {
+		XftFontClose(screen->display, pub->cache[n].font);
+	    }
+	}
     }
 }
 
@@ -3613,6 +3629,16 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
     FcResult status;
     const char *tag = 0;
 
+    /* ignore codes in private use areas */
+    if ((wc >= 0xe000 && wc <= 0xf8ff)
+	|| (wc >= 0xf0000 && wc <= 0xffffd)
+	|| (wc >= 0x100000 && wc <= 0x10fffd)) {
+	return 0;
+    }
+    /* the end of the BMP is reserved for non-characters */
+    if (wc >= 0xfff0 && wc <= 0xffff)
+	return 0;
+
     for (n = 0; n < XtNumber(table); ++n) {
 	XTermXftFonts *check = (XTermXftFonts *) ((void *) ((char *) screen
 							    + table[n]));
@@ -3638,6 +3664,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	    }
 	    if (result == 0) {
 		FcPattern *myPattern;
+		FcPattern *myReport = 0;
 		FcPattern *matchedFont;
 		FcFontSet *myFontSets[1];
 		FcCharSet *myCharSet;
@@ -3650,6 +3677,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		FcCharSetAddChar(myCharSet, wc);
 		FcPatternAddCharSet(myPattern, FC_CHARSET, myCharSet);
 		FcPatternAddBool(myPattern, FC_SCALABLE, FcTrue);
+		FcPatternAddInteger(myPattern, FC_CHAR_WIDTH, given->max_advance_width);
 
 		FcConfigSubstitute(FcConfigGetCurrent(),
 				   myPattern,
@@ -3670,16 +3698,24 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    XftFontClose(screen->display, which->cache[--n].font);
 		}
 
+		if (resource.reportFonts) {
+		    printf("Opening fallback font for U+%04X, width=%d\n",
+			   wc, given->max_advance_width);
+		    myReport = FcPatternDuplicate(matchedFont);
+		}
 		which->cache[n].font = XftFontOpenPattern(screen->display, matchedFont);
 		if (which->cache[n].font) {
 		    reportXftFonts(xw, which->cache[n].font, "fallback",
-				   tag, matchedFont);
+				   tag, myReport);
 		    if (XftGlyphExists(screen->display,
 				       which->cache[n].font, wc)) {
 			result = which->cache[n].font;
 		    }
 		}
 
+		if (resource.reportFonts) {
+		    FcPatternDestroy(myReport);
+		}
 		FcPatternDestroy(myPattern);
 		FcCharSetDestroy(myCharSet);
 	    }
