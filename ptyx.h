@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.935 2018/11/25 13:55:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.936 2018/11/25 23:31:06 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1828,7 +1828,7 @@ typedef enum {
 	if ((xw)->work.render_font == erDefault) \
 	    (xw)->work.render_font = erFalse
 
-#define MAX_XFT_CACHE	10
+#define MAX_XFT_CACHE	30
 typedef struct {
 	XftFont *	font;
 	unsigned	wc;
