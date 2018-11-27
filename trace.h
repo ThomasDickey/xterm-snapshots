@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.84 2018/11/18 21:45:18 tom Exp $ */
+/* $XTermId: trace.h,v 1.85 2018/11/26 09:41:16 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -88,6 +88,12 @@ extern	const	char *trace_who;
 extern	void	TraceEvent(const char *, XEvent *, String *, Cardinal *);
 #undef  TRACE_EVENT
 #define	TRACE_EVENT(t,e,s,n) TraceEvent(t, (XEvent *)e, s, n)
+
+#if OPT_RENDERFONT
+extern	void	TraceFallback(XtermWidget, const char *, unsigned, int, XftFont *);
+#undef  TRACE_FALLBACK
+#define TRACE_FALLBACK(w,t,c,n,f) TraceFallback(w, t, c, n, f)
+#endif
 
 extern	void	TraceFocus(Widget, XEvent *);
 #undef  TRACE_FOCUS

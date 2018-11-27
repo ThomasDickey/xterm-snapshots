@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.591 2018/11/26 00:44:18 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.592 2018/11/26 09:41:37 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -3659,6 +3659,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		}
 		if (XftGlyphExists(screen->display, which->cache[n].font, wc)) {
 		    result = which->cache[n].font;
+		    TRACE_FALLBACK(xw, "old", wc, n, result);
 		    break;
 		}
 	    }
@@ -3710,6 +3711,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    if (XftGlyphExists(screen->display,
 				       which->cache[n].font, wc)) {
 			result = which->cache[n].font;
+			TRACE_FALLBACK(xw, "new", wc, n, result);
 		    }
 		}
 
