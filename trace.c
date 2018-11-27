@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.188 2018/11/24 01:53:53 tom Exp $ */
+/* $XTermId: trace.c,v 1.192 2018/11/27 00:35:05 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -36,6 +36,7 @@
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
 #include <xstrings.h>
+#include <wcwidth.h>
 #include <version.h>
 
 #if OPT_TRACE
@@ -806,6 +807,32 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	}
     }
 }
+
+#if OPT_RENDERFONT
+void
+TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
+{
+    XGlyphInfo gi;
+    int expect = my_wcwidth(wc);
+    int hijack = mk_wcwidth_cjk(wc);
+    int actual;
+
+    XftTextExtents32(TScreenOf(xw)->display, font, &wc, 1, &gi);
+    actual = ((gi.width + font->max_advance_width - 1)
+	      / font->max_advance_width);
+
+    TRACE(("FALLBACK %s U+%04X %d (%d,%d) %dx%d %d vs %d/%d%s\n", tag, wc, n,
+	   gi.y + gi.yOff,
+	   gi.x + gi.xOff,
+	   gi.height, gi.width,
+	   actual, expect, hijack,
+	   ((actual != expect)
+	    ? ((actual == hijack)
+	       ? " OOPS"
+	       : " oops")
+	    : "")));
+}
+#endif /* OPT_RENDERFONT */
 
 void
 TraceFocus(Widget w, XEvent *ev)
