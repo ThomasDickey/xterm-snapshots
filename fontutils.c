@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.592 2018/11/26 09:41:37 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.604 2018/11/30 00:47:27 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2292,7 +2292,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     TRACE(("   data range %#6x..%#6x\n", first, last));
     for (c = first; c <= last; ++c) {
 	if (FcCharSetHasChar(xft->charset, c)) {
-	    int width = my_wcwidth((int) c);
+	    int width = CharWidth(c);
 	    XGlyphInfo extents;
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
@@ -2430,6 +2430,30 @@ maybeXftCache(XtermWidget xw, XftFont *font)
 	}
     }
     return result;
+}
+
+/*
+ * Drop an entry from the cache, and close the font.
+ */
+void
+closeCachedXft(TScreen *screen, XftFont *font)
+{
+    if (font != 0) {
+	ListXftFonts *p, *q;
+
+	for (p = screen->list_xft_fonts, q = 0; p != 0; q = p, p = p->next) {
+	    if (p->font == font) {
+		XftFontClose(screen->display, font);
+		if (q != 0) {
+		    q->next = p->next;
+		} else {
+		    screen->list_xft_fonts = p->next;
+		}
+		free(p);
+		break;
+	    }
+	}
+    }
 }
 
 static XftFont *
@@ -2820,7 +2844,7 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
     if (pub->font != 0) {
 	Cardinal n;
 
-	XftFontClose(screen->display, pub->font);
+	closeCachedXft(screen, pub->font);
 	pub->font = 0;
 
 	if (pub->pattern) {
@@ -2832,7 +2856,7 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 
 	for (n = 0; n < MAX_XFT_CACHE; ++n) {
 	    if (pub->cache[n].font) {
-		XftFontClose(screen->display, pub->cache[n].font);
+		closeCachedXft(screen, pub->cache[n].font);
 	    }
 	}
     }
@@ -3207,7 +3231,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 
     if (pc == 0 || CI_NONEXISTCHAR(pc)) {
 	TRACE2(("xtermMissingChar %#04x (!exists), %d cells\n",
-		ch, my_wcwidth((wchar_t) ch)));
+		ch, CharWidth(ch)));
 	result = True;
     }
     if (ch < KNOWN_MISSING) {
@@ -3606,6 +3630,39 @@ xtermDrawBoxChar(XtermWidget xw,
 #endif /* OPT_BOX_CHARS */
 
 #if OPT_RENDERFONT
+/*
+ * Check if the glyph is defined in the given font, and (try to) filter out
+ * cases where double-width glyphs are stuffed into a single-width outline.
+ */
+static Boolean
+foundXftGlyph(XtermWidget xw, XftFont *font, unsigned wc)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = False;
+
+    if (XftGlyphExists(screen->display, font, wc)) {
+	int expect;
+
+	if ((expect = CharWidth(wc)) > 0) {
+	    XGlyphInfo gi;
+	    int actual;
+
+	    XftTextExtents32(screen->display, font, &wc, 1, &gi);
+	    actual = (((gi.xOff * 5) / 4) >= gi.width) ? 1 : 2;
+	    if (actual <= expect) {
+		/* allow double-cell if wcwidth agrees */
+		result = True;
+	    } else {
+		TRACE(("SKIP U+%04X %d vs %d (%d vs %d)\n",
+		       wc, gi.xOff, gi.width, actual, expect));
+	    }
+	} else {
+	    result = True;
+	}
+    }
+    return result;
+}
+
 XftFont *
 findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 {
@@ -3653,13 +3710,16 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	    which->fontset = FcFontSort(0, which->pattern, 1, 0, &status);
 	}
 	if (which->fontset != 0) {
+	    XftFont *check;
+
 	    for (n = 0; n < XtNumber(which->cache); ++n) {
-		if (which->cache[n].font == 0) {
+		if ((check = which->cache[n].font) == 0) {
 		    break;
 		}
-		if (XftGlyphExists(screen->display, which->cache[n].font, wc)) {
-		    result = which->cache[n].font;
-		    TRACE_FALLBACK(xw, "old", wc, n, result);
+		if (foundXftGlyph(xw, check, wc)) {
+		    result = check;
+		    which->cache[n].usage = which->cache_used++;
+		    TRACE_FALLBACK(xw, "old", wc, (int) n, result);
 		    break;
 		}
 	    }
@@ -3693,25 +3753,70 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 					     &status);
 
 		/*
-		 * TODO: use LRU to close the least-recently-used entry.
+		 * Close the least-recently-used entry.
 		 */
 		if (n >= XtNumber(which->cache)) {
-		    XftFontClose(screen->display, which->cache[--n].font);
+		    Cardinal m;
+		    unsigned long level = which->cache_used;
+		    Cardinal unuse = --n;
+
+		    TRACE(("FALLBACK overflow - reuse least-recently-used entry\n"));
+		    for (m = 0; m < XtNumber(which->cache); ++m) {
+			if (level > which->cache[m].usage) {
+			    level = which->cache[m].usage;
+			    unuse = m;
+			}
+		    }
+		    TRACE(("...that is %d\n", unuse));
+		    /* reset usage counts to avoid overflow */
+		    if (level--) {
+			for (m = 0; m < XtNumber(which->cache); ++m) {
+			    which->cache[m].usage -= level;
+			}
+			which->cache_used -= level;
+		    }
+		    n = unuse;
 		}
 
 		if (resource.reportFonts) {
-		    printf("Opening fallback font for U+%04X, width=%d\n",
-			   wc, given->max_advance_width);
 		    myReport = FcPatternDuplicate(matchedFont);
 		}
-		which->cache[n].font = XftFontOpenPattern(screen->display, matchedFont);
-		if (which->cache[n].font) {
-		    reportXftFonts(xw, which->cache[n].font, "fallback",
-				   tag, myReport);
-		    if (XftGlyphExists(screen->display,
-				       which->cache[n].font, wc)) {
-			result = which->cache[n].font;
-			TRACE_FALLBACK(xw, "new", wc, n, result);
+		check = XftFontOpenPattern(screen->display, matchedFont);
+		if (check != 0) {
+		    Cardinal m;
+		    Boolean giveup = False;
+		    /*
+		     * When Xft finishes scanning a pattern, it starts all over
+		     * again without returning an error.  This check for
+		     * duplicates is a workaround for that issue.
+		     */
+		    for (m = 0; m <= n; ++m) {
+			if (check == which->cache[n].font) {
+			    giveup = True;
+			    break;
+			}
+		    }
+		    if (giveup) {
+			TRACE(("found duplicate - stop\n"));
+			XftFontClose(screen->display, check);
+		    } else if (foundXftGlyph(xw, check, wc)) {
+			if (resource.reportFonts) {
+			    printf("Opened fallback font #%d for U+%04X, width=%d\n",
+				   n + 1, wc, given->max_advance_width);
+			}
+			reportXftFonts(xw, check, "fallback", tag, myReport);
+			closeCachedXft(screen, which->cache[n].font);
+			(void) maybeXftCache(xw, check);
+			which->cache[n].font = check;
+			which->cache[n].usage = which->cache_used++;
+			result = check;
+			TRACE_FALLBACK(xw, "new", wc, (int) n, result);
+		    } else {
+			if (resource.reportFonts) {
+			    printf("Cannot find fallback font for U+%04X, width=%d\n",
+				   wc, given->max_advance_width);
+			}
+			XftFontClose(screen->display, check);
 		    }
 		}
 

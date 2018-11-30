@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.192 2018/11/27 00:35:05 tom Exp $ */
+/* $XTermId: trace.c,v 1.193 2018/11/30 00:30:19 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -813,8 +813,8 @@ void
 TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
 {
     XGlyphInfo gi;
-    int expect = my_wcwidth(wc);
-    int hijack = mk_wcwidth_cjk(wc);
+    int expect = my_wcwidth((wchar_t) wc);
+    int hijack = mk_wcwidth_cjk((wchar_t) wc);
     int actual;
 
     XftTextExtents32(TScreenOf(xw)->display, font, &wc, 1, &gi);
