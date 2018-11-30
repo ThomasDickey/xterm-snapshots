@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.127 2018/11/24 01:34:01 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.128 2018/11/29 00:03:41 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -149,6 +149,7 @@ extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigne
 extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
 extern XftFont *findXftGlyph (XtermWidget /* xw */, XftFont * /* given */, unsigned /* wc */);
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
+extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif
 

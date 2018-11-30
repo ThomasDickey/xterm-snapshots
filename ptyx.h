@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.937 2018/11/26 09:41:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.939 2018/11/28 09:53:35 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1828,10 +1828,10 @@ typedef enum {
 	if ((xw)->work.render_font == erDefault) \
 	    (xw)->work.render_font = erFalse
 
-#define MAX_XFT_CACHE	30
+#define MAX_XFT_CACHE	5
 typedef struct {
 	XftFont *	font;
-	unsigned	wc;
+	unsigned long	usage;
 } XTermXftCache;
 
 typedef struct {
@@ -1839,6 +1839,7 @@ typedef struct {
 	XftPattern *	pattern;
 	XftFontSet *	fontset;
 	XTermXftCache   cache[MAX_XFT_CACHE];
+	unsigned long	cache_used;
 	FontMap		map;
 } XTermXftFonts;
 
