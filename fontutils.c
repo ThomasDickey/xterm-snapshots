@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.604 2018/11/30 00:47:27 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.605 2018/12/02 21:55:42 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -3648,13 +3648,17 @@ foundXftGlyph(XtermWidget xw, XftFont *font, unsigned wc)
 	    int actual;
 
 	    XftTextExtents32(screen->display, font, &wc, 1, &gi);
-	    actual = (((gi.xOff * 5) / 4) >= gi.width) ? 1 : 2;
+	    /*
+	     * Some (more than a few) fonts are sloppy; allow 10% outside
+	     * the bounding box to accommodate them.
+	     */
+	    actual = ((gi.xOff * 10) >= (11 * FontWidth(screen))) ? 2 : 1;
 	    if (actual <= expect) {
 		/* allow double-cell if wcwidth agrees */
 		result = True;
 	    } else {
 		TRACE(("SKIP U+%04X %d vs %d (%d vs %d)\n",
-		       wc, gi.xOff, gi.width, actual, expect));
+		       wc, gi.xOff, FontWidth(screen), actual, expect));
 	    }
 	} else {
 	    result = True;

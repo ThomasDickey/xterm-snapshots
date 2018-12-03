@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.193 2018/11/30 00:30:19 tom Exp $ */
+/* $XTermId: trace.c,v 1.196 2018/12/02 22:47:21 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -812,19 +812,25 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 void
 TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
 {
+    TScreen *screen = TScreenOf(xw);
     XGlyphInfo gi;
     int expect = my_wcwidth((wchar_t) wc);
     int hijack = mk_wcwidth_cjk((wchar_t) wc);
     int actual;
 
-    XftTextExtents32(TScreenOf(xw)->display, font, &wc, 1, &gi);
-    actual = ((gi.width + font->max_advance_width - 1)
-	      / font->max_advance_width);
+    XftTextExtents32(screen->display, font, &wc, 1, &gi);
+    actual = ((gi.xOff + FontWidth(screen) - 1)
+	      / FontWidth(screen));
 
-    TRACE(("FALLBACK %s U+%04X %d (%d,%d) %dx%d %d vs %d/%d%s\n", tag, wc, n,
-	   gi.y + gi.yOff,
-	   gi.x + gi.xOff,
+    TRACE(("FALLBACK #%d %s U+%04X %d,%d pos,"
+	   " %d,%d off," " %dx%d size,"
+	   " %d/%d next," " %d vs %d/%d cells%s\n",
+	   n + 1, tag, wc,
+	   gi.y, gi.x,
+	   gi.yOff, gi.xOff,
 	   gi.height, gi.width,
+	   font->max_advance_width,
+	   FontWidth(screen),
 	   actual, expect, hijack,
 	   ((actual != expect)
 	    ? ((actual == hijack)
