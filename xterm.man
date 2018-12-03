@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.763 2018/11/24 15:28:33 tom Exp $
+.\" $XTermId: xterm.man,v 1.764 2018/12/03 00:25:20 tom Exp $
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
 .\"
@@ -3923,6 +3923,13 @@ false	true	use built-in tables
 true	false	use built-in CJK tables
 true	true	use built-in CJK tables
 .TE
+.IP
+To disable \fBmkWidth\fP, and use the system's tables,
+set both \fBmkSampleSize\fP and \fBmkSamplePass\fP to \*(``0\*(''.
+Doing that may make \fI\*n\fP more consistent
+with applications running in \fI\*n\fP,
+but may omit some font glyphs whose width correctly differs
+from the system's character tables.
 .TP 8
 .B "modifyCursorKeys\fP (class\fB ModifyCursorKeys\fP)"
 Tells how to handle the special case where

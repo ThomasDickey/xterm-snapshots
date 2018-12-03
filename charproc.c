@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1616 2018/11/25 13:55:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1617 2018/12/02 23:58:18 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2200,7 +2200,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& CharWidth(test) == CharWidth(prev)) {
 		putXtermCell(screen, use_row, use_col, test);
 	    } else if (screen->char_was_written
-		       || getXtermCell(screen, use_row, use_col) > ' ') {
+		       || getXtermCell(screen, use_row, use_col) >= ' ') {
 		addXtermCombining(screen, use_row, use_col, c);
 	    } else {
 		/*

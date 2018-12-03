@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.776 2018/11/24 02:17:57 tom Exp $ */
+/* $XTermId: util.c,v 1.777 2018/12/02 22:59:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4765,7 +4765,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 	LineData *ld = getLineData(screen, row);
 	size_t off;
 
-	TRACE(("addXtermCombining %d,%d %#x (%d)\n",
+	TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
 	       row, col, ch, CharWidth(ch)));
 
 	for_each_combData(off, ld) {
