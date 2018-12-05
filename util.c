@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.777 2018/12/02 22:59:47 tom Exp $ */
+/* $XTermId: util.c,v 1.778 2018/12/05 23:46:45 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2840,8 +2840,8 @@ getXftColor(XtermWidget xw, Pixel pixel)
 	  ? 0 \
 	  : (((ch) < 256) \
 	      ? (((ch) >= 128 && (ch) < 160) \
-	          ? (TScreenOf(xw)->c1_printable ? 1 : 0) \
-	          : 1) \
+		  ? (TScreenOf(xw)->c1_printable ? 1 : 0) \
+		  : 1) \
 	      : CharWidth(ch)))
 #else
 #define XtermCellWidth(xw, ch) \
@@ -3402,7 +3402,7 @@ drawUnderline(XtermWidget xw,
 /*
  * As a special case, we are currently allowing italic fonts to be inexact
  * matches for the normal font's size.  That introduces a problem:  either the
- * ascent or descent may be shorter, leaving a gap that has to be filled in. 
+ * ascent or descent may be shorter, leaving a gap that has to be filled in.
  * Or they may be larger, requiring clipping.  Check for both cases.
  */
 static int
@@ -3711,7 +3711,7 @@ drawXtermText(XtermWidget xw,
 			    if (!xtermXftMissing(xw, test, ch)) {
 				tempFont = test;
 				replace = True;
-				filler = needed - 1;
+				filler = 0;
 			    } else if ((part = AsciiEquivs(ch)) != ch) {
 				filler = needed - 1;
 				ch = part;
@@ -4090,7 +4090,7 @@ drawXtermText(XtermWidget xw,
 	    buffer[dst].byte1 = HI_BYTE(ch);
 #if OPT_MINI_LUIT
 #define UCS2SBUF(value)	buffer[dst].byte2 = LO_BYTE(value);\
-	    		buffer[dst].byte1 = HI_BYTE(value)
+			buffer[dst].byte1 = HI_BYTE(value)
 
 #define Map2Sbuf(from,to) (text[src] == from) { UCS2SBUF(to); }
 
