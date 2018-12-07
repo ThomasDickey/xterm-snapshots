@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.564 2018/09/21 22:26:00 tom Exp $ */
+/* $XTermId: screen.c,v 1.567 2018/12/07 00:50:36 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -703,18 +703,6 @@ ChangeToWide(XtermWidget xw)
 }
 #endif
 
-#define ClearCell(d) \
-	do { \
-	    dst->charData[d] = ' '; \
-	    dst->attribs[d] = src->attribs[d]; \
-	    if_OPT_ISO_COLORS(screen, { \
-		dst->color[d] = src->color[d]; \
-	    )}; \
-	    if_OPT_WIDE_CHARS(screen, { \
-		dst->combSize = 0; \
-	    }); \
-	} while (0)
-
 /*
  * Copy cells, no side-effects.
  */
@@ -740,37 +728,37 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Boole
 	    if (col > 0) {
 		if (dst->charData[col] == HIDDEN_CHAR) {
 		    if (down) {
-			ClearCell(col - 1);
-			ClearCell(col);
+			Clear2Cell(dst, src, col - 1);
+			Clear2Cell(dst, src, col);
 		    } else {
 			if (src->charData[col] != HIDDEN_CHAR) {
-			    ClearCell(col - 1);
-			    ClearCell(col);
+			    Clear2Cell(dst, src, col - 1);
+			    Clear2Cell(dst, src, col);
 			} else {
 			    fix_l = col - 1;
 			}
 		    }
 		} else if (src->charData[col] == HIDDEN_CHAR) {
-		    ClearCell(col - 1);
-		    ClearCell(col);
+		    Clear2Cell(dst, src, col - 1);
+		    Clear2Cell(dst, src, col);
 		    ++col;
 		}
 	    }
 	    if (last < src->lineSize) {
 		if (dst->charData[last] == HIDDEN_CHAR) {
 		    if (down) {
-			ClearCell(last - 1);
-			ClearCell(last);
+			Clear2Cell(dst, src, last - 1);
+			Clear2Cell(dst, src, last);
 		    } else {
 			if (src->charData[last] != HIDDEN_CHAR) {
-			    ClearCell(last);
+			    Clear2Cell(dst, src, last);
 			} else {
 			    fix_r = last - 1;
 			}
 		    }
 		} else if (src->charData[last] == HIDDEN_CHAR) {
 		    last--;
-		    ClearCell(last);
+		    Clear2Cell(dst, src, last);
 		}
 	    }
 	});
@@ -797,12 +785,12 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Boole
 
 	if_OPT_WIDE_CHARS(screen, {
 	    if (fix_l >= 0) {
-		ClearCell(fix_l);
-		ClearCell(fix_l + 1);
+		Clear2Cell(dst, src, fix_l);
+		Clear2Cell(dst, src, fix_l + 1);
 	    }
 	    if (fix_r >= 0) {
-		ClearCell(fix_r);
-		ClearCell(fix_r + 1);
+		Clear2Cell(dst, src, fix_r);
+		Clear2Cell(dst, src, fix_r + 1);
 	    }
 	});
     }
@@ -2438,24 +2426,47 @@ ScrnFillRectangle(XtermWidget xw,
     TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
 	LineData *ld;
-	unsigned left = (unsigned) (target->left - 1);
-	unsigned size = (unsigned) (target->right - (int) left);
+	int top = (target->top - 1);
+	int left = (target->left - 1);
+	int right = (target->right - 1);
+	int bottom = (target->bottom - 1);
+	int numcols = (right - left) + 1;
+	int numrows = (bottom - top) + 1;
 	unsigned attrs = flags;
 	int row, col;
+	int b_left = 0;
+	int b_right = 0;
 
-	(void) size;
+	(void) numcols;
 
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
-	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
+	for (row = bottom; row >= top; row--) {
 	    ld = getLineData(screen, row);
 
-	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
+	    TRACE(("filling %d [%d..%d]\n", row, left, left + numcols));
+
+	    if_OPT_WIDE_CHARS(screen, {
+		if (left > 0) {
+		    if (ld->charData[left] == HIDDEN_CHAR) {
+			b_left = 1;
+			Clear1Cell(ld, left - 1);
+			Clear1Cell(ld, left);
+		    }
+		}
+		if (right < ld->lineSize) {
+		    if (ld->charData[right] == HIDDEN_CHAR) {
+			b_right = 1;
+			Clear1Cell(ld, right);
+			Clear1Cell(ld, right + 1);
+		    }
+		}
+	    });
 
 	    /*
 	     * Fill attributes, preserving colors.
 	     */
-	    for (col = (int) left; col < target->right; ++col) {
+	    for (col = left; col <= right; ++col) {
 		unsigned temp = ld->attribs[col];
 
 		if (!keepColors) {
@@ -2470,21 +2481,23 @@ ScrnFillRectangle(XtermWidget xw,
 		});
 	    }
 
-	    for (col = (int) left; col < target->right; ++col)
+	    for (col = left; col <= right; ++col)
 		ld->charData[col] = (CharData) value;
 
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
 		for_each_combData(off, ld) {
-		    memset(ld->combData[off] + left, 0, size * sizeof(CharData));
+		    memset(ld->combData[off] + left,
+			   0,
+			   (size_t) numcols * sizeof(CharData));
 		}
 	    })
 	}
 	ScrnUpdate(xw,
-		   target->top - 1,
-		   target->left - 1,
-		   (target->bottom - target->top) + 1,
-		   (target->right - target->left) + 1,
+		   top,
+		   left - b_left,
+		   numrows,
+		   numcols + b_left + b_right,
 		   False);
     }
 }
@@ -2725,38 +2738,56 @@ ScrnWipeRectangle(XtermWidget xw,
 
     TRACE(("wiping rectangle\n"));
 
+#define IsProtected(ld, col) \
+		((screen->protected_mode == DEC_PROTECT) \
+		 && (ld->attribs[col] & PROTECTED))
+
     if (validRect(xw, target)) {
 	LineData *ld;
 	int top = target->top - 1;
+	int left = target->left - 1;
+	int right = target->right - 1;
 	int bottom = target->bottom - 1;
+	int numcols = (right - left) + 1;
+	int numrows = (bottom - top) + 1;
 	int row, col;
+	int b_left = 0;
+	int b_right = 0;
 
 	for (row = top; row <= bottom; ++row) {
-	    int left = (target->left - 1);
-	    int right = (target->right - 1);
-
 	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
 
 	    ld = getLineData(screen, row);
+
+	    if_OPT_WIDE_CHARS(screen, {
+		if (left > 0 && !IsProtected(ld, left)) {
+		    if (ld->charData[left] == HIDDEN_CHAR) {
+			b_left = 1;
+			Clear1Cell(ld, left - 1);
+			Clear1Cell(ld, left);
+		    }
+		}
+		if (right < ld->lineSize && !IsProtected(ld, right)) {
+		    if (ld->charData[right] == HIDDEN_CHAR) {
+			b_right = 1;
+			Clear1Cell(ld, right);
+			Clear1Cell(ld, right + 1);
+		    }
+		}
+	    });
+
 	    for (col = left; col <= right; ++col) {
-		if (!((screen->protected_mode == DEC_PROTECT)
-		      && (ld->attribs[col] & PROTECTED))) {
+		if (!IsProtected(ld, col)) {
 		    ld->attribs[col] |= CHARDRAWN;
-		    ld->charData[col] = ' ';
-		    if_OPT_WIDE_CHARS(screen, {
-			size_t off;
-			for_each_combData(off, ld) {
-			    ld->combData[off][col] = '\0';
-			}
-		    })
+		    Clear1Cell(ld, col);
 		}
 	    }
 	}
 	ScrnUpdate(xw,
-		   (target->top - 1),
-		   (target->left - 1),
-		   (target->bottom - target->top) + 1,
-		   ((target->right - target->left) + 1),
+		   top,
+		   left - b_left,
+		   numrows,
+		   numcols + b_left + b_right,
 		   False);
     }
 }

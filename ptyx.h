@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.940 2018/12/04 22:31:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.941 2018/12/07 00:21:46 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1764,6 +1764,32 @@ typedef struct {
 } CellData;
 
 #define for_each_combData(off, ld) for (off = 0; off < ld->combSize; ++off)
+
+#define Clear1Cell(ld, x) \
+	do { \
+	    ld->charData[x] = ' '; \
+	    if_OPT_WIDE_CHARS(screen, { \
+		size_t z; \
+		for_each_combData(z, ld) { \
+		    ld->combData[z][x] = '\0'; \
+		} \
+	    }); \
+	} while (0)
+
+#define Clear2Cell(dst, src, x) \
+	do { \
+	    dst->charData[x] = ' '; \
+	    dst->attribs[x] = src->attribs[x]; \
+	    if_OPT_ISO_COLORS(screen, { \
+		dst->color[x] = src->color[x]; \
+	    )}; \
+	    if_OPT_WIDE_CHARS(screen, { \
+		size_t z; \
+		for_each_combData(z, dst) { \
+		    dst->combData[z][x] = '\0'; \
+		} \
+	    }); \
+	} while (0)
 
 /*
  * Accommodate older compilers by not using variable-length arrays.
