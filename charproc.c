@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1617 2018/12/02 23:58:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1618 2018/12/09 14:05:20 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -10830,6 +10830,7 @@ reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
     TScreen *screen = TScreenOf(xw);
     CgsEnum result = gcMAX;
 
+    (void) screen;
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
 	switch (font) {
 	case fNorm:

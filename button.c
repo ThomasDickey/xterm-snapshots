@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.556 2018/11/21 02:30:07 tom Exp $ */
+/* $XTermId: button.c,v 1.558 2018/12/09 13:42:22 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2159,6 +2159,44 @@ removeControls(XtermWidget xw, char *value)
     return dst;
 }
 
+#if OPT_SELECTION_OPS
+static void
+beginInternalSelect(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    InternalSelect *mydata = &(screen->internal_select);
+
+    (void) mydata;
+    /* override flags so that SelectionReceived only updates a buffer */
+#if OPT_PASTE64
+    mydata->base64_paste = screen->base64_paste;
+    screen->base64_paste = 0;
+#endif
+#if OPT_PASTE64 || OPT_READLINE
+    mydata->paste_brackets = screen->paste_brackets;
+    SCREEN_FLAG_unset(screen, paste_brackets);
+#endif
+}
+
+static void
+finishInternalSelect(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    InternalSelect *mydata = &(screen->internal_select);
+
+    (void) mydata;
+#if OPT_PASTE64
+    screen->base64_paste = mydata->base64_paste;
+#endif
+#if OPT_PASTE64 || OPT_READLINE
+    screen->paste_brackets = mydata->paste_brackets;
+#endif
+}
+
+#else
+#define finishInternalSelect(xw)	/* nothing */
+#endif /* OPT_SELECTION_OPS */
+
 /* SelectionReceived: stuff received selection text into pty */
 
 /* ARGSUSED */
@@ -2262,7 +2300,7 @@ SelectionReceived(Widget w,
 	} else
 #endif
 #if OPT_PASTE64 || OPT_READLINE
-	if (SCREEN_FLAG(screen, paste_brackets)) {
+	if (SCREEN_FLAG(screen, paste_brackets) && !screen->selectToBuffer) {
 	    _WriteKey(screen, (const Char *) "200");
 	}
 #endif
@@ -2271,36 +2309,29 @@ SelectionReceived(Widget w,
 
 	    if (screen->selectToBuffer) {
 		InternalSelect *mydata = &(screen->internal_select);
-		size_t have = (mydata->buffer
-			       ? strlen(mydata->buffer)
-			       : 0);
-		size_t need = have + len + 1;
-		char *buffer = realloc(mydata->buffer, need);
+		if (!mydata->done) {
+		    size_t have = (mydata->buffer
+				   ? strlen(mydata->buffer)
+				   : 0);
+		    size_t need = have + len + 1;
+		    char *buffer = realloc(mydata->buffer, need);
 
-		screen->selectToBuffer = False;
-#if OPT_PASTE64
-		screen->base64_paste = mydata->base64_paste;
-#endif
-#if OPT_PASTE64 || OPT_READLINE
-		screen->paste_brackets = mydata->paste_brackets;
-#endif
-		if (buffer != 0) {
-		    strcpy(buffer + have, text_list[i]);
-		    mydata->buffer = buffer;
+		    if (buffer != 0) {
+			strcpy(buffer + have, text_list[i]);
+			mydata->buffer = buffer;
+		    }
+		    TRACE(("FormatSelect %d.%d .. %d.%d %s\n",
+			   screen->startSel.row,
+			   screen->startSel.col,
+			   screen->endSel.row,
+			   screen->endSel.col,
+			   mydata->buffer));
+		    mydata->format_select(w, mydata->format, mydata->buffer,
+					  &(screen->startSel),
+					  &(screen->endSel));
+		    mydata->done = True;
 		}
-		TRACE(("FormatSelect %d.%d .. %d.%d %s\n",
-		       screen->startSel.row,
-		       screen->startSel.col,
-		       screen->endSel.row,
-		       screen->endSel.col,
-		       mydata->buffer));
-		mydata->format_select(w, mydata->format, mydata->buffer,
-				      &(screen->startSel),
-				      &(screen->endSel));
 
-		free(mydata->format);
-		free(mydata->buffer);
-		memset(mydata, 0, sizeof(*mydata));
 	    } else {
 		_WriteSelectionData(xw, (Char *) text_list[i], len);
 	    }
@@ -2311,10 +2342,20 @@ SelectionReceived(Widget w,
 	} else
 #endif
 #if OPT_PASTE64 || OPT_READLINE
-	if (SCREEN_FLAG(screen, paste_brackets)) {
+	if (SCREEN_FLAG(screen, paste_brackets) && !screen->selectToBuffer) {
 	    _WriteKey(screen, (const Char *) "201");
 	}
 #endif
+	if (screen->selectToBuffer) {
+	    InternalSelect *mydata = &(screen->internal_select);
+	    finishInternalSelect(xw);
+	    if (mydata->done) {
+		free(mydata->format);
+		free(mydata->buffer);
+		memset(mydata, 0, sizeof(*mydata));
+	    }
+	    screen->selectToBuffer = False;
+	}
 	XFreeStringList(text_list);
     } else {
 	TRACE(("...empty text-list\n"));
@@ -4997,18 +5038,13 @@ doSelectionFormat(XtermWidget xw,
     mydata->format = x_strdup(params[0]);
     mydata->format_select = format_select;
 
-    /* override flags so that SelectionReceived only updates a buffer */
-#if OPT_PASTE64
-    mydata->base64_paste = screen->base64_paste;
-    screen->base64_paste = 0;
-#endif
-#if OPT_PASTE64 || OPT_READLINE
-    mydata->paste_brackets = screen->paste_brackets;
-    SCREEN_FLAG_unset(screen, paste_brackets);
-#endif
-
     screen->selectToBuffer = True;
+    beginInternalSelect(xw);
+
     xtermGetSelection(w, getEventTime(event), params + 1, *num_params - 1, NULL);
+
+    if (screen->selectToBuffer)
+	finishInternalSelect(xw);
 }
 
 /* obtain data from the screen, passing the endpoints to caller's parameters */
