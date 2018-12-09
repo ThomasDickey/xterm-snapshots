@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.812 2018/11/20 01:35:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.813 2018/12/09 14:08:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1565,6 +1565,7 @@ extern void discardRenderDraw(TScreen * /* screen */);
 #define xtermColorPair(xw) 0
 
 #define checkVeryBoldColors(flags, fg) /* nothing */
+#define discardRenderDraw(screen) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
 

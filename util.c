@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.781 2018/12/07 00:20:58 tom Exp $ */
+/* $XTermId: util.c,v 1.782 2018/12/09 14:09:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2930,6 +2930,7 @@ getNormXftFont(XtermWidget xw,
     int fontnum = screen->menu_font_number;
     XftFont *font;
 
+    (void) did_ul;
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
 #if OPT_ISO_COLORS
@@ -5244,6 +5245,7 @@ VDrawable(TScreen *screen)
 #endif
 
 #if OPT_RENDERFONT
+#ifndef discardRenderDraw
 void
 discardRenderDraw(TScreen *screen)
 {
@@ -5253,3 +5255,4 @@ discardRenderDraw(TScreen *screen)
     }
 }
 #endif
+#endif /* OPT_RENDERFONT */

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.941 2018/12/07 00:21:46 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.943 2018/12/09 14:06:28 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -963,6 +963,7 @@ typedef enum {
 typedef void (*FormatSelect) (Widget, char *, char *, CELL *, CELL *);
 
 typedef struct {
+    Boolean done;
     char *format;
     char *buffer;
     FormatSelect format_select;
@@ -1768,27 +1769,30 @@ typedef struct {
 #define Clear1Cell(ld, x) \
 	do { \
 	    ld->charData[x] = ' '; \
+	    do { \
 	    if_OPT_WIDE_CHARS(screen, { \
 		size_t z; \
 		for_each_combData(z, ld) { \
 		    ld->combData[z][x] = '\0'; \
 		} \
-	    }); \
+	    }) } while (0); \
 	} while (0)
 
 #define Clear2Cell(dst, src, x) \
 	do { \
 	    dst->charData[x] = ' '; \
 	    dst->attribs[x] = src->attribs[x]; \
+	    do { \
 	    if_OPT_ISO_COLORS(screen, { \
 		dst->color[x] = src->color[x]; \
-	    )}; \
+	    }) } while (0); \
+	    do { \
 	    if_OPT_WIDE_CHARS(screen, { \
 		size_t z; \
 		for_each_combData(z, dst) { \
 		    dst->combData[z][x] = '\0'; \
 		} \
-	    }); \
+	    }) } while (0); \
 	} while (0)
 
 /*
