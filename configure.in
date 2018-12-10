@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.359 2018/05/02 22:07:06 tom Exp $
+dnl $XTermId: configure.in,v 1.361 2018/12/09 19:07:03 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -387,6 +387,17 @@ CF_XBOOL_RESULT(DEF_META_SENDS_ESC,meta_sends_esc,[Define to 1 if meta should se
 ###############################################################################
 AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
 if test "$cf_tic_prog" = yes ; then
+	if test -n "$TERMINFO"
+	then
+		case "$TERMINFO" in
+		(/*)
+			test -d "$TERMINFO" || unset TERMINFO
+			;;
+		(*)
+			unset TERMINFO
+			;;
+		esac
+	fi
 	AC_MSG_CHECKING(for private terminfo-directory)
 	AC_ARG_WITH(own-terminfo,
 		[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
