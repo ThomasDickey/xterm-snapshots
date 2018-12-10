@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.178 2018/11/21 01:04:02 tom Exp $
+-- $XTermId: INSTALL,v 1.179 2018/12/09 18:14:52 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2017,2018 by Thomas E. Dickey
 --
@@ -737,9 +737,9 @@ The options (in alphabetic order):
 	rule to point to the given directory.
 
 	If you have the $TERMINFO variable defined in your environment, the
-	configure script will use that value.  If no option and no variable
-	are are given, the configure script uses /usr/lib/terminfo, if it
-	exists.
+	configure script may use that value, if it matches an existing
+	directory.  If no option and no variable are are given, the configure
+	script uses /usr/lib/terminfo, if it exists.
 
 	You do not have to run "make install-ti", if there is already a
 	workable terminfo description.  Be advised, however, that the

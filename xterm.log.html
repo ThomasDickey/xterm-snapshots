@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1953 2018/12/09 14:58:23 tom Exp $
+  $XTermId: xterm.log.html,v 1.1955 2018/12/09 18:27:38 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -964,6 +964,28 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>ignore <code>$TERMINFO</code> in the configure script if it
+    is set to a non-directory value.</li>
+
+    <li>updated configure macros:
+
+      <ul>
+        <li><code>CF_WITH_PCRE2</code>, modified to work with
+        Debian's (mis-numbered) pcre3 package.</li>
+
+        <li><code>CF_CC_ENV_FLAGS</code> , report preprocessor
+        options in <code>CFLAGS</code></li>
+
+        <li><code>CF_LD_RPATH_OPT</code> , suppress check if
+        <code>--disable-rpath</code> option was given.</li>
+
+        <li><code>CF_XOPEN_SOURCE</code>, add case for
+        midnightbsd</li>
+      </ul>
+    </li>
+
+    <li>update config.guess, config.sub</li>
+
     <li>add a check to ensure that the filename parameter passed to
     <code>XpmReadFileToPixmap</code> is actually a file, since that
     function does not check (report by Ben Nott).</li>

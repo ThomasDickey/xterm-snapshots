@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.558 2018/12/09 13:42:22 tom Exp $ */
+/* $XTermId: button.c,v 1.559 2018/12/09 22:30:39 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4462,7 +4462,7 @@ _OwnSelection(XtermWidget xw,
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 		       scp->data_length, cutbuffer));
 		xtermWarning("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-			     scp->data_length, cutbuffer);
+			     (unsigned long) scp->data_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
 		 * broken as not even the corresponding paste code in xterm

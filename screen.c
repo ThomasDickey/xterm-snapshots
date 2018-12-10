@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.567 2018/12/07 00:50:36 tom Exp $ */
+/* $XTermId: screen.c,v 1.568 2018/12/10 00:27:09 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -707,7 +707,7 @@ ChangeToWide(XtermWidget xw)
  * Copy cells, no side-effects.
  */
 void
-CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Boolean down)
+CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Bool down)
 {
     (void) screen;
     (void) down;
