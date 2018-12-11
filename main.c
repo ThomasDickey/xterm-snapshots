@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.840 2018/09/19 20:18:32 tom Exp $ */
+/* $XTermId: main.c,v 1.841 2018/12/11 00:17:16 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -185,7 +185,7 @@ static void HsSysError(int) GCC_NORETURN;
 #define WTMP
 #endif
 
-#if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID)
+#if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID) || defined(HAVE_INITGROUPS)
 #include <grp.h>
 #endif
 
