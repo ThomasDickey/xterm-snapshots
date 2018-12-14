@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.605 2018/12/02 21:55:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.608 2018/12/14 23:07:32 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2210,17 +2210,22 @@ xtermSetCursorBox(TScreen *screen)
 }
 
 #define CACHE_XFT(dst,src) if (src.font != 0) {\
-	    failed += checkXft(xw, &(dst[fontnum]), &src);\
-	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s\n",\
+	    int err = checkXft(xw, &(dst[fontnum]), &src);\
+	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s%s\n",\
 		#dst,\
-	    	fontnum,\
+		fontnum,\
 		src.font->height,\
 		src.font->ascent,\
 		src.font->descent,\
 		((src.font->ascent + src.font->descent) > src.font->height ? "*" : ""),\
 		src.font->max_advance_width,\
 		dst[fontnum].map.min_width,\
-		dst[fontnum].map.mixed ? " mixed" : ""));\
+		dst[fontnum].map.mixed ? " mixed" : "",\
+		err ? " ERROR" : ""));\
+	    if (err) {\
+		xtermCloseXft(screen, &src);\
+		failed += err;\
+	    }\
 	}
 
 #if OPT_RENDERFONT
@@ -2316,11 +2321,29 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     FcChar32 c;
     Dimension width = 0;
     int failed = 0;
+    FcChar32 lo_check = 32;
+    FcChar32 hi_check = 255;
+    FcBool fcbogus;
 
     target->font = source->font;
     target->pattern = source->pattern;
     target->map.min_width = 0;
     target->map.max_width = (Dimension) source->font->max_advance_width;
+
+#ifdef FC_COLOR
+#define GetFcBogus(pattern, what) \
+    (FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
+    /*
+     * Check if this is a FC_COLOR font, which fontconfig misrepresents to
+     * "fix" a problem with web browsers.  As of 2018/12 (4 years later),
+     * Xft does not work with that.
+     */
+    if (GetFcBogus(source->pattern, FC_COLOR)
+	&& fcbogus) {
+	lo_check = 0;
+	hi_check = 0;
+    }
+#endif
 
     /*
      * For each ASCII or ISO-8859-1 printable code, ask what its width is.
@@ -2329,7 +2352,7 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      *
      * Ignore control characters - their extent information is misleading.
      */
-    for (c = 32; c < 256; ++c) {
+    for (c = lo_check; c < hi_check; ++c) {
 	if (c >= 127 && c <= 159)
 	    continue;
 	if (FcCharSetHasChar(source->font->charset, c)) {
@@ -2338,6 +2361,10 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 	    XftTextExtents32(XtDisplay(xw), source->font, &c, 1, &extents);
 	    if (width >= extents.width)
 		continue;
+	    if (extents.width >= (3 * target->map.max_width)) {
+		width = 0;	/* metrics are bogus - give up */
+		break;
+	    }
 	    if (extents.width > target->map.max_width)
 		continue;
 	    width = extents.width;
@@ -3797,11 +3824,25 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    for (m = 0; m <= n; ++m) {
 			if (check == which->cache[n].font) {
 			    giveup = True;
+			    TRACE(("found duplicate - stop\n"));
 			    break;
 			}
 		    }
+#ifdef FC_COLOR
+		    if (!giveup) {
+			FcBool fcbogus;
+			if (GetFcBogus(check->pattern, FC_COLOR)
+			    && (fcbogus != FcFalse)) {
+			    giveup = True;
+			    TRACE(("ignoring color-bitmap font match by fontconfig\n"));
+			} else if (GetFcBogus(check->pattern, FC_OUTLINE)
+				   && (fcbogus == FcFalse)) {
+			    giveup = True;
+			    TRACE(("ignoring non-scalable font match by fontconfig\n"));
+			}
+		    }
+#endif
 		    if (giveup) {
-			TRACE(("found duplicate - stop\n"));
 			XftFontClose(screen->display, check);
 		    } else if (foundXftGlyph(xw, check, wc)) {
 			if (resource.reportFonts) {
