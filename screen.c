@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.568 2018/12/10 00:27:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.569 2018/12/15 15:19:08 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -319,7 +319,7 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 Char *
 allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol)
 {
-    Char *result;
+    Char *result = 0;
     size_t length;
 
     AlignValue(ncol);
@@ -744,7 +744,7 @@ CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len, Bool 
 		    ++col;
 		}
 	    }
-	    if (last < src->lineSize) {
+	    if (last < (int) src->lineSize) {
 		if (dst->charData[last] == HIDDEN_CHAR) {
 		    if (down) {
 			Clear2Cell(dst, src, last - 1);
@@ -2454,7 +2454,7 @@ ScrnFillRectangle(XtermWidget xw,
 			Clear1Cell(ld, left);
 		    }
 		}
-		if (right < ld->lineSize) {
+		if (right < (int) ld->lineSize) {
 		    if (ld->charData[right] == HIDDEN_CHAR) {
 			b_right = 1;
 			Clear1Cell(ld, right);
@@ -2767,7 +2767,7 @@ ScrnWipeRectangle(XtermWidget xw,
 			Clear1Cell(ld, left);
 		    }
 		}
-		if (right < ld->lineSize && !IsProtected(ld, right)) {
+		if (right < (int) ld->lineSize && !IsProtected(ld, right)) {
 		    if (ld->charData[right] == HIDDEN_CHAR) {
 			b_right = 1;
 			Clear1Cell(ld, right);
@@ -2837,7 +2837,7 @@ xtermCheckRect(XtermWidget xw,
 	    ld = getLineData(screen, row);
 	    if (ld == 0)
 		continue;
-	    for (col = left; col <= right && col < ld->lineSize; ++col) {
+	    for (col = left; col <= right && col < (int) ld->lineSize; ++col) {
 		int ch = ((ld->attribs[col] & CHARDRAWN)
 			  ? (int) ld->charData[col]
 			  : ' ');

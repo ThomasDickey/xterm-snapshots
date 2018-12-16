@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.559 2018/12/09 22:30:39 tom Exp $ */
+/* $XTermId: button.c,v 1.560 2018/12/15 15:02:52 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1890,8 +1890,8 @@ static void
 ToNational(XtermWidget xw, Char *buffer, unsigned *length)
 {
     TScreen *screen = TScreenOf(xw);
-    int gsetL = screen->gsets[screen->curgl];
-    int gsetR = screen->gsets[screen->curgr];
+    DECNRCM_codes gsetL = screen->gsets[screen->curgl];
+    DECNRCM_codes gsetR = screen->gsets[screen->curgr];
 
 #if OPT_WIDE_CHARS
     if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.782 2018/12/09 14:09:03 tom Exp $ */
+/* $XTermId: util.c,v 1.783 2018/12/15 15:00:21 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -524,7 +524,7 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 			    Clear1Cell(ld, left);
 			}
 		    }
-		    if (right + 1 < ld->lineSize) {
+		    if (right + 1 < (int) ld->lineSize) {
 			if (ld->charData[right + 1] == HIDDEN_CHAR) {
 			    Clear1Cell(ld, right);
 			    Clear1Cell(ld, right + 1);

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.841 2018/12/11 00:17:16 tom Exp $ */
+/* $XTermId: main.c,v 1.845 2018/12/16 23:06:59 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2018 by Thomas E. Dickey
@@ -866,7 +866,7 @@ static sigjmp_buf env;
 #  define SetUtmpSysLen(utmp) 			   \
 	{ \
 	    utmp.ut_host[sizeof(utmp.ut_host)-1] = '\0'; \
-	    utmp.ut_syslen = (short) strlen(utmp.ut_host) + 1; \
+	    utmp.ut_syslen = (short) ((int) strlen(utmp.ut_host) + 1); \
 	}
 #endif
 
@@ -4742,9 +4742,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #ifdef USE_LASTLOGX
 	    if (xw->misc.login_shell) {
 		memset(&lastlogx, 0, sizeof(lastlogx));
-		(void) strncpy(lastlogx.ll_line,
-			       my_pty_name(ttydev),
-			       sizeof(lastlogx.ll_line));
+		copy_filled(lastlogx.ll_line,
+			    my_pty_name(ttydev),
+			    sizeof(lastlogx.ll_line));
 		X_GETTIMEOFDAY(&lastlogx.ll_tv);
 		SetUtmpHost(lastlogx.ll_host, screen);
 		updlastlogx(_PATH_LASTLOGX, screen->uid, &lastlogx);
@@ -4758,9 +4758,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		off_t offset = (off_t) ((size_t) screen->uid * size);
 
 		memset(&lastlog, 0, size);
-		(void) strncpy(lastlog.ll_line,
-			       my_pty_name(ttydev),
-			       sizeof(lastlog.ll_line));
+		copy_filled(lastlog.ll_line,
+			    my_pty_name(ttydev),
+			    sizeof(lastlog.ll_line));
 		SetUtmpHost(lastlog.ll_host, screen);
 		lastlog.ll_time = time((time_t *) 0);
 		if (lseek(i, offset, 0) != (off_t) (-1)) {

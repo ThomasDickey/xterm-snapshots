@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.107 2018/09/09 15:31:01 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.108 2018/12/15 19:18:08 tom Exp $ */
 
 /*
  * Copyright 2014-2017,2018 by Ross Combs
@@ -146,7 +146,7 @@ typedef struct RegisTextControls {
 } RegisTextControls;
 
 #define FixedCopy(dst, src, len) strncpy(dst, src, len - 1)[len - 1] = '\0'
-#define CopyFontname(dst, src) FixedCopy(dst, src, REGIS_FONTNAME_LEN)
+#define CopyFontname(dst, src) FixedCopy(dst, src, (size_t) REGIS_FONTNAME_LEN)
 
 #define MAX_REGIS_PAGES 8U
 
@@ -599,7 +599,7 @@ draw_filled_polygon(RegisGraphicsContext *context)
 	}
     }
 
-    qsort(context->fill_points, context->fill_point_count,
+    qsort(context->fill_points, (size_t) context->fill_point_count,
 	  sizeof(context->fill_points[0]), sort_points);
 
     old_x = DUMMY_STACK_X;
@@ -1644,7 +1644,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	workh = (unsigned) font->height + 2U;
     }
 
-    if (!(pixels = malloc(workw * workh))) {
+    if (!(pixels = malloc((size_t) (workw * workh)))) {
 	*w = 0U;
 	*h = 0U;
 	return;
@@ -2778,7 +2778,7 @@ fragment_to_string(RegisDataFragment const *fragment, char *out,
     } else {
 	endpos = outlen - 1U;
     }
-    strncpy(out, &fragment->start[fragment->pos], endpos);
+    strncpy(out, &fragment->start[fragment->pos], (size_t) endpos);
     out[endpos] = '\0';
 }
 
@@ -7121,7 +7121,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		* context->alphabets[state->load_index].pixh;
 	    if (context->alphabets[state->load_index].bytes == NULL) {
 		if (!(context->alphabets[state->load_index].bytes =
-		      calloc(MAX_GLYPHS * glyph_size, sizeof(unsigned char)))) {
+		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(unsigned char)))) {
 		    TRACE(("ERROR: unable to allocate %u bytes for glyph storage\n",
 			   MAX_GLYPHS * glyph_size));
 		    return 0;

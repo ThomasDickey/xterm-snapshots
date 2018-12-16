@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.849 2018/12/09 14:54:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.852 2018/12/15 21:50:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -6369,9 +6369,9 @@ xtermEnvEncoding(void)
 #else
 	char *locale = xtermEnvLocale();
 	if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
-	    result = "ASCII";
+	    result = x_strdup("ASCII");
 	} else {
-	    result = "ISO-8859-1";
+	    result = x_strdup("ISO-8859-1");
 	}
 #endif
 	TRACE(("xtermEnvEncoding ->%s\n", result));
