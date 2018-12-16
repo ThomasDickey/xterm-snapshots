@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.51 2018/08/12 17:23:53 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.52 2018/12/15 15:15:00 tom Exp $ */
 
 /*
  * Copyright 2007-2016,2018 by Thomas E. Dickey
@@ -292,7 +292,7 @@ keyIsDistinct(XtermWidget xw, int which)
 		}
 	    } else {
 		/* there is no data for the shifted key */
-		result = -1;
+		result = False;
 	    }
 	}
 #endif

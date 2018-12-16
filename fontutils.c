@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.608 2018/12/14 23:07:32 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.609 2018/12/15 15:05:02 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2323,7 +2323,9 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     int failed = 0;
     FcChar32 lo_check = 32;
     FcChar32 hi_check = 255;
+#ifdef FC_COLOR
     FcBool fcbogus;
+#endif
 
     target->font = source->font;
     target->pattern = source->pattern;

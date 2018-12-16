@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.353 2018/04/29 21:46:10 tom Exp $ */
+/* $XTermId: menu.c,v 1.354 2018/12/16 22:37:07 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -642,6 +642,30 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 }
 
 /*
+ * When using the toolbar configuration, some systems (seen with Solaris 11)
+ * give a warning that (Xt) cannot find a usable font-set.  This does not stop
+ * the toolbars from working - ignore for now.
+ */
+#if OPT_TOOLBAR
+static void
+ignoreWarning(
+		 String p_name,
+		 String p_type,
+		 String p_class,
+		 String p_default,
+		 String *p_params,
+		 Cardinal *p_num_params)
+{
+    (void) p_name;
+    (void) p_type;
+    (void) p_class;
+    (void) p_default;
+    (void) p_params;
+    (void) p_num_params;
+}
+#endif
+
+/*
  * create_menu - create a popup shell and stuff the menu into it.
  */
 static Widget
@@ -690,6 +714,12 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     if (list->w != 0) {
 	Boolean *unused = unusedEntries(xw, num);
 	Cardinal n;
+#if OPT_TOOLBAR
+	Boolean useLocale = !strcmp(resource.menuLocale, "");
+	XtErrorMsgHandler warningHandler = 0;
+	if (!useLocale)
+	    warningHandler = XtAppSetWarningMsgHandler(app_con, ignoreWarning);
+#endif
 
 	list->entries = 0;
 
@@ -706,6 +736,10 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 		list->entries++;
 	    }
 	}
+#if OPT_TOOLBAR
+	if (!useLocale)
+	    XtAppSetWarningMsgHandler(app_con, warningHandler);
+#endif
     }
 #if !OPT_TOOLBAR
     (void) setMenuLocale(False, saveLocale);

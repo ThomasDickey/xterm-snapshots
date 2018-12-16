@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.360 2018/08/24 01:16:10 tom Exp $ */
+/* $XTermId: input.c,v 1.361 2018/12/15 19:21:09 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1352,7 +1352,7 @@ Input(XtermWidget xw,
 		if ((xw->flags & NATIONAL) != 0) {
 		    unsigned cmp = xtermCharSetIn(xw,
 						  CharOf(kd.strbuf[0]),
-						  screen->keyboard_dialect[0]);
+						  (DECNRCM_codes) screen->keyboard_dialect[0]);
 		    TRACE(("...input NRC %d, %s %d\n",
 			   CharOf(kd.strbuf[0]),
 			   (CharOf(kd.strbuf[0]) == cmp)

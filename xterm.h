@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.814 2018/12/10 00:27:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.816 2018/12/15 20:13:23 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
