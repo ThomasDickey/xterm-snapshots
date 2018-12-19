@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.85 2018/11/26 09:41:16 tom Exp $ */
+/* $XTermId: trace.h,v 1.86 2018/12/18 23:14:28 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -45,12 +45,14 @@
 
 extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
 extern	void	TraceVA ( const char *fmt, va_list ap );
+extern	void	TraceXError (Display *d, XErrorEvent *ev);
 
 #undef  TRACE
 #define TRACE(p) Trace p
 
 #undef  TRACE_VA
 #define TRACE_VA(p) TraceVA p
+#define TRACE_X_ERR(d,e) TraceXError(d,e)
 
 extern	void	TraceClose (void);
 

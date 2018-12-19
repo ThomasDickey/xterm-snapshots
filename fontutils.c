@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.609 2018/12/15 15:05:02 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.610 2018/12/19 01:29:35 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2224,6 +2224,7 @@ xtermSetCursorBox(TScreen *screen)
 		err ? " ERROR" : ""));\
 	    if (err) {\
 		xtermCloseXft(screen, &src);\
+		memset((&dst[fontnum]), 0, sizeof(dst[fontnum]));\
 		failed += err;\
 	    }\
 	}
@@ -2340,8 +2341,8 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      * "fix" a problem with web browsers.  As of 2018/12 (4 years later),
      * Xft does not work with that.
      */
-    if (GetFcBogus(source->pattern, FC_COLOR)
-	&& fcbogus) {
+    if ((GetFcBogus(source->pattern, FC_COLOR) && fcbogus)
+	|| (GetFcBogus(source->pattern, FC_OUTLINE) && !fcbogus)) {
 	lo_check = 0;
 	hi_check = 0;
     }
@@ -2988,9 +2989,17 @@ xtermComputeFontInfo(XtermWidget xw,
 	     * cumulative.  Build the bold- and italic-patterns on top of the
 	     * normal pattern.
 	     */
+#ifdef FC_COLOR
+#define NormXftPattern \
+	    XFT_FAMILY, XftTypeString, "mono", \
+	    FC_COLOR, XftTypeBool, FcFalse, \
+	    FC_OUTLINE, XftTypeBool, FcTrue, \
+	    XFT_SIZE, XftTypeDouble, face_size
+#else
 #define NormXftPattern \
 	    XFT_FAMILY, XftTypeString, "mono", \
 	    XFT_SIZE, XftTypeDouble, face_size
+#endif
 
 #define BoldXftPattern(norm) \
 	    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD, \
@@ -3726,8 +3735,9 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	return 0;
     }
     /* the end of the BMP is reserved for non-characters */
-    if (wc >= 0xfff0 && wc <= 0xffff)
+    if (wc >= 0xfff0 && wc <= 0xffff) {
 	return 0;
+    }
 
     for (n = 0; n < XtNumber(table); ++n) {
 	XTermXftFonts *check = (XTermXftFonts *) ((void *) ((char *) screen
