@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.943 2018/12/09 14:06:28 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.944 2018/12/18 23:08:57 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3483,6 +3483,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE_WM_HINTS
 #define TRACE_WM_HINTS(w) /*nothing*/
+#endif
+
+#ifndef TRACE_X_ERR
+#define TRACE_X_ERR(d,e) /*nothing*/
 #endif
 
 #ifndef TRACE_XRES

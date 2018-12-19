@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.852 2018/12/15 21:50:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.853 2018/12/18 23:17:17 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -5978,6 +5978,7 @@ int
 xerror(Display *d, XErrorEvent *ev)
 {
     xtermWarning("warning, error event received:\n");
+    TRACE_X_ERR(d, ev);
     (void) XmuPrintDefaultErrorMessage(d, ev, stderr);
     Exit(ERROR_XERROR);
     return 0;			/* appease the compiler */

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.196 2018/12/02 22:47:21 tom Exp $ */
+/* $XTermId: trace.c,v 1.197 2018/12/18 23:18:34 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2018 by Thomas E. Dickey
@@ -54,6 +54,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
+#include <X11/Xmu/Error.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/ConvertI.h>
@@ -164,6 +165,14 @@ TraceClose(void)
 	(void) visibleIChars(NULL, 0);
 	trace_fp = 0;
     }
+}
+
+void
+TraceXError(Display *d, XErrorEvent *ev)
+{
+    FILE *fp = TraceOpen();
+    (void) XmuPrintDefaultErrorMessage(d, ev, fp);
+    (void) fflush(fp);
 }
 
 void
