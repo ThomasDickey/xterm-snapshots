@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.610 2018/12/19 01:29:35 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.611 2018/12/20 01:55:43 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2316,6 +2316,33 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 #define DUMP_XFT(xw, data)	/* nothing */
 #endif
 
+/*
+ * Check if this is a FC_COLOR font, which fontconfig misrepresents to "fix" a
+ * problem with web browsers.  As of 2018/12 (4 years later), Xft does not work
+ * with that.
+ */
+#ifdef FC_COLOR
+#define GetFcBool(pattern, what) \
+    (FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
+
+static Boolean
+isBogusXft(XftFont *font)
+{
+    Boolean result = False;
+    if (font != 0) {
+	FcBool fcbogus;
+	if (GetFcBool(font->pattern, FC_COLOR) && fcbogus) {
+	    TRACE(("...matched color-bitmap font\n"));
+	    result = True;
+	} else if (GetFcBool(font->pattern, FC_OUTLINE) && !fcbogus) {
+	    TRACE(("...matched non-outline font\n"));
+	    result = True;
+	}
+    }
+    return result;
+}
+#endif
+
 static int
 checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 {
@@ -2324,29 +2351,11 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     int failed = 0;
     FcChar32 lo_check = 32;
     FcChar32 hi_check = 255;
-#ifdef FC_COLOR
-    FcBool fcbogus;
-#endif
 
     target->font = source->font;
     target->pattern = source->pattern;
     target->map.min_width = 0;
     target->map.max_width = (Dimension) source->font->max_advance_width;
-
-#ifdef FC_COLOR
-#define GetFcBogus(pattern, what) \
-    (FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
-    /*
-     * Check if this is a FC_COLOR font, which fontconfig misrepresents to
-     * "fix" a problem with web browsers.  As of 2018/12 (4 years later),
-     * Xft does not work with that.
-     */
-    if ((GetFcBogus(source->pattern, FC_COLOR) && fcbogus)
-	|| (GetFcBogus(source->pattern, FC_OUTLINE) && !fcbogus)) {
-	lo_check = 0;
-	hi_check = 0;
-    }
-#endif
 
     /*
      * For each ASCII or ISO-8859-1 printable code, ask what its width is.
@@ -2504,6 +2513,14 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 	match = FcFontMatch(NULL, pat, &status);
 	if (match != 0) {
 	    result = XftFontOpenPattern(dpy, match);
+#ifdef FC_COLOR
+	    if (result != 0) {
+		if (isBogusXft(result)) {
+		    XftFontClose(dpy, result);
+		    result = 0;
+		}
+	    }
+#endif
 	    if (result != 0) {
 		TRACE(("...matched %s font\n", tag));
 		if (!maybeXftCache(xw, result)) {
@@ -2861,9 +2878,12 @@ static void
 checkFontInfo(int value, const char *tag, int failed)
 {
     if (value == 0 || failed) {
-	xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
-	if (value == 0)
+	if (value == 0) {
+	    xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
 	    exit(1);
+	} else {
+	    xtermWarning("Selected font has no valid %s for ISO-8859-1 encoding\n", tag);
+	}
     }
 }
 
@@ -3061,8 +3081,20 @@ xtermComputeFontInfo(XtermWidget xw,
 	    }
 
 	    CACHE_XFT(screen->renderFontNorm, norm);
+
 	    CACHE_XFT(screen->renderFontBold, bold);
+	    if (norm.font != 0 && !bold.font) {
+		xtermWarning("did not find a usable bold TrueType font\n");
+		failed = False;
+		CACHE_XFT(screen->renderFontBold, norm);
+	    }
+
 	    CACHE_XFT(screen->renderFontItal, ital);
+	    if (norm.font != 0 && !ital.font) {
+		xtermWarning("did not find a usable italic TrueType font\n");
+		failed = False;
+		CACHE_XFT(screen->renderFontItal, norm);
+	    }
 
 	    /*
 	     * See xtermXftDrawString().
@@ -3087,7 +3119,8 @@ xtermComputeFontInfo(XtermWidget xw,
 		XFT_SIZE, XftTypeDouble, face_size, \
 		XFT_SPACING, XftTypeInteger, XFT_MONO
 
-		if (face_name && (pat = XftNameParse(face_name)) != 0) {
+		if (!IsEmpty(face_name) && (pat = XftNameParse(face_name))
+		    != 0) {
 #define OPEN_XFT(name, tag) name.font = xtermOpenXft(xw, face_name, name.pattern, tag)
 		    wnorm.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(wnorm.pattern,
@@ -3842,15 +3875,8 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    }
 #ifdef FC_COLOR
 		    if (!giveup) {
-			FcBool fcbogus;
-			if (GetFcBogus(check->pattern, FC_COLOR)
-			    && (fcbogus != FcFalse)) {
+			if (isBogusXft(check)) {
 			    giveup = True;
-			    TRACE(("ignoring color-bitmap font match by fontconfig\n"));
-			} else if (GetFcBogus(check->pattern, FC_OUTLINE)
-				   && (fcbogus == FcFalse)) {
-			    giveup = True;
-			    TRACE(("ignoring non-scalable font match by fontconfig\n"));
 			}
 		    }
 #endif
