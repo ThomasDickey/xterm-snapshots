@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.611 2018/12/20 01:55:43 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.612 2018/12/21 00:57:14 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2512,12 +2512,14 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 
 	match = FcFontMatch(NULL, pat, &status);
 	if (match != 0) {
+	    Boolean maybeReopened = False;
 	    result = XftFontOpenPattern(dpy, match);
 #ifdef FC_COLOR
 	    if (result != 0) {
 		if (isBogusXft(result)) {
 		    XftFontClose(dpy, result);
 		    result = 0;
+		    maybeReopened = True;
 		}
 	    }
 #endif
@@ -2528,7 +2530,8 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
 		}
 	    } else {
 		TRACE(("...could not open %s font\n", tag));
-		XftPatternDestroy(match);
+		if (!maybeReopened)
+		    XftPatternDestroy(match);
 		if (xw->misc.fontWarnings >= fwAlways) {
 		    cannotFont(xw, "open", tag, name);
 		}
@@ -3064,7 +3067,6 @@ xtermComputeFontInfo(XtermWidget xw,
 			OPEN_XFT(ital, "italic");
 		    }
 #endif
-#undef OPEN_XFT
 
 		    /*
 		     * FIXME:  just assume that the corresponding font has no
@@ -3077,24 +3079,39 @@ xtermComputeFontInfo(XtermWidget xw,
 		    }
 		}
 
+		CACHE_XFT(screen->renderFontNorm, norm);
+
+		CACHE_XFT(screen->renderFontBold, bold);
+		if (norm.font != 0 && !bold.font) {
+		    xtermWarning("did not find a usable bold TrueType font\n");
+		    XftPatternDestroy(bold.pattern);
+		    bold.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(bold.pattern,
+				    NormXftPattern,
+				    (void *) 0);
+		    OPEN_XFT(bold, "bold");
+		    failed = False;
+		    CACHE_XFT(screen->renderFontBold, bold);
+		}
+#if HAVE_ITALICS
+		CACHE_XFT(screen->renderFontItal, ital);
+		if (norm.font != 0 && !ital.font) {
+		    xtermWarning("did not find a usable italic TrueType font\n");
+		    XftPatternDestroy(ital.pattern);
+		    ital.pattern = XftPatternDuplicate(pat);
+		    XftPatternBuild(ital.pattern,
+				    NormXftPattern,
+				    (void *) 0);
+		    OPEN_XFT(ital, "italics");
+		    failed = False;
+		    CACHE_XFT(screen->renderFontItal, ital);
+		}
+#endif
 		XftPatternDestroy(pat);
+	    } else {
+		failed = True;
 	    }
-
-	    CACHE_XFT(screen->renderFontNorm, norm);
-
-	    CACHE_XFT(screen->renderFontBold, bold);
-	    if (norm.font != 0 && !bold.font) {
-		xtermWarning("did not find a usable bold TrueType font\n");
-		failed = False;
-		CACHE_XFT(screen->renderFontBold, norm);
-	    }
-
-	    CACHE_XFT(screen->renderFontItal, ital);
-	    if (norm.font != 0 && !ital.font) {
-		xtermWarning("did not find a usable italic TrueType font\n");
-		failed = False;
-		CACHE_XFT(screen->renderFontItal, norm);
-	    }
+#undef OPEN_XFT
 
 	    /*
 	     * See xtermXftDrawString().

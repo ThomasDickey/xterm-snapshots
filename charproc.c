@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1618 2018/12/09 14:05:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1619 2018/12/20 23:39:26 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -9765,7 +9765,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=
 		screen->cacheVTFonts.menu_font_names[n][k]) {
-		TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
+		if (screen->menu_font_names[n][k] != _Font_Selected_) {
+		    TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
+		}
 		TRACE_FREE_LEAK(screen->cacheVTFonts.menu_font_names[n][k]);
 	    } else {
 		TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
