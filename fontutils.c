@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.612 2018/12/21 00:57:14 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.614 2018/12/22 01:02:20 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2916,7 +2916,7 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 }
 
 /*
- * Get the faceName/faceDoublesize resource setting.
+ * Get the faceName/faceNameDoublesize resource setting.
  */
 String
 getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
@@ -3014,22 +3014,22 @@ xtermComputeFontInfo(XtermWidget xw,
 	     */
 #ifdef FC_COLOR
 #define NormXftPattern \
-	    XFT_FAMILY, XftTypeString, "mono", \
-	    FC_COLOR, XftTypeBool, FcFalse, \
-	    FC_OUTLINE, XftTypeBool, FcTrue, \
-	    XFT_SIZE, XftTypeDouble, face_size
+	    XFT_FAMILY,     XftTypeString, "mono", \
+	    FC_COLOR,       XftTypeBool,   FcFalse, \
+	    FC_OUTLINE,     XftTypeBool,   FcTrue, \
+	    XFT_SIZE,       XftTypeDouble, face_size
 #else
 #define NormXftPattern \
-	    XFT_FAMILY, XftTypeString, "mono", \
-	    XFT_SIZE, XftTypeDouble, face_size
+	    XFT_FAMILY,     XftTypeString, "mono", \
+	    XFT_SIZE,       XftTypeDouble, face_size
 #endif
 
 #define BoldXftPattern(norm) \
-	    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD, \
+	    XFT_WEIGHT,     XftTypeInteger, XFT_WEIGHT_BOLD, \
 	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
 
 #define ItalXftPattern(norm) \
-	    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC, \
+	    XFT_SLANT,      XftTypeInteger, XFT_SLANT_ITALIC, \
 	    XFT_CHAR_WIDTH, XftTypeInteger, norm.font->max_advance_width
 
 #if OPT_WIDE_ATTRS
@@ -3119,12 +3119,10 @@ xtermComputeFontInfo(XtermWidget xw,
 #if OPT_RENDERWIDE
 	    if (norm.font != 0 && screen->wide_chars) {
 		int char_width = norm.font->max_advance_width * 2;
-#ifdef FC_ASPECT
 		double aspect = ((FirstItemOf(xw->work.fonts.xft.list_w)
 				  || screen->renderFontNorm[fontnum].map.mixed)
 				 ? 1.0
 				 : 2.0);
-#endif
 
 		face_name = getFaceName(xw, True);
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
@@ -3132,9 +3130,11 @@ xtermComputeFontInfo(XtermWidget xw,
 		       char_width));
 
 #define WideXftPattern \
-		XFT_FAMILY, XftTypeString, "mono", \
-		XFT_SIZE, XftTypeDouble, face_size, \
-		XFT_SPACING, XftTypeInteger, XFT_MONO
+		XFT_FAMILY,     XftTypeString,   "mono", \
+		XFT_SIZE,       XftTypeDouble,   face_size, \
+		XFT_SPACING,    XftTypeInteger,  XFT_MONO, \
+		XFT_CHAR_WIDTH, XftTypeInteger,  char_width, \
+		FC_ASPECT,      XftTypeDouble,   aspect
 
 		if (!IsEmpty(face_name) && (pat = XftNameParse(face_name))
 		    != 0) {
@@ -3142,16 +3142,12 @@ xtermComputeFontInfo(XtermWidget xw,
 		    wnorm.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(wnorm.pattern,
 				    WideXftPattern,
-				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-#ifdef FC_ASPECT
-				    FC_ASPECT, XftTypeDouble, aspect,
-#endif
 				    (void *) 0);
 		    OPEN_XFT(wnorm, "wide");
 
 		    if (wnorm.font != 0) {
 			wbold.pattern = XftPatternDuplicate(wnorm.pattern);
-			XftPatternBuild(pat,
+			XftPatternBuild(wbold.pattern,
 					WideXftPattern,
 					BoldXftPattern(wnorm),
 					(void *) 0);
@@ -3160,21 +3156,48 @@ xtermComputeFontInfo(XtermWidget xw,
 #if HAVE_ITALICS
 			if (FIND_ITALICS) {
 			    wital.pattern = XftPatternDuplicate(wnorm.pattern);
-			    XftPatternBuild(pat,
+			    XftPatternBuild(wital.pattern,
 					    WideXftPattern,
 					    ItalXftPattern(wnorm),
 					    (void *) 0);
 			    OPEN_XFT(wital, "wide-italic");
 			}
 #endif
-#undef OPEN_XFT
 		    }
-		    XftPatternDestroy(pat);
-		}
 
-		CACHE_XFT(screen->renderWideNorm, wnorm);
-		CACHE_XFT(screen->renderWideBold, wbold);
-		CACHE_XFT(screen->renderWideItal, wital);
+		    CACHE_XFT(screen->renderWideNorm, wnorm);
+
+		    CACHE_XFT(screen->renderWideBold, wbold);
+		    if (wnorm.font != 0 && !wbold.font) {
+			xtermWarning("did not find a usable wide-bold TrueType font\n");
+			XftPatternDestroy(wbold.pattern);
+			wbold.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(bold.pattern,
+					WideXftPattern,
+					(void *) 0);
+			OPEN_XFT(wbold, "wide-bold");
+			failed = False;
+			CACHE_XFT(screen->renderWideBold, bold);
+		    }
+
+		    CACHE_XFT(screen->renderWideItal, wital);
+		    if (wnorm.font != 0 && !wital.font) {
+			xtermWarning("did not find a usable wide-italic TrueType font\n");
+			XftPatternDestroy(wital.pattern);
+			wital.pattern = XftPatternDuplicate(pat);
+			XftPatternBuild(wital.pattern,
+					WideXftPattern,
+					(void *) 0);
+			OPEN_XFT(wital, "wide-italic");
+			failed = False;
+			CACHE_XFT(screen->renderWideItal, wital);
+		    }
+
+		    XftPatternDestroy(pat);
+		} else {
+		    failed = True;
+		}
+#undef OPEN_XFT
 	    }
 #endif /* OPT_RENDERWIDE */
 	}
