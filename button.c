@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.560 2018/12/15 15:02:52 tom Exp $ */
+/* $XTermId: button.c,v 1.561 2018/12/23 20:00:13 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -3945,7 +3945,7 @@ SaltTextAway(XtermWidget xw,
     if (scp->data_limit <= (unsigned) need) {
 	if ((line = (Char *) malloc((size_t) need + 1)) == 0)
 	    SysError(ERROR_BMALLOC2);
-	XtFree((char *) scp->data_buffer);
+	free(scp->data_buffer);
 	scp->data_buffer = line;
 	scp->data_limit = (size_t) (need + 1);
     } else {
@@ -3986,8 +3986,9 @@ ClearSelectionBuffer(TScreen *screen, String selection)
     int which = TargetToSelection(screen, selection);
     SelectedCells *scp = &(screen->selected_cells[which >= 0 ? which : 0]);
     if (scp->data_buffer) {
-	XtFree((char *) (scp->data_buffer));
+	free(scp->data_buffer);
 	scp->data_buffer = 0;
+	scp->data_limit = 0;
     }
     scp->data_length = 0;
     screen->base64_count = 0;
@@ -4487,7 +4488,7 @@ _OwnSelection(XtermWidget xw,
 	    if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
 		SysError(ERROR_BMALLOC2);
 
-	    XtFree((char *) screen->clipboard_data);
+	    free(screen->clipboard_data);
 	    memcpy(buf, scp->data_buffer, scp->data_length);
 	    screen->clipboard_data = buf;
 	    screen->clipboard_size = scp->data_length;
@@ -5118,6 +5119,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 	    result[scp->data_limit] = 0;
 	}
 	free(scp->data_buffer);
+	scp->data_limit = 0;
     }
 
     TRACE(("...getDataFromScreen restoring previous selection\n"));
