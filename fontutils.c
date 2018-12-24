@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.614 2018/12/22 01:02:20 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.619 2018/12/24 20:11:50 tom Exp $ */
 
 /*
  * Copyright 1998-2017,2018 by Thomas E. Dickey
@@ -2209,6 +2209,8 @@ xtermSetCursorBox(TScreen *screen)
     screen->box = VTbox;
 }
 
+#if OPT_RENDERFONT
+
 #define CACHE_XFT(dst,src) if (src.font != 0) {\
 	    int err = checkXft(xw, &(dst[fontnum]), &src);\
 	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s%s\n",\
@@ -2228,8 +2230,6 @@ xtermSetCursorBox(TScreen *screen)
 		failed += err;\
 	    }\
 	}
-
-#if OPT_RENDERFONT
 
 #if OPT_REPORT_FONTS
 static FcChar32
@@ -2349,8 +2349,6 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     FcChar32 c;
     Dimension width = 0;
     int failed = 0;
-    FcChar32 lo_check = 32;
-    FcChar32 hi_check = 255;
 
     target->font = source->font;
     target->pattern = source->pattern;
@@ -2364,7 +2362,7 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      *
      * Ignore control characters - their extent information is misleading.
      */
-    for (c = lo_check; c < hi_check; ++c) {
+    for (c = 32; c < 255; ++c) {
 	if (c >= 127 && c <= 159)
 	    continue;
 	if (FcCharSetHasChar(source->font->charset, c)) {
@@ -2545,9 +2543,7 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern *pat, const char *tag)
     }
     return result;
 }
-#endif
 
-#if OPT_RENDERFONT
 #if OPT_SHIFT_FONTS
 /*
  * Don't make a dependency on the math library for a single function.
@@ -2993,7 +2989,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	XTermXftFonts wital = screen->renderWideItal[fontnum];
 #endif
 
-	if (norm.font == 0 && face_name) {
+	if (norm.font == 0 && !IsEmpty(face_name)) {
 	    XftPattern *pat;
 	    double face_size;
 
@@ -3051,15 +3047,16 @@ xtermComputeFontInfo(XtermWidget xw,
 		OPEN_XFT(norm, "normal");
 
 		if (norm.font != 0) {
-		    bold.pattern = XftPatternDuplicate(norm.pattern);
+		    bold.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(bold.pattern,
+				    NormXftPattern,
 				    BoldXftPattern(norm),
 				    (void *) 0);
 		    OPEN_XFT(bold, "bold");
 
 #if HAVE_ITALICS
 		    if (FIND_ITALICS) {
-			ital.pattern = XftPatternDuplicate(norm.pattern);
+			ital.pattern = XftPatternDuplicate(pat);
 			XftPatternBuild(ital.pattern,
 					NormXftPattern,
 					ItalXftPattern(norm),
@@ -3090,7 +3087,7 @@ xtermComputeFontInfo(XtermWidget xw,
 				    NormXftPattern,
 				    (void *) 0);
 		    OPEN_XFT(bold, "bold");
-		    failed = False;
+		    failed = 0;
 		    CACHE_XFT(screen->renderFontBold, bold);
 		}
 #if HAVE_ITALICS
@@ -3103,18 +3100,19 @@ xtermComputeFontInfo(XtermWidget xw,
 				    NormXftPattern,
 				    (void *) 0);
 		    OPEN_XFT(ital, "italics");
-		    failed = False;
+		    failed = 0;
 		    CACHE_XFT(screen->renderFontItal, ital);
 		}
 #endif
 		XftPatternDestroy(pat);
 	    } else {
-		failed = True;
+		failed = 1;
 	    }
 #undef OPEN_XFT
 
 	    /*
-	     * See xtermXftDrawString().
+	     * See xtermXftDrawString().  A separate double-width font is nice
+	     * to have, but not essential.
 	     */
 #if OPT_RENDERWIDE
 	    if (norm.font != 0 && screen->wide_chars) {
@@ -3146,7 +3144,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		    OPEN_XFT(wnorm, "wide");
 
 		    if (wnorm.font != 0) {
-			wbold.pattern = XftPatternDuplicate(wnorm.pattern);
+			wbold.pattern = XftPatternDuplicate(pat);
 			XftPatternBuild(wbold.pattern,
 					WideXftPattern,
 					BoldXftPattern(wnorm),
@@ -3155,7 +3153,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 #if HAVE_ITALICS
 			if (FIND_ITALICS) {
-			    wital.pattern = XftPatternDuplicate(wnorm.pattern);
+			    wital.pattern = XftPatternDuplicate(pat);
 			    XftPatternBuild(wital.pattern,
 					    WideXftPattern,
 					    ItalXftPattern(wnorm),
@@ -3176,7 +3174,7 @@ xtermComputeFontInfo(XtermWidget xw,
 					WideXftPattern,
 					(void *) 0);
 			OPEN_XFT(wbold, "wide-bold");
-			failed = False;
+			failed = 0;
 			CACHE_XFT(screen->renderWideBold, bold);
 		    }
 
@@ -3189,13 +3187,11 @@ xtermComputeFontInfo(XtermWidget xw,
 					WideXftPattern,
 					(void *) 0);
 			OPEN_XFT(wital, "wide-italic");
-			failed = False;
+			failed = 0;
 			CACHE_XFT(screen->renderWideItal, wital);
 		    }
 
 		    XftPatternDestroy(pat);
-		} else {
-		    failed = True;
 		}
 #undef OPEN_XFT
 	    }
