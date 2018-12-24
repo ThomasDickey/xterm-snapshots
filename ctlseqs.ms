@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.485 2018/11/22 02:19:21 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.486 2018/12/24 15:29:04 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2017,2018 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #336
-.ds RF 2018/11/21
+.ds LF Patch #341
+.ds RF 2018/12/24
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2991,10 +2991,15 @@ The initial state of \fIAlternate Scroll\fP mode is set
 using the \fBalternateScroll\fP resource.
 .Ss Other buttons
 .LP
-Additional buttons are encoded like the wheel mice, by adding 64.
-The encoding is unambiguous for buttons 6 and 7,
-which are seen for some tiltable wheel mice.
-However, it is not possible to use these buttons in \fI\*(xt\fP's
+Additional buttons are encoded like the wheel mice,
+.bP
+by adding 64 (for buttons 6 and 7), or
+.bP
+by adding 128 (for buttons 8 through 11).
+.LP
+Past button 11, the encoding is ambiguous because the same code
+may correspond to different button/modifier combinations.
+It is not possible to use these buttons (6-11) in \fI\*(xt\fP's
 \fBtranslation\fP resource because their names are not in the X Toolkit's
 symbol table.
 .Ss Highlight tracking

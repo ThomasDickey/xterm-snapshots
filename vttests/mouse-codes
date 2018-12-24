@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: mouse-codes,v 1.1 2018/11/16 13:54:43 tom Exp $
+# $XTermId: mouse-codes,v 1.4 2018/12/24 14:17:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -36,6 +36,10 @@
 use strict;
 use warnings;
 use diagnostics;
+
+use Getopt::Std;
+
+our ( $opt_b, $opt_i, $opt_x );
 
 # Typically,
 # -	Buttons 1, 2, and 3 are left-to-right assignments on a 3-button mouse.
@@ -87,6 +91,7 @@ sub report() {
     my $states;
     my $motion;
     my %encoded;
+    my %reports;
     for $states ( 0 .. $maxstates ) {
         for $motion ( 0 .. 1 ) {
             for $button ( -1 .. $maxbutton ) {
@@ -97,7 +102,12 @@ sub report() {
                     $result += 3;
                 }
                 else {
-                    $result += ( 64 - 4 ) if ( $button > 3 );
+                    if ( $button > 7 ) {
+                        $result += ( 128 - 4 );
+                    }
+                    elsif ( $button > 3 ) {
+                        $result += ( 64 - 4 );
+                    }
                     $result += $button;
                 }
                 my $code   = sprintf "%3d",    $result;
@@ -105,15 +115,42 @@ sub report() {
                   &KeyState($states), &Motion($motion);
                 printf "OOPS %s ->%s versus %s\n", $code, $report,
                   $encoded{$code}
-                  if ( defined $encoded{$code} );
-                $encoded{$code} = $report;
+                  if ( defined $encoded{$code}
+                    or ( $result > 255 and not defined $opt_x ) );
+                $encoded{$code}   = $report;
+                $reports{$report} = $result;
             }
         }
     }
-    foreach my $code ( sort keys %encoded ) {
-        printf "%s = %s\n", $code, $encoded{$code};
+    if ($opt_i) {
+        foreach my $report ( sort keys %reports ) {
+            printf "%s = %s\n", $report, $reports{$report};
+        }
+    }
+    else {
+        foreach my $code ( sort keys %encoded ) {
+            printf "%s = %s\n", $code, $encoded{$code};
+        }
     }
 }
+
+sub main::HELP_MESSAGE() {
+    printf STDERR <<EOF
+Usage: $0 [options]
+
+Options:
+	-b NUM	set the number of buttons (default: 7)
+	-i	invert the report to show code for each combination
+	-x	eliminate 1-byte limit for codes
+EOF
+      ;
+    exit 1;
+}
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+&getopts('b:ix') || &main::HELP_MESSAGE;
+$maxbutton = $opt_b if ( defined $opt_b );
+&main::HELP_MESSAGE if ( $maxbutton !~ /^\d+$/ );
+$#ARGV < 0 || &main::HELP_MESSAGE;
 
 &report;
 

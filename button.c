@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.561 2018/12/23 20:00:13 tom Exp $ */
+/* $XTermId: button.c,v 1.562 2018/12/24 15:07:40 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4695,14 +4695,15 @@ SaveText(TScreen *screen,
     return (result);
 }
 
-/* 32 + following 7-bit word:
+/* 32 + following 8-bit word:
 
    1:0  Button no: 0, 1, 2.  3=release.
      2  shift
      3  meta
      4  ctrl
      5  set for motion notify
-     6  set for wheel
+     6  set for wheel (and button 6 and 7)
+     7  set for buttons 8 to 11
 */
 
 /* Position: 32 - 255. */
@@ -4717,9 +4718,11 @@ BtnCode(XButtonEvent *event, int button)
     if (button < 0) {
 	result += 3;
     } else {
-	if (button > 3)
-	    result += (64 - 4);
-	result += button;
+	result += button & 3;
+	if (button & 4)
+	    result += 64;
+	if (button & 8)
+	    result += 128;
     }
     TRACE(("BtnCode button %d, %s state " FMT_MODIFIER_NAMES " ->%#x\n",
 	   button,
