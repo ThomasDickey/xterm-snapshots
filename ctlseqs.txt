@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2018)
-               updated for XTerm Patch #336 (2018/11/21)
+               updated for XTerm Patch #341 (2018/12/24)
 
 
 
@@ -2185,11 +2185,16 @@ Scroll mode is set using the alternateScroll resource.
 
 Other buttons
 
-Additional buttons are encoded like the wheel mice, by adding 64.  The
-encoding is unambiguous for buttons 6 and 7, which are seen for some
-tiltable wheel mice.  However, it is not possible to use these buttons
-in xterm's translation resource because their names are not in the X
-Toolkit's symbol table.
+Additional buttons are encoded like the wheel mice,
+
+o   by adding 64 (for buttons 6 and 7), or
+
+o   by adding 128 (for buttons 8 through 11).
+
+Past button 11, the encoding is ambiguous because the same code may cor-
+respond to different button/modifier combinations.  It is not possible
+to use these buttons (6-11) in xterm's translation resource because
+their names are not in the X Toolkit's symbol table.
 
 
 Highlight tracking
@@ -2749,12 +2754,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
+    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -2764,7 +2769,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.
