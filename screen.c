@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.569 2018/12/15 15:19:08 tom Exp $ */
+/* $XTermId: screen.c,v 1.570 2018/12/24 02:04:07 Martin.Hostettler Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -2454,8 +2454,8 @@ ScrnFillRectangle(XtermWidget xw,
 			Clear1Cell(ld, left);
 		    }
 		}
-		if (right < (int) ld->lineSize) {
-		    if (ld->charData[right] == HIDDEN_CHAR) {
+		if (right + 1 < (int) ld->lineSize) {
+		    if (ld->charData[right + 1] == HIDDEN_CHAR) {
 			b_right = 1;
 			Clear1Cell(ld, right);
 			Clear1Cell(ld, right + 1);
@@ -2767,8 +2767,8 @@ ScrnWipeRectangle(XtermWidget xw,
 			Clear1Cell(ld, left);
 		    }
 		}
-		if (right < (int) ld->lineSize && !IsProtected(ld, right)) {
-		    if (ld->charData[right] == HIDDEN_CHAR) {
+		if (right + 1 < (int) ld->lineSize && !IsProtected(ld, right)) {
+		    if (ld->charData[right + 1] == HIDDEN_CHAR) {
 			b_right = 1;
 			Clear1Cell(ld, right);
 			Clear1Cell(ld, right + 1);
