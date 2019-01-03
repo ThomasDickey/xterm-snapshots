@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.619 2018/12/24 20:11:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.621 2019/01/03 23:50:16 tom Exp $ */
 
 /*
- * Copyright 1998-2017,2018 by Thomas E. Dickey
+ * Copyright 1998-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2319,7 +2319,8 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 /*
  * Check if this is a FC_COLOR font, which fontconfig misrepresents to "fix" a
  * problem with web browsers.  As of 2018/12 (4 years later), Xft does not work
- * with that.
+ * with that.  Even with this workaround, fontconfig has at least one bug which
+ * causes it to crash (Debian #917034).
  */
 #ifdef FC_COLOR
 #define GetFcBool(pattern, what) \
@@ -2336,7 +2337,9 @@ isBogusXft(XftFont *font)
 	    result = True;
 	} else if (GetFcBool(font->pattern, FC_OUTLINE) && !fcbogus) {
 	    TRACE(("...matched non-outline font\n"));
-	    result = True;
+	    /* This is legal for regular bitmap fonts - fontconfig attempts to
+	     * find a match - but problematic for misencoded color-bitmap fonts.
+	     */
 	}
     }
     return result;
