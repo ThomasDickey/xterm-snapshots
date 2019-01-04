@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: mouse-codes,v 1.4 2018/12/24 14:17:07 tom Exp $
+# $XTermId: mouse-codes,v 1.6 2019/01/04 00:49:41 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018 by Thomas E. Dickey
+# Copyright 2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -102,21 +102,24 @@ sub report() {
                     $result += 3;
                 }
                 else {
-                    if ( $button > 7 ) {
-                        $result += ( 128 - 4 );
+                    $result += $button & 3;
+                    if ( $button & 4 ) {
+                        $result += 64;
                     }
-                    elsif ( $button > 3 ) {
-                        $result += ( 64 - 4 );
+                    if ( $button & 8 ) {
+                        $result += 128;
                     }
-                    $result += $button;
                 }
                 my $code   = sprintf "%3d",    $result;
                 my $report = sprintf "%s%s%s", &ButtonName($button),
                   &KeyState($states), &Motion($motion);
-                printf "OOPS %s ->%s versus %s\n", $code, $report,
-                  $encoded{$code}
-                  if ( defined $encoded{$code}
-                    or ( $result > 255 and not defined $opt_x ) );
+                if ( defined $encoded{$code} ) {
+                    printf "OOPS %s ->%s versus %s\n", $code, $report,
+                      $encoded{$code};
+                }
+                elsif ( $result > 255 and not defined $opt_x ) {
+                    printf "OOPS %s ->%s\n", $code, $report;
+                }
                 $encoded{$code}   = $report;
                 $reports{$report} = $result;
             }

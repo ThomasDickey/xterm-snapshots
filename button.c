@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.562 2018/12/24 15:07:40 tom Exp $ */
+/* $XTermId: button.c,v 1.564 2019/01/04 01:07:36 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4805,6 +4805,18 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     button = (int) (event->button - 1);
     if (button >= 3)
 	button++;
+
+    /* Ignore buttons that cannot be encoded */
+    if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
+	|| screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
+	if (button > 15) {
+	    return;
+	}
+    } else {
+	if (button > 11) {
+	    return;
+	}
+    }
 
     /* Compute character position of mouse pointer */
     row = (event->y - screen->border) / FontHeight(screen);
