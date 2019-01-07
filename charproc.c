@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1619 2018/12/20 23:39:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1621 2019/01/07 22:34:39 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -810,6 +810,7 @@ static XtResource xterm_resources[] =
     Dres(XtNfaceSize, XtCFaceSize, misc.face_size[0], DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.default_xft.f_n, DEFFACENAME),
     Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
+    Ires(XtNlimitFontsets, XtCLimitFontsets, misc.limit_fontsets, MAX_XFT_CACHE),
 #if OPT_RENDERWIDE
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.default_xft.f_w, DEFFACENAME),
 #endif
@@ -9127,6 +9128,11 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_RENDERFONT
+    init_Ires(misc.limit_fontsets);
+    wnew->work.max_fontsets = wnew->misc.limit_fontsets;
+    if (wnew->work.max_fontsets > MAX_XFT_CACHE)
+	wnew->work.max_fontsets = MAX_XFT_CACHE;
+
     init_Sres(misc.render_font_s);
     wnew->work.render_font =
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,

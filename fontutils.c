@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.621 2019/01/03 23:50:16 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.623 2019/01/07 21:46:58 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -3785,6 +3785,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
     XftFont *result = 0;
     /* workaround for interface changes... */
     int fontnum = screen->menu_font_number;
+    Cardinal my_limit = xw->work.max_fontsets;
     static int table[] =
     {
 	offsetof(TScreen, renderFontNorm),
@@ -3799,6 +3800,11 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
     Cardinal n;
     FcResult status;
     const char *tag = 0;
+
+    /* if fontsets are not wanted, just leave */
+    if (my_limit == 0) {
+	return 0;
+    }
 
     /* ignore codes in private use areas */
     if ((wc >= 0xe000 && wc <= 0xf8ff)
@@ -3827,7 +3833,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	if (which->fontset != 0) {
 	    XftFont *check;
 
-	    for (n = 0; n < XtNumber(which->cache); ++n) {
+	    for (n = 0; n < my_limit; ++n) {
 		if ((check = which->cache[n].font) == 0) {
 		    break;
 		}
@@ -3838,7 +3844,11 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    break;
 		}
 	    }
-	    if (result == 0) {
+	    /*
+	     * If not found, and the cache has more than one slot, try to
+	     * improve the set of matches.
+	     */
+	    if ((result == 0) && (my_limit > 1)) {
 		FcPattern *myPattern;
 		FcPattern *myReport = 0;
 		FcPattern *matchedFont;
@@ -3870,13 +3880,13 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		/*
 		 * Close the least-recently-used entry.
 		 */
-		if (n >= XtNumber(which->cache)) {
+		if (n >= my_limit) {
 		    Cardinal m;
 		    unsigned long level = which->cache_used;
 		    Cardinal unuse = --n;
 
 		    TRACE(("FALLBACK overflow - reuse least-recently-used entry\n"));
-		    for (m = 0; m < XtNumber(which->cache); ++m) {
+		    for (m = 0; m < my_limit; ++m) {
 			if (level > which->cache[m].usage) {
 			    level = which->cache[m].usage;
 			    unuse = m;
@@ -3885,7 +3895,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    TRACE(("...that is %d\n", unuse));
 		    /* reset usage counts to avoid overflow */
 		    if (level--) {
-			for (m = 0; m < XtNumber(which->cache); ++m) {
+			for (m = 0; m < my_limit; ++m) {
 			    which->cache[m].usage -= level;
 			}
 			which->cache_used -= level;

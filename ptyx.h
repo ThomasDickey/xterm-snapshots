@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.944 2018/12/18 23:08:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.946 2019/01/07 22:34:49 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2983,6 +2983,7 @@ typedef struct _Misc {
     VTFontNames default_xft;
     float face_size[NMENUFONTS];
     char *render_font_s;
+    int limit_fontsets;
 #endif
 } Misc;
 
@@ -3023,6 +3024,7 @@ typedef struct _Work {
     XtermFontNames fonts;
 #if OPT_RENDERFONT
     Boolean render_font;
+    Cardinal max_fontsets;
 #endif
 #if OPT_DABBREV
 #define MAX_DABBREV	1024	/* maximum word length as in tcsh */
