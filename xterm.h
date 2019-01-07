@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.816 2018/12/15 20:13:23 tom Exp $ */
+/* $XTermId: xterm.h,v 1.818 2019/01/07 22:34:58 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -486,6 +486,7 @@ extern char **environ;
 #define XtNkeepClipboard	"keepClipboard"
 #define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
+#define XtNlimitFontsets	"limitFontsets"
 #define XtNlimitResize		"limitResize"
 #define XtNlocale		"locale"
 #define XtNlocaleFilter		"localeFilter"
@@ -678,6 +679,7 @@ extern char **environ;
 #define XtCKeepClipboard	"KeepClipboard"
 #define XtCKeepSelection	"KeepSelection"
 #define XtCKeyboardDialect	"KeyboardDialect"
+#define XtCLimitFontsets	"LimitFontsets"
 #define XtCLimitResize		"LimitResize"
 #define XtCLocale		"Locale"
 #define XtCLocaleFilter		"LocaleFilter"
