@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.767 2019/01/07 23:08:03 tom Exp $
+.\" $XTermId: xterm.man,v 1.769 2019/01/10 23:38:05 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -3727,9 +3727,18 @@ The default is \*(``B\*('', which corresponds to US ASCII.
 See the discussion of the \fBkeymap()\fP action.
 .TP 8
 .B "limitFontsets\fP (class\fB LimitFontsets\fP)"
-Limits the size of the fontset (i.e., fallback fonts)
-which can be used with TrueType fonts.
-The default is \*(``10\*('', which is also the maximum value for the resource.
+Limits the number of TrueType fallback fonts (i.e., fontset) which can be used.
+The default is \*(``50\*(''.
+.IP
+This limits the number of fallback fonts
+which \fI\*n\fP uses to display characters.
+Because TrueType fonts typically are small,
+\fI\*n\fP may open several fonts for good coverage, and
+may open additional fonts to obtain information.
+You can see which font-files \fI\*n\fP opens by setting the
+environment variable \fBXFT_DEBUG\fP to 3.
+The Xft library and \fI\*n\fP write this debugging trace
+to the standard output.
 .IP
 Set this to \*(``0\*('' to disable fallbacks entirely.
 .TP 8

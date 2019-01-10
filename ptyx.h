@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.948 2019/01/10 01:32:56 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.949 2019/01/10 10:26:02 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1857,8 +1857,6 @@ typedef enum {
 #define DefaultRenderFont(xw) \
 	if ((xw)->work.render_font == erDefault) \
 	    (xw)->work.render_font = erFalse
-
-#define MAX_XFT_CACHE	10
 
 typedef enum {
     	xcEmpty = 0			/* slot is unused */

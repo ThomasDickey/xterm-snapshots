@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1622 2019/01/10 01:33:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1623 2019/01/10 10:26:02 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -810,7 +810,7 @@ static XtResource xterm_resources[] =
     Dres(XtNfaceSize, XtCFaceSize, misc.face_size[0], DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.default_xft.f_n, DEFFACENAME),
     Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
-    Ires(XtNlimitFontsets, XtCLimitFontsets, misc.limit_fontsets, MAX_XFT_CACHE),
+    Ires(XtNlimitFontsets, XtCLimitFontsets, misc.limit_fontsets, DEF_XFT_CACHE),
 #if OPT_RENDERWIDE
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.default_xft.f_w, DEFFACENAME),
 #endif
