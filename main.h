@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.67 2018/11/25 13:55:05 tom Exp $ */
+/* $XTermId: main.h,v 1.68 2019/01/10 21:32:05 tom Exp $ */
 
 /*
- * Copyright 2000-2016,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -211,6 +211,10 @@
 
 #ifndef DEF_TITLE_MODES
 #define DEF_TITLE_MODES		0
+#endif
+
+#ifndef DEF_XFT_CACHE
+#define DEF_XFT_CACHE		50
 #endif
 
 #ifndef PROJECTROOT

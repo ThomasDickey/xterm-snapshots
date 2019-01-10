@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.625 2019/01/10 01:33:49 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.628 2019/01/10 21:39:01 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -3780,14 +3780,17 @@ foundXftGlyph(XtermWidget xw, XftFont *font, unsigned wc)
 }
 
 static void
-markXftOpened(XTermXftFonts *which, Cardinal n, unsigned wc)
+markXftOpened(XtermWidget xw, XTermXftFonts *which, Cardinal n, unsigned wc)
 {
     if (which->cache[n].usage != xcOpened) {
 	which->opened++;
 	which->cache[n].usage = xcOpened;
 	/* XFT_DEBUG=3 will show useful context for this */
 	if (getenv("XFT_DEBUG") != 0) {
-	    printf("xterm: matched U+%04X in fontset #%d\n", wc, n + 1);
+	    printf("xterm: matched U+%04X in fontset #%d [%u:%u]\n",
+		   wc, n + 1,
+		   which->opened,
+		   xw->work.max_fontsets);
 	}
     }
 }
@@ -3860,7 +3863,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 
 	    sortedFonts = FcFontSort(0, myPattern, FcTrue, 0, &status);
 
-	    if (!sortedFonts || sortedFonts->nfont == 0) {
+	    if (!sortedFonts || sortedFonts->nfont <= 0) {
 		xtermWarning("did not find any usable TrueType font\n");
 		return 0;
 	    }
@@ -3879,7 +3882,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 	    FcFontSetSortDestroy(sortedFonts);
 	    FcPatternDestroy(myPattern);
 	}
-	if (which->fontset != 0 && (which->opened < xw->work.max_fontsets)) {
+	if (which->fontset != 0) {
 	    XftFont *check;
 	    Cardinal empty = which->limit;
 
@@ -3888,10 +3891,12 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		if (usage == xcEmpty) {
 		    if (empty > n)
 			empty = n;
-		} else if (usage >= xcOpened) {
+		} else if (usage == xcOpened
+			   || (usage == xcUnused
+			       && (which->opened < xw->work.max_fontsets))) {
 		    check = which->cache[n].font;
 		    if (foundXftGlyph(xw, check, wc)) {
-			markXftOpened(which, n, wc);
+			markXftOpened(xw, which, n, wc);
 			result = check;
 			TRACE_FALLBACK(xw, "old", wc, (int) n, result);
 			break;
@@ -3899,11 +3904,13 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		}
 	    }
 
-	    if ((result == 0) && (empty < which->limit)) {
+	    if ((result == 0)
+		&& (empty < which->limit)
+		&& (which->opened < xw->work.max_fontsets)) {
 		FcPattern *myPattern = 0;
 		FcPattern *myReport = 0;
 
-		for (n = empty; (int) n < which->fontset->nfont; ++n) {
+		for (n = empty; n < which->limit; ++n) {
 		    if (which->cache[n].usage >= xcBogus)
 			continue;
 		    if (resource.reportFonts) {
@@ -3923,7 +3930,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 		    }
 #endif
 		    if (foundXftGlyph(xw, check, wc)) {
-			markXftOpened(which, n, wc);
+			markXftOpened(xw, which, n, wc);
 			reportXftFonts(xw, check, "fallback", tag, myReport);
 			result = check;
 			TRACE_FALLBACK(xw, "new", wc, (int) n, result);
