@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.946 2019/01/07 22:34:49 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.948 2019/01/10 01:32:56 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1859,17 +1859,26 @@ typedef enum {
 	    (xw)->work.render_font = erFalse
 
 #define MAX_XFT_CACHE	10
-typedef struct {
-	XftFont *	font;
-	unsigned long	usage;
-} XTermXftCache;
+
+typedef enum {
+    	xcEmpty = 0			/* slot is unused */
+	, xcBogus			/* ignore this pattern */
+	, xcOpened			/* slot has open font descriptor */
+	, xcUnused			/* opened, but unused so far */
+} XftCache;
 
 typedef struct {
 	XftFont *	font;
-	XftPattern *	pattern;
-	XftFontSet *	fontset;
-	XTermXftCache   cache[MAX_XFT_CACHE];
-	unsigned long	cache_used;
+	XftCache	usage;
+} XTermXftCache;
+
+typedef struct {
+	XftFont *	font;		/* main font */
+	XftPattern *	pattern;	/* pattern for main font */
+	XftFontSet *	fontset;	/* ordered list of fallback patterns */
+	XTermXftCache * cache;
+	unsigned	limit;		/* allocated size of cache[] */
+	unsigned	opened;		/* number of slots with xcOpened */
 	FontMap		map;
 } XTermXftFonts;
 
@@ -3024,7 +3033,7 @@ typedef struct _Work {
     XtermFontNames fonts;
 #if OPT_RENDERFONT
     Boolean render_font;
-    Cardinal max_fontsets;
+    unsigned max_fontsets;
 #endif
 #if OPT_DABBREV
 #define MAX_DABBREV	1024	/* maximum word length as in tcsh */

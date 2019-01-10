@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1621 2019/01/07 22:34:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1622 2019/01/10 01:33:10 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -9129,9 +9129,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
     init_Ires(misc.limit_fontsets);
-    wnew->work.max_fontsets = wnew->misc.limit_fontsets;
-    if (wnew->work.max_fontsets > MAX_XFT_CACHE)
-	wnew->work.max_fontsets = MAX_XFT_CACHE;
+    wnew->work.max_fontsets = (unsigned) wnew->misc.limit_fontsets;
 
     init_Sres(misc.render_font_s);
     wnew->work.render_font =
