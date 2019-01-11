@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.628 2019/01/10 21:39:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.629 2019/01/11 02:14:23 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -2903,9 +2903,11 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 
 	if (pub->pattern) {
 	    XftPatternDestroy(pub->pattern);
+	    pub->pattern = 0;
 	}
 	if (pub->fontset) {
 	    XftFontSetDestroy(pub->fontset);
+	    pub->fontset = 0;
 	}
 
 	for (n = 0; n < pub->limit; ++n) {
