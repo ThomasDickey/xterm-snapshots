@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.769 2019/01/10 23:38:05 tom Exp $
+.\" $XTermId: xterm.man,v 1.770 2019/01/12 00:16:13 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -2929,10 +2929,34 @@ If the undisplayable text would be double-width,
 the same layout on the screen as the original text.
 .TP 8
 .B "deleteIsDEL\fP (class\fB DeleteIsDEL\fP)"
-Specifies whether the Delete key on the editing keypad should send DEL (127)
-or the VT220-style Remove escape sequence.
-A \*(``false\*('' value enables the latter.
+Specifies what the \fIDelete\fP key
+on the editing keypad should send when pressed.
+The resource value is a string, evaluated as a boolean after startup.
+\fI\*N\fP uses it in conjunction with the \fBkeyboardType\fP resource:
+.RS
+.bP
+If the keyboard type is
+\*(``default\*('',
+or
+\*(``vt220\*(''
+and the resource is either \*(``true\*('' or \*(``maybe\*('' 
+send the VT220-style \fIRemove\fP escape sequence.
+Otherwise, send DEL (127).
+.bP
+If the keyboard type is
+\*(``legacy\*('',
+and the resource is \*(``true\*(''
+send DEL.
+Otherwise, send the \fIRemove\fP sequence.
+.bP
+Otherwise, if the keyboard type is none of these special cases,
+send DEL (127).
+.RE
+.IP
 The default is \*(``__delete_is_del__\*(''.
+The resource is allowed to be a non-boolean \*(``maybe\*(''
+so that the popup menu \fBDelete is DEL\fP entry does
+not override the keyboard type.
 .TP 8
 .B "directColor\fP (class\fB DirectColor\fP)"
 Specifies whether to handle direct-color control sequences
