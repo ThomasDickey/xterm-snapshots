@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.853 2018/12/18 23:17:17 tom Exp $ */
+/* $XTermId: misc.c,v 1.854 2019/01/11 22:25:03 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -4969,7 +4969,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case srm_DELETE_IS_DEL:
-	    result = MdBool(screen->delete_is_del);
+	    result = MdBool(xtermDeleteIsDEL(xw));
 	    break;
 #if OPT_NUM_LOCK
 	case srm_ALT_SENDS_ESC:
