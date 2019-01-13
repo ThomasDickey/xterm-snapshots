@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.354 2018/12/16 22:37:07 tom Exp $ */
+/* $XTermId: menu.c,v 1.355 2019/01/12 02:04:19 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -371,6 +371,9 @@ MenuEntry vtMenuEntries[] = {
     { "scrollttyoutput",do_scrollttyoutput, NULL },
     { "allow132",	do_allow132,	NULL },
     { "keepSelection",	do_keepSelection, NULL },
+#if OPT_MENU_KEEPCLIPBOARD
+    { "keepClipboard",	do_keepClipboard, NULL },
+#endif
     { "selectToClipboard",do_selectClipboard, NULL },
     { "visualbell",	do_visualbell,	NULL },
     { "bellIsUrgent",	do_bellIsUrgent, NULL },
@@ -1540,6 +1543,17 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
     ToggleFlag(screen->scrollttyoutput);
     update_scrollttyoutput();
 }
+
+#if OPT_MENU_KEEPCLIPBOARD
+void
+update_keepClipboard(void)
+{
+    UpdateCheckbox("update_keepClipboard",
+		   vtMenuEntries,
+		   vtMenu_keepClipboard,
+		   TScreenOf(term)->keepClipboard);
+}
+#endif
 
 static void
 do_keepClipboard(Widget gw GCC_UNUSED,

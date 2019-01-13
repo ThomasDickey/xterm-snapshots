@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.20 2018/08/10 23:33:05 tom Exp $
+-- $XTermId: THANKS,v 1.21 2019/01/13 17:18:41 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -135,6 +135,7 @@ Marco Peereboom
 Marius Tolzmann
 Mark Waggoner
 Markus Kuhn
+Martin Hostettler
 Martin Pirker
 Martin Tournoij
 Matthew Green
@@ -193,6 +194,7 @@ Semen A Ustimenko
 Sergei Laskavy
 Sergey Vlasov
 Slava Semushin
+Stefan Assmann
 Stefan Dirsch
 Stephen P Wall
 Stuart Lissaman
