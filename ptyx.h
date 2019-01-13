@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.949 2019/01/10 10:26:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.950 2019/01/12 01:34:39 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2636,8 +2636,7 @@ typedef struct {
 	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 
-	Char		*clipboard_data; /* the current clipboard */
-	unsigned long	clipboard_size; /*  size of allocated buffer */
+	SelectedCells	clipboard_data;	/* what we sent to the clipboard */
 
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */

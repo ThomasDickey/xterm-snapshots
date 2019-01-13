@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.854 2019/01/11 22:25:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.855 2019/01/12 00:52:14 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

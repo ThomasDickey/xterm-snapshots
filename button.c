@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.564 2019/01/04 01:07:36 tom Exp $ */
+/* $XTermId: button.c,v 1.567 2019/01/13 16:03:05 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -170,6 +170,7 @@ static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
 static void StartSelect(XtermWidget xw, const CELL *cell);
 static void TrackDown(XtermWidget xw, XButtonEvent *event);
 static void TrackText(XtermWidget xw, const CELL *first, const CELL *last);
+static void UnHiliteText(XtermWidget xw);
 static void _OwnSelection(XtermWidget xw, String *selections, Cardinal count);
 static void do_select_end(XtermWidget xw, XEvent *event, String *params,
 			  Cardinal *num_params, Bool use_cursor_loc);
@@ -2675,7 +2676,7 @@ EndExtend(XtermWidget xw,
 		}
 	    }
 	    v_write(screen->respond, line, count);
-	    TrackText(xw, &zeroCELL, &zeroCELL);
+	    UnHiliteText(xw);
 	}
     }
     SelectSet(xw, event, params, num_params);
@@ -3842,6 +3843,12 @@ TrackText(XtermWidget xw,
     screen->endHCoord = to;
 }
 
+static void
+UnHiliteText(XtermWidget xw)
+{
+    TrackText(xw, &zeroCELL, &zeroCELL);
+}
+
 /* Guaranteed that (first->row, first->col) <= (last->row, last->col) */
 static void
 ReHiliteText(XtermWidget xw,
@@ -4230,7 +4237,7 @@ ConvertSelection(Widget w,
 
     if (keepClipboard(*selection)) {
 	TRACE(("asked for clipboard\n"));
-	scp = &(screen->selected_cells[1]);
+	scp = &(screen->clipboard_data);
     } else {
 	TRACE(("asked for selection\n"));
 	scp = &(screen->selected_cells[*selection == CLIPBOARD_ATOM]);
@@ -4416,7 +4423,7 @@ LoseSelection(Widget w, Atom *selection)
     }
 
     if (screen->selection_count == 0)
-	TrackText(xw, &zeroCELL, &zeroCELL);
+	UnHiliteText(xw);
 }
 
 /* ARGSUSED */
@@ -4481,19 +4488,22 @@ _OwnSelection(XtermWidget xw,
 			     (int) length,
 			     cutbuffer);
 	    }
-	} else if (keepClipboard(atoms[i])) {
-	    Char *buf;
-	    TRACE(("saving selection to clipboard buffer\n"));
-	    scp = &(screen->selected_cells[1]);
-	    if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
-		SysError(ERROR_BMALLOC2);
-
-	    free(screen->clipboard_data);
-	    memcpy(buf, scp->data_buffer, scp->data_length);
-	    screen->clipboard_data = buf;
-	    screen->clipboard_size = scp->data_length;
 	} else {
 	    int which = (atoms[i] == CLIPBOARD_ATOM) ? 1 : 0;
+	    if (keepClipboard(atoms[i])) {
+		Char *buf;
+		SelectedCells *tcp = &(screen->clipboard_data);
+		TRACE(("saving selection to clipboard buffer\n"));
+		scp = &(screen->selected_cells[1]);
+		if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
+		    SysError(ERROR_BMALLOC2);
+
+		free(tcp->data_buffer);
+		memcpy(buf, scp->data_buffer, scp->data_length);
+		tcp->data_buffer = buf;
+		tcp->data_limit = scp->data_length;
+		tcp->data_length = scp->data_length;
+	    }
 	    scp = &(screen->selected_cells[which]);
 	    if (scp->data_length == 0) {
 		TRACE(("XtDisownSelection(%s, @%ld)\n",
@@ -4522,7 +4532,7 @@ _OwnSelection(XtermWidget xw,
     if (!screen->replyToEmacs)
 	screen->selection_count = count;
     if (!have_selection)
-	TrackText(xw, &zeroCELL, &zeroCELL);
+	UnHiliteText(xw);
 }
 
 static void

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.770 2019/01/12 00:16:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.773 2019/01/13 18:43:23 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -205,9 +205,7 @@ against a terminfo library, since the requisite information is not provided
 by the termcap emulation of terminfo libraries).
 .
 .PP
-Many of the special
-.I \*n
-features may be modified under program control
+Many of the special \fI\*n\fP features may be modified under program control
 through a set of escape sequences different from the standard VT\fIxxx\fP escape
 sequences (see \fIXterm Control Sequences\fP).
 .
@@ -216,10 +214,9 @@ The Tektronix 4014 emulation is also fairly good.
 It supports 12-bit graphics addressing, scaled to the window size.
 Four different font sizes and five different lines types are supported.
 There is no write-through or defocused mode support.
-The Tektronix text and graphics commands are recorded internally by
-.I \*n
-and may be written to a file by sending the COPY escape sequence (or through
-the \fBTektronix\fP menu; see below).
+The Tektronix text and graphics commands are recorded internally by \fI\*n\fP
+and may be written to a file by sending the COPY escape sequence
+(or through the \fBTektronix\fP menu; see below).
 The name of the file will be
 .NS
 \*(``COPY\fIyyyy\fR\-\fIMM\fR\-\fIdd\fR.\fIhh\fR:\fImm\fR:\fIss\fR\*(''
@@ -234,10 +231,8 @@ where
 and
 .I ss
 are the year, month, day, hour, minute and second when the COPY was performed
-(the file is created in the directory
-.I \*n
-is started in, or the home directory for a login
-.IR \*n ).
+(the file is created in the directory \fI\*n\fP
+is started in, or the home directory for a login \fI\*n\fP).
 .
 .PP
 Not all of the features described in this manual are necessarily available in
@@ -421,23 +416,18 @@ Not all options are necessarily configured into your copy of \fI\*n\fP:
 .B \-132
 Normally, the VT102 DECCOLM escape sequence that switches between 80 and
 132 column mode is ignored.
-This option causes the DECCOLM escape sequence to be recognized, and the
-.I \*n
-window will resize appropriately.
+This option causes the DECCOLM escape sequence to be recognized,
+and the \fI\*n\fP window will resize appropriately.
 .TP 8
 .B \-ah
-This option indicates that
-.I \*n
-should always highlight the text cursor.
+This option indicates that \fI\*n\fP should always highlight the text cursor.
 By default,
-.I \*n
-will display a hollow text cursor whenever the focus is lost or the
+\fI\*n\fP will display a hollow text cursor whenever the focus is lost or the
 pointer leaves the window.
 .TP 8
 .B +ah
 This option indicates that
-.I \*n
-should do text cursor highlighting based on focus.
+\fI\*n\fP should do text cursor highlighting based on focus.
 .TP 8
 .B \-ai
 This option disables active icon support if that feature was compiled
@@ -1171,8 +1161,7 @@ entries that work with \fI\*n\fR are:
 .br
 \*(``dumb\*(''.
 .IP
-.I \*n
-automatically searches the terminal database in this order
+\fI\*N\fP automatically searches the terminal database in this order
 for these entries and then
 sets the \*(``TERM\*('' variable
 (and the \*(``TERMCAP\*('' environment variable, if relevant).
@@ -2277,7 +2266,8 @@ The default is \*(``__alt_sends_esc__\*(''.
 .B "alternateScroll\fP (class\fB ScrollCond\fP)"
 If \*(``true\*('',
 the \fBscroll-back\fP and \fBscroll-forw\fP actions
-send cursor\-up and \-down keys when \*n is displaying the alternate screen.
+send cursor\-up and \-down keys
+when \fI\*n\fP is displaying the alternate screen.
 The default is \*(``false\*(''.
 .IP
 The \fBalternateScroll\fP state can also be set using a control sequence.
@@ -3134,7 +3124,7 @@ GetChecksum
 Report checksum of characters in a rectangular region.
 .TP 5
 GetIconTitle (20)
-Report \*n window's icon label as a string.
+Report \fI\*n\fP window's icon label as a string.
 .TP 5
 GetScreenSizeChars (19)
 Report the size of the screen in characters as numbers.
@@ -3143,22 +3133,22 @@ GetSelection
 Report selection data as a base64 string.
 .TP 5
 GetWinPosition (13)
-Report \*n window position as numbers.
+Report \fI\*n\fP window position as numbers.
 .TP 5
 GetWinSizeChars (18)
 Report the size of the text area in characters as numbers.
 .TP 5
 GetWinSizePixels (14)
-Report \*n window in pixels as numbers.
+Report \fI\*n\fP window in pixels as numbers.
 .TP 5
 GetWinState (11)
-Report \*n window state as a number.
+Report \fI\*n\fP window state as a number.
 .TP 5
 GetWinTitle (21)
-Report \*n window's title as a string.
+Report \fI\*n\fP window's title as a string.
 .TP 5
 LowerWin (6)
-Lower the \*n window to the bottom of the stacking order.
+Lower the \fI\*n\fP window to the bottom of the stacking order.
 .TP 5
 MaximizeWin (9)
 Maximize window (i.e., resize to screen size).
@@ -3176,10 +3166,10 @@ PushTitle (22)
 Push title to internal stack.
 .TP 5
 RaiseWin (5)
-Raise the \*n window to the front of the stacking order.
+Raise the \fI\*n\fP window to the front of the stacking order.
 .TP 5
 RefreshWin (7)
-Refresh the \*n window.
+Refresh the \fI\*n\fP window.
 .TP 5
 RestoreWin (1)
 De-iconify window.
@@ -3200,7 +3190,7 @@ SetWinSizeChars (8)
 Resize the text area to given size in characters.
 .TP 5
 SetWinSizePixels (4)
-Resize the \*n window to given size in pixels.
+Resize the \fI\*n\fP window to given size in pixels.
 .TP 5
 SetXprop
 Set X property on top-level window.
@@ -3734,11 +3724,15 @@ Specifies whether \fI\*n\fR will reuse the selection data which it
 copied to the keyboard rather than asking the clipboard for its
 current contents when told to provide the selection.
 The default is \*(``false\*(''.
+.IP
+The menu entry \fBKeep Clipboard\fP allows you to change this at runtime.
 .TP 8
 .B "keepSelection\fP (class\fB KeepSelection\fP)"
 Specifies whether \fI\*n\fR will keep the selection even after the
 selected area was touched by some output to the terminal.
 The default is \*(``true\*(''.
+.IP
+The menu entry \fBKeep Selection\fP allows you to change this at runtime.
 .TP 8
 .B "keyboardDialect\fP (class\fB KeyboardDialect\fP)"
 Specifies the initial keyboard dialect, as well as the default value when
@@ -4384,20 +4378,24 @@ application switches the printer offline with a Media Copy command.
 The default is \*(``false\*(''.
 .TP 8
 .B "printerCommand\fP (class\fB PrinterCommand\fP)"
-Specifies a shell command to which
-.I \*n
-will open a pipe when the first
+Specifies a shell command to which \fI\*n\fP will open a pipe when the first
 MC (Media Copy) command is initiated.
 The default is an empty string, i.e., \*(``\*(''.
 If the resource value is given as an empty string, the printer is disabled.
 .TP 8
 .B "printerControlMode\fP (class\fB PrinterControlMode\fP)"
 Specifies the printer control mode.
-A \*(``1\*('' selects autoprint mode, which causes
-.I \*n
-to print a line from the screen when you move the cursor off that
-line with a line feed, form feed or vertical tab character, or an
-autowrap occurs.
+A \*(``1\*('' selects autoprint mode,
+which causes \fI\*n\fP to print a line from the screen
+when
+.RS
+.bP
+you move the cursor off that
+line with a line feed, form feed or vertical tab character, or
+.bP
+an autowrap occurs.
+.RE
+.IP
 Autoprint mode is overridden by printer controller mode (a \*(``2\*(''),
 which causes all of the output to be directed to the printer.
 The default is \*(``0\*(''.
@@ -5349,8 +5347,7 @@ foreground and background color.
 .
 .PP
 Once the VT\fIxxx\fP window is created,
-.I \*n
-allows you to select text and copy it within the same or other windows
+\fI\*n\fP allows you to select text and copy it within the same or other windows
 using the \fIpointer\fP or the keyboard.
 .
 .PP
@@ -5437,8 +5434,8 @@ the right edge of the selection than the left, it extends/contracts the
 right edge of the selection.
 If you contract the selection past
 the left edge of the selection,
-.I \*n
-assumes you really meant the left edge, restores the original selection, then
+\fI\*n\fP assumes you really meant the left edge,
+restores the original selection, then
 extends/contracts the left edge of the selection.
 Extension starts in the
 selection unit mode
@@ -5496,14 +5493,28 @@ for details).
 .
 .SH SELECT/PASTE
 X clients provide select and paste support by responding to requests conveyed
-by the server.
+by the X server.
+The X server holds data in \*(``atoms\*('' which correspond
+to the different types of selection: PRIMARY, CLIPBOARD, CUT_BUFFER.
+The ICCCM also refers to a \fISECONDARY\fP selection atom,
+which \fI\*n\fP does not support.
+.PP
+The ICCCM deals with the underlying mechanism for select/paste.
+It does not mention \fIhighlighting\fP.
+The \fIselection\fP is not the same as \fIhighlighting\fP.
+\fI\*N\fP (like many applications) uses highlighting to show you
+the currently selected text.
+An X application may \fIown\fP a selection,
+which allows it to be the source of data copied using a given selection atom
+\fI\*N\fP may continue owning a selection after it stops highlighting
+(see \fBkeepSelection\fP).
 .SS PRIMARY
-When configured to use the primary selection,
-(the default) \fI\*n\fP can
-provide the selection data in ways which help to retain character
+When configured to use the primary selection (the default),
+\fI\*n\fP can provide the selection data in ways
+which help to retain character
 encoding information as it is pasted.
 .PP
-A user \*(``selects\*('' text on \*n, which highlights the selected text.
+A user \*(``selects\*('' text on \fI\*n\fP, which highlights the selected text.
 A subsequent \*(``paste\*('' to another client forwards
 a request to the client owning the selection.
 If \fI\*n\fP owns the primary selection, it makes the data
@@ -5771,9 +5782,7 @@ and
 are the year, month, day, hour, minute and second
 when the screen dump was performed
 (the file is created in the directory
-.I \*n
-is started in, or the home directory for a login
-.IR \*n ).
+\fI\*n\fP is started in, or the home directory for a login \fI\*n\fP).
 .IP
 The \fBdump-html\fP action can also be triggered using the Media Copy
 control sequence CSI 1 0 i, for example from a shell script with
@@ -5811,9 +5820,7 @@ and
 are the year, month, day, hour, minute and second
 when the screen dump was performed
 (the file is created in the directory
-.I \*n
-is started in, or the home directory for a login
-.IR \*n ).
+\fI\*n\fP is started in, or the home directory for a login \fI\*n\fP).
 .IP
 The \fBdump-svg\fP action can also be triggered using the Media Copy
 control sequence CSI 1 1 i, for example from a shell script with
@@ -5888,28 +5895,23 @@ Commands for process signalling:
 .TP
 .B Send KILL Signal\fP (resource \fBkill\fP)
 These send the SIGTSTP, SIGCONT, SIGINT, SIGHUP, SIGTERM and SIGKILL
-signals respectively, to the process group of the process running under
-.I \*n
-(usually the shell).
+signals respectively, to
+the process group of the process running under \fI\*n\fP (usually the shell).
 The \fBSIGCONT\fP
 function is especially useful if the user has accidentally typed CTRL-Z,
 suspending the process.
 .TP
 .B Quit\fP (resource \fBquit\fP)
 Stop processing X events except to support the \fB-hold\fP option,
-and then send a SIGHUP signal to the
-process group of the process running under
-.I \*n
-(usually the shell).
+and then send a SIGHUP signal to
+the process group of the process running under \fI\*n\fP (usually the shell).
 .RE
 .PP
 .
 .\" ************************************************************************
 .SS "VT Options"
 .PP
-The
-.I \*n
-.I vtMenu
+The \fI\*n\fP \fIvtMenu\fP
 sets various modes in the VT\fIxxx\fP emulation, and is popped up when the
 \*(``control\*('' key and pointer button two
 are pressed in the VT\fIxxx\fP window.
@@ -5986,18 +5988,38 @@ This corresponds to the \fB\-132\fP option and the \fBc132\fP resource.
 Tell \fI\*n\fP whether to disown the selection when it stops highlighting it,
 e.g., when an application modifies the display so that it no longer matches
 the text which has been highlighted.
-As long as \fI\*n\fP continues to own the selection,
-it can provide the corresponding text to other clients via cut/paste.
+As long as \fI\*n\fP continues to own the selection for a given atom,
+it can provide the corresponding text to other clients which request
+the selection using that atom.
+.IP
 This corresponds to the \fBkeepSelection\fP resource.
 There is no corresponding command-line option.
+.IP
+Telling \fI\*n\fP to not disown the selection
+does not prevent other applications from taking ownership of the selection.
+When that happens, \fI\*n\fP receives notification that this has happened,
+and removes its highlighting.
+.IP
+See \fBSELECT/PASTE\fP for more information.
 .
 .TP
 .B Select to Clipboard\fP (resource \fBselectToClipboard\fP)
 Tell \fI\*n\fP whether to use the \fBPRIMARY\fP or \fBCLIPBOARD\fP
 for \fBSELECT\fP tokens in the \fBtranslations\fP resource which
 maps keyboard and mouse actions to select/paste actions.
+.IP
 This corresponds to the \fBselectToClipboard\fP resource.
 There is no corresponding command-line option.
+.IP
+The \fBkeepSelection\fP resource setting applies
+to \fBCLIPBOARD\fP selections just as it does for \fBPRIMARY\fP selections.
+However some window managers treat the clipboard specially.
+For instance, XQuartz's synchronization between the OSX \fIpasteboard\fP
+and the X11 \fIclipboard\fP causes applications
+to lose the selection ownership
+for that atom when a selection is copied to the clipboard.
+.IP
+See \fBSELECT/PASTE\fP for more information.
 .
 .TP
 .B Enable Visual Bell\fP (resource \fBvisualbell\fP)
@@ -6093,8 +6115,7 @@ This corresponds to the VT220 DECSTR control sequence.
 The full reset entry will clear the screen, reset tabs to every
 eight columns, and reset the terminal modes (such as wrap and smooth scroll)
 to their initial states just after
-.I \*n
-has finished processing the command line options.
+\fI\*n\fP has finished processing the command line options.
 This corresponds to the VT102 RIS control sequence,
 with a few obvious differences.
 For example, your session is not disconnected as a real VT102 would do.
@@ -8106,13 +8127,11 @@ will accept data, but some pty drivers do not return enough information
 to know if the write has succeeded.
 .
 .PP
-When connected to an input method, it is possible for \*n to hang
+When connected to an input method, it is possible for \fI\*n\fP to hang
 if the XIM server is suspended or killed.
 .
 .PP
-Many of the options are not resettable after
-.I \*n
-starts.
+Many of the options are not resettable after \fI\*n\fP starts.
 .
 .PP
 This program still needs to be rewritten.
@@ -8138,6 +8157,7 @@ tty(4)
 .PP
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
+.RS 4n
 .sp
 https://invisible\-island.net/xterm/xterm.html
 .br
@@ -8148,7 +8168,30 @@ https://invisible\-island.net/xterm/ctlseqs/ctlseqs.html
 https://invisible\-island.net/xterm/xterm.faq.html
 .br
 https://invisible\-island.net/xterm/xterm.log.html
-.
+.RE
+.PP
+\fIInter-Client Communication Conventions Manual\fR (ICCCM),
+.br
+David Rosenthal and
+Stuart W. Marks (version 2.0, 1994).
+.PP
+Version 2.0 of the ICCCM does not address UTF-8.
+That is an extension added in XFree86.
+.bP
+Markus Kuhn summarized this in 
+\fIUTF-8 and Unicode FAQ for Unix/Linux\fP (2001),
+in the section \*(``Is X11 ready for Unicode?\*(''
+.IP
+https://www.cl.cam.ac.uk/~mgk25/unicode.html
+.bP
+Juliusz Chroboczek proposed the UTF8_STRING selection atom in 1999/2000,
+which became part of the ICCCM in XFree86.
+.IP
+https://www.irif.fr/~jch/software/UTF8_STRING/
+.IP
+An Xorg developer removed that part of the documentation in 2004
+when incorporating other work from XFree86 into Xorg.
+The feature is still supported in Xorg, though undocumented as of 2019.
 .
 .SH AUTHORS
 Far too many people.
@@ -8163,7 +8206,7 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \*n's source lists 189 at the end of 2017.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 211 at the end of 2018.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,
