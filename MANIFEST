@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-342g
+MANIFEST for xterm, version xterm-342h
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -166,9 +166,16 @@ package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
 package/freebsd                 subdirectory
 package/freebsd/Makefile        build-script
+package/freebsd/distinfo        generated sums
 package/freebsd/pkg-descr       build-script
 package/freebsd/pkg-message     build-script
 package/freebsd/pkg-plist       build-script
+package/pkgsrc                  subdirectory
+package/pkgsrc/DESCR            build-script
+package/pkgsrc/Makefile         build-script
+package/pkgsrc/PLIST            build-script
+package/pkgsrc/distinfo         build-script
+package/pkgsrc/options.mk       build-script
 package                         subdirectory
 package/xterm.spec              build-script
 tektests                        subdirectory
