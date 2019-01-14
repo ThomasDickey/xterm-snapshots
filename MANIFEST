@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-342h
+MANIFEST for xterm, version xterm-343
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -6,6 +6,7 @@ MANIFEST                        this file
 88colres.h                      resource definitions for 88-color mode
 88colres.pl                     script to generate 88colres.h
 AAA_README_VMS.txt              note for VMS port of 'xterm'
+COPYING                         license for this program
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 KOI8RXTerm.ad                   resources for koi8rxterm
