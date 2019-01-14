@@ -6,7 +6,7 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	343
+PORTVERSION=	344
 CATEGORIES=	x11
 MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/ \
 		https://invisible-mirror.net/archives/xterm/:src1
