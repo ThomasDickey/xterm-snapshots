@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.244 2018/11/22 14:36:02 tom Exp $
+## $XTermId: Makefile.in,v 1.245 2019/01/14 01:40:56 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2017,2018 by Thomas E. Dickey
+# Copyright 1997-2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -519,6 +519,9 @@ uninstall-full ::
 @desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
 @desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) $(DESKTOP_FLAGS) $$n; \
 @desktop_utils@		done'
+################################################################################
+check :
+	@ echo "There are no batch tests available (use vttest)"
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp

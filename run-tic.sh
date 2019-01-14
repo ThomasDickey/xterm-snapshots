@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.4 2007/06/17 15:30:03 tom Exp $
+# $XTermId: run-tic.sh,v 1.7 2019/01/14 01:52:19 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006,2007 by Thomas E. Dickey
+# Copyright 2006-2007,2019 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -40,14 +40,29 @@ TMP=run-tic$$.log
 VER=`tic -V 2>/dev/null`
 OPT=
 
-case .$VER in
-.ncurses*)
+PROG=tic
+unset TERM
+unset TERMINFO_DIRS
+
+case "x$VER" in
+*ncurses*)
+	# Prefer ncurses 6 over 5, if we can get it, since some older 5.9
+	# packages do not handle the extensions as well.
+	case "$VER" in
+	*\ [6789].*)
+		;;
+	*)
+		VER=`tic6 -V 2>/dev/null`
+		test -n "$VER" && PROG=tic6
+		;;
+	esac
+	echo "** using tic from $VER"
 	OPT="-x"
 	;;
 esac
 
-echo "** tic $OPT" "$@"
-tic $OPT "$@" 2>$TMP
+echo "** $PROG $OPT" "$@"
+$PROG $OPT "$@" 2>$TMP
 RET=$?
 
 fgrep -v 'Unknown Capability' $TMP | \
