@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.773 2019/01/13 18:43:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.775 2019/01/17 09:33:18 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -136,7 +136,7 @@ VT102 emulation is fairly complete, but does not support autorepeat
 (because that would affect the keyboard used by other X clients).
 .IP
 Double-size characters are displayed properly if your font server supports
-scalable fonts.
+scalable bitmap fonts.
 .bP
 VT220 emulation does not support soft fonts, it is otherwise complete.
 .bP
@@ -4124,7 +4124,7 @@ r r.
 .TP 8
 .B "numLock\fP (class\fB NumLock\fP)"
 If \*(``true\*('', \fI\*n\fR checks if NumLock is used as a modifier
-(see \fIxmodmap\fP(__mansuffix__)).
+(see \fBxmodmap\fP(__mansuffix__)).
 If so, this modifier is used to simplify the logic when implementing special
 NumLock for the \fBsunKeyboard\fP resource.
 Also (when \fBsunKeyboard\fP is false), similar logic is used to find the
@@ -6372,7 +6372,7 @@ run under \fIxdm\fP,
 are capable of using a \*(``magic cookie\*('' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
-the server (see \fIxhost(__mansuffix__)\fP),
+the server (see \fBxhost(__mansuffix__)\fP),
 then if you enable access for a host and
 other users are also permitted to run clients on that same host,
 it is possible that someone can run an application which uses the
@@ -7253,7 +7253,7 @@ indicate the normal and bold fonts that have been set through escape codes
 (or specified as the second and third action arguments, respectively), and
 .HP
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
-\fIxfontsel(__mansuffix__)\fP) indicated by the second action argument.
+\fBxfontsel(__mansuffix__)\fP) indicated by the second action argument.
 .RE
 .IP
 If \fI\*n\fR is configured to support wide characters, an
