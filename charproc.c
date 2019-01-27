@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1623 2019/01/10 10:26:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1624 2019/01/27 14:31:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1615,7 +1615,10 @@ dump_params(void)
 	    sp->print_used = 0;					\
 	}							\
 
+#define PARSE_SRM 1
+
 struct ParseState {
+    unsigned check_recur;
 #if OPT_VT52_MODE
     Bool vt52_cup;
 #endif
@@ -4888,6 +4891,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     return True;
 }
 
+static Boolean
+redoparsing(XtermWidget xw, unsigned c, struct ParseState *sp, unsigned check)
+{
+    Boolean result = False;
+    if (!(sp->check_recur & check)) {
+	UIntSet(sp->check_recur, check);
+	result = doparsing(xw, c, sp);
+	UIntClr(sp->check_recur, check);
+    }
+    return result;
+}
+
 static void
 VTparse(XtermWidget xw)
 {
@@ -7559,7 +7574,7 @@ unparseputc(XtermWidget xw, int c)
 
     /* If send/receive mode is reset, we echo characters locally */
     if ((xw->keyboard.flags & MODE_SRM) == 0) {
-	(void) doparsing(xw, (unsigned) c, &myState);
+	(void) redoparsing(xw, (unsigned) c, &myState, PARSE_SRM);
     }
 }
 
