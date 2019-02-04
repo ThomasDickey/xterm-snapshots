@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1626 2019/02/04 02:02:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1627 2019/02/04 10:23:08 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1576,8 +1576,10 @@ dump_params(void)
 #define SafeAlloc(type, area, used, size) \
 		type *new_string = area; \
 		size_t new_length = size; \
-		if (new_length == 0) { \
-		    new_length = 256; \
+		if (sp->check_recur) { \
+		    continue; \
+		} else if (new_length == 0) { \
+		    new_length = 1024; \
 		    new_string = TypeMallocN(type, new_length); \
 		} else if (used+1 >= new_length) { \
 		    new_length = size * 2; \
