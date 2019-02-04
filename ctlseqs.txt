@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2018)
-               updated for XTerm Patch #341 (2018/12/24)
+                    invisible-island.net (2006-2019)
+               updated for XTerm Patch #344 (2019/02/03)
 
 
 
@@ -693,7 +693,7 @@ CSI ? Pm h
             Ps = 3 5  -> Enable font-shifting functions (rxvt).
             Ps = 3 8  -> Enter Tektronix Mode (DECTEK), VT240, xterm.
             Ps = 4 0  -> Allow 80 -> 132 Mode, xterm.
-            Ps = 4 1  -> more(1) fix (see curses(3) resource).
+            Ps = 4 1  -> more(1) fix (see curses resource).
             Ps = 4 2  -> Enable National Replacement Character sets
           (DECNRCM), VT220.
             Ps = 4 4  -> Turn On Margin Bell, xterm.
@@ -812,7 +812,7 @@ CSI ? Pm l
             Ps = 3 0  -> Don't show scrollbar (rxvt).
             Ps = 3 5  -> Disable font-shifting functions (rxvt).
             Ps = 4 0  -> Disallow 80 -> 132 Mode, xterm.
-            Ps = 4 1  -> No more(1) fix (see curses(3) resource).
+            Ps = 4 1  -> No more(1) fix (see curses resource).
             Ps = 4 2  -> Disable National Replacement Character sets
           (DECNRCM), VT220.
             Ps = 4 4  -> Turn Off Margin Bell, xterm.
