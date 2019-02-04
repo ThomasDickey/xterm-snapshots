@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.775 2019/01/17 09:33:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.776 2019/02/03 22:22:13 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -7841,7 +7841,7 @@ when \fI\*n\fP is configured (at build-time) to update utmp.
 .IP
 Your configuration may have set \fBLOGNAME\fP; \fI\*n\fP does not modify that.
 If it is unset, \fI\*n\fP will use \fBUSER\fP if it is set.
-Finally, if neither is set, \fI\*n\fP will use the \fBgetlogin\fP(2) function.
+Finally, if neither is set, \fI\*n\fP will use the \fBgetlogin\fP(3) function.
 .TP 5
 .B SHELL
 when \fI\*n\fP is configured (at build-time) to update utmp.

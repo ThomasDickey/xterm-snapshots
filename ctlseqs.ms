@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.486 2018/12/24 15:29:04 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.488 2019/02/04 02:18:06 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2017,2018 by Thomas E. Dickey
+.\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #341
-.ds RF 2018/12/24
+.ds LF Patch #344
+.ds RF 2019/02/03
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -348,7 +348,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2018)
+invisible-island.net (2006-2019)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1234,7 +1234,7 @@ This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK), VT240, \fI\*(xt\fP.
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP(3) resource).
+  \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets
 (DECNRCM), VT220.
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell, \fI\*(xt\fP.
@@ -1358,7 +1358,7 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP(3) resource).
+  \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM),
 VT220.
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell, \fI\*(xt\fP.
