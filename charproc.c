@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1631 2019/02/07 01:48:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1634 2019/02/07 10:24:40 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3934,7 +3934,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (nparam != 3) {
 		    TRACE(("DATA_ERROR: malformed CASE_GRAPHICS_ATTRIBUTES request with %d parameters\n", nparam));
 		} else {
-		    int status = 3;
+		    int status = 3;	/* assume failure */
 		    int result = 0;
 		    int result2 = 0;
 
@@ -3944,51 +3944,54 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    case 1:	/* color register count */
 			switch (GetParam(1)) {
 			case 1:	/* read */
-			    status = 0;
+			    status = 0;		/* success */
 			    result = (int) get_color_register_count(screen);
 			    break;
 			case 2:	/* reset */
 			    screen->numcolorregisters = 0;
-			    status = 0;
+			    status = 0;		/* success */
 			    result = (int) get_color_register_count(screen);
 			    break;
 			case 3:	/* set */
 			    if (GetParam(2) > 1 &&
 				(unsigned) GetParam(2) <= MAX_COLOR_REGISTERS) {
 				screen->numcolorregisters = GetParam(2);
-				status = 0;
+				status = 0;	/* success */
 				result = (int) get_color_register_count(screen);
 			    }
 			    break;
 			case 4:	/* read maximum */
-			    status = 0;
+			    status = 0;		/* success */
 			    result = MAX_COLOR_REGISTERS;
 			    break;
 			default:
 			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES color register count request with unknown action parameter: %d\n",
 				   GetParam(1)));
-			    status = 2;
+			    status = 2;		/* error in Pa */
 			    break;
 			}
 			break;
 		    case 2:	/* graphics geometry */
 			switch (GetParam(1)) {
 			case 1:	/* read */
-			    status = 0;
-			    result = screen->graphics_max_wide;
-			    result2 = screen->graphics_max_high;
+			    TRACE(("Get sixel graphics geometry\n"));
+			    status = 0;		/* success */
+			    result = Min(Width(screen), screen->graphics_max_wide);
+			    result2 = Min(Height(screen), screen->graphics_max_high);
 			    break;
 			case 2:	/* reset */
 			    /* FALLTHRU */
 			case 3:	/* set */
-			    /* FALLTHRU */
+			    break;
 			case 4:	/* read maximum */
-			    /* not implemented */
+			    status = 0;		/* success */
+			    result = screen->graphics_max_wide;
+			    result2 = screen->graphics_max_high;
 			    break;
 			default:
 			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES graphics geometry request with unknown action parameter: %d\n",
 				   GetParam(1)));
-			    status = 2;
+			    status = 2;		/* error in Pa */
 			    break;
 			}
 			break;
@@ -3996,7 +3999,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    case 3:	/* ReGIS geometry */
 			switch (GetParam(1)) {
 			case 1:	/* read */
-			    status = 0;
+			    status = 0;		/* success */
 			    result = screen->graphics_regis_def_wide;
 			    result2 = screen->graphics_regis_def_high;
 			    break;
@@ -4010,7 +4013,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			default:
 			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES ReGIS geometry request with unknown action parameter: %d\n",
 				   GetParam(1)));
-			    status = 2;
+			    status = 2;		/* error in Pa */
 			    break;
 			}
 			break;
