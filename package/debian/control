@@ -2,7 +2,7 @@ Source: xterm-dev
 Section: x11
 Priority: optional
 Maintainer: Thomas E. Dickey <dickey@invisible-island.net>
-Homepage: http://invisible-island.net/xterm/
+Homepage: https://invisible-island.net/xterm/
 Build-Depends: debhelper (>= 7), xorg-docs-core
 Standards-Version: 3.8.2
 

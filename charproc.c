@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1627 2019/02/04 10:23:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1631 2019/02/07 01:48:32 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1576,9 +1576,7 @@ dump_params(void)
 #define SafeAlloc(type, area, used, size) \
 		type *new_string = area; \
 		size_t new_length = size; \
-		if (sp->check_recur) { \
-		    continue; \
-		} else if (new_length == 0) { \
+		if (new_length == 0) { \
 		    new_length = 1024; \
 		    new_string = TypeMallocN(type, new_length); \
 		} else if (used+1 >= new_length) { \
@@ -1643,6 +1641,10 @@ struct ParseState {
     Char *string_area;
     size_t string_size;
     size_t string_used;
+    /* Buffer for deferring input */
+    Char *defer_area;
+    size_t defer_size;
+    size_t defer_used;
 };
 
 static struct ParseState myState;
@@ -2140,6 +2142,19 @@ init_reply(unsigned type)
     reply.a_type = (Char) type;
 }
 
+static void
+deferparsing(unsigned c, struct ParseState *sp)
+{
+    SafeAlloc(Char, sp->defer_area, sp->defer_used, sp->defer_size);
+    if (new_string == 0) {
+	xtermWarning("Cannot allocate %lu bytes for deferred parsing of %u\n",
+		     (unsigned long) new_length, c);
+	return;
+    }
+    SafeFree(sp->defer_area, sp->defer_size);
+    sp->defer_area[(sp->defer_used)++] = CharOf(c);
+}
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -2153,6 +2168,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_DEC_RECTOPS
     int thispage = 1;
 #endif
+
+    if (sp->check_recur) {
+	/* Defer parsing when parser is already running as the parser is not
+	 * safe to reenter.
+	 */
+	deferparsing(c, sp);
+	return True;
+    }
 
     do {
 #if OPT_WIDE_CHARS
@@ -4908,12 +4931,28 @@ redoparsing(XtermWidget xw, unsigned c, struct ParseState *sp, unsigned check)
 static void
 VTparse(XtermWidget xw)
 {
+    Boolean keep_running;
+
     /* We longjmp back to this point in VTReset() */
     (void) setjmp(vtjmpbuf);
     init_parser(xw, &myState);
 
+    keep_running = False;
     do {
-    } while (doparsing(xw, doinput(), &myState));
+	keep_running = doparsing(xw, doinput(), &myState);
+	while (myState.defer_used) {
+	    Char *deferred = myState.defer_area;
+	    size_t len = myState.defer_used;
+	    size_t i;
+	    myState.defer_area = NULL;
+	    myState.defer_size = 0;
+	    myState.defer_used = 0;
+	    for (i = 0; i < len; i++) {
+		(void) doparsing(xw, deferred[i], &myState);
+	    }
+	    free(deferred);
+	}
+    } while (keep_running);
 }
 
 static Char *v_buffer;		/* pointer to physical buffer */
@@ -11863,6 +11902,13 @@ void
 VTReset(XtermWidget xw, Bool full, Bool saved)
 {
     ReallyReset(xw, full, saved);
+
+    free(myState.string_area);
+    myState.string_area = 0;
+
+    free(myState.print_area);
+    myState.print_area = 0;
+
     longjmp(vtjmpbuf, 1);	/* force ground state in parser */
 }
 

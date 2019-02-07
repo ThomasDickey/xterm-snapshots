@@ -7,7 +7,7 @@ MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/
 EXTRACT_SUFX=	.tgz
 
 MAINTAINER=	pkgsrc-users@NetBSD.org
-HOMEPAGE=	http://invisible-island.net/xterm/xterm.html
+HOMEPAGE=	https://invisible-island.net/xterm/xterm.html
 COMMENT=	Latest terminal emulator for the X Window System
 LICENSE=	x11
 
