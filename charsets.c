@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.104 2018/09/23 16:48:58 tom Exp $ */
+/* $XTermId: charsets.c,v 1.105 2019/02/11 00:41:13 tom Exp $ */
 
 /*
- * Copyright 1998-2017,2018 by Thomas E. Dickey
+ * Copyright 1998-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -791,6 +791,111 @@
 	    UNI(0x7f, 0x00ff);	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
 	} \
 	end_CODEPAGE()
+	/* DEC Cyrillic from screenshot */
+#define map_DEC_Cyrillic(code) \
+	begin_CODEPAGE(); \
+	switch (code) { \
+	    UNI(0x20, 0x00a0);	/* NO-BREAK SPACE */ \
+	    XXX(0x21, UNDEF);	/* undefined */ \
+	    XXX(0x22, UNDEF);	/* undefined */ \
+	    XXX(0x23, UNDEF);	/* undefined */ \
+	    XXX(0x24, UNDEF);	/* undefined */ \
+	    XXX(0x25, UNDEF);	/* undefined */ \
+	    XXX(0x26, UNDEF);	/* undefined */ \
+	    XXX(0x27, UNDEF);	/* undefined */ \
+	    XXX(0x28, UNDEF);	/* undefined */ \
+	    XXX(0x29, UNDEF);	/* undefined */ \
+	    XXX(0x2a, UNDEF);	/* undefined */ \
+	    XXX(0x2b, UNDEF);	/* undefined */ \
+	    XXX(0x2c, UNDEF);	/* undefined */ \
+	    XXX(0x2d, UNDEF);	/* undefined */ \
+	    XXX(0x2e, UNDEF);	/* undefined */ \
+	    XXX(0x2f, UNDEF);	/* undefined */ \
+	    XXX(0x30, UNDEF);	/* undefined */ \
+	    XXX(0x31, UNDEF);	/* undefined */ \
+	    XXX(0x32, UNDEF);	/* undefined */ \
+	    XXX(0x33, UNDEF);	/* undefined */ \
+	    XXX(0x34, UNDEF);	/* undefined */ \
+	    XXX(0x35, UNDEF);	/* undefined */ \
+	    XXX(0x36, UNDEF);	/* undefined */ \
+	    XXX(0x37, UNDEF);	/* undefined */ \
+	    XXX(0x38, UNDEF);	/* undefined */ \
+	    XXX(0x39, UNDEF);	/* undefined */ \
+	    XXX(0x3a, UNDEF);	/* undefined */ \
+	    XXX(0x3b, UNDEF);	/* undefined */ \
+	    XXX(0x3c, UNDEF);	/* undefined */ \
+	    XXX(0x3d, UNDEF);	/* undefined */ \
+	    XXX(0x3e, UNDEF);	/* undefined */ \
+	    XXX(0x3f, UNDEF);	/* undefined */ \
+	    \
+	    UNI(0x40, 0x044e);	/* CYRILLIC SMALL LETTER YU */ \
+	    UNI(0x41, 0x0430);	/* CYRILLIC SMALL LETTER A */ \
+	    UNI(0x42, 0x0431);	/* CYRILLIC SMALL LETTER BE */ \
+	    UNI(0x43, 0x0446);	/* CYRILLIC SMALL LETTER TSE */ \
+	    UNI(0x44, 0x0434);	/* CYRILLIC SMALL LETTER DE */ \
+	    UNI(0x45, 0x0435);	/* CYRILLIC SMALL LETTER IE */ \
+	    UNI(0x46, 0x0444);	/* CYRILLIC SMALL LETTER EF */ \
+	    UNI(0x47, 0x0433);	/* CYRILLIC SMALL LETTER GHE */ \
+	    UNI(0x48, 0x0445);	/* CYRILLIC SMALL LETTER HA */ \
+	    UNI(0x49, 0x0438);	/* CYRILLIC SMALL LETTER I */ \
+	    UNI(0x4a, 0x0439);	/* CYRILLIC SMALL LETTER SHORT I */ \
+	    UNI(0x4b, 0x043a);	/* CYRILLIC SMALL LETTER KA */ \
+	    UNI(0x4c, 0x043b);	/* CYRILLIC SMALL LETTER EL */ \
+	    UNI(0x4d, 0x043c);	/* CYRILLIC SMALL LETTER EM */ \
+	    UNI(0x4e, 0x043d);	/* CYRILLIC SMALL LETTER EN */ \
+	    UNI(0x4f, 0x043e);	/* CYRILLIC SMALL LETTER O */ \
+	    UNI(0x50, 0x043f);	/* CYRILLIC SMALL LETTER PE */ \
+	    UNI(0x51, 0x044f);	/* CYRILLIC SMALL LETTER YA */ \
+	    UNI(0x52, 0x0440);	/* CYRILLIC SMALL LETTER ER */ \
+	    UNI(0x53, 0x0441);	/* CYRILLIC SMALL LETTER ES */ \
+	    UNI(0x54, 0x0442);	/* CYRILLIC SMALL LETTER TE */ \
+	    UNI(0x55, 0x0443);	/* CYRILLIC SMALL LETTER U */ \
+	    UNI(0x56, 0x0436);	/* CYRILLIC SMALL LETTER ZHE */ \
+	    UNI(0x57, 0x0432);	/* CYRILLIC SMALL LETTER VE */ \
+	    UNI(0x58, 0x044c);	/* CYRILLIC SMALL LETTER SOFT SIGN */ \
+	    UNI(0x59, 0x044b);	/* CYRILLIC SMALL LETTER YERU */ \
+	    UNI(0x5a, 0x0437);	/* CYRILLIC SMALL LETTER ZE */ \
+	    UNI(0x5b, 0x0448);	/* CYRILLIC SMALL LETTER SHA */ \
+	    UNI(0x5c, 0x044d);	/* CYRILLIC SMALL LETTER E */ \
+	    UNI(0x5d, 0x0449);	/* CYRILLIC SMALL LETTER SHCHA */ \
+	    UNI(0x5e, 0x0447);	/* CYRILLIC SMALL LETTER CHE */ \
+	    UNI(0x5f, 0x044a);	/* CYRILLIC SMALL LETTER HARD SIGN */ \
+	    \
+	    UNI(0x60, 0x042e);	/* CYRILLIC CAPITAL LETTER YU */ \
+	    UNI(0x61, 0x0410);	/* CYRILLIC CAPITAL LETTER A */ \
+	    UNI(0x62, 0x0411);	/* CYRILLIC CAPITAL LETTER BE */ \
+	    UNI(0x63, 0x0426);	/* CYRILLIC CAPITAL LETTER TSE */ \
+	    UNI(0x64, 0x0414);	/* CYRILLIC CAPITAL LETTER DE */ \
+	    UNI(0x65, 0x0415);	/* CYRILLIC CAPITAL LETTER IE */ \
+	    UNI(0x66, 0x0424);	/* CYRILLIC CAPITAL LETTER EF */ \
+	    UNI(0x67, 0x0413);	/* CYRILLIC CAPITAL LETTER GHE */ \
+	    UNI(0x68, 0x0425);	/* CYRILLIC CAPITAL LETTER HA */ \
+	    UNI(0x69, 0x0418);	/* CYRILLIC CAPITAL LETTER I */ \
+	    UNI(0x6a, 0x0419);	/* CYRILLIC CAPITAL LETTER SHORT I */ \
+	    UNI(0x6b, 0x041a);	/* CYRILLIC CAPITAL LETTER KA */ \
+	    UNI(0x6c, 0x041b);	/* CYRILLIC CAPITAL LETTER EL */ \
+	    UNI(0x6d, 0x041c);	/* CYRILLIC CAPITAL LETTER EM */ \
+	    UNI(0x6e, 0x041d);	/* CYRILLIC CAPITAL LETTER EN */ \
+	    UNI(0x6f, 0x041e);	/* CYRILLIC CAPITAL LETTER O */ \
+	    UNI(0x70, 0x041f);	/* CYRILLIC CAPITAL LETTER PE */ \
+	    UNI(0x71, 0x042f);	/* CYRILLIC CAPITAL LETTER YA */ \
+	    UNI(0x72, 0x0420);	/* CYRILLIC CAPITAL LETTER ER */ \
+	    UNI(0x73, 0x0421);	/* CYRILLIC CAPITAL LETTER ES */ \
+	    UNI(0x74, 0x0422);	/* CYRILLIC CAPITAL LETTER TE */ \
+	    UNI(0x75, 0x0423);	/* CYRILLIC CAPITAL LETTER U */ \
+	    UNI(0x76, 0x0416);	/* CYRILLIC CAPITAL LETTER ZHE */ \
+	    UNI(0x77, 0x0412);	/* CYRILLIC CAPITAL LETTER VE */ \
+	    UNI(0x78, 0x042c);	/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
+	    UNI(0x79, 0x042b);	/* CYRILLIC CAPITAL LETTER YERU */ \
+	    UNI(0x7a, 0x0417);	/* CYRILLIC CAPITAL LETTER ZE */ \
+	    UNI(0x7b, 0x0428);	/* CYRILLIC CAPITAL LETTER SHA */ \
+	    UNI(0x7c, 0x042d);	/* CYRILLIC CAPITAL LETTER E */ \
+	    UNI(0x7d, 0x0429);	/* CYRILLIC CAPITAL LETTER SHCHA */ \
+	    UNI(0x7e, 0x0427);	/* CYRILLIC CAPITAL LETTER CHE */ \
+	    UNI(0x7f, 0x042a);	/* CYRILLIC CAPITAL LETTER HARD SIGN */ \
+	    \
+	} \
+	end_CODEPAGE()
 	/* figure A-24 "DEC Greek Supplemental Character Set" */
 #define map_DEC_Greek_Supp(code)	\
 	begin_CODEPAGE(); \
@@ -1172,6 +1277,7 @@
 	    UNI(0x7e, 0x00fc);	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 #else
+#define map_DEC_Cyrillic(code)	/* nothing */
 #define map_DEC_Greek_Supp(code)	/* nothing */
 #define map_DEC_Hebrew_Supp(code)	/* nothing */
 #define map_DEC_Technical(code)	/* nothing */
@@ -1329,10 +1435,13 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_DEC_Turkish_Supp(code);
 	break;
 
-    case nrc_British_Latin_1:
     case nrc_Cyrillic:
-    case nrc_French_Canadian2:
+	map_DEC_Cyrillic(code);
+	break;
+
+    case nrc_British_Latin_1:
     case nrc_Russian:
+    case nrc_French_Canadian2:
     case nrc_Unknown:
     default:			/* any character sets we don't recognize */
 	break;
@@ -1544,6 +1653,9 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    break;
 
 	case nrc_Cyrillic:
+	    map_DEC_Cyrillic(chr = seven);
+	    break;
+
 	case nrc_Russian:
 	case nrc_Unknown:
 	default:		/* any character sets we don't recognize */

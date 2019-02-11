@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.488 2019/02/04 02:18:06 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.489 2019/02/11 01:08:37 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #344
-.ds RF 2019/02/03
+.ds RF 2019/02/10
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -707,18 +707,20 @@ The final character \*A is a special case,
 since the same final character is
 used by the VT300-control for the 96-character British Latin-1.
 .br
-There are a few other 94-character sets not documented as NRCS:
+There are a few other 94-character sets:
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
   \*(Cc = \*< \(-> DEC Supplemental, VT200.
   \*(Cc = \*> \(-> DEC Technical, VT300.
+.br
+These are documented as NRCS:
   \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
+  \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
   \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
   \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
   \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
 .br
 The VT520 reference manual lists a few more,
 but no documentation has been found for the mappings:
-  \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
   \*(Cc = \*&\*5 \(-> DEC Russian, VT500.
   \*(Cc = \*%\*3 \(-> SCS NRCS, VT500.
 .iP
