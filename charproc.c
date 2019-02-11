@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1634 2019/02/07 10:24:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1636 2019/02/10 23:32:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1392,6 +1392,7 @@ static const struct {
 #endif
 #if OPT_WIDE_CHARS
 	,DATA(esc_pct_table)
+	,DATA(scs_amp_table)
 	,DATA(scs_pct_table)
 	,DATA(scs_2qt_table)
 #endif
@@ -1714,6 +1715,7 @@ static struct {
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
     /* VT5xx */
+    { nrc_Cyrillic,          '&', '4', 5, 9, 1 },
     { nrc_Greek,             '"', '>', 5, 9, 1 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1 },
     { nrc_Turkish,	     '%', '2', 5, 9, 1 },
@@ -1726,7 +1728,6 @@ static struct {
     { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0 },
     /* VT5xx (not implemented) */
 #if 0
-    { nrc_Cyrillic,          '&', '4', 5, 9, 0 },
     { nrc_Russian,           '&', '5', 5, 9, 1 },
     { nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
 #endif
@@ -4763,6 +4764,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level >= 5) {
 		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
 		xtermDecodeSCS(xw, sp->scstype, '"', (int) c);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_SCS_AMPRSND:
+	    TRACE(("CASE_SCS_AMPRSND\n"));
+	    sp->parsestate = scs_amp_table;
+	    break;
+
+	case CASE_GSETS_AMPRSND:
+	    if (screen->vtXX_level >= 5) {
+		TRACE(("CASE_GSETS_AMPRSND(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, '&', (int) c);
 	    }
 	    ResetState(sp);
 	    break;
