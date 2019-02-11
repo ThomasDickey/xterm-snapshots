@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.950 2019/01/12 01:34:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.951 2019/02/11 10:22:07 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1226,6 +1226,8 @@ typedef enum {
     , epBS
     , epCR
     , epDEL
+    , epESC
+    , epFF
     , epHT
     , epNL
     , epLAST

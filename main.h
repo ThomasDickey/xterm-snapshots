@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.68 2019/01/10 21:32:05 tom Exp $ */
+/* $XTermId: main.h,v 1.69 2019/02/11 09:26:51 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -132,7 +132,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_PASTE_CONTROLS
-#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,HT,DEL"
+#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,HT,DEL,ESC"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP
