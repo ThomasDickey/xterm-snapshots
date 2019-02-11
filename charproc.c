@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1636 2019/02/10 23:32:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1637 2019/02/11 10:21:54 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -8455,6 +8455,8 @@ VTInitialize(Widget wrequest,
 	,DATA(BS)
 	,DATA(CR)
 	,DATA(DEL)
+	,DATA(ESC)
+	,DATA(FF)
 	,DATA(HT)
 	,DATA(NL)
 	,DATA_END

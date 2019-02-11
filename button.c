@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.567 2019/01/13 16:03:05 tom Exp $ */
+/* $XTermId: button.c,v 1.568 2019/02/11 10:21:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2126,14 +2126,20 @@ removeControls(XtermWidget xw, char *value)
 		case ANSI_BS:
 		    ReplacePaste(epBS);
 		    break;
+		case ANSI_CR:
+		    ReplacePaste(epCR);
+		    break;
+		case ANSI_ESC:
+		    ReplacePaste(epESC);
+		    break;
+		case ANSI_FF:
+		    ReplacePaste(epFF);
+		    break;
 		case ANSI_HT:
 		    ReplacePaste(epHT);
 		    break;
 		case ANSI_LF:
 		    ReplacePaste(epNL);
-		    break;
-		case ANSI_CR:
-		    ReplacePaste(epCR);
 		    break;
 		default:
 		    continue;

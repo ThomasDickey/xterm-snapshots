@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.776 2019/02/03 22:22:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.777 2019/02/11 10:25:43 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -3075,6 +3075,12 @@ ASCII carriage-return
 .TP 5
 DEL
 ASCII delete
+.TP 5
+ESC
+ASCII escape
+.TP 5
+FF
+ASCII form-feed
 .TP 5
 HT
 ASCII tab

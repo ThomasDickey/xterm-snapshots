@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.489 2019/02/11 01:08:37 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.490 2019/02/11 09:18:39 Robert.Ross Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -364,7 +364,7 @@ The literal character \fIc\fP.
 A single (required) character.
 .\".iP
 .IP \*(Ps
-A single (usually optional) numeric parameter, composed of one of more digits.
+A single (usually optional) numeric parameter, composed of one or more digits.
 .\".iP
 .IP \*(Pm
 A multiple numeric parameter composed of any number of single numeric
