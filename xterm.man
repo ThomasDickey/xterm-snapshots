@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.777 2019/02/11 10:25:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.778 2019/02/13 02:48:53 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -3058,7 +3058,7 @@ The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
 The default value is
 .NS
-BS,HT,DEL
+BS,HT,DEL,ESC
 .NE
 .IP
 The names are listed below:
