@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.855 2019/01/12 00:52:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.856 2019/02/28 01:04:29 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1309,7 +1309,7 @@ HandleBellPropertyChange(Widget w GCC_UNUSED,
 }
 
 void
-xtermWarning(const char *fmt,...)
+xtermWarning(const char *fmt, ...)
 {
     int save_err = errno;
     va_list ap;
@@ -1333,7 +1333,7 @@ xtermWarning(const char *fmt,...)
 }
 
 void
-xtermPerror(const char *fmt,...)
+xtermPerror(const char *fmt, ...)
 {
     int save_err = errno;
     char *msg = strerror(errno);
@@ -1720,9 +1720,14 @@ RequestMaximize(XtermWidget xw, int maximize)
 	    break;
 	case 1:
 	    FullScreen(xw, 0);	/* overrides any EWMH hint */
+	    TRACE(("XMoveResizeWindow: position %d,%d size %d,%d\n",
+		   wm_attrs.border_width,
+		   wm_attrs.border_width,
+		   root_width,
+		   root_height));
 	    XMoveResizeWindow(screen->display, VShellWindow(xw),
-			      0 + wm_attrs.border_width,	/* x */
-			      0 + wm_attrs.border_width,	/* y */
+			      0,	/* x */
+			      0,	/* y */
 			      root_width,
 			      root_height);
 	    break;
@@ -5090,7 +5095,7 @@ udk_lookup(XtermWidget xw, int keycode, int *len)
 
 #if OPT_REPORT_ICONS
 void
-report_icons(const char *fmt,...)
+report_icons(const char *fmt, ...)
 {
     if (resource.reportIcons) {
 	va_list ap;
