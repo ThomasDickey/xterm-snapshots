@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1637 2019/02/11 10:21:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1638 2019/02/27 02:04:09 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -10191,7 +10191,7 @@ VTRealize(Widget w,
     pos.w = screen->fullVwin.fullwidth;
     pos.h = screen->fullVwin.fullheight;
 
-    TRACE(("... border widget %d parent %d shell %d\n",
+    TRACE(("... BorderWidth: widget %d parent %d shell %d\n",
 	   BorderWidth(xw),
 	   BorderWidth(XtParent(xw)),
 	   BorderWidth(SHELL_OF(xw))));
