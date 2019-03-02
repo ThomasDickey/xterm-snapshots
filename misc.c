@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.856 2019/02/28 01:04:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.857 2019/03/02 00:59:03 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -469,7 +469,7 @@ TraceConfigureEvent(XEvent *arg)
 {
     XConfigureEvent *event = (XConfigureEvent *) arg;
 
-    TRACE(("pending Configure %ld %d,%d %dx%d %#lx\n",
+    TRACE(("pending Configure serial %ld position %d,%d size %dx%d window %#lx\n",
 	   event->serial,
 	   event->y,
 	   event->x,
@@ -502,7 +502,6 @@ mergeConfigureEvents(XEvent *target)
     XtAppNextEvent(app_con, target);
     p = (XConfigureEvent *) target;
 
-    TRACE(("pending Configure...?%s\n", XtAppPending(app_con) ? "yes" : "no"));
     TraceConfigureEvent(target);
 
     if (XtAppPending(app_con)
@@ -1688,8 +1687,8 @@ RequestMaximize(XtermWidget xw, int maximize)
 	    || screen->restore_width != root_width
 	    || screen->restore_height != root_height) {
 	    screen->restore_data = True;
-	    screen->restore_x = wm_attrs.x + wm_attrs.border_width;
-	    screen->restore_y = wm_attrs.y + wm_attrs.border_width;
+	    screen->restore_x = wm_attrs.x;
+	    screen->restore_y = wm_attrs.y;
 	    screen->restore_width = (unsigned) vshell_attrs.width;
 	    screen->restore_height = (unsigned) vshell_attrs.height;
 	    TRACE(("RequestMaximize: save window position %d,%d size %d,%d\n",
@@ -1700,10 +1699,8 @@ RequestMaximize(XtermWidget xw, int maximize)
 	}
 
 	/* subtract wm decoration dimensions */
-	root_width -= (unsigned) ((wm_attrs.width - vshell_attrs.width)
-				  + (wm_attrs.border_width * 2));
-	root_height -= (unsigned) ((wm_attrs.height - vshell_attrs.height)
-				   + (wm_attrs.border_width * 2));
+	root_width -= (unsigned) (wm_attrs.width - vshell_attrs.width);
+	root_height -= (unsigned) (wm_attrs.height - vshell_attrs.height);
 	success = True;
     } else if (screen->restore_data) {
 	success = True;
@@ -1720,9 +1717,9 @@ RequestMaximize(XtermWidget xw, int maximize)
 	    break;
 	case 1:
 	    FullScreen(xw, 0);	/* overrides any EWMH hint */
-	    TRACE(("XMoveResizeWindow: position %d,%d size %d,%d\n",
-		   wm_attrs.border_width,
-		   wm_attrs.border_width,
+	    TRACE(("XMoveResizeWindow(Maximize): position %d,%d size %d,%d\n",
+		   0,
+		   0,
 		   root_width,
 		   root_height));
 	    XMoveResizeWindow(screen->display, VShellWindow(xw),
@@ -1737,7 +1734,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 	    if (screen->restore_data) {
 		screen->restore_data = False;
 
-		TRACE(("HandleRestoreSize: position %d,%d size %d,%d\n",
+		TRACE(("XMoveResizeWindow(Restore): position %d,%d size %d,%d\n",
 		       screen->restore_x,
 		       screen->restore_y,
 		       screen->restore_width,
