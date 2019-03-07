@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.857 2019/03/02 00:59:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.860 2019/03/07 01:17:23 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -389,26 +389,6 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     }
 }
 
-#if OPT_TRACE
-static void
-TraceExposeEvent(XEvent *arg)
-{
-    XExposeEvent *event = (XExposeEvent *) arg;
-
-    TRACE(("pending Expose %ld %d: %d,%d %dx%d %#lx\n",
-	   event->serial,
-	   event->count,
-	   event->y,
-	   event->x,
-	   event->height,
-	   event->width,
-	   event->window));
-}
-
-#else
-#define TraceExposeEvent(event)	/* nothing */
-#endif
-
 /* true if p contains q */
 #define ExposeContains(p,q) \
 	    ((p)->y <= (q)->y \
@@ -422,8 +402,6 @@ mergeExposeEvents(XEvent *target)
     XEvent next_event;
     XExposeEvent *p;
 
-    TRACE(("pending Expose...?\n"));
-    TraceExposeEvent(target);
     XtAppNextEvent(app_con, target);
     p = (XExposeEvent *) target;
 
@@ -431,11 +409,10 @@ mergeExposeEvents(XEvent *target)
 	   && XtAppPeekEvent(app_con, &next_event)
 	   && next_event.type == Expose) {
 	Boolean merge_this = False;
-	XExposeEvent *q;
+	XExposeEvent *q = (XExposeEvent *) (&next_event);
 
-	TraceExposeEvent(&next_event);
-	q = (XExposeEvent *) (&next_event);
 	XtAppNextEvent(app_con, &next_event);
+	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
 
 	/*
 	 * If either window is contained within the other, merge the events.
@@ -463,25 +440,6 @@ mergeExposeEvents(XEvent *target)
     return XtAppPending(app_con);
 }
 
-#if OPT_TRACE
-static void
-TraceConfigureEvent(XEvent *arg)
-{
-    XConfigureEvent *event = (XConfigureEvent *) arg;
-
-    TRACE(("pending Configure serial %ld position %d,%d size %dx%d window %#lx\n",
-	   event->serial,
-	   event->y,
-	   event->x,
-	   event->height,
-	   event->width,
-	   event->window));
-}
-
-#else
-#define TraceConfigureEvent(event)	/* nothing */
-#endif
-
 /*
  * On entry, we have peeked at the event queue and see a configure-notify
  * event.  Remove that from the queue so we can look further.
@@ -502,17 +460,14 @@ mergeConfigureEvents(XEvent *target)
     XtAppNextEvent(app_con, target);
     p = (XConfigureEvent *) target;
 
-    TraceConfigureEvent(target);
-
     if (XtAppPending(app_con)
 	&& XtAppPeekEvent(app_con, &next_event)
 	&& next_event.type == ConfigureNotify) {
 	Boolean merge_this = False;
-	XConfigureEvent *q;
+	XConfigureEvent *q = (XConfigureEvent *) (&next_event);
 
-	TraceConfigureEvent(&next_event);
 	XtAppNextEvent(app_con, &next_event);
-	q = (XConfigureEvent *) (&next_event);
+	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
 
 	if (p->window == q->window) {
 	    TRACE(("pending Configure...merged\n"));
@@ -546,14 +501,12 @@ xtermAppPending(void)
 
     while (result && XtAppPeekEvent(app_con, &this_event)) {
 	found = True;
+	TRACE_EVENT("pending", &this_event, (String *) 0, 0);
 	if (this_event.type == Expose) {
 	    result = mergeExposeEvents(&this_event);
-	    TRACE(("got merged expose events\n"));
 	} else if (this_event.type == ConfigureNotify) {
 	    result = mergeConfigureEvents(&this_event);
-	    TRACE(("got merged configure notify events\n"));
 	} else {
-	    TRACE(("pending %s\n", visibleEventType(this_event.type)));
 	    break;
 	}
     }

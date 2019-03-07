@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.197 2018/12/18 23:18:34 tom Exp $ */
+/* $XTermId: trace.c,v 1.203 2019/03/07 01:38:40 tom Exp $ */
 
 /*
- * Copyright 1997-2017,2018 by Thomas E. Dickey
+ * Copyright 1997-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -134,7 +134,7 @@ TraceOpen(void)
 }
 
 void
-Trace(const char *fmt,...)
+Trace(const char *fmt, ...)
 {
     va_list ap;
     FILE *fp = TraceOpen();
@@ -771,9 +771,10 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 {
     char mask_buffer[160];
 
-    TRACE(("Event #%lu %s: %s",
+    TRACE(("Event #%lu %s: %#lx %s",
 	   ev->xany.serial,
 	   tag,
+	   ev->xany.window,
 	   visibleEventType(ev->type)));
 
     switch (ev->type) {
@@ -798,12 +799,63 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	break;
     case EnterNotify:
     case LeaveNotify:
-	TRACE((" (%d,%d)",
+	TRACE((" at %d,%d root %d,%d %s %s",
+	       ev->xcrossing.y,
+	       ev->xcrossing.x,
 	       ev->xcrossing.y_root,
-	       ev->xcrossing.x_root));
+	       ev->xcrossing.x_root,
+	       visibleNotifyMode(ev->xcrossing.mode),
+	       visibleNotifyDetail(ev->xcrossing.detail)));
 	break;
     case FocusIn:
     case FocusOut:
+	TRACE((" %s %s",
+	       visibleNotifyMode(ev->xfocus.mode),
+	       visibleNotifyDetail(ev->xfocus.detail)));
+	break;
+    case MapNotify:
+	TRACE((" event %#lx %s",
+	       ev->xmap.event,
+	       ev->xmap.override_redirect ? "override" : ""));
+	break;
+    case UnmapNotify:
+	TRACE((" event %#lx %s",
+	       ev->xunmap.event,
+	       ev->xunmap.from_configure ? "configure" : ""));
+	break;
+    case ReparentNotify:
+	TRACE((" at %d,%d event %#lx parent %#lx %s",
+	       ev->xreparent.y,
+	       ev->xreparent.x,
+	       ev->xreparent.event,
+	       ev->xreparent.parent,
+	       ev->xreparent.override_redirect ? "override" : ""));
+	break;
+    case ConfigureNotify:
+	TRACE((" at %d,%d size %dx%d",
+	       ev->xconfigure.y,
+	       ev->xconfigure.x,
+	       ev->xconfigure.height,
+	       ev->xconfigure.width));
+	break;
+    case PropertyNotify:
+	TRACE((" %s %s",
+	       TraceAtomName(XtDisplay(toplevel), ev->xproperty.atom),
+	       ((ev->xproperty.state == PropertyNewValue)
+		? "NewValue"
+		: ((ev->xproperty.state == PropertyDelete)
+		   ? "Delete"
+		   : "?"))));
+
+	break;
+    case Expose:
+	TRACE((" at %d,%d size %dx%d count %d",
+	       ev->xexpose.y,
+	       ev->xexpose.x,
+	       ev->xexpose.height,
+	       ev->xexpose.width,
+	       ev->xexpose.count));
+	break;
     default:
 	TRACE((" FIXME"));
 	break;
