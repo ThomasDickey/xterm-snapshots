@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1638 2019/02/27 02:04:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1639 2019/03/08 10:23:25 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5812,7 +5812,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    }
 #else
 	    if (height != xw->hints.height || width != xw->hints.width) {
-#if OPT_DOUBLE_BUFFER
 		/*
 		 * This is a special case: other calls to RequestResize that
 		 * could set the screensize arbitrarily are via escape
@@ -5825,9 +5824,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		xw->misc.limit_resize = 0;
 		RequestResize(xw, height, width, False);
 		xw->misc.limit_resize = saved_limit;
-#else
-		RequestResize(xw, height, width, False);
-#endif
 	    }
 #endif /* OPT_TOOLBAR */
 	}
@@ -9526,14 +9522,9 @@ VTInitialize(Widget wrequest,
 #if OPT_TOOLBAR
     wnew->VT100_TB_INFO(menu_bar) = request->VT100_TB_INFO(menu_bar);
     init_Ires(VT100_TB_INFO(menu_height));
-#elif !OPT_DOUBLE_BUFFER
-    /* Flag icon name with "***"  on window output when iconified.
-     * Put in a handler that will tell us when we get Map/Unmap events.
-     */
-    if (resource.zIconBeep)
 #endif
-	XtAddEventHandler(my_parent, StructureNotifyMask, False,
-			  HandleStructNotify, (Opaque) 0);
+    XtAddEventHandler(my_parent, StructureNotifyMask, False,
+		      HandleStructNotify, (Opaque) 0);
 #endif /* HANDLE_STRUCT_NOTIFY */
 
     screen->bellInProgress = False;

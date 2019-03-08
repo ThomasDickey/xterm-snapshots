@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.203 2019/03/07 01:38:40 tom Exp $ */
+/* $XTermId: trace.c,v 1.205 2019/03/08 01:16:53 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -832,11 +832,13 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xreparent.override_redirect ? "override" : ""));
 	break;
     case ConfigureNotify:
-	TRACE((" at %d,%d size %dx%d",
+	TRACE((" at %d,%d size %dx%d bd %d above %#lx",
 	       ev->xconfigure.y,
 	       ev->xconfigure.x,
 	       ev->xconfigure.height,
-	       ev->xconfigure.width));
+	       ev->xconfigure.width,
+	       ev->xconfigure.border_width,
+	       ev->xconfigure.above));
 	break;
     case PropertyNotify:
 	TRACE((" %s %s",
