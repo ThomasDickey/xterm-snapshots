@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1639 2019/03/08 10:23:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1640 2019/03/09 01:23:40 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5747,6 +5747,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
     switch (event->type) {
     case MapNotify:
 	TRACE(("HandleStructNotify(MapNotify) %#lx\n", event->xmap.window));
+	/* repairSizeHints(); */
 	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
