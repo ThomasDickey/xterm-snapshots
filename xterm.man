@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.778 2019/02/13 02:48:53 tom Exp $
+.\" $XTermId: xterm.man,v 1.782 2019/03/23 22:48:40 Larry.Hynes Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -838,7 +838,7 @@ That was a problem in X11R4 \fBxterm\fP (1989) which was addressed by
 a patch to X11R5 late in 1993.
 X11R6 included these fixes.
 The older version (when running with \fIroot\fP privilege) would create
-the log-file using \fIroot\fP privilege.
+the log file using \fIroot\fP privilege.
 The reason why \fI\*n\fP ran with \fIroot\fP privileges
 was to open pseudo-terminals.
 Those privileges are now needed only on very old systems:
@@ -850,7 +850,7 @@ Unless overridden by the \fB\-lf\fP option or the \fBlogFile\fP resource:
 If the filename is \*(``-\*('', then logging is sent to the standard output.
 .bP
 Otherwise a filename is generated, and
-the logfile is written to the directory from which \fI\*n\fP is invoked.
+the log file is written to the directory from which \fI\*n\fP is invoked.
 .bP
 The generated filename is of the form
 .NS
@@ -896,7 +896,7 @@ Force scrollbar to the left side of VT100 screen.
 This is the default, unless you have set the rightScrollBar resource.
 .TP 8
 .BI \-lf " filename"
-Specify the log-filename.
+Specify the log filename.
 This sets the \fBlogFile\fP resource.
 If set to \*(``-\*('',
 \fI\*n\fP writes its log to the standard output.
@@ -1835,7 +1835,7 @@ setting the initial screen size, e.g., via window manager interaction.
 .IP
 See also \fBwaitForMap\fP which waits for a handshake-message
 giving the pseudo-terminal's notion of the screen size.
-The default is \*(``false\*('' on Linux and OS X systems,
+The default is \*(``false\*('' on Linux and macOS systems,
 \*(``true\*('' otherwise.
 .TP 8
 .B "reportColors\fP (class\fB ReportColors\fP)"
@@ -3866,7 +3866,7 @@ as a login shell.
 The default is \*(``false\*(''.
 .TP 8
 .B "logFile\fP (class\fB Logfile\fP)"
-Specify the name for \fI\*n\fP's log-file.
+Specify the name for \fI\*n\fP's log file.
 If no name is specified, \fI\*n\fP will generate a name when
 logging is enabled,
 as described in the \fB\-l\fP option.
@@ -5697,7 +5697,7 @@ Commands for capturing output:
 .RS
 .TP
 .B Log to File\fP (resource \fBlogging\fP)
-Captures text sent to the screen in a logfile,
+Captures text sent to the screen in a log file,
 as in the \fB\-l\fP logging option.
 .TP
 .B Print-All Immediately\fP (resource \fBprint-immediate\fP)
@@ -5954,7 +5954,7 @@ This corresponds to the \fB\-rw\fP option and the \fBreverseWrap\fP resource.
 .B Enable Auto Linefeed\fP (resource \fBautolinefeed\fP)
 Enable (or disable) auto-linefeed.
 This is the VT102 NEL function,
-which causes the emulator to emit a linefeed after each carriage return.
+which causes the emulator to emit a line feed after each carriage return.
 There is no corresponding command-line option or resource setting.
 .
 .TP
@@ -7059,7 +7059,7 @@ This action sets, unsets or toggles the handling of Application Keypad mode
 and is also invoked by the \fBappkeypad\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autolinefeed(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles automatic insertion of linefeeds.
+This action sets, unsets or toggles automatic insertion of line feeds.
 It is also invoked by the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autowrap(\fIon/off/toggle\fP)"
@@ -7868,7 +7868,7 @@ for the actual size window you have created.
 This feature is, like \fBLINES\fP and \fBCOLUMNS\fP, used rarely.
 It addresses the same limitation of a few older systems
 by providing a way for \fItermcap\fP-based applications to get the initial
-screensize.
+screen size.
 .TP 5
 .B TERMINFO
 may be defined to a nonstandard location using the configure script.
@@ -7888,10 +7888,10 @@ On systems which have the \fIgetusershell\fP function,
 since the file may not be present if the system uses default settings.
 .TP 5
 \fI/etc/utmp\fP
-the system logfile, which records user logins.
+the system log file, which records user logins.
 .TP 5
 \fI/etc/wtmp\fP
-the system logfile, which records user logins and logouts.
+the system log file, which records user logins and logouts.
 .TP 5
 .I __apploaddir__/__default_class__
 the \fI\*n\fP default application resources.
