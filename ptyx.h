@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.951 2019/02/11 10:22:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.952 2019/04/09 23:44:34 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1152,6 +1152,14 @@ typedef enum {
     ,srm_SIXEL_SCROLLS_RIGHT = 8452
 #endif
 } DECSET_codes;
+
+/* internal codes for selection atoms */
+typedef enum {
+    PRIMARY_CODE = 0
+    ,CLIPBOARD_CODE
+    ,SECONDARY_CODE
+    ,MAX_SELECTION_CODES
+} SelectionCodes;
 
 /* indices for mapping multiple clicks to selection types */
 typedef enum {
@@ -2645,8 +2653,10 @@ typedef struct {
 	Time		lastButtonUpTime;
 	unsigned	lastButton;
 
-#define MAX_SELECTIONS	12
-	SelectedCells	selected_cells[MAX_SELECTIONS]; /* primary/clipboard */
+#define MAX_CUT_BUFFER  8		/* CUT_BUFFER0 to CUT_BUFFER7 */
+#define MAX_SELECTIONS	(MAX_SELECTION_CODES + MAX_CUT_BUFFER)
+	SelectedCells	selected_cells[MAX_SELECTIONS];
+
 	CELL		rawPos;		/* raw position for selection start */
 	CELL		startRaw;	/* area before selectUnit processing */
 	CELL		endRaw;		/* " " */

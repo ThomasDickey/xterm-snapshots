@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.491 2019/02/13 02:13:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.493 2019/04/10 01:02:22 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #344
-.ds RF 2019/02/12
+.ds LF Patch #345
+.ds RF 2019/04/09
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2291,10 +2291,11 @@ The parameter \*(Pt is parsed as
 	\*(Pc\*s\*;\*(Pd
 .br
 The first, \*(Pc, may contain zero or more characters from the
-set \*c, \*p, \*(cs, \*0, \*1, \*2, \*3, \*4, \*5, \*6, and \*7.
+set \*c, \*p, \*q, \*(cs, \*0, \*1, \*2, \*3, \*4, \*5, \*6, and \*7.
 It is used to construct a list of selection parameters for
 clipboard,
 primary,
+secondary,
 select,
 or cut buffers 0 through 7 respectively,
 in the order given.

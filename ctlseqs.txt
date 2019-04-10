@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #344 (2019/02/12)
+               updated for XTerm Patch #345 (2019/04/09)
 
 
 
@@ -1598,11 +1598,11 @@ OSC Ps ; Pt ST
           Pt is parsed as
                Pc ; Pd
           The first, Pc, may contain zero or more characters from the
-          set c , p , s , 0 , 1 , 2 , 3 , 4 , 5 , 6 , and 7 .  It is
+          set c , p , q , s , 0 , 1 , 2 , 3 , 4 , 5 , 6 , and 7 .  It is
           used to construct a list of selection parameters for clip-
-          board, primary, select, or cut buffers 0 through 7 respec-
-          tively, in the order given.  If the parameter is empty, xterm
-          uses s 0 , to specify the configurable primary/clipboard
+          board, primary, secondary, select, or cut buffers 0 through 7
+          respectively, in the order given.  If the parameter is empty,
+          xterm uses s 0 , to specify the configurable primary/clipboard
           selection and cut buffer 0.
 
           The second parameter, Pd, gives the selection data.  Normally
