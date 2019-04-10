@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.861 2019/04/10 00:14:22 tom Exp $ */
+/* $XTermId: misc.c,v 1.862 2019/04/10 09:18:15 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -6451,7 +6451,7 @@ xtermOpenApplication(XtAppContext * app_context_return,
 		     XrmOptionDescRec * options,
 		     Cardinal num_options,
 		     int *argc_in_out,
-		     String *argv_in_out,
+		     char **argv_in_out,
 		     String *fallback_resources,
 		     WidgetClass widget_class,
 		     ArgList args,
