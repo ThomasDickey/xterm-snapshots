@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.845 2018/12/16 23:06:59 tom Exp $ */
+/* $XTermId: main.c,v 1.846 2019/04/10 09:19:15 tom Exp $ */
 
 /*
- * Copyright 2002-2017,2018 by Thomas E. Dickey
+ * Copyright 2002-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2414,7 +2414,7 @@ main(int argc, char *argv[]ENVP_ARG)
 					my_class,
 					optionDescList,
 					XtNumber(optionDescList),
-					&argc, (String *) argv,
+					&argc, argv,
 					fallback_resources,
 					sessionShellWidgetClass,
 					NULL, 0);

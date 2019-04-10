@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.818 2019/01/07 22:34:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.819 2019/04/10 09:18:55 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1065,7 +1065,7 @@ extern Boolean xtermGetWinProp(Display * /* dpy */, Window /* win */, Atom /* pr
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long /* fg */, unsigned long /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern String xtermEnvLocale (void);
-extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, String */* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
+extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, char **/* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
 extern Window WMFrameWindow (XtermWidget /* termw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
