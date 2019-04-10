@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.860 2019/03/07 01:17:23 tom Exp $ */
+/* $XTermId: misc.c,v 1.861 2019/04/10 00:14:22 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3044,6 +3044,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
     } table[] = {
 	PDATA('s', SELECT),
 	    PDATA('p', PRIMARY),
+	    PDATA('q', SECONDARY),
 	    PDATA('c', CLIPBOARD),
 	    PDATA('0', CUT_BUFFER0),
 	    PDATA('1', CUT_BUFFER1),
