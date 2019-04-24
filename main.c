@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.846 2019/04/10 09:19:15 tom Exp $ */
+/* $XTermId: main.c,v 1.847 2019/04/24 08:53:47 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -3887,7 +3887,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	}
     }
     if (ok_termcap) {
-	resource.term_name = TermName;
+	resource.term_name = x_strdup(TermName);
 	resize_termcap(xw);
     }
 
