@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.952 2019/04/09 23:44:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.953 2019/04/23 09:05:54 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2193,8 +2193,9 @@ typedef struct {
 					   (position report, etc.)	*/
 	int		nextEventDelay;	/* msecs to delay for x-events  */
 /* These parameters apply to VT100 window */
-	IChar		unparse_bfr[256];
+	IChar		*unparse_bfr;
 	unsigned	unparse_len;
+	unsigned	unparse_max;	/* limitResponse resource	*/
 
 #if OPT_TCAP_QUERY
 	int		tc_query_code;

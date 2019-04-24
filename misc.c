@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.862 2019/04/10 09:18:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.863 2019/04/24 09:05:28 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4542,6 +4542,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			    unparseputs(xw, resource.term_name);
 			} else {
 			    XKeyEvent event;
+			    memset(&event, 0, sizeof(event));
 			    event.state = state;
 			    Input(xw, &event, False);
 			}

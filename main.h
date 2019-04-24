@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.69 2019/02/11 09:26:51 tom Exp $ */
+/* $XTermId: main.h,v 1.70 2019/04/23 09:03:53 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -199,6 +199,10 @@
 #else
 #define DEF_PTY_STTY_SIZE	True
 #endif
+#endif
+
+#ifndef DEF_LIMIT_RESPONSE
+#define DEF_LIMIT_RESPONSE	1024
 #endif
 
 #ifndef DEF_SAVE_LINES

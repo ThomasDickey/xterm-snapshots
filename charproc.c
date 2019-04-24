@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1640 2019/03/09 01:23:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1643 2019/04/24 01:24:47 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -493,6 +493,7 @@ static XtResource xterm_resources[] =
     Ires(XtNfontWarnings, XtCFontWarnings, misc.fontWarnings, fwResource),
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
+    Ires(XtNlimitResponse, XtCLimitResponse, screen.unparse_max, DEF_LIMIT_RESPONSE),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
     Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, DEF_POINTER_MODE),
@@ -7618,8 +7619,8 @@ unparseputc(XtermWidget xw, int c)
     IChar *buf = screen->unparse_bfr;
     unsigned len;
 
-    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr) / sizeof(IChar))
-	  unparse_end(xw);
+    if ((screen->unparse_len + 2) >= screen->unparse_max)
+	unparse_end(xw);
 
     len = screen->unparse_len;
 
@@ -7654,6 +7655,18 @@ unparse_end(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
+#if OPT_TCAP_QUERY
+    /*
+     * tcap-query works by simulating key-presses, which ordinarily would be
+     * flushed out at the end of each key.  For better efficiency, do not do
+     * the flush unless we are about to fill the buffer used to capture the
+     * response.
+     */
+    if ((screen->tc_query_code >= 0)
+	&& (screen->unparse_len + 2 < screen->unparse_max)) {
+	return;
+    }
+#endif
     if (screen->unparse_len) {
 	TRACE(("unparse_end %u:%s\n",
 	       screen->unparse_len,
@@ -9558,6 +9571,12 @@ VTInitialize(Widget wrequest,
     screen->whichVwin = &screen->fullVwin;
 #endif /* NO_ACTIVE_ICON */
 
+    init_Ires(screen.unparse_max);
+    if ((int) screen->unparse_max < 256)
+	screen->unparse_max = 256;
+    screen->unparse_bfr = (IChar *) (void *) XtCalloc(screen->unparse_max,
+						      sizeof(IChar));
+
     if (screen->savelines < 0)
 	screen->savelines = 0;
 
@@ -9713,6 +9732,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	}
     }
 #endif
+    TRACE_FREE_LEAK(screen->unparse_bfr);
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);

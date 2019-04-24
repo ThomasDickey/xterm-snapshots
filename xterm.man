@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.783 2019/04/10 01:31:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.784 2019/04/24 01:00:21 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -3770,6 +3770,12 @@ Set this to \*(``0\*('' to disable fallbacks entirely.
 Limits resizing of the screen via control sequence to a given multiple of
 the display dimensions.
 The default is \*(``1\*(''.
+.TP 8
+.B "limitResponse\fP (class\fB LimitResponse\fP)"
+Limits the buffer-size used when \fI\*n\fP
+replies to various control sequences.
+The default is \*(``1024\*(''.
+The minimum value is \*(``256\*(''.
 .TP 8
 .B "locale\fP (class\fB Locale\fP)"
 Specifies how to use \fIluit\fR, an encoding converter between UTF-8
