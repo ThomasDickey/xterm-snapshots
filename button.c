@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.570 2019/04/10 00:25:54 tom Exp $ */
+/* $XTermId: button.c,v 1.571 2019/04/25 23:01:57 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4838,8 +4838,11 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	button++;
 
     /* Ignore buttons that cannot be encoded */
-    if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
-	|| screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
+    if (screen->send_mouse_pos == X10_MOUSE) {
+	if (button > 3)
+	    return;
+    } else if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
+	       || screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
 	if (button > 15) {
 	    return;
 	}

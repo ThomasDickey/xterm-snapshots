@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.493 2019/04/10 01:02:22 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.494 2019/04/25 23:17:04 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #345
-.ds RF 2019/04/09
+.ds RF 2019/04/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2949,9 +2949,9 @@ It is enabled by specifying parameter 9 to DECSET.
 On button press, \fI\*(xt\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy (6 characters).
 .bP
-\*(Cb is button\-1.
+\*(Cb is \fIbutton\fP\-1, where \fIbutton\fP is 1, 2 or 3.
 .bP
-\*(Cx and \*(Cy are the x and y coordinates of the mouse when the
+\*(Cx and \*(Cy are the \fIx\fP and \fIy\fP coordinates of the mouse when the
 button was pressed.
 .Ss Normal tracking mode
 .LP
@@ -3021,8 +3021,8 @@ hang \fI\*(xt.\fP
 On button press, the same information as for normal tracking is
 generated; \fI\*(xt\fP then waits for the program to send mouse
 tracking information.
-\fIAll X events are ignored until the proper escape sequence is
-received from the pty:\fP
+\fIAll X events are ignored until the proper escape sequence is\fP
+\fIreceived from the pty:\fP
 \*(Cs\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*T.
 The parameters are \fIfunc, startx, starty, firstrow,\fP and \fIlastrow.\fP
 .bP
