@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #345 (2019/04/09)
+               updated for XTerm Patch #345 (2019/04/25)
 
 
 
@@ -2141,7 +2141,7 @@ encoding the location and the mouse button pressed.  It is enabled by
 specifying parameter 9 to DECSET.  On button press, xterm sends CSI M
 CbCxCy (6 characters).
 
-o   Cb is button-1.
+o   Cb is button-1, where button is 1, 2 or 3.
 
 o   Cx and Cy are the x and y coordinates of the mouse when the button
     was pressed.

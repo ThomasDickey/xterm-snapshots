@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2015 2019/04/24 00:45:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.2016 2019/04/25 23:01:41 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -978,6 +978,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix an inconsistency in X10 mouse responses from <a href=
+    "#xterm_342">patch #342</a> changes; the legacy protocol
+    supports only buttons 1-3.</li>
+
     <li>reduce the number of buffer-flushes for tcap-query
     batches.</li>
 
