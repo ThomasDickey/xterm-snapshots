@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1643 2019/04/24 01:24:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1644 2019/04/26 21:53:14 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -11099,9 +11099,11 @@ ShowCursor(void)
 	    flags &= ~(FG_COLOR | BG_COLOR);
 	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
 	    TRACE(("ShowCursor - should we treat as a colored cell?\n"));
-	    if (!(xw->flags & FG_COLOR))
-		if (CheckBogusForeground(screen, "ShowCursor"))
+	    if (!(xw->flags & FG_COLOR)) {
+		if (CheckBogusForeground(screen, "ShowCursor")) {
 		    flags &= ~(FG_COLOR | BG_COLOR);
+		}
+	    }
 	}
     }
 #else /* !EXP_BOGUS_FG */
@@ -12336,6 +12338,8 @@ set_cursor_gcs(XtermWidget xw)
 
     TRACE(("set_cursor_gcs cc=%#lx, fg=%#lx, bg=%#lx\n", cc, fg, bg));
     if (win != 0 && (cc != bg)) {
+	Pixel xx = ((fg == cc) ? bg : cc);
+
 	/* set the fonts to the current one */
 	setCgsFont(xw, win, gcVTcursNormal, 0);
 	setCgsFont(xw, win, gcVTcursFilled, 0);
@@ -12344,9 +12348,9 @@ set_cursor_gcs(XtermWidget xw)
 
 	/* we have a colored cursor */
 	setCgsFore(xw, win, gcVTcursNormal, fg);
-	setCgsBack(xw, win, gcVTcursNormal, cc);
+	setCgsBack(xw, win, gcVTcursNormal, xx);
 
-	setCgsFore(xw, win, gcVTcursFilled, cc);
+	setCgsFore(xw, win, gcVTcursFilled, xx);
 	setCgsBack(xw, win, gcVTcursFilled, fg);
 
 	if (screen->always_highlight) {
