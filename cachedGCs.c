@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.75 2018/07/15 18:21:17 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.76 2019/04/26 21:57:07 tom Exp $ */
 
 /*
- * Copyright 2007-2017,2018 by Thomas E. Dickey
+ * Copyright 2007-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -464,6 +464,9 @@ setCgsFore(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel fg)
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	NEXT(fg) = fg;
 	me->mask |= GCForeground;
+	TRACE2(("setCgsFore(%s) %s\n",
+		traceCgsEnum(cgsId),
+		tracePixel(xw, NEXT(fg))));
     }
 }
 
@@ -475,6 +478,9 @@ setCgsBack(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel bg)
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	NEXT(bg) = bg;
 	me->mask |= GCBackground;
+	TRACE2(("setCgsBack(%s) %s\n",
+		traceCgsEnum(cgsId),
+		tracePixel(xw, NEXT(bg))));
     }
 }
 
