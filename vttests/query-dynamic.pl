@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.10 2019/04/27 10:20:26 tom Exp $
+# $XTermId: query-dynamic.pl,v 1.2 2019/04/27 10:19:58 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012-2018,2019 by Thomas E. Dickey
+# Copyright 2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -31,11 +31,9 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
-# Test the color-query features of xterm using OSC 4 or OSC 5.
+# Test the color-query features of xterm for dynamic-colors
 
-# TODO: show result in #rrggbb format.
-# TODO: demonstrate multiple parameters per query, e.g., "-q" in tcap-query.pl
-# TODO: demonstrate OSC 4 with special-colors
+# TODO test multiple params per query (should be multiple responses)
 
 use strict;
 use warnings;
@@ -45,9 +43,22 @@ use IO::Handle;
 
 our ($opt_s);
 
+our @color_names = (
+    "VT100 text foreground color",
+    "VT100 text background color",
+    "text cursor color",
+    "mouse foreground color",
+    "mouse background color",
+    "Tektronix foreground color",
+    "Tektronix background color",
+    "highlight background color",
+    "Tektronix cursor color",
+    "highlight foreground color"
+);
+
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 &getopts('s') || die(
-    "Usage: $0 [options] [color1[-color2]]\n
+    "Usage: $0 [options]\n
 Options:\n
   -s      use ^G rather than ST
 "
@@ -118,38 +129,18 @@ sub visible($) {
     return $result;
 }
 
-sub special_color($) {
-    my $param = shift;
-    $param = 0 if ( $param =~ /^bold$/i );
-    $param = 1 if ( $param =~ /^underline$/i );
-    $param = 2 if ( $param =~ /^blink$/i );
-    $param = 3 if ( $param =~ /^reverse$/i );
-    $param = 4 if ( $param =~ /^italic$/i );
-    return $param;
-}
-
 sub query_color($) {
     my $param = shift;
-    my $op    = 4;
-
-    if ( $param !~ /^\d+$/ ) {
-        $param = &special_color($param);
-        if ( $param !~ /^\d+$/ ) {
-            printf STDERR "? not a color name or code: $param\n";
-            return;
-        }
-        $op = 5;
-    }
-
     my $reply;
     my $n;
     my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
-    my $osc   = qr/\x1b]$op/;
+    my $osc   = qr/\x1b]$param/;
     my $match = qr/${osc}.*${st}/;
 
-    $reply = &get_reply( "\x1b]$op;" . $param . ";?" . $ST );
+    $reply = &get_reply( "\x1b]" . $param . ";?" . $ST );
 
-    printf "query{%s}%*s", &visible($param), 3 - length($param), " ";
+    printf "%-30s query{%s}%*s", $color_names[ $param - 10 ], &visible($param),
+      3 - length($param), " ";
 
     if ( defined $reply ) {
         printf "%2d ", length($reply);
@@ -171,15 +162,9 @@ sub query_color($) {
 sub query_colors($$) {
     my $lo = shift;
     my $hi = shift;
-    if ( $lo =~ /^\d+$/ ) {
-        my $n;
-        for ( $n = $lo ; $n <= $hi ; ++$n ) {
-            &query_color($n);
-        }
-    }
-    else {
-        &query_color($lo);
-        &query_color($hi) unless ( $hi eq $lo );
+    my $n;
+    for ( $n = $lo ; $n <= $hi ; ++$n ) {
+        &query_color($n);
     }
 }
 
@@ -196,5 +181,5 @@ if ( $#ARGV >= 0 ) {
     }
 }
 else {
-    &query_colors( 0, 7 );
+    &query_colors( 10, 19 );
 }

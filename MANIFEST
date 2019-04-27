@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-344l
+MANIFEST for xterm, version xterm-344m
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -213,6 +213,7 @@ vttests/other-sgr.sh            demonstrate non-VTxx SGRs
 vttests/paste64.pl              script to test base64-selection option
 vttests/print-vt-chars.pl       demo-script
 vttests/query-color.pl          demonstrate OSC 4
+vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
 vttests/query-fonts.pl          script to demo/test font-querying
 vttests/query-status.pl         query DECRQSS status
 vttests/report-sgr.pl           demonstrate report-sgr
