@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.10 2019/04/27 10:20:26 tom Exp $
+# $XTermId: query-color.pl,v 1.18 2019/04/30 00:49:49 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -33,27 +33,37 @@
 # -----------------------------------------------------------------------------
 # Test the color-query features of xterm using OSC 4 or OSC 5.
 
-# TODO: show result in #rrggbb format.
-# TODO: demonstrate multiple parameters per query, e.g., "-q" in tcap-query.pl
-# TODO: demonstrate OSC 4 with special-colors
+# TODO: optionally show result in #rrggbb format.
 
 use strict;
 use warnings;
+use diagnostics;
 
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_s);
+our ( $opt_4, $opt_a, $opt_n, $opt_q, $opt_s );
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('s') || die(
+&getopts('4an:qs') || die(
     "Usage: $0 [options] [color1[-color2]]\n
 Options:\n
+  -4      use OSC 4 for special colors rather than OSC 5
+  -a      query all \"ANSI\" colors
+  -n NUM  assume terminal supports NUM \"ANSI\" colors rather than 256
+  -q      quicker results by merging queries
   -s      use ^G rather than ST
 "
 );
 
-our $ST = $opt_s ? "\007" : "\x1b\\";
+our $ST              = $opt_s ? "\007" : "\x1b\\";
+our $num_ansi_colors = $opt_n ? $opt_n : 256;
+
+our $last_op = -1;
+our $this_op = -1;
+
+our @query_params;
+our @query_result;
 
 sub no_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -118,7 +128,7 @@ sub visible($) {
     return $result;
 }
 
-sub special_color($) {
+sub special2code($) {
     my $param = shift;
     $param = 0 if ( $param =~ /^bold$/i );
     $param = 1 if ( $param =~ /^underline$/i );
@@ -128,44 +138,96 @@ sub special_color($) {
     return $param;
 }
 
+sub code2special($) {
+    my $param = shift;
+    my $result;
+    $result = "bold"      if ( $param == 0 );
+    $result = "underline" if ( $param == 1 );
+    $result = "blink"     if ( $param == 2 );
+    $result = "reverse"   if ( $param == 3 );
+    $result = "italic"    if ( $param == 4 );
+    return $result;
+}
+
+sub begin_query() {
+    @query_params = ();
+}
+
+sub add_param($) {
+    $query_params[ $#query_params + 1 ] = $_[0];
+}
+
+sub show_reply($) {
+    my $reply = shift;
+    printf "data={%s}", &visible($reply);
+    if ( $reply =~ /^\d+;rgb:.*/ and ( $opt_4 or ( $this_op == 5 ) ) ) {
+        my $num = $reply;
+        my $max = $opt_4 ? $num_ansi_colors : 0;
+        $num =~ s/;.*//;
+        if ( $num >= $max ) {
+            my $name = &code2special( $num - $max );
+            printf "  %s", $name if ($name);
+        }
+    }
+}
+
+sub finish_query() {
+    my $reply;
+    my $n;
+    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
+    my $osc   = qr/\x1b]$this_op/;
+    my $match = qr/^(${osc}.*${st})+$/;
+
+    my $params = sprintf "%s;?;", ( join( ";?;", @query_params ) );
+    $reply = &get_reply( "\x1b]$this_op;" . $params . $ST );
+
+    printf "query%s{%s}%*s", $this_op, &visible($params), 3 - length($params),
+      " ";
+
+    if ( defined $reply ) {
+        printf "len=%2d ", length($reply);
+        if ( $reply =~ /${match}/ ) {
+            my @chunks = split /${st}${osc}/, $reply;
+            printf "\n" if ( $#chunks > 0 );
+            for my $c ( 0 .. $#chunks ) {
+                $chunks[$c] =~ s/^${osc}// if ( $c == 0 );
+                $chunks[$c] =~ s/${st}$//  if ( $c == $#chunks );
+                $chunks[$c] =~ s/^;//;
+                printf "\t%d: ", $c if ( $#chunks > 0 );
+                &show_reply( $chunks[$c] );
+                printf "\n" if ( $c < $#chunks );
+            }
+        }
+        else {
+            printf "? ";
+            &show_reply($reply);
+        }
+    }
+    printf "\n";
+}
+
 sub query_color($) {
     my $param = shift;
     my $op    = 4;
 
     if ( $param !~ /^\d+$/ ) {
-        $param = &special_color($param);
+        $param = &special2code($param);
         if ( $param !~ /^\d+$/ ) {
             printf STDERR "? not a color name or code: $param\n";
             return;
         }
-        $op = 5;
-    }
-
-    my $reply;
-    my $n;
-    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
-    my $osc   = qr/\x1b]$op/;
-    my $match = qr/${osc}.*${st}/;
-
-    $reply = &get_reply( "\x1b]$op;" . $param . ";?" . $ST );
-
-    printf "query{%s}%*s", &visible($param), 3 - length($param), " ";
-
-    if ( defined $reply ) {
-        printf "%2d ", length($reply);
-        if ( $reply =~ /${match}/ ) {
-
-            $reply =~ s/^${osc}//;
-            $reply =~ s/^;//;
-            $reply =~ s/${st}$//;
+        if ($opt_4) {
+            $param += $num_ansi_colors;
         }
         else {
-            printf "? ";
+            $op = 5;
         }
-
-        printf "{%s}", &visible($reply);
     }
-    printf "\n";
+    $this_op = $op;    # FIXME handle mixed OSC 4/5
+
+    &begin_query unless $opt_q;
+    &add_param($param);
+    &finish_query unless $opt_q;
 }
 
 sub query_colors($$) {
@@ -183,6 +245,8 @@ sub query_colors($$) {
     }
 }
 
+&begin_query if ($opt_q);
+
 if ( $#ARGV >= 0 ) {
     while ( $#ARGV >= 0 ) {
         if ( $ARGV[0] =~ /-/ ) {
@@ -196,5 +260,9 @@ if ( $#ARGV >= 0 ) {
     }
 }
 else {
-    &query_colors( 0, 7 );
+    &query_colors( 0, $opt_a ? $num_ansi_colors : 7 );
 }
+
+&finish_query if ($opt_q);
+
+1;
