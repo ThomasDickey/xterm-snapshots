@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.863 2019/04/24 09:05:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.865 2019/04/30 00:55:44 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2282,7 +2282,7 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 
 #if OPT_ISO_COLORS
 static void
-ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
+ReportAnsiColorRequest(XtermWidget xw, int opcode, int colornum, int final)
 {
     if (AllowColorOps(xw, ecGetAnsiColor)) {
 	XColor color;
@@ -2292,15 +2292,15 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 	TRACE(("ReportAnsiColorRequest %d\n", colornum));
 	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
 	XQueryColor(TScreenOf(xw)->display, cmap, &color);
-	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
-		colornum,
+	sprintf(buffer, "%d;%d;rgb:%04x/%04x/%04x",
+		opcode,
+		(opcode == 5) ? (colornum - NUM_ANSI_COLORS) : colornum,
 		color.red,
 		color.green,
 		color.blue);
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
 	unparseputc1(xw, final);
-	unparse_end(xw);
     }
 }
 
@@ -2737,6 +2737,7 @@ ChangeOneAnsiColor(XtermWidget xw, int color, const char *name)
  */
 static Bool
 ChangeAnsiColorRequest(XtermWidget xw,
+		       int opcode,
 		       char *buf,
 		       int first,
 		       int final)
@@ -2744,6 +2745,7 @@ ChangeAnsiColorRequest(XtermWidget xw,
     int repaint = False;
     int code;
     int last = (MAXCOLORS - first);
+    int queried = 0;
 
     TRACE(("ChangeAnsiColorRequest string='%s'\n", buf));
 
@@ -2764,7 +2766,8 @@ ChangeAnsiColorRequest(XtermWidget xw,
 	    buf++;
 	}
 	if (!strcmp(name, "?")) {
-	    ReportAnsiColorRequest(xw, color + first, final);
+	    ++queried;
+	    ReportAnsiColorRequest(xw, opcode, color + first, final);
 	} else {
 	    code = ChangeOneAnsiColor(xw, color + first, name);
 	    if (code < 0) {
@@ -2778,6 +2781,8 @@ ChangeAnsiColorRequest(XtermWidget xw,
 	     */
 	}
     }
+    if (queried)
+	unparse_end(xw);
 
     return (repaint);
 }
@@ -3824,7 +3829,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	ansi_colors = NUM_ANSI_COLORS;
 	/* FALLTHRU */
     case 4:
-	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
+	if (ChangeAnsiColorRequest(xw, mode, buf, ansi_colors, final))
 	    xw->work.palette_changed = True;
 	break;
     case 6:

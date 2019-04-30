@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: tcapquery.pl,v 1.28 2019/04/23 23:43:04 tom Exp $
+# $XTermId: tcapquery.pl,v 1.29 2019/04/29 23:27:57 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -128,9 +128,6 @@ sub begin_query() {
 
 sub add_param($) {
     $query_params[ $#query_params + 1 ] = &hexified( $_[0] );
-}
-
-sub add_reply() {
 }
 
 sub finish_query() {
