@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.865 2019/04/30 00:55:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.867 2019/05/01 00:00:52 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2281,9 +2281,11 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 }
 
 #if OPT_ISO_COLORS
-static void
+static Bool
 ReportAnsiColorRequest(XtermWidget xw, int opcode, int colornum, int final)
 {
+    Bool result = False;
+
     if (AllowColorOps(xw, ecGetAnsiColor)) {
 	XColor color;
 	Colormap cmap = xw->core.colormap;
@@ -2301,7 +2303,9 @@ ReportAnsiColorRequest(XtermWidget xw, int opcode, int colornum, int final)
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
 	unparseputc1(xw, final);
+	result = True;
     }
+    return result;
 }
 
 static void
@@ -2766,8 +2770,8 @@ ChangeAnsiColorRequest(XtermWidget xw,
 	    buf++;
 	}
 	if (!strcmp(name, "?")) {
-	    ++queried;
-	    ReportAnsiColorRequest(xw, opcode, color + first, final);
+	    if (ReportAnsiColorRequest(xw, opcode, color + first, final))
+		++queried;
 	} else {
 	    code = ChangeOneAnsiColor(xw, color + first, name);
 	    if (code < 0) {
@@ -3290,9 +3294,11 @@ oppositeColor(int n)
     return n;
 }
 
-static void
+static Bool
 ReportColorRequest(XtermWidget xw, int ndx, int final)
 {
+    Bool result = False;
+
     if (AllowColorOps(xw, ecGetColor)) {
 	XColor color;
 	Colormap cmap = xw->core.colormap;
@@ -3317,8 +3323,9 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
 	unparseputc1(xw, final);
-	unparse_end(xw);
+	result = True;
     }
+    return result;
 }
 
 static Bool
@@ -3394,6 +3401,7 @@ ChangeColorsRequest(XtermWidget xw,
 
     if (GetOldColors(xw)) {
 	int i;
+	int queried = 0;
 
 	newColors.which = 0;
 	for (i = 0; i < NCOLORS; i++) {
@@ -3415,7 +3423,8 @@ ChangeColorsRequest(XtermWidget xw,
 		}
 		if (thisName != 0) {
 		    if (!strcmp(thisName, "?")) {
-			ReportColorRequest(xw, ndx, final);
+			if (ReportColorRequest(xw, ndx, final))
+			    ++queried;
 		    } else if (!xw->work.oldColors->names[ndx]
 			       || strcmp(thisName, xw->work.oldColors->names[ndx])) {
 			AllocateTermColor(xw, &newColors, ndx, thisName, False);
@@ -3427,6 +3436,8 @@ ChangeColorsRequest(XtermWidget xw,
 	if (newColors.which != 0) {
 	    ChangeColors(xw, &newColors);
 	    UpdateOldColors(xw, &newColors);
+	} else if (queried) {
+	    unparse_end(xw);
 	}
 	result = True;
     }
