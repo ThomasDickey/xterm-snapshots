@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.494 2019/04/25 23:17:04 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.495 2019/05/01 00:37:17 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #345
-.ds RF 2019/04/25
+.ds RF 2019/04/30
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2237,7 +2237,9 @@ using \*1\*0 through \*1\*9 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
 were the first means for setting \fI\*(xt\fR's colors dynamically,
 i.e., after it was started.
-They are not the same as the ANSI colors.
+They are not the same as the ANSI colors
+(however, the dynamic text foreground and background colors
+are used when ANSI colors are reset using SGR \*3\*9 and \*4\*9, respectively).
 These controls may be disabled using the \fIallowColorOps\fP resource.
 At least one parameter is expected for \*(Pt.
 Each successive parameter changes the next color in the list.

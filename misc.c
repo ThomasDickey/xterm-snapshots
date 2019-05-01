@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.867 2019/05/01 00:00:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.869 2019/05/01 08:43:48 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -6703,10 +6703,7 @@ traceIStack(unsigned flags)
     DATA(ATR_ITALIC);
     DATA(ATR_STRIKEOUT);
     DATA(ATR_DBL_UNDER);
-#if OPT_DIRECT_COLOR
-    DATA(ATR_DIRECT_FG);	/* FIXME - integrate with FG_COLOR */
-    DATA(ATR_DIRECT_BG);	/* FIXME - integrate with BG_COLOR */
-#endif
+    /* direct-colors are a special case of ISO-colors (see above) */
 #endif
 #undef DATA
     return result;
@@ -6812,6 +6809,15 @@ xtermPopSGR(XtermWidget xw)
 		    TRACE(("...pop " #name " = %s\n", BtoS(xw->flags & name))); \
 		} \
 	    }
+#define POP_FLAG2(name,part) \
+	    if (xBIT(ps##name - 1) & mask) { \
+	    	if ((xw->flags & part) ^ (s->stack[s->used].flags & part)) { \
+		    changed = True; \
+		    UIntClr(xw->flags, part); \
+		    UIntSet(xw->flags, (s->stack[s->used].flags & part)); \
+		    TRACE(("...pop " #part " = %s\n", BtoS(xw->flags & part))); \
+		} \
+	    }
 #define POP_DATA(name,value) \
 	    if (xBIT(ps##name - 1) & mask) { \
 	        Bool always = False; \
@@ -6845,8 +6851,8 @@ xtermPopSGR(XtermWidget xw)
 	    POP_DATA(FG_COLOR, sgr_foreground);
 	    POP_DATA(BG_COLOR, sgr_background);
 #if OPT_DIRECT_COLOR
-	    POP_FLAG(ATR_DIRECT_FG);
-	    POP_FLAG(ATR_DIRECT_BG);
+	    POP_FLAG2(FG_COLOR, ATR_DIRECT_FG);
+	    POP_FLAG2(BG_COLOR, ATR_DIRECT_BG);
 #endif
 	    if (changed) {
 		setExtendedColors(xw);

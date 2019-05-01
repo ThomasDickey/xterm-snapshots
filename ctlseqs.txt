@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #345 (2019/04/25)
+               updated for XTerm Patch #345 (2019/04/30)
 
 
 
@@ -1546,12 +1546,14 @@ OSC Ps ; Pt ST
           through 1 9  are denoted dynamic colors, since the correspond-
           ing control sequences were the first means for setting xterm's
           colors dynamically, i.e., after it was started.  They are not
-          the same as the ANSI colors.  These controls may be disabled
-          using the allowColorOps resource.  At least one parameter is
-          expected for Pt.  Each successive parameter changes the next
-          color in the list.  The value of Ps tells the starting point
-          in the list.  The colors are specified by name or RGB specifi-
-          cation as per XParseColor.
+          the same as the ANSI colors (however, the dynamic text fore-
+          ground and background colors are used when ANSI colors are
+          reset using SGR 3 9  and 4 9 , respectively).  These controls
+          may be disabled using the allowColorOps resource.  At least
+          one parameter is expected for Pt.  Each successive parameter
+          changes the next color in the list.  The value of Ps tells the
+          starting point in the list.  The colors are specified by name
+          or RGB specification as per XParseColor.
 
           If a "?" is given rather than a name or RGB specification,
           xterm replies with a control sequence of the same form which

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.953 2019/04/23 09:05:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.954 2019/05/01 08:59:39 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1265,10 +1265,6 @@ typedef enum {
     , psBG_COLOR = 11
 #endif
 #if OPT_WIDE_ATTRS
-#if OPT_DIRECT_COLOR
-    , psATR_DIRECT_FG = 12
-    , psATR_DIRECT_BG = 13
-#endif
     , psATR_DBL_UNDER = 21
 #endif
     , MAX_PUSH_SGR
