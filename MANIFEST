@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-344p
+MANIFEST for xterm, version xterm-344q
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -220,5 +220,6 @@ vttests/report-sgr.pl           demonstrate report-sgr
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
 vttests/sgrPushPop.pl           demonstrate xterm SGR push/pop
+vttests/sgrPushPop2.pl          demonstrate xterm SGR push/pop for colors
 vttests/tcapquery.pl            script to test tcap-query option
 vttests/title.sh                test-script to show title of xterm in action
