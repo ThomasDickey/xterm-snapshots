@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.820 2019/04/23 08:46:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.821 2019/05/02 23:55:57 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -564,6 +564,7 @@ extern char **environ;
 #define XtNtoolBar		"toolBar"
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
+#define XtNuseBorderClipping	"useBorderClipping"
 #define XtNuseClipping		"useClipping"
 #define XtNutf8			"utf8"
 #define XtNutf8Fonts		"utf8Fonts"
@@ -752,6 +753,7 @@ extern char **environ;
 #define XtCToolBar		"ToolBar"
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
+#define XtCUseBorderClipping	"UseBorderClipping"
 #define XtCUseClipping		"UseClipping"
 #define XtCUtf8			"Utf8"
 #define XtCUtf8Fonts		"Utf8Fonts"

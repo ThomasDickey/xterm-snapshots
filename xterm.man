@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.785 2019/04/30 01:16:10 tom Exp $
+.\" $XTermId: xterm.man,v 1.786 2019/05/03 00:56:50 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -4786,6 +4786,12 @@ underlined.
 It may be desirable to disable underlining when color is being
 used for the underline attribute.
 The default is \*(``true\*(''.
+.TP 8
+.B "useBorderClipping\fP (class\fB UseBorderClipping\fP)"
+Tell \fI\*n\fP whether to apply clipping when \fBuseClipping\fP is false.
+Unlike \fBuseClipping\fP, this simply limits text to keep it within the
+window borders, e.g., as a refinement to the \fBscaleHeight\fP workaround.
+The default is \*(``false\*(''.
 .TP 8
 .B "useClipping\fP (class\fB UseClipping\fP)"
 Tell \fI\*n\fP whether to use clipping to keep
