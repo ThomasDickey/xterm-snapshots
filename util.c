@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.783 2018/12/15 15:00:21 tom Exp $ */
+/* $XTermId: util.c,v 1.786 2019/05/03 00:29:56 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3295,18 +3295,29 @@ xtermSetClipRectangles(Display *dpy,
  * trash in rxcurses' hanoi.cmd demo (e.g., 10x20 font).
  */
 #define beginClipping(screen,gc,pwidth,plength) \
-	    if (screen->use_clipping && (pwidth > 2)) { \
+	if (pwidth > 2) { \
+	    if (screen->use_clipping) { \
 		XRectangle clip; \
 		int clip_x = x; \
 		int clip_y = y - FontHeight(screen) + FontDescent(screen); \
 		clip.x = 0; \
 		clip.y = 0; \
 		clip.height = (unsigned short) FontHeight(screen); \
-		clip.width = (unsigned short) (pwidth * plength); \
+		clip.width = (unsigned short) ((pwidth) * (plength)); \
 		xtermSetClipRectangles(screen->display, gc, \
 				       clip_x, clip_y, \
 				       &clip, 1, Unsorted); \
-	    }
+	    } else if (screen->use_border_clipping) { \
+		XRectangle clip; \
+		clip.x = 0; \
+		clip.y = 0; \
+		clip.height = (unsigned short) Height(screen); \
+		clip.width = (unsigned short) Width(screen); \
+		xtermSetClipRectangles(screen->display, gc, \
+				       0, 0, \
+				       &clip, 1, Unsorted); \
+	    } \
+	}
 #define endClipping(screen,gc) \
 	    XSetClipMask(screen->display, gc, None)
 #else
@@ -3316,7 +3327,8 @@ xtermSetClipRectangles(Display *dpy,
 
 #if OPT_CLIP_BOLD && OPT_RENDERFONT && defined(HAVE_XFTDRAWSETCLIP) && defined(HAVE_XFTDRAWSETCLIPRECTANGLES)
 #define beginXftClipping(screen,px,py,plength) \
-	    if (screen->use_clipping && (FontWidth(screen) > 2)) { \
+	if (FontWidth(screen) > 2) { \
+	    if (screen->use_clipping) { \
 		XRectangle clip; \
 		double adds = (screen->scale_height - 1.0) * FontHeight(screen); \
 		int height = dimRound(adds + FontHeight(screen)); \
@@ -3330,7 +3342,17 @@ xtermSetClipRectangles(Display *dpy,
 		XftDrawSetClipRectangles (screen->renderDraw, \
 					  clip_x, clip_y, \
 					  &clip, 1); \
-	    }
+	    } else if (screen->use_border_clipping) { \
+		XRectangle clip; \
+		clip.x = 0; \
+		clip.y = 0; \
+		clip.height = (unsigned short) Height(screen); \
+		clip.width = (unsigned short) Width(screen); \
+		XftDrawSetClipRectangles (screen->renderDraw, \
+					  0, 0, \
+					  &clip, 1); \
+	    } \
+	}
 #define endXftClipping(screen) \
 	    XftDrawSetClip (screen->renderDraw, 0)
 #else
@@ -3722,12 +3744,12 @@ drawXtermText(XtermWidget xw,
 			unsigned part = ucs2dec(screen, ch);
 			if (xtermIsDecGraphic(part)) {
 			    if (screen->force_box_chars
-				|| screen->broken_box_chars
-				|| xtermXftMissing(xw, currFont, ch)) {
+				|| screen->broken_box_chars) {
 				SetMissing("case 2");
 				ch = part;
 			    }
-			} else if (xtermXftMissing(xw, currFont, ch)) {
+			}
+			if (!missing && xtermXftMissing(xw, currFont, ch)) {
 			    XftFont *test = findXftGlyph(xw, currFont, ch);
 			    if (test == 0)
 				test = pickXftFont(needed, font0, wfont0);

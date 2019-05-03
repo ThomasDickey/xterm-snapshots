@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.954 2019/05/01 08:59:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.955 2019/05/02 23:56:33 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2715,6 +2715,7 @@ typedef struct {
 	SubResourceRec	cacheVTFonts;
 #endif
 #if OPT_CLIP_BOLD
+	Boolean		use_border_clipping;
 	Boolean		use_clipping;
 #endif
 	void *		main_cgs_cache;

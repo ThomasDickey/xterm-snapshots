@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1644 2019/04/26 21:53:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1645 2019/05/03 00:10:48 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -603,6 +603,8 @@ static XtResource xterm_resources[] =
 
 #if OPT_CLIP_BOLD
     Bres(XtNuseClipping, XtCUseClipping, screen.use_clipping, True),
+    Bres(XtNuseBorderClipping, XtCUseBorderClipping,
+	 screen.use_border_clipping, False),
 #endif
 
 #if OPT_DEC_CHRSET
@@ -9042,6 +9044,7 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_CLIP_BOLD
+    init_Bres(screen.use_border_clipping);
     init_Bres(screen.use_clipping);
 #endif
 
