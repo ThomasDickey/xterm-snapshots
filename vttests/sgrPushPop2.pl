@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: sgrPushPop2.pl,v 1.1 2019/05/02 00:38:34 tom Exp $
+# $XTermId: sgrPushPop2.pl,v 1.2 2019/05/03 23:59:26 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -51,8 +51,8 @@ Options:\n
   -r NUM  rotate example-columns (e.g, -r1 puts direct-color in middle)
 "
 );
-$opt_n = 9 unless ($opt_n);
-$opt_r = 0 unless ($opt_r);
+$opt_n = 9 unless ( defined $opt_n );
+$opt_r = 0 unless ( defined $opt_r );
 
 our @xterm_ansi = (
     0x000000,    #black
@@ -65,8 +65,10 @@ our @xterm_ansi = (
     0xe5e5e5     #gray90
 );
 
+# The lengths in @example_title differ to ensure that the trailing "END!"
+# should be the same color as the middle column, regardless of "-r" rotation.
 our $example_title = "COLOR-";
-our @example_title = ( "Indexed", "ANSI(8)", "Direct" );
+our @example_title = ( "Indexed", "ANSI8", "Direct" );
 
 # demonstrate selective SGR pop by a two-level test where the top-level has
 # ANSI colors, while the lower-level iterates over a color test-pattern,
@@ -182,6 +184,8 @@ sub set_video($) {
     printf "%-20s",    &video_name($param);
     printf "\x1b[%dm", $param;
 }
+
+printf "\x1b[H\x1b[J";
 
 &pushSGR("");
 printf "\x1b[40;37mSetting ambient colors to white-on-black\n";
