@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #345 (2019/04/30)
+               updated for XTerm Patch #345 (2019/05/07)
 
 
 
@@ -1148,6 +1148,11 @@ CSI ? Ps $ p
           vided only for reporting their values using this control
           sequence.  They correspond to the resources cursorBlink and
           cursorBlinkXOR.
+CSI # p
+CSI Ps ; Ps # p
+          Push video attributes onto stack (XTPUSHSGR), xterm.  This is
+          an alias for CSI # { , used to work around language limita-
+          tions of C#.
 
 CSI Ps q  Load LEDs (DECLL), VT100.
             Ps = 0  -> Clear all LEDS (default).
@@ -1174,6 +1179,10 @@ CSI Ps " q
             Ps = 0  -> DECSED and DECSEL can erase (default).
             Ps = 1  -> DECSED and DECSEL cannot erase.
             Ps = 2  -> DECSED and DECSEL can erase.
+
+CSI # q   Pop video attributes from stack (XTPOPSGR), xterm.  This is an
+          alias for CSI # } , used to work around language limitations
+          of C#.
 
 CSI Ps ; Ps r
           Set Scrolling Region [top;bottom] (default = full size of win-
@@ -2637,7 +2646,7 @@ o   VT520/VT525 Video Terminal
 
 o   Digital ANSI-Compliant Printing Protocol
     Level 2 Programming Reference Manual
-    Digital Equipment Corporation (EK-PPLV2-PM. B01, August 1994).
+    Digital Equipment Corporation (EK-PPLV2-PM B01, August 1994).
 
 o   4014 and 4014-1 Computer Display Terminal
     User's Manual.
