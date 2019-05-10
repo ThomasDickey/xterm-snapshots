@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: query-dynamic.pl,v 1.4 2019/04/30 23:51:53 tom Exp $
+# $XTermId: query-dynamic.pl,v 1.5 2019/05/10 20:21:20 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -39,7 +39,7 @@ use warnings;
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_q, $opt_s );
+our ( $opt_q, $opt_s, $opt_8 );
 
 our @query_params;
 
@@ -57,15 +57,18 @@ our @color_names = (
 );
 
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-&getopts('qs') || die(
+&getopts('qs8') || die(
     "Usage: $0 [options]\n
 Options:\n
   -q      quicker results by merging queries
   -s      use ^G rather than ST
+  -8      use 8-bit controls
 "
 );
 
-our $ST = $opt_s ? "\007" : "\x1b\\";
+our $OSC = "\x1b\]";
+$OSC = "\x9d" if ($opt_8);
+our $ST = $opt_8 ? "\x9c" : ( $opt_s ? "\007" : "\x1b\\" );
 
 sub no_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -148,14 +151,14 @@ sub finish_query($) {
 
     my $reply;
     my $n;
-    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
-    my $osc   = qr/\x1b]/;
+    my $st = $opt_8 ? qr/\x9c/ : ( $opt_s ? qr/\007/ : qr/\x1b\\/ );
+    my $osc = $opt_8 ? qr/\x9d/ : qr/\x1b]/;
     my $match = qr/${osc}.*${st}/;
 
     my $params = join( ";", @query_params );
     $params =~ s/\d+/?/g;
     $params = sprintf( "%d;%s", $query_params[0], $params );
-    $reply = &get_reply( "\x1b]" . $params . $ST );
+    $reply = &get_reply( $OSC . $params . $ST );
 
     printf "query{%s}", &visible($params);
 
@@ -210,6 +213,8 @@ sub query_colors($$) {
     }
 }
 
+printf "\x1b G" if ($opt_8);
+
 &begin_query if ($opt_q);
 
 if ( $#ARGV >= 0 ) {
@@ -229,5 +234,7 @@ else {
 }
 
 &finish_query if ($opt_q);
+
+printf "\x1b F" if ($opt_8);
 
 1;

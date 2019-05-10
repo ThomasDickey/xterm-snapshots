@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2029 2019/05/07 08:46:23 tom Exp $
+  $XTermId: xterm.log.html,v 1.2033 2019/05/10 22:23:50 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -978,6 +978,19 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add left/right margin capabilities to terminfo, since the
+    default terminal emulation is VT420 (suggested by Thomas
+    Wolff).</li>
+
+    <li>modify treatment of <code>reverseVideo</code> for dynamic
+    colors to make text foreground/background consistent with the
+    cursor color (prompted by discussion with Ben Wong, lsix
+    #20).</li>
+
+    <li>modify button-handling to make SGR button-release distinct
+    from button-press for button-codes starting with 8 (patch by
+    Mikulas Patocka).</li>
+
     <li>add aliases for the sgr push/pop controls to work around
     language limitations of C# (request by Dan Thompson).</li>
 

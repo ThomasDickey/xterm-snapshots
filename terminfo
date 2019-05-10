@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.178 2019/01/13 19:27:05 tom Exp $
+# $XTermId: terminfo,v 1.181 2019/05/10 22:08:18 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -136,12 +136,18 @@ xterm-new|modern xterm terminal emulator,
 	kcbt=\E[Z,
 	kent=\EOM,
 	rin=\E[%p1%dT,
+	use=vt420+lrmm,
 	use=xterm+sm+1006,
 	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
 	use=xterm-basic,
+
+# Left/right margins are supported in xterm since patch #279 (2012/05/10)
+vt420+lrmm|VT420 left/right margins,
+	mgc=\E[?69l,
+	smglr=\E[?69h\E[%i%p1%d;%p2%ds,
 
 # These "ansi+XXX" blocks were added in ncurses 5.0:
 ansi+rep,
@@ -1547,7 +1553,7 @@ xterm-xmc|xterm with magic-cookie glitch,
 	use=xterm-new,
 #
 # This one also is primarily for testing ncurses; while the ISO 6429 defines
-# the REP control, none of the DEC VTxxx terminals (VT52 through VT420) support
+# the REP control, none of the DEC VTxxx terminals (VT52 through VT525) support
 # it.
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
