@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.869 2019/05/01 08:43:48 tom Exp $ */
+/* $XTermId: misc.c,v 1.870 2019/05/10 08:44:56 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3257,14 +3257,16 @@ GetOldColors(XtermWidget xw)
 }
 
 static int
-oppositeColor(int n)
+oppositeColor(XtermWidget xw, int n)
 {
+    Boolean reversed = (xw->misc.re_verse);
+
     switch (n) {
     case TEXT_FG:
-	n = TEXT_BG;
+	n = reversed ? TEXT_FG : TEXT_BG;
 	break;
     case TEXT_BG:
-	n = TEXT_FG;
+	n = reversed ? TEXT_BG : TEXT_FG;
 	break;
     case MOUSE_FG:
 	n = MOUSE_BG;
@@ -3274,10 +3276,10 @@ oppositeColor(int n)
 	break;
 #if OPT_TEK4014
     case TEK_FG:
-	n = TEK_BG;
+	n = reversed ? TEK_FG : TEK_BG;
 	break;
     case TEK_BG:
-	n = TEK_FG;
+	n = reversed ? TEK_BG : TEK_FG;
 	break;
 #endif
 #if OPT_HIGHLIGHT_COLOR
@@ -3309,7 +3311,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 	 * reverse-video is set.  Report this as the original color index, but
 	 * reporting the opposite color which would be used.
 	 */
-	int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
+	int i = (xw->misc.re_verse) ? oppositeColor(xw, ndx) : ndx;
 
 	GetOldColors(xw);
 	color.pixel = xw->work.oldColors->colors[ndx];
@@ -3410,7 +3412,7 @@ ChangeColorsRequest(XtermWidget xw,
 	for (i = start; i < OSC_NCOLORS; i++) {
 	    int ndx = OscToColorIndex((OscTextColors) i);
 	    if (xw->misc.re_verse)
-		ndx = oppositeColor(ndx);
+		ndx = oppositeColor(xw, ndx);
 
 	    if (IsEmpty(names)) {
 		newColors.names[ndx] = NULL;
@@ -3462,7 +3464,7 @@ ResetColorsRequest(XtermWidget xw,
 	int ndx = OscToColorIndex((OscTextColors) (code - OSC_RESET));
 
 	if (xw->misc.re_verse)
-	    ndx = oppositeColor(ndx);
+	    ndx = oppositeColor(xw, ndx);
 
 	thisName = xw->screen.Tcolors[ndx].resource;
 
