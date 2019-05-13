@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-344u
+MANIFEST for xterm, version xterm-344v
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -170,6 +170,7 @@ package/freebsd/Makefile        build-script
 package/freebsd/distinfo        generated sums
 package/freebsd/pkg-descr       build-script
 package/freebsd/pkg-message     build-script
+package/freebsd/pkg-message.wchar  build-script
 package/freebsd/pkg-plist       build-script
 package/pkgsrc                  subdirectory
 package/pkgsrc/DESCR            build-script
