@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.205 2019/03/08 01:16:53 tom Exp $ */
+/* $XTermId: trace.c,v 1.207 2019/05/13 08:11:00 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -871,7 +871,7 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
     }
 }
 
-#if OPT_RENDERFONT
+#if OPT_RENDERFONT && OPT_WIDE_CHARS
 void
 TraceFallback(XtermWidget xw, const char *tag, unsigned wc, int n, XftFont *font)
 {
