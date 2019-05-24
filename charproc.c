@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1645 2019/05/03 00:10:48 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1650 2019/05/24 08:44:32 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -183,6 +183,14 @@ static void StopBlinking(TScreen * /* screen */ );
 #else
 #define StartBlinking(screen)	/* nothing */
 #define StopBlinking(screen)	/* nothing */
+#endif
+
+#ifndef NO_ACTIVE_ICON
+static Boolean discount_frame_extents(XtermWidget /* xw */ ,
+				      int * /* height */ ,
+				      int * /* width */ );
+#else
+#define discount_frame_extents(xw, height, width)	False
 #endif
 
 #if OPT_INPUT_METHOD
@@ -1431,6 +1439,9 @@ check_tables(void)
 {
     Cardinal n;
     int ch;
+    int total_codes = 0;
+    int total_ground = 0;
+    int total_ignored = 0;
 
     TRACE(("** check_tables\n"));
     for (n = 0; n < XtNumber(all_tables); ++n) {
@@ -1470,7 +1481,29 @@ check_tables(void)
 		}
 	    }
 	}
+	/*
+	 * Just for amusement, show how sparse the encoding tables are.
+	 */
+	for (ch = 0; ch < 256; ++ch) {
+	    ++total_codes;
+	    switch (table[ch]) {
+	    case CASE_GROUND_STATE:
+		total_ground++;
+		break;
+	    case CASE_ESC_IGNORE:
+		/* FALLTHRU */
+	    case CASE_IGNORE:
+		/* FALLTHRU */
+	    case CASE_VT52_IGNORE:
+		total_ignored++;
+		break;
+	    }
+	}
     }
+    TRACE(("VTPrsTbl:\n"));
+    TRACE(("%d total codes\n", total_codes));
+    TRACE(("%d total ignored\n", total_ignored));
+    TRACE(("%d total reset/ground\n", total_ground));
 }
 
 static void
@@ -7257,6 +7290,10 @@ window_ops(XtermWidget xw)
 
     case ewGetWinPosition:	/* Report the window's position */
 	if (AllowWindowOps(xw, ewGetWinPosition)) {
+	    Window win;
+	    Window result_win;
+	    int result_y, result_x;
+
 	    TRACE(("...get window position\n"));
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
@@ -7264,28 +7301,43 @@ window_ops(XtermWidget xw)
 	    reply.a_param[0] = 3;
 	    switch (zero_if_default(1)) {
 	    case 2:		/* report the text-window's position */
-		win_attrs.y = 0;
-		win_attrs.x = 0;
+		result_y = 0;
+		result_x = 0;
 		{
 		    Widget mw;
 		    for (mw = (Widget) xw; mw != 0; mw = XtParent(mw)) {
-			win_attrs.x += mw->core.x;
-			win_attrs.y += mw->core.y;
+			result_x += mw->core.x;
+			result_y += mw->core.y;
 			if (mw == SHELL_OF(xw))
 			    break;
 		    }
 		}
-		win_attrs.x += OriginX(screen);
-		win_attrs.y += OriginY(screen);
+		result_x += OriginX(screen);
+		result_y += OriginY(screen);
 		break;
 	    default:
+		win = WMFrameWindow(xw);
 		xtermGetWinAttrs(screen->display,
-				 WMFrameWindow(xw),
+				 win,
 				 &win_attrs);
+		XTranslateCoordinates(screen->display,
+				      VShellWindow(xw),
+				      win_attrs.root,
+				      -win_attrs.border_width,
+				      -win_attrs.border_width,
+				      &result_x, &result_y, &result_win);
+		TRACE(("translated position %d,%d vs %d,%d\n",
+		       result_y, result_x,
+		       win_attrs.y, win_attrs.x));
+		if (!discount_frame_extents(xw, &result_y, &result_x)) {
+		    TRACE(("...cancelled translation\n"));
+		    result_y = win_attrs.y;
+		    result_x = win_attrs.x;
+		}
 		break;
 	    }
-	    reply.a_param[1] = (ParmType) win_attrs.x;
-	    reply.a_param[2] = (ParmType) win_attrs.y;
+	    reply.a_param[1] = (ParmType) result_x;
+	    reply.a_param[2] = (ParmType) result_y;
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
@@ -7565,7 +7617,7 @@ unparseseq(XtermWidget xw, ANSI *ap)
 		unparseputc(xw, ap->a_param[i]);
 		break;
 	    default:
-		unparseputn(xw, (unsigned int) ap->a_param[i]);
+		unparseputn(xw, (UParm) ap->a_param[i]);
 		break;
 	    }
 	}
@@ -7595,9 +7647,9 @@ unparseseq(XtermWidget xw, ANSI *ap)
 }
 
 void
-unparseputn(XtermWidget xw, unsigned int n)
+unparseputn(XtermWidget xw, UParm n)
 {
-    unsigned int q;
+    UParm q;
 
     q = n / 10;
     if (q != 0)
@@ -10045,7 +10097,61 @@ getWindowManagerName(XtermWidget xw)
     TRACE(("... window manager name is %s\n", result));
     return result;
 }
-#endif
+
+static Boolean
+discount_frame_extents(XtermWidget xw, int *high, int *wide)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+
+    Atom atom_supported = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
+    Atom actual_type;
+    int actual_format;
+    long long_offset = 0;
+    long long_length = 128;	/* number of items to ask for at a time */
+    unsigned long nitems;
+    unsigned long bytes_after;
+    unsigned char *args;
+    Boolean rc;
+
+    rc = xtermGetWinProp(dpy,
+			 VShellWindow(xw),
+			 atom_supported,
+			 long_offset,
+			 long_length,
+			 XA_CARDINAL,	/* req_type */
+			 &actual_type,	/* actual_type_return */
+			 &actual_format,	/* actual_format_return */
+			 &nitems,	/* nitems_return */
+			 &bytes_after,	/* bytes_after_return */
+			 &args	/* prop_return */
+	);
+
+    if (rc && args && (nitems == 4) && (actual_format == 32)) {
+	long *extents = (long *) (void *) args;
+
+	TRACE(("_NET_FRAME_EXTENTS:\n"));
+	TRACE(("   left:   %ld\n", extents[0]));
+	TRACE(("   right:  %ld\n", extents[1]));
+	TRACE(("   top:    %ld\n", extents[2]));
+	TRACE(("   bottom: %ld\n", extents[3]));
+
+	if (!x_strncasecmp(xw->work.wm_name, "gnome shell", 11)) {
+	    *wide -= (int) (extents[0] + extents[1]);	/* -= (left+right) */
+	    *high -= (int) (extents[2] + extents[3]);	/* -= (top+bottom) */
+	    TRACE(("...applied extents %d,%d\n", *high, *wide));
+	} else if (!x_strncasecmp(xw->work.wm_name, "fvwm", 4)) {
+	    TRACE(("...skipping extents\n"));
+	} else {
+	    TRACE(("...ignoring extents\n"));
+	    rc = False;
+	}
+    } else {
+	rc = False;
+    }
+    return rc;
+}
+#endif /* !NO_ACTIVE_ICON */
 
 void
 initBorderGC(XtermWidget xw, VTwin *win)
@@ -10370,12 +10476,12 @@ VTRealize(Widget w,
     }
 #endif
     if ((xw->work.active_icon == eiDefault) && getIconicFont(screen)->fs) {
-	char *wm_name = getWindowManagerName(xw);
-	ReportIcons(("window manager name is %s\n", wm_name));
-	if (x_strncasecmp(wm_name, "fvwm", 4) &&
-	    x_strncasecmp(wm_name, "window maker", 12))
+	xw->work.wm_name = getWindowManagerName(xw);
+	ReportIcons(("window manager name is %s\n", xw->work.wm_name));
+	if (x_strncasecmp(xw->work.wm_name, "fvwm", 4) &&
+	    x_strncasecmp(xw->work.wm_name, "window maker", 12)) {
 	    xw->work.active_icon = eiFalse;
-	free(wm_name);
+	}
     }
     if (xw->work.active_icon && getIconicFont(screen)->fs) {
 	int iconX = 0, iconY = 0;

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.956 2019/05/03 23:39:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.958 2019/05/24 08:19:28 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -423,6 +423,7 @@ typedef	struct {
 } PARAMS;
 
 typedef short ParmType;
+typedef unsigned short UParm;		/* unparseputn passes ParmType	*/
 
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
@@ -3016,6 +3017,7 @@ typedef struct _Work {
     } user_keys[MAX_UDK];
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
+    char *wm_name;
 #endif /* NO_ACTIVE_ICON */
 #if OPT_INPUT_METHOD
     Boolean cannot_im;		/* true if we cannot use input-method */

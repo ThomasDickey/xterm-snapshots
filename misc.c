@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.870 2019/05/10 08:44:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.873 2019/05/24 08:20:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4541,7 +4541,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
 				if (xw->rgb_widths[0] == xw->rgb_widths[1] &&
 				    xw->rgb_widths[1] == xw->rgb_widths[2]) {
-				    unparseputn(xw, xw->rgb_widths[0]);
+				    unparseputn(xw, (UParm) xw->rgb_widths[0]);
 				} else {
 				    char temp[1024];
 				    sprintf(temp, "%d/%d/%d",
@@ -6506,7 +6506,7 @@ xtermOpenApplication(XtAppContext * app_context_return,
 #endif /* OPT_SESSION_MGT */
     init_colored_cursor(XtDisplay(result));
 
-    XtSetErrorHandler((XtErrorHandler) 0);
+    XtSetErrorHandler(NULL);
 
     return result;
 }

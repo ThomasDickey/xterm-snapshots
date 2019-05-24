@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.821 2019/05/02 23:55:57 tom Exp $ */
+/* $XTermId: xterm.h,v 1.824 2019/05/24 08:20:46 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -941,7 +941,7 @@ extern void set_tb_margins (TScreen * /* screen */, int  /* top */, int  /* bott
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
-extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
+extern void unparseputn (XtermWidget /* xw */, UParm /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
 extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);
@@ -1133,7 +1133,7 @@ extern void switch_modes (Bool /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
 extern void update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern void xevents (void);
-extern void xt_error (String /* message */);
+extern void xt_error (String /* message */) GCC_NORETURN;
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);

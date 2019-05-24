@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #345 (2019/05/07)
+               updated for XTerm Patch #346 (2019/05/19)
 
 
 
@@ -1249,6 +1249,9 @@ CSI Ps ; Ps ; Ps t
           If the xterm window is non-iconified, it returns CSI 1 t .
           If the xterm window is iconified, it returns CSI 2 t .
             Ps = 1 3  -> Report xterm window position.
+          Note: X Toolkit positions can be negative, but the reported
+          values are unsigned, in the range 0-65535.  Negative values
+          correspond to 32768-65535.
           Result is CSI 3 ; x ; y t
             Ps = 1 3 ;  2  -> Report xterm text-area position.
           Result is CSI 3 ; x ; y t

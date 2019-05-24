@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: query-dynamic.pl,v 1.5 2019/05/10 20:21:20 tom Exp $
+# $XTermId: query-dynamic.pl,v 1.6 2019/05/19 08:56:11 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -69,17 +69,6 @@ Options:\n
 our $OSC = "\x1b\]";
 $OSC = "\x9d" if ($opt_8);
 our $ST = $opt_8 ? "\x9c" : ( $opt_s ? "\007" : "\x1b\\" );
-
-sub no_reply($) {
-    open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
-    autoflush TTY 1;
-    my $old = `stty -g`;
-    system "stty raw -echo min 0 time 5";
-
-    print TTY @_;
-    close TTY;
-    system "stty $old";
-}
 
 sub get_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
