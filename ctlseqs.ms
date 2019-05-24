@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.497 2019/05/07 09:00:12 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.498 2019/05/19 18:15:49 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #345
-.ds RF 2019/05/07
+.ds LF Patch #346
+.ds RF 2019/05/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1868,6 +1868,10 @@ If the \fI\*(xt\fP window is non-iconified, it returns \*(Cs\*1\*t.
 .br
 If the \fI\*(xt\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*1\*3 \(-> Report \fI\*(xt\fP window position.
+.br
+Note: X Toolkit positions can be negative,
+but the reported values are unsigned, in the range 0-65535.
+Negative values correspond to 32768-65535.
 .br
 Result is
 \*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: query-color.pl,v 1.19 2019/04/30 22:35:14 tom Exp $
+# $XTermId: query-color.pl,v 1.20 2019/05/19 08:56:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -63,17 +63,6 @@ our $last_op = -1;
 our $this_op = -1;
 
 our @query_params;
-
-sub no_reply($) {
-    open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
-    autoflush TTY 1;
-    my $old = `stty -g`;
-    system "stty raw -echo min 0 time 5";
-
-    print TTY @_;
-    close TTY;
-    system "stty $old";
-}
 
 sub get_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
