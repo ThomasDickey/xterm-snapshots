@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1650 2019/05/24 08:44:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1651 2019/05/24 22:54:05 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -7202,8 +7202,8 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewSetWinPosition)) {
 	    unsigned value_mask;
 
-	    values.x = zero_if_default(1);
-	    values.y = zero_if_default(2);
+	    values.x = (Position) zero_if_default(1);
+	    values.y = (Position) zero_if_default(2);
 	    TRACE(("...move window to %d,%d\n", values.x, values.y));
 	    value_mask = (CWX | CWY);
 	    XReconfigureWMWindow(screen->display,
