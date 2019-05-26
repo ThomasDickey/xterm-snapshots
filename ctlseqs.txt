@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #346 (2019/05/19)
+               updated for XTerm Patch #346 (2019/05/23)
 
 
 
@@ -240,9 +240,15 @@ Controls beginning with ESC
 This excludes controls where ESC  is part of a 7-bit equivalent to 8-bit
 C1 controls, ordered by the final character(s).
 
-ESC SP F  7-bit controls (S7C1T), VT220.
+ESC SP F  7-bit controls (S7C1T), VT220.  This tells the terminal to
+          send C1 control characters as 7-bit sequences, e.g., its
+          responses to queries.  DEC VT200 and up always accept 8-bit
+          control sequences except when configured for VT100 mode.
 
-ESC SP G  8-bit controls (S8C1T), VT220.
+ESC SP G  8-bit controls (S8C1T), VT220.  This tells the terminal to
+          send C1 control characters as 8-bit sequences, e.g., its
+          responses to queries.  DEC VT200 and up always accept 8-bit
+          control sequences except when configured for VT100 mode.
 
 ESC SP L  Set ANSI conformance level 1 (dpANS X3.134.1).
 
@@ -1121,11 +1127,15 @@ CSI Ps ; Ps " p
             Ps = 6 1  -> VT100.
             Ps = 6 2  -> VT200.
             Ps = 6 3  -> VT300.
+            Ps = 6 4  -> VT400.
+            Ps = 6 5  -> VT500.
 
-          Valid values for the second parameter:
+          Valid values for the optional second parameter:
             Ps = 0  -> 8-bit controls.
-            Ps = 1  -> 7-bit controls (always set for VT100).
-            Ps = 2  -> 8-bit controls.
+            Ps = 1  -> 7-bit controls (DEC factory default).
+            Ps = 2  -> 8-bit controls.  The 7-bit and 8-bit control
+          modes can also be set by S7C1T and S8C1T, but DECSCL is pre-
+          ferred.
 
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply DECRPM is
