@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1651 2019/05/24 22:54:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1653 2019/05/26 22:18:58 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3895,7 +3895,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCL(%d,%d)\n", GetParam(0), GetParam(1)));
 	    /*
 	     * This changes the emulation level, and is not recognized by
-	     * VT100s.
+	     * VT100s.  However, a VT220 or above can be set to conformance
+	     * level 1 to act like a VT100.
 	     */
 	    if (screen->terminal_id >= 200) {
 		/*
@@ -10139,6 +10140,11 @@ discount_frame_extents(XtermWidget xw, int *high, int *wide)
 	if (!x_strncasecmp(xw->work.wm_name, "gnome shell", 11)) {
 	    *wide -= (int) (extents[0] + extents[1]);	/* -= (left+right) */
 	    *high -= (int) (extents[2] + extents[3]);	/* -= (top+bottom) */
+	    TRACE(("...applied extents %d,%d\n", *high, *wide));
+	} else if (!x_strncasecmp(xw->work.wm_name, "compiz", 6)) {
+	    /* Ubuntu 16.04 is really off-by-one */
+	    *wide -= (int) (extents[0] + extents[1] - 1);
+	    *high -= (int) (extents[2] + extents[3] - 1);
 	    TRACE(("...applied extents %d,%d\n", *high, *wide));
 	} else if (!x_strncasecmp(xw->work.wm_name, "fvwm", 4)) {
 	    TRACE(("...skipping extents\n"));

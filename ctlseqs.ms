@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.501 2019/05/25 00:41:55 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.502 2019/05/26 20:18:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #346
-.ds RF 2019/05/23
+.ds RF 2019/05/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1719,17 +1719,21 @@ Soft terminal reset (DECSTR), VT220 and up.
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
 Set conformance level (DECSCL), VT220 and up.
 .iP
-Valid values for the first parameter:
-  \*(Ps = \*6\*1 \(-> VT100.
-  \*(Ps = \*6\*2 \(-> VT200.
-  \*(Ps = \*6\*3 \(-> VT300.
-  \*(Ps = \*6\*4 \(-> VT400.
-  \*(Ps = \*6\*5 \(-> VT500.
+The first parameter selects the conformance level.
+Valid values are:
+  \*(Ps = \*6\*1 \(-> level 1, e.g., VT100.
+  \*(Ps = \*6\*2 \(-> level 2, e.g., VT200.
+  \*(Ps = \*6\*3 \(-> level 3, e.g., VT300.
+  \*(Ps = \*6\*4 \(-> level 4, e.g., VT400.
+  \*(Ps = \*6\*5 \(-> level 5, e.g., VT500.
 .iP
-Valid values for the optional second parameter:
+The second parameter selects the C1 control transmission mode.
+This is an optional parameter, ignored in conformance level 1.
+Valid values are:
   \*(Ps = \*0 \(-> 8-bit controls.
   \*(Ps = \*1 \(-> 7-bit controls (DEC factory default).
   \*(Ps = \*2 \(-> 8-bit controls.
+.iP
 The 7-bit and 8-bit control modes can also be set by S7C1T and S8C1T,
 but DECSCL is preferred.
 .
