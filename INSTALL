@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.179 2018/12/09 18:14:52 tom Exp $
+-- $XTermId: INSTALL,v 1.182 2019/05/27 18:17:01 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2017,2018 by Thomas E. Dickey
+-- Copyright 1997-2018,2019 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -261,9 +261,8 @@ The options (in alphabetic order):
 
   --disable-paste64       disable support for bracketed paste mode
 
-	Do not compile-in code to support experimental bracketed paste mode,
-	along with functions for setting/getting the selection data, termed
-	"paste64".
+	Do not compile-in code to support bracketed paste mode, along with
+	functions for setting/getting the selection data, termed "paste64".
 
 	(see ctlseqs.ms description of OSC 52, and DECSET 2004).
 
@@ -515,7 +514,7 @@ The options (in alphabetic order):
 
   --enable-readline-mouse enable support for mouse in readline applications
 
-	Compile-in code to support experimental bracketed paste mode, i.e.,
+	Compile-in code to support predecessor to bracketed paste mode, i.e.,
 	provide functions for setting/getting the selection data.  Essentially
 	this puts xterm into a mode that sends special function-key strings to
 	bracket the data.
