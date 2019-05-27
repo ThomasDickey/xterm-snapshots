@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.786 2019/05/03 00:56:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.787 2019/05/27 16:23:42 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -4495,27 +4495,30 @@ After startup, you can still switch to/from the bitmap font using the
 .TP 5
 default
 .br
-startup using the normal (bitmap) font,
-but enable the \*(``TrueType Fonts\*(''
+Enable the \*(``TrueType Fonts\*(''
 menu entry to allow runtime switching to/from TrueType fonts.
-.IP
-If there is no \fBfaceName\fP resource set,
-then runtime switching to TrueType fonts is disabled.
-\fI\*N\fP has a separate  compiled-in value for \fBfaceName\fP
-for the special case where \fBrenderFont\fP is \*(``default\*(''.
+The initial font used depends upon whether the \fBfaceName\fP resource is set:
+.RS
+.bP
+If the \fBfaceName\fP resource is not set,
+start by using the normal (bitmap) font.
+\fI\*N\fP has a separate compiled-in value for \fBfaceName\fP
+for this special case.
 That is normally \*(``mono\*(''.
+.bP
+If the \fBfaceName\fP resource is set,
+then start by using the TrueType font rather than the bitmap font.
+.RE
 .RE
 .TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
-Affects the behavior when the window is resized to be taller or
-shorter.
+Affects the behavior when the window is resized to be taller or shorter.
 \fBNorthWest\fP
 specifies that the top line of text on the screen stay fixed.
-If the window
-is made shorter, lines are dropped from the bottom; if the window is
+If the window is made shorter,
+lines are dropped from the bottom; if the window is
 made taller, blank lines are added at the bottom.
-This is compatible
-with the behavior in R4.
+This is compatible with the behavior in X11R4.
 \fBSouthWest\fP (the default) specifies that
 the bottom line of text on the screen stay fixed.
 If the window is
