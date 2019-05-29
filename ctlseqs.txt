@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #346 (2019/05/26)
+               updated for XTerm Patch #347 (2019/05/28)
 
 
 
@@ -428,11 +428,11 @@ DCS Ps $ t Pt ST
             Ps = 2  -> DECTABSR
 
 DCS + p Pt ST
-          Set Termcap/Terminfo Data (xterm, experimental).  The string
-          following the "p" is a name to use for retrieving data from
-          the terminal database.  The data will be used for the "tcap"
-          keyboard configuration's function- and special-keys, as well
-          as by the Request Termcap/Terminfo String control.
+          Set Termcap/Terminfo Data (xterm).  The string following the
+          "p" is a name to use for retrieving data from the terminal
+          database.  The data will be used for the "tcap" keyboard con-
+          figuration's function- and special-keys, as well as by the
+          Request Termcap/Terminfo String control.
 
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm).  The string following

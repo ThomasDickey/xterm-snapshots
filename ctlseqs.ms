@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.502 2019/05/26 20:18:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.503 2019/05/29 00:23:45 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #346
-.ds RF 2019/05/26
+.ds LF Patch #347
+.ds RF 2019/05/28
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -895,7 +895,7 @@ by changing the first \*(``u\*('' to a \*(``t\*(''
 .
 .iP
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
-Set Termcap/Terminfo Data (\fI\*(xt\fP, experimental).
+Set Termcap/Terminfo Data (\fI\*(xt\fP).
 The string following the \*(``p\*('' is a name to use for retrieving data from
 the terminal database.
 The data will be used for the \*(``tcap\*('' keyboard
