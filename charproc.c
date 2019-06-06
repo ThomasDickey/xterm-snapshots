@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1653 2019/05/26 22:18:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1654 2019/06/06 01:09:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -10481,8 +10481,8 @@ VTRealize(Widget w,
 	ReportIcons(("using TrueType font as iconFont\n"));
     }
 #endif
+    xw->work.wm_name = getWindowManagerName(xw);
     if ((xw->work.active_icon == eiDefault) && getIconicFont(screen)->fs) {
-	xw->work.wm_name = getWindowManagerName(xw);
 	ReportIcons(("window manager name is %s\n", xw->work.wm_name));
 	if (x_strncasecmp(xw->work.wm_name, "fvwm", 4) &&
 	    x_strncasecmp(xw->work.wm_name, "window maker", 12)) {
