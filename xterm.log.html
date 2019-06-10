@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2049 2019/06/06 01:17:14 tom Exp $
+  $XTermId: xterm.log.html,v 1.2050 2019/06/10 23:56:46 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -982,6 +982,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>replace logic in <code>wcwidth.c</code> for detecting
+    double-width characters with binary-search table generated
+    using updated <code>uniset</code> (report by Robert Ross).</li>
+
+    <li>add test-driver for <code>wcwidth.c</code> to simplify
+    comparison with system's <code>wcwidth</code>.</li>
+
     <li>ensure that window-manager name comparisons work when
     active-icon is enabled, since <code><em>CSI</em>13t</code> uses
     the window-manager name (Arch #62818).</li>

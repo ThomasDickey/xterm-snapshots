@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.245 2019/01/14 01:40:56 tom Exp $
+## $XTermId: Makefile.in,v 1.246 2019/06/10 09:48:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -129,6 +129,7 @@ AUTO_SOURCE	= \
            HDRS = VTparse.h data.h error.h fontutils.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
+  TEST_PROGRAMS = test_wcwidth$x
 
 all :	$(PROGRAMS)
 ################################################################################
@@ -229,6 +230,10 @@ builtin_icons.h :
 	@sed -e 's/static char \* /static const char * /' $(srcdir)/icons/mini.xterm_48x48.xpm >>$@
 	@echo "#endif" >>$@
 	@echo "made $@"
+
+################################################################################
+test_wcwidth$x : wcwidth.c
+	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER wcwidth.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
@@ -527,7 +532,7 @@ mostlyclean :
 	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS) $(AUTO_SOURCE)
+	-$(RM) $(PROGRAMS) $(TEST_PROGRAMS) $(AUTO_SOURCE)
 
 sources : $(AUTO_SOURCE)
 
