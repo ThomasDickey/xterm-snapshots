@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1654 2019/06/06 01:09:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1658 2019/06/11 20:45:28 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -142,7 +142,7 @@
 typedef int (*BitFunc) (unsigned * /* p */ ,
 			unsigned /* mask */ );
 
-static IChar doinput(void);
+static IChar doinput(XtermWidget /* xw */ );
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
 static void ReallyReset(XtermWidget /* xw */ ,
@@ -172,17 +172,17 @@ static void window_ops(XtermWidget /* xw */ );
 #define SettableCursorBlink(screen) \
 	(((screen)->cursor_blink != cbAlways) && \
 	 ((screen)->cursor_blink != cbNever))
-#define UpdateCursorBlink(screen) \
-	 SetCursorBlink(screen, screen->cursor_blink)
-static void SetCursorBlink(TScreen * /* screen */ ,
+#define UpdateCursorBlink(xw) \
+	 SetCursorBlink(xw, TScreenOf(xw)->cursor_blink)
+static void SetCursorBlink(XtermWidget /* xw */ ,
 			   BlinkOps /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
 			   XtIntervalId * /* id */ );
-static void StartBlinking(TScreen * /* screen */ );
-static void StopBlinking(TScreen * /* screen */ );
+static void StartBlinking(XtermWidget /* xw */ );
+static void StopBlinking(XtermWidget /* xw */ );
 #else
-#define StartBlinking(screen)	/* nothing */
-#define StopBlinking(screen)	/* nothing */
+#define StartBlinking(xw)	/* nothing */
+#define StopBlinking(xw)	/* nothing */
 #endif
 
 #ifndef NO_ACTIVE_ICON
@@ -2643,7 +2643,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (xw->flags & LINEFEED)
 		CarriageReturn(xw);
 	    else
-		do_xevents();
+		do_xevents(xw);
 	    break;
 
 	case CASE_CBT:
@@ -2944,7 +2944,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		TRACE(("CASE_SD - scroll down\n"));
 		/* SD */
 		RevScroll(xw, one_if_default(0));
-		do_xevents();
+		do_xevents(xw);
 	    }
 	    ResetState(sp);
 	    break;
@@ -2955,7 +2955,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     */
 	    TRACE(("CASE_SD - scroll down\n"));
 	    RevScroll(xw, one_if_default(0));
-	    do_xevents();
+	    do_xevents(xw);
 	    ResetState(sp);
 	    break;
 
@@ -3228,7 +3228,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    /* FALLTHRU */
 		case 6:	/* Blink (150 per minute, or more) */
 		    UIntSet(xw->flags, BLINK);
-		    StartBlinking(screen);
+		    StartBlinking(xw);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -3806,7 +3806,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (change) {
 		    xtermSetCursorBox(screen);
 		    screen->cursor_blink_esc = blinks;
-		    UpdateCursorBlink(screen);
+		    UpdateCursorBlink(xw);
 		}
 	    }
 	    ResetState(sp);
@@ -4213,7 +4213,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_IND:
 	    TRACE(("CASE_IND - index\n"));
 	    xtermIndex(xw, 1);
-	    do_xevents();
+	    do_xevents(xw);
 	    ResetState(sp);
 	    break;
 
@@ -4993,7 +4993,7 @@ VTparse(XtermWidget xw)
 
     keep_running = False;
     do {
-	keep_running = doparsing(xw, doinput(), &myState);
+	keep_running = doparsing(xw, doinput(xw), &myState);
 	while (myState.defer_used) {
 	    Char *deferred = myState.defer_area;
 	    size_t len = myState.defer_used;
@@ -5193,13 +5193,15 @@ updateCursor(TScreen *screen)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-reallyStopBlinking(TScreen *screen)
+reallyStopBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->cursor_state == BLINKED_OFF) {
 	/* force cursor to display if it is enabled */
 	screen->cursor_state = !screen->cursor_set;
 	updateCursor(screen);
-	xevents();
+	xevents(xw);
     }
 }
 #endif
@@ -5299,7 +5301,7 @@ in_put(XtermWidget xw)
 	}
 
 	if (select_mask & X_mask) {
-	    xevents();
+	    xevents(xw);
 	    if (VTbuffer->update != update)
 		break;
 	}
@@ -5447,7 +5449,7 @@ in_put(XtermWidget xw)
 	    XdbeSwapInfo swap;
 	    swap.swap_window = VWindow(screen);
 	    swap.swap_action = XdbeCopied;
-	    XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+	    XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
 	    XFlush(XtDisplay(xw));
 	    screen->needSwap = 0;
 	}
@@ -5469,7 +5471,7 @@ in_put(XtermWidget xw)
 	   counts as being readable */
 	if (xtermAppPending() ||
 	    FD_ISSET(ConnectionNumber(screen->display), &select_mask)) {
-	    xevents();
+	    xevents(xw);
 	    if (VTbuffer->update != update)	/* HandleInterpret */
 		break;
 	}
@@ -5479,12 +5481,12 @@ in_put(XtermWidget xw)
 #endif /* VMS */
 
 static IChar
-doinput(void)
+doinput(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     while (!morePtyData(screen, VTbuffer))
-	in_put(term);
+	in_put(xw);
     return nextPtyData(screen, VTbuffer);
 }
 
@@ -5897,31 +5899,35 @@ DoStartBlinking(TScreen *screen)
 }
 
 static void
-SetCursorBlink(TScreen *screen, BlinkOps enable)
+SetCursorBlink(XtermWidget xw, BlinkOps enable)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (SettableCursorBlink(screen)) {
 	screen->cursor_blink = enable;
     }
     if (DoStartBlinking(screen)) {
-	StartBlinking(screen);
+	StartBlinking(xw);
     } else {
 	/* EMPTY */
 #if OPT_BLINK_TEXT
-	reallyStopBlinking(screen);
+	reallyStopBlinking(xw);
 #else
-	StopBlinking(screen);
+	StopBlinking(xw);
 #endif
     }
     update_cursorblink();
 }
 
 void
-ToggleCursorBlink(TScreen *screen)
+ToggleCursorBlink(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->cursor_blink == cbTrue) {
-	SetCursorBlink(screen, cbFalse);
+	SetCursorBlink(xw, cbFalse);
     } else if (screen->cursor_blink == cbFalse) {
-	SetCursorBlink(screen, cbTrue);
+	SetCursorBlink(xw, cbTrue);
     }
 }
 #endif
@@ -6085,7 +6091,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
 	    if (SettableCursorBlink(screen)) {
 		set_bool_mode(screen->cursor_blink_esc);
-		UpdateCursorBlink(screen);
+		UpdateCursorBlink(xw);
 	    }
 	    break;
 	case srm_CURSOR_BLINK_OPS:
@@ -6776,7 +6782,7 @@ restoremodes(XtermWidget xw)
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
 	    if (SettableCursorBlink(screen)) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
-		UpdateCursorBlink(screen);
+		UpdateCursorBlink(xw);
 	    }
 	    break;
 	case srm_CURSOR_BLINK_OPS:
@@ -7860,7 +7866,7 @@ VTRun(XtermWidget xw)
     screen->cursor_set = ON;
 #if OPT_BLINK_CURS
     if (DoStartBlinking(screen))
-	StartBlinking(screen);
+	StartBlinking(xw);
 #endif
 
 #if OPT_TEK4014
@@ -7875,11 +7881,11 @@ VTRun(XtermWidget xw)
     }
 #if OPT_MAXIMIZE
     else if (resource.fullscreen == esTrue || resource.fullscreen == esAlways)
-	FullScreen(term, True);
+	FullScreen(xw, True);
 #endif
     if (!setjmp(VTend))
 	VTparse(xw);
-    StopBlinking(screen);
+    StopBlinking(xw);
     HideCursor();
     screen->cursor_set = OFF;
     TRACE(("... VTRun\n"));
@@ -7899,14 +7905,15 @@ VTExpose(Widget w GCC_UNUSED,
 static void
 VTGraphicsOrNoExpose(XEvent *event)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     if (screen->incopy <= 0) {
 	screen->incopy = 1;
 	if (screen->scrolls > 0)
 	    screen->scrolls--;
     }
     if (event->type == GraphicsExpose)
-	if (HandleExposure(term, event))
+	if (HandleExposure(xw, event))
 	    screen->cursor_state = OFF;
     if ((event->type == NoExpose)
 	|| ((XGraphicsExposeEvent *) event)->count == 0) {
@@ -8066,7 +8073,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
     XSync(screen->display, False);	/* synchronize */
     if (xtermAppPending())
-	xevents();
+	xevents(xw);
 
     TRACE(("...RequestResize done\n"));
 }
@@ -9744,7 +9751,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TScreen *screen = TScreenOf(xw);
     Cardinal n, k;
 
-    StopBlinking(screen);
+    StopBlinking(xw);
 
     if (screen->scrollWidget) {
 	XtUninstallTranslations(screen->scrollWidget);
@@ -10347,7 +10354,7 @@ VTRealize(Widget w,
     xw->hints.y = pos.y;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (term->work.ewmh[0].mode) {
+    if (xw->work.ewmh[0].mode) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
@@ -10639,10 +10646,12 @@ xim_instantiate_cb(Display *display,
 		   XPointer client_data GCC_UNUSED,
 		   XPointer call_data GCC_UNUSED)
 {
+    XtermWidget xw = term;
+
     TRACE(("xim_instantiate_cb client=%p, call=%p\n", client_data, call_data));
 
-    if (display == XtDisplay(term)) {
-	VTInitI18N(term);
+    if (display == XtDisplay(xw)) {
+	VTInitI18N(xw);
     }
 }
 
@@ -11687,8 +11696,10 @@ HideCursor(void)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-StartBlinking(TScreen *screen)
+StartBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->blink_timer == 0) {
 	unsigned long interval = (unsigned long) ((screen->cursor_state == ON)
 						  ? screen->blink_on
@@ -11698,17 +11709,19 @@ StartBlinking(TScreen *screen)
 	screen->blink_timer = XtAppAddTimeOut(app_con,
 					      interval,
 					      HandleBlinking,
-					      screen);
+					      xw);
     }
 }
 
 static void
-StopBlinking(TScreen *screen)
+StopBlinking(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->blink_timer) {
 	XtRemoveTimeOut(screen->blink_timer);
 	screen->blink_timer = 0;
-	reallyStopBlinking(screen);
+	reallyStopBlinking(xw);
     } else {
 	screen->blink_timer = 0;
     }
@@ -11741,7 +11754,8 @@ LineHasBlinking(TScreen *screen, CLineData *ld)
 static void
 HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 {
-    TScreen *screen = (TScreen *) closure;
+    XtermWidget xw = (XtermWidget) closure;
+    TScreen *screen = TScreenOf(xw);
     Bool resume = False;
 
     screen->blink_timer = 0;
@@ -11796,7 +11810,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	 * columns which are updated.
 	 */
 	if (first_row <= last_row) {
-	    ScrnRefresh(term,
+	    ScrnRefresh(xw,
 			first_row,
 			0,
 			last_row + 1 - first_row,
@@ -11810,13 +11824,15 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
      * If either the cursor or text is blinking, restart the timer.
      */
     if (resume)
-	StartBlinking(screen);
+	StartBlinking(xw);
 }
 #endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
 
 void
-RestartBlinking(TScreen *screen GCC_UNUSED)
+RestartBlinking(XtermWidget xw GCC_UNUSED)
 {
+    TScreen *screen = TScreenOf(xw);
+
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
     if (screen->blink_timer == 0) {
 	Bool resume = False;
@@ -11843,7 +11859,7 @@ RestartBlinking(TScreen *screen GCC_UNUSED)
 	}
 #endif
 	if (resume)
-	    StartBlinking(screen);
+	    StartBlinking(xw);
     }
 #endif
 }
@@ -12019,7 +12035,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
 	    if (xtermAppPending())
-		xevents();
+		xevents(xw);
 	}
 
 	CursorSet(screen, 0, 0, xw->flags);
@@ -12351,7 +12367,7 @@ DoSetSelectedFont(Widget w,
 		&& !strchr(used, '\n')
 		&& (test = x_strdup(used)) != 0) {
 		TScreenOf(xw)->SelectFontName() = test;
-		if (!xtermLoadFont(term,
+		if (!xtermLoadFont(xw,
 				   xtermFontName(used),
 				   True,
 				   fontMenu_fontsel)) {
@@ -12363,7 +12379,7 @@ DoSetSelectedFont(Widget w,
 		failed = True;
 	    }
 	    if (failed) {
-		(void) xtermLoadFont(term,
+		(void) xtermLoadFont(xw,
 				     xtermFontName(TScreenOf(xw)->MenuFontName(oldFont)),
 				     True,
 				     oldFont);

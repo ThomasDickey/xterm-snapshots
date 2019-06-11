@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.233 2019/03/21 00:32:54 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.235 2019/06/11 20:07:02 tom Exp $ */
 
 /*
  * Copyright 2001-2018,2019 by Thomas E. Dickey
@@ -714,7 +714,7 @@ Tekparse(TekWidget tw)
 		TekGINoff(tw);
 	    TCursorDown(tw);
 	    if (!tekRefreshList)
-		do_xevents();
+		do_xevents(tw->vt);
 	    break;
 
 	case CASE_SP:
@@ -864,13 +864,13 @@ Tinput(TekWidget tw)
 	    }
 #ifdef VMS
 	    if (Tselect_mask & X_mask) {
-		xevents();
+		xevents(tw->vt);
 		if (VTbuffer->update != update)
 		    goto again;
 	    }
 #else /* VMS */
 	    if (FD_ISSET(ConnectionNumber(XtDisplay(tw)), &Tselect_mask)) {
-		xevents();
+		xevents(tw->vt);
 		if (VTbuffer->update != update)
 		    goto again;
 	    }

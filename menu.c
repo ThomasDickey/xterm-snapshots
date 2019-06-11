@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.355 2019/01/12 02:04:19 tom Exp $ */
+/* $XTermId: menu.c,v 1.356 2019/06/11 20:23:45 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1665,7 +1665,7 @@ do_cursorblink(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    ToggleCursorBlink(TScreenOf(term));
+    ToggleCursorBlink(term);
 }
 #endif
 
