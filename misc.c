@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.873 2019/05/24 08:20:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.876 2019/06/11 09:10:26 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -297,9 +297,9 @@ setXUrgency(XtermWidget xw, Bool enable)
 }
 
 void
-do_xevents(void)
+do_xevents(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     if (xtermAppPending()
 	||
@@ -309,7 +309,7 @@ do_xevents(void)
 	GetBytesAvailable(ConnectionNumber(screen->display)) > 0
 #endif
 	)
-	xevents();
+	xevents(xw);
 }
 
 void
@@ -523,9 +523,8 @@ xtermAppPending(void)
 }
 
 void
-xevents(void)
+xevents(XtermWidget xw)
 {
-    XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
     XEvent event;
     XtInputMask input_mask;
@@ -557,7 +556,7 @@ xevents(void)
     }
 
     /*
-     * If there's no XEvents, don't wait around...
+     * If there are no XEvents, don't wait around...
      */
     if ((input_mask & XtIMXEvent) != XtIMXEvent)
 	return;
@@ -1164,7 +1163,7 @@ Bell(XtermWidget xw, int which, int percent)
 	long now_msecs;
 
 	if (screen->bellInProgress) {
-	    do_xevents();
+	    do_xevents(xw);
 	    if (screen->bellInProgress) {	/* even after new events? */
 		return;
 	    }
@@ -1218,7 +1217,8 @@ flashWindow(TScreen *screen, Window window, GC visualGC, unsigned width, unsigne
 void
 VisualBell(void)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     if (VB_DELAY > 0) {
 	Pixel xorPixel = (T_COLOR(screen, TEXT_FG) ^
@@ -1228,9 +1228,9 @@ VisualBell(void)
 
 	gcval.function = GXxor;
 	gcval.foreground = xorPixel;
-	visualGC = XtGetGC((Widget) term, GCFunction + GCForeground, &gcval);
+	visualGC = XtGetGC((Widget) xw, GCFunction + GCForeground, &gcval);
 #if OPT_TEK4014
-	if (TEK4014_ACTIVE(term)) {
+	if (TEK4014_ACTIVE(xw)) {
 	    TekScreen *tekscr = TekScreenOf(tekWidget);
 	    flashWindow(screen, TWindow(tekscr), visualGC,
 			TFullWidth(tekscr),
@@ -1242,7 +1242,7 @@ VisualBell(void)
 			FullWidth(screen),
 			FullHeight(screen));
 	}
-	XtReleaseGC((Widget) term, visualGC);
+	XtReleaseGC((Widget) xw, visualGC);
     }
 }
 
@@ -1737,7 +1737,8 @@ HandleRestoreSize(Widget w,
 void
 Redraw(void)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     XExposeEvent event;
 
     TRACE(("Redraw\n"));
@@ -1750,18 +1751,18 @@ Redraw(void)
 
     if (VWindow(screen)) {
 	event.window = VWindow(screen);
-	event.width = term->core.width;
-	event.height = term->core.height;
-	(*term->core.widget_class->core_class.expose) ((Widget) term,
-						       (XEvent *) &event,
-						       NULL);
+	event.width = xw->core.width;
+	event.height = xw->core.height;
+	(*xw->core.widget_class->core_class.expose) ((Widget) xw,
+						     (XEvent *) &event,
+						     NULL);
 	if (ScrollbarWidth(screen)) {
 	    (screen->scrollWidget->core.widget_class->core_class.expose)
 		(screen->scrollWidget, (XEvent *) &event, NULL);
 	}
     }
 #if OPT_TEK4014
-    if (TEK4014_SHOWN(term)) {
+    if (TEK4014_SHOWN(xw)) {
 	TekScreen *tekscr = TekScreenOf(tekWidget);
 	event.window = TWindow(tekscr);
 	event.width = tekWidget->core.width;
@@ -1793,6 +1794,38 @@ timestamp_filename(char *dst, const char *src)
 	    tstruct->tm_hour,
 	    tstruct->tm_min,
 	    tstruct->tm_sec);
+}
+
+FILE *
+create_printfile(XtermWidget xw, const char *suffix)
+{
+    TScreen *screen = TScreenOf(xw);
+    char fname[1024];
+    int fd;
+    FILE *fp;
+
+#ifdef VMS
+    sprintf(fname, "sys$scratch:xterm%s", suffix);
+#elif defined(HAVE_STRFTIME)
+    {
+	char format[1024];
+	time_t now;
+	struct tm *ltm;
+
+	now = time((time_t *) 0);
+	ltm = localtime(&now);
+
+	sprintf(format, "xterm%s%s", FMT_TIMESTAMP, suffix);
+	if (strftime(fname, sizeof fname, format, ltm) == 0) {
+	    sprintf(fname, "xterm%s", suffix);
+	}
+    }
+#else
+    sprintf(fname, "xterm%s", suffix);
+#endif
+    fd = open_userfile(screen->uid, screen->gid, fname, False);
+    fp = fdopen(fd, "wb");
+    return fp;
 }
 
 int
@@ -5683,7 +5716,7 @@ NormalExit(void)
     if (hold_screen) {
 	hold_screen = 2;
 	while (hold_screen) {
-	    xevents();
+	    xevents(term);
 	    Sleep(EVENT_DELAY);
 	}
     }
@@ -6062,10 +6095,12 @@ set_vt_visibility(Bool on)
 void
 set_tek_visibility(Bool on)
 {
+    XtermWidget xw = term;
+
     TRACE(("set_tek_visibility(%d)\n", on));
 
     if (on) {
-	if (!TEK4014_SHOWN(term)) {
+	if (!TEK4014_SHOWN(xw)) {
 	    if (tekWidget == 0) {
 		TekInit();	/* will exit on failure */
 	    }
@@ -6084,15 +6119,15 @@ set_tek_visibility(Bool on)
 		(void) XSetWMProtocols(XtDisplay(tekParent),
 				       XtWindow(tekParent),
 				       &wm_delete_window, 1);
-		TEK4014_SHOWN(term) = True;
+		TEK4014_SHOWN(xw) = True;
 	    }
 	}
     } else {
-	if (TEK4014_SHOWN(term) && tekWidget) {
+	if (TEK4014_SHOWN(xw) && tekWidget) {
 	    withdraw_window(XtDisplay(tekWidget),
 			    TShellWindow,
 			    XScreenNumberOfScreen(XtScreen(tekWidget)));
-	    TEK4014_SHOWN(term) = False;
+	    TEK4014_SHOWN(xw) = False;
 	}
     }
     set_tekhide_sensitivity();

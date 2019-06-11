@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.203 2018/07/17 20:39:03 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.205 2019/06/11 20:43:28 tom Exp $ */
 
 /*
- * Copyright 2000-2017,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -234,7 +234,7 @@ DoResizeScreen(XtermWidget xw)
 #endif
     XSync(screen->display, False);	/* synchronize */
     if (xtermAppPending())
-	xevents();
+	xevents(xw);
 
 #ifndef NO_ACTIVE_ICON
     WhichVWin(screen) = saveWin;
@@ -409,7 +409,7 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-	    RestartBlinking(screen);
+	    RestartBlinking(xw);
 #endif
 	}
     }
