@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1658 2019/06/11 20:45:28 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1659 2019/06/12 01:23:03 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1173,6 +1173,16 @@ setItalicFont(XtermWidget xw, Bool enable)
 	xtermUpdateFontGCs(xw, False);
     }
 }
+
+static void
+ResetItalics(XtermWidget xw)
+{
+    setItalicFont(xw, False);
+    UIntClr(xw->flags, ATR_ITALIC);
+}
+
+#else
+#define ResetItalics(xw)	/* nothing */
 #endif
 
 static void
@@ -3188,9 +3198,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case DEFAULT:
 		    /* FALLTHRU */
 		case 0:
-#if OPT_WIDE_ATTRS
-		    setItalicFont(xw, False);
-#endif
+		    ResetItalics(xw);
 		    UIntClr(xw->flags,
 			    (SGR_MASK | SGR_MASK2 | INVISIBLE));
 		    if_OPT_ISO_COLORS(screen, {
@@ -3263,8 +3271,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #if OPT_WIDE_ATTRS
 		case 23:	/* not italicized */
-		    setItalicFont(xw, False);
-		    UIntClr(xw->flags, ATR_ITALIC);
+		    ResetItalics(xw);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -12002,10 +12009,12 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	FromAlternate(xw);
 	ClearScreen(xw);
 	screen->cursor_state = OFF;
+
 	if (xw->flags & REVERSE_VIDEO)
 	    ReverseVideo(xw);
-
+	ResetItalics(xw);
 	xw->flags = xw->initflags;
+
 	update_reversevideo();
 	update_autowrap();
 	update_reversewrap();
@@ -12049,6 +12058,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
 	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP);
 	bitclr(&xw->flags, INSERT | INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
+	ResetItalics(xw);
 	if_OPT_ISO_COLORS(screen, {
 	    reset_SGR_Colors(xw);
 	});
