@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.958 2019/05/24 08:19:28 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.959 2019/06/12 08:35:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2597,6 +2597,7 @@ typedef struct {
 #endif
 
 #if OPT_VT52_MODE
+	IFlags		vt52_save_flags;
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;

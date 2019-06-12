@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.787 2019/05/27 16:23:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.788 2019/06/12 22:16:29 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -283,10 +283,8 @@ Because \fI\*n\fP uses the X Toolkit library,
 it accepts the standard X Toolkit command line options.
 \fI\*N\fP also accepts many application-specific options.
 .PP
-By convention, if an option begins with a
-.RB \*(`` + \*(''
-instead of a
-.RB \*(`` \- \*('',
+By convention, if an option begins with a \*(``\fB+\fP\*(''
+instead of a \*(``\fB\-\fP\*('',
 the option is restored to its default value.
 .\" ***************************************************************************
 .PP
@@ -2650,11 +2648,11 @@ to be used as brighter versions.
 These specify the colors for the ISO-6429 extension if the bold attribute
 is also enabled.
 The default resource values are respectively,
-gray30,
+gray50,
 red,
 green,
 yellow,
-a customizable light blue,
+a customized light blue,
 magenta,
 cyan,
 and
@@ -2667,8 +2665,13 @@ through
 .B "color255\fP (class\fB Color255\fP)"
 These specify the colors for the 256-color extension.
 The default resource values
-are for colors 16 through 231 to make a 6x6x6 color cube, and colors
-232 through 255 to make a grayscale ramp.
+are for
+.RS
+.bP
+colors 16 through 231 to make a 6x6x6 color cube, and
+.bP
+colors 232 through 255 to make a grayscale ramp.
+.RE
 .IP
 Resources past \fBcolor15\fP are available as a compile-time option.
 Due to a hardcoded limit in the X libraries on the total number of
@@ -3727,7 +3730,7 @@ See \fBfastScroll\fP for a variation.
 .TP 8
 .B "keepClipboard\fP (class\fB KeepClipboard\fP)"
 Specifies whether \fI\*n\fR will reuse the selection data which it
-copied to the keyboard rather than asking the clipboard for its
+copied to the clipboard rather than asking the clipboard for its
 current contents when told to provide the selection.
 The default is \*(``false\*(''.
 .IP

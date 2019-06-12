@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.356 2019/06/11 20:23:45 tom Exp $ */
+/* $XTermId: menu.c,v 1.357 2019/06/12 21:30:29 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1006,6 +1006,18 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 	kill_process_group(screen->pid, sig);
 #endif
 }
+
+#if OPT_VT52_MODE
+static void
+DisableIfVT52(MenuEntry * menu, int which)
+{
+    Widget mi = menu[which].widget;
+    SetItemSensitivity(mi, TScreenOf(term)->vtXX_level != 0);
+}
+
+#else
+#define DisableIfVT52(which,val)	/* nothing */
+#endif
 
 static void
 UpdateMenuItem(
@@ -3540,6 +3552,8 @@ update_reversevideo(void)
 void
 update_autowrap(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_autowrap);
     UpdateCheckbox("update_autowrap",
 		   vtMenuEntries,
 		   vtMenu_autowrap,
@@ -3549,6 +3563,8 @@ update_autowrap(void)
 void
 update_reversewrap(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_reversewrap);
     UpdateCheckbox("update_reversewrap",
 		   vtMenuEntries,
 		   vtMenu_reversewrap,
@@ -3558,6 +3574,8 @@ update_reversewrap(void)
 void
 update_autolinefeed(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_autolinefeed);
     UpdateCheckbox("update_autolinefeed",
 		   vtMenuEntries,
 		   vtMenu_autolinefeed,
@@ -3567,6 +3585,8 @@ update_autolinefeed(void)
 void
 update_appcursor(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_appcursor);
     UpdateCheckbox("update_appcursor",
 		   vtMenuEntries,
 		   vtMenu_appcursor,
@@ -3621,6 +3641,8 @@ update_selectToClipboard(void)
 void
 update_allow132(void)
 {
+    DisableIfVT52(vtMenuEntries,
+		  vtMenu_allow132);
     UpdateCheckbox("update_allow132",
 		   vtMenuEntries,
 		   vtMenu_allow132,
