@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2052 2019/06/12 01:26:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.2054 2019/06/12 22:20:07 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -982,6 +982,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>documentation errata (report by Thomas Wolff).</li>
+
+    <li>reset flags including wraparound and reverse-wrap when
+    switching to VT52 mode, while noting that DEC's standard
+    documention leaves that behavior <em>undefined</em> (report by
+    Thomas Wolff).</li>
+
     <li>ensure that italic font is turned off on hard/soft resets
     (report by Martin Hostettler).</li>
 

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1659 2019/06/12 01:23:03 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1662 2019/06/12 21:36:20 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2202,6 +2202,19 @@ deferparsing(unsigned c, struct ParseState *sp)
     sp->defer_area[(sp->defer_used)++] = CharOf(c);
 }
 
+#if OPT_VT52_MODE
+static void
+update_vt52_vt100_settings(void)
+{
+    update_autowrap();
+    update_reversewrap();
+    update_autolinefeed();
+    update_appcursor();
+    update_appkeypad();
+    update_allow132();
+}
+#endif
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -3872,10 +3885,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * DECSCL (per vttest).
 		 */
 		screen->vtXX_level = 1;
+		xw->flags = screen->vt52_save_flags;
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
 		screen->curss = screen->vt52_save_curss;
 		restoreCharsets(screen, screen->vt52_save_gsets);
+		update_vt52_vt100_settings();
 	    }
 	    break;
 #endif
@@ -6026,13 +6041,28 @@ dpmodes(XtermWidget xw, BitFunc func)
 		TRACE(("DECANM terminal_id %d, vtXX_level %d\n",
 		       screen->terminal_id,
 		       screen->vtXX_level));
+		/*
+		 * According to DEC STD 070 section A.5.5, the various VT100
+		 * modes have undefined behavior when entering/exiting VT52
+		 * mode.  xterm saves/restores/initializes the most commonly
+		 * used settings, but a real VT100 or VT520 may differ.
+		 *
+		 * For instance, DEC's documention goes on to comment that
+		 * while the VT52 uses hardware tabs (8 columns), the emulation
+		 * (e.g., a VT420) does not alter those tab settings when
+		 * switching modes.
+		 */
 		screen->vtXX_level = 0;
+		screen->vt52_save_flags = xw->flags;
+		xw->flags = 0;
 		screen->vt52_save_curgl = screen->curgl;
 		screen->vt52_save_curgr = screen->curgr;
 		screen->vt52_save_curss = screen->curss;
 		saveCharsets(screen, screen->vt52_save_gsets);
 		resetCharsets(screen);
 		InitParams();	/* ignore the remaining params, if any */
+		update_vt52_vt100_settings();
+		RequestResize(xw, -1, 80, True);
 	    }
 #endif
 	    break;
