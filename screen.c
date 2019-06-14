@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.570 2018/12/24 02:04:07 Martin.Hostettler Exp $ */
+/* $XTermId: screen.c,v 1.572 2019/06/14 23:37:47 tom Exp $ */
 
 /*
  * Copyright 1999-2017,2018 by Thomas E. Dickey
@@ -1691,18 +1691,22 @@ ScrnRefresh(XtermWidget xw,
 	lastind = col;
 
 	for (; col <= maxcol; col++) {
-	    if ((attrs[col] != flags)
-		|| (hilite && (col > hi_col))
+	    if (
+#if OPT_WIDE_CHARS
+		   (chars[col] != HIDDEN_CHAR) &&
+#endif
+		   ((attrs[col] != flags)
+		    || (hilite && (col > hi_col))
 #if OPT_ISO_COLORS
-		|| ((flags & FG_COLOR)
-		    && (extract_fg(xw, ColorOf(col), attrs[col]) != fg))
-		|| ((flags & BG_COLOR)
-		    && (extract_bg(xw, ColorOf(col), attrs[col]) != bg))
+		    || ((flags & FG_COLOR)
+			&& (extract_fg(xw, ColorOf(col), attrs[col]) != fg))
+		    || ((flags & BG_COLOR)
+			&& (extract_bg(xw, ColorOf(col), attrs[col]) != bg))
 #endif
 #if OPT_WIDE_CHARS
-		|| (isWide((int) chars[col]) != wideness
-		    && chars[col] != HIDDEN_CHAR)
+		    || (isWide((int) chars[col]) != wideness)
 #endif
+		   )
 		) {
 		assert(col >= lastind);
 		TRACE(("ScrnRefresh looping drawXtermText %d..%d:%s\n",
@@ -2334,11 +2338,11 @@ non_blank_line(TScreen *screen,
 #define maxRectCol(screen) (getMaxCol(screen) + 1)
 
 static int
-limitedParseRow(XtermWidget xw, int row)
+limitedParseRow(XtermWidget xw, int row, int err)
 {
     TScreen *screen = TScreenOf(xw);
     int min_row = minRectRow(screen);
-    int max_row = maxRectRow(screen);
+    int max_row = maxRectRow(screen) + err;
 
     if (xw->flags & ORIGIN)
 	row += screen->top_marg;
@@ -2352,11 +2356,11 @@ limitedParseRow(XtermWidget xw, int row)
 }
 
 static int
-limitedParseCol(XtermWidget xw, int col)
+limitedParseCol(XtermWidget xw, int col, int err)
 {
     TScreen *screen = TScreenOf(xw);
     int min_col = minRectCol(screen);
-    int max_col = maxRectCol(screen);
+    int max_col = maxRectCol(screen) + err;
 
     if (xw->flags & ORIGIN)
 	col += screen->lft_marg;
@@ -2369,8 +2373,8 @@ limitedParseCol(XtermWidget xw, int col)
     return col;
 }
 
-#define LimitedParse(num, func, dft) \
-	func(xw, (nparams > num && params[num] > 0) ? params[num] : dft)
+#define LimitedParse(num, func, dft, err) \
+	func(xw, (nparams > num && params[num] > 0) ? params[num] : dft, err)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as
@@ -2382,10 +2386,10 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect *target)
     TScreen *screen = TScreenOf(xw);
 
     memset(target, 0, sizeof(*target));
-    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen));
-    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen));
-    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen));
-    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen));
+    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen), 1);
+    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen), 1);
+    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen), 0);
+    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen), 0);
     TRACE(("parsed rectangle %d,%d %d,%d\n",
 	   target->top,
 	   target->left,
@@ -2397,17 +2401,19 @@ static Bool
 validRect(XtermWidget xw, XTermRect *target)
 {
     TScreen *screen = TScreenOf(xw);
+    Bool result = (target != 0
+		   && target->top >= minRectRow(screen)
+		   && target->left >= minRectCol(screen)
+		   && target->top <= target->bottom
+		   && target->left <= target->right
+		   && target->top <= maxRectRow(screen)
+		   && target->right <= maxRectCol(screen));
 
-    TRACE(("comparing against screensize %dx%d\n",
+    TRACE(("comparing against screensize %dx%d, is%s valid\n",
 	   maxRectRow(screen),
-	   maxRectCol(screen)));
-    return (target != 0
-	    && target->top >= minRectRow(screen)
-	    && target->left >= minRectCol(screen)
-	    && target->top <= target->bottom
-	    && target->left <= target->right
-	    && target->top <= maxRectRow(screen)
-	    && target->right <= maxRectCol(screen));
+	   maxRectCol(screen),
+	   result ? "" : " NOT"));
+    return result;
 }
 
 /*
