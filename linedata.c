@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.91 2018/04/02 00:27:27 tom Exp $ */
+/* $XTermId: linedata.c,v 1.94 2019/06/15 01:11:00 tom Exp $ */
 
 /*
- * Copyright 2009-2017,2018 by Thomas E. Dickey
+ * Copyright 2009-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -226,23 +226,34 @@ saveCellData(TScreen *screen,
 	     CellData *data,
 	     Cardinal cell,
 	     CLineData *ld,
+	     XTermRect *limits,
 	     int column)
 {
     CellData *item = CellDataAddr(screen, data, cell);
 
+    (void) limits;
     if (column < MaxCols(screen)) {
 	item->attribs = ld->attribs[column];
-#if OPT_ISO_COLORS
-	item->color = ld->color[column];
-#endif
+	if_OPT_ISO_COLORS(screen, {
+	    item->color = ld->color[column];
+	});
 	item->charData = ld->charData[column];
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
-	    item->combSize = ld->combSize;
-	    for_each_combData(off, ld) {
+	    Bool blank = (((item->charData == HIDDEN_CHAR)
+			   && column == limits->left)
+			  || (item->charData != HIDDEN_CHAR
+			      && WideCells(item->charData) > 1
+			      && column + 1 >= limits->right));
+	    if (blank) {
+		item->charData = ' ';
+	    }
+	    item->combSize = blank ? 0 : ld->combSize;
+	    for_each_combData(off, item) {
 		item->combData[off] = ld->combData[off][column];
 	    }
 	})
+	    TRACE2(("SAVED::%s\n", visibleIChars(ld->charData, ld->lineSize)));
     }
 }
 
@@ -251,15 +262,18 @@ restoreCellData(TScreen *screen,
 		const CellData *data,
 		Cardinal cell,
 		LineData *ld,
+		XTermRect *limits,
 		int column)
 {
     const CellData *item = ConstCellDataAddr(screen, data, cell);
 
+    (void) limits;
     if (column < MaxCols(screen)) {
 	ld->attribs[column] = item->attribs;
-#if OPT_ISO_COLORS
-	ld->color[column] = item->color;
-#endif
+	TRACE2(("BEFORE:%s\n", visibleIChars(ld->charData, ld->lineSize)));
+	if_OPT_ISO_COLORS(screen, {
+	    ld->color[column] = item->color;
+	});
 	ld->charData[column] = item->charData;
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
@@ -268,5 +282,6 @@ restoreCellData(TScreen *screen,
 		ld->combData[off][column] = item->combData[off];
 	    }
 	})
+	    TRACE2(("AFTER::%s\n", visibleIChars(ld->charData, ld->lineSize)));
     }
 }

@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.572 2019/06/14 23:37:47 tom Exp $ */
+/* $XTermId: screen.c,v 1.573 2019/06/15 00:35:13 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2560,7 +2560,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 			k = (Cardinal) (col - (source->left - 1));
 			saveCellData(screen, cells,
 				     (j * wide) + k,
-				     ld, col);
+				     ld, source, col);
 		    }
 		}
 		for (row = target.top - 1; row < target.bottom; ++row) {
@@ -2577,7 +2577,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 			    if (j < high && k < wide) {
 				restoreCellData(screen, cells,
 						(j * wide) + k,
-						ld, col);
+						ld, &target, col);
 			    } else {
 				/* EMPTY */
 				/* FIXME - clear the target cell? */
