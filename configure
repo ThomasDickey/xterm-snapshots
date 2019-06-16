@@ -22564,8 +22564,9 @@ rm -f conftest.$ac_objext conftest.$ac_ext
 echo "${ECHO_T}$CLANG_COMPILER" >&6
 fi
 
+if test "x$have_x" = xyes; then
 cat >conftest.$ac_ext <<_ACEOF
-#line 22568 "configure"
+#line 22569 "configure"
 #include "confdefs.h"
 
 #include <stdlib.h>
@@ -22580,26 +22581,26 @@ String foo = malloc(1)
 }
 _ACEOF
 rm -f conftest.$ac_objext
-if { (eval echo "$as_me:22583: \"$ac_compile\"") >&5
+if { (eval echo "$as_me:22584: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:22586: \$? = $ac_status" >&5
+  echo "$as_me:22587: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:22589: \"$ac_try\"") >&5
+  { (eval echo "$as_me:22590: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:22592: \$? = $ac_status" >&5
+  echo "$as_me:22593: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-echo "$as_me:22595: checking for X11/Xt const-feature" >&5
+echo "$as_me:22596: checking for X11/Xt const-feature" >&5
 echo $ECHO_N "checking for X11/Xt const-feature... $ECHO_C" >&6
 if test "${cf_cv_const_x_string+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
 	cat >conftest.$ac_ext <<_ACEOF
-#line 22602 "configure"
+#line 22603 "configure"
 #include "confdefs.h"
 
 #define _CONST_X_STRING	/* X11R7.8 (perhaps) */
@@ -22616,16 +22617,16 @@ String foo = malloc(1); *foo = 0
 }
 _ACEOF
 rm -f conftest.$ac_objext
-if { (eval echo "$as_me:22619: \"$ac_compile\"") >&5
+if { (eval echo "$as_me:22620: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:22622: \$? = $ac_status" >&5
+  echo "$as_me:22623: \$? = $ac_status" >&5
   (exit $ac_status); } &&
          { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:22625: \"$ac_try\"") >&5
+  { (eval echo "$as_me:22626: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:22628: \$? = $ac_status" >&5
+  echo "$as_me:22629: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
 			cf_cv_const_x_string=no
@@ -22640,7 +22641,7 @@ fi
 rm -f conftest.$ac_objext conftest.$ac_ext
 
 fi
-echo "$as_me:22643: result: $cf_cv_const_x_string" >&5
+echo "$as_me:22644: result: $cf_cv_const_x_string" >&5
 echo "${ECHO_T}$cf_cv_const_x_string" >&6
 
 case $cf_cv_const_x_string in
@@ -22663,12 +22664,11 @@ else
 cat conftest.$ac_ext >&5
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
-
+ fi
 cat > conftest.$ac_ext <<EOF
-#line 22668 "${as_me:-configure}"
+#line 22669 "${as_me:-configure}"
 int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
 EOF
-
 if test "$INTEL_COMPILER" = yes
 then
 # The "-wdXXX" options suppress warnings:

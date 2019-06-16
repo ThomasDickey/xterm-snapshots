@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1662 2019/06/12 21:36:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1663 2019/06/12 21:36:20 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -11868,9 +11868,9 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 void
 RestartBlinking(XtermWidget xw GCC_UNUSED)
 {
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
     TScreen *screen = TScreenOf(xw);
 
-#if OPT_BLINK_CURS || OPT_BLINK_TEXT
     if (screen->blink_timer == 0) {
 	Bool resume = False;
 

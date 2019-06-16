@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.876 2019/06/11 09:10:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.877 2019/06/15 00:37:15 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -6795,7 +6795,7 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 	for (col = value->left - 1; col < value->right; ++col) {
 	    if (first) {
 		first = False;
-		saveCellData(screen, &working, 0, ld, col);
+		saveCellData(screen, &working, 0, ld, NULL, col);
 	    }
 	    working.attribs &= ld->attribs[col];
 #if OPT_ISO_COLORS

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.829 2019/06/11 20:43:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.830 2019/06/15 00:34:47 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1026,8 +1026,8 @@ extern void copyLineData(LineData * /* dst */, CLineData * /* src */);
 extern void initLineData(XtermWidget /* xw */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
-extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, int /* column */);
-extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
+extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, XTermRect * /* limits */, int /* column */);
+extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, XTermRect * /* limits */, int /* column */);
 
 /* main.c */
 #define ENVP_ARG /**/

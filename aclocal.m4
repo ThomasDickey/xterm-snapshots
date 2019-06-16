@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.431 2019/04/08 21:50:29 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.432 2019/06/16 13:45:01 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1104,14 +1104,11 @@ AC_DEFUN([CF_GCC_WARNINGS],
 AC_REQUIRE([CF_GCC_VERSION])
 CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
-
-CF_CONST_X_STRING
-
+if test "x$have_x" = xyes; then CF_CONST_X_STRING fi
 cat > conftest.$ac_ext <<EOF
 #line __oline__ "${as_me:-configure}"
 int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == 0) ; }
 EOF
-
 if test "$INTEL_COMPILER" = yes
 then
 # The "-wdXXX" options suppress warnings:
