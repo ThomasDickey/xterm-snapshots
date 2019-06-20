@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1663 2019/06/12 21:36:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1664 2019/06/19 23:22:04 Mike.Thornburg Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -11486,7 +11486,7 @@ ShowCursor(void)
 	     */
 	    screen->box->x = (short) x;
 	    screen->box->y = (short) y;
-	    XDrawLines(screen->display, VWindow(screen), outlineGC,
+	    XDrawLines(screen->display, VDrawable(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
 #if OPT_WIDE_ATTRS
