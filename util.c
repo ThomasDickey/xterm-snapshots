@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.788 2019/05/27 18:10:06 tom Exp $ */
+/* $XTermId: util.c,v 1.789 2019/06/19 23:22:04 Mike.Thornburg Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3056,6 +3056,9 @@ xtermXftDrawString(XtermWidget xw,
 	ncells = (int) len;
 #endif
     }
+#if OPT_DOUBLE_BUFFER
+    screen->needSwap = 1;
+#endif
     return ncells;
 }
 #define xtermXftWidth(xw, attr_flags, color, font, x, y, chars, len) \
