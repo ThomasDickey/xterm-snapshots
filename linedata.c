@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.94 2019/06/15 01:11:00 tom Exp $ */
+/* $XTermId: linedata.c,v 1.95 2019/06/21 08:32:19 tom Exp $ */
 
 /*
  * Copyright 2009-2018,2019 by Thomas E. Dickey
@@ -241,10 +241,12 @@ saveCellData(TScreen *screen,
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    Bool blank = (((item->charData == HIDDEN_CHAR)
-			   && column == limits->left)
+			   && (limits == NULL
+			       || (column + 1) == limits->left))
 			  || (item->charData != HIDDEN_CHAR
 			      && WideCells(item->charData) > 1
-			      && column + 1 >= limits->right));
+			      && (limits == NULL
+				  || (column + 1) >= limits->right)));
 	    if (blank) {
 		item->charData = ' ';
 	    }
@@ -252,8 +254,8 @@ saveCellData(TScreen *screen,
 	    for_each_combData(off, item) {
 		item->combData[off] = ld->combData[off][column];
 	    }
-	})
-	    TRACE2(("SAVED::%s\n", visibleIChars(ld->charData, ld->lineSize)));
+	});
+	TRACE2(("SAVED::%s\n", visibleIChars(&(item->charData), 1)));
     }
 }
 
@@ -270,7 +272,7 @@ restoreCellData(TScreen *screen,
     (void) limits;
     if (column < MaxCols(screen)) {
 	ld->attribs[column] = item->attribs;
-	TRACE2(("BEFORE:%s\n", visibleIChars(ld->charData, ld->lineSize)));
+	TRACE2(("BEFORE:%2d:%s\n", column + 1, visibleIChars(ld->charData, ld->lineSize)));
 	if_OPT_ISO_COLORS(screen, {
 	    ld->color[column] = item->color;
 	});
@@ -281,7 +283,7 @@ restoreCellData(TScreen *screen,
 	    for_each_combData(off, ld) {
 		ld->combData[off][column] = item->combData[off];
 	    }
-	})
-	    TRACE2(("AFTER::%s\n", visibleIChars(ld->charData, ld->lineSize)));
+	});
+	TRACE2(("AFTER::%2d:%s\n", column + 1, visibleIChars(ld->charData, ld->lineSize)));
     }
 }
