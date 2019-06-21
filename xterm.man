@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.788 2019/06/12 22:16:29 tom Exp $
+.\" $XTermId: xterm.man,v 1.789 2019/06/20 23:29:40 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -1567,6 +1567,13 @@ c l l c c.
 ^H	true	false	0	^H
 ^H	true	true	1	^H
 .TE
+.TP 8
+.B "buffered\fP (class\fB Buffered\fP)"
+When \fI\*n\fP is built with double-buffer support,
+this resource can be used to turn it off.
+The default is
+\*(``true\*(''
+which turns double-buffering on.
 .TP 8
 .B "fullscreen\fP (class\fB Fullscreen\fP)"
 Specifies whether or not \fI\*n\fP should ask the window manager to

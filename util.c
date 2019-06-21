@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.789 2019/06/19 23:22:04 Mike.Thornburg Exp $ */
+/* $XTermId: util.c,v 1.792 2019/06/21 00:00:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2040,12 +2040,14 @@ do_ti_xtra_scroll(XtermWidget xw)
 static void
 CopyWait(XtermWidget xw)
 {
-#if OPT_DOUBLE_BUFFER
-    (void) xw;
-#else /* !OPT_DOUBLE_BUFFER */
     TScreen *screen = TScreenOf(xw);
     XEvent reply;
     XEvent *rep = &reply;
+
+#if OPT_DOUBLE_BUFFER
+    if (resource.buffered)
+	return;
+#endif
 
     for (;;) {
 	XWindowEvent(screen->display, VWindow(screen), ExposureMask, &reply);
@@ -2076,7 +2078,6 @@ CopyWait(XtermWidget xw)
 	    break;
 	}
     }
-#endif /* OPT_DOUBLE_BUFFER */
 }
 
 /*
@@ -2309,13 +2310,14 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	    if ((ww > 0) && (x < hmark2)) {
 		int w2 = (xx <= hmark2) ? (xx - x) : (hmark2 - x);
 #if OPT_DOUBLE_BUFFER
-		XFillRectangle(screen->display, draw,
-			       FillerGC(xw, screen),
-			       x, y, (unsigned) w2, (unsigned) h2);
-#else
-		XClearArea(screen->display, VWindow(screen),
-			   x, y, (unsigned) w2, (unsigned) h2, False);
+		if (resource.buffered) {
+		    XFillRectangle(screen->display, draw,
+				   FillerGC(xw, screen),
+				   x, y, (unsigned) w2, (unsigned) h2);
+		} else
 #endif
+		    XClearArea(screen->display, VWindow(screen),
+			       x, y, (unsigned) w2, (unsigned) h2, False);
 		x += w2;
 		ww -= w2;
 	    }
@@ -2331,11 +2333,15 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	}
     } else {
 #if OPT_DOUBLE_BUFFER
-	gc = FillerGC(xw, screen);
-	XFillRectangle(screen->display, draw, gc, x, y, width, height);
-#else
-	XClearArea(screen->display, VWindow(screen), x, y, width, height, False);
+	if (resource.buffered) {
+	    gc = FillerGC(xw, screen);
+	    XFillRectangle(screen->display, draw, gc,
+			   x, y, width, height);
+	} else
 #endif
+	    XClearArea(screen->display,
+		       VWindow(screen),
+		       x, y, width, height, False);
     }
 }
 
@@ -3055,10 +3061,10 @@ xtermXftDrawString(XtermWidget xw,
 	}
 	ncells = (int) len;
 #endif
-    }
 #if OPT_DOUBLE_BUFFER
-    screen->needSwap = 1;
+	screen->needSwap = 1;
 #endif
+    }
     return ncells;
 }
 #define xtermXftWidth(xw, attr_flags, color, font, x, y, chars, len) \
@@ -5274,7 +5280,11 @@ VDrawable(TScreen *screen)
 void
 discardRenderDraw(TScreen *screen)
 {
-    if (screen->renderDraw) {
+    if (
+#if OPT_DOUBLE_BUFFER
+	   resource.buffered &&
+#endif
+	   screen->renderDraw) {
 	XftDrawDestroy(screen->renderDraw);
 	screen->renderDraw = NULL;
     }

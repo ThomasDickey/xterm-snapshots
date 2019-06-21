@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.847 2019/04/24 08:53:47 tom Exp $ */
+/* $XTermId: main.c,v 1.849 2019/06/20 23:47:32 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -951,6 +951,9 @@ static XtResource application_resources[] =
 #if OPT_MAXIMIZE
     Bres(XtNmaximized, XtCMaximized, maximized, False),
     Sres(XtNfullscreen, XtCFullscreen, fullscreen_s, "off"),
+#endif
+#if OPT_DOUBLE_BUFFER
+    Bres(XtNbuffered, XtCBuffered, buffered, True),
 #endif
 };
 

@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.108 2018/12/15 19:18:08 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.109 2019/06/20 23:02:13 tom Exp $ */
 
 /*
- * Copyright 2014-2017,2018 by Ross Combs
+ * Copyright 2014-2018,2019 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -7483,16 +7483,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		prev_tv = curr_tv;
 		iterations = 0U;
 		refresh_modified_displayed_graphics(xw);
-#if OPT_DOUBLE_BUFFER
-		{
-		    XdbeSwapInfo swap;
-
-		    swap.swap_window = VWindow(screen);
-		    swap.swap_action = XdbeCopied;
-		    XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
-		    XFlush(XtDisplay(xw));
-		}
-#endif
+		xtermFlushDbe(xw);
 	    }
 
 	    continue;
