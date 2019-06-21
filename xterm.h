@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.830 2019/06/15 00:34:47 tom Exp $ */
+/* $XTermId: xterm.h,v 1.831 2019/06/20 22:52:33 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -412,6 +412,7 @@ extern char **environ;
 #define XtNbrokenLinuxOSC	"brokenLinuxOSC"
 #define XtNbrokenSelections	"brokenSelections"
 #define XtNbrokenStringTerm	"brokenStringTerm"
+#define XtNbuffered		"buffered"
 #define XtNc132			"c132"
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcdXtraScroll		"cdXtraScroll"
@@ -616,6 +617,7 @@ extern char **environ;
 #define XtCBrokenLinuxOSC	"BrokenLinuxOSC"
 #define XtCBrokenSelections	"BrokenSelections"
 #define XtCBrokenStringTerm	"BrokenStringTerm"
+#define XtCBuffered		"Buffered"
 #define XtCC132			"C132"
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCdXtraScroll		"CdXtraScroll"
@@ -1154,6 +1156,12 @@ extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 #if OPT_DIRECT_COLOR
 extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
 #endif /* OPT_DIRECT_COLOR */
+
+#if OPT_DOUBLE_BUFFER
+extern void xtermFlushDbe(XtermWidget /* xw */);
+#else
+#define xtermFlushDbe(xw)	/* nothing */
+#endif /* OPT_DOUBLE_BUFFER */
 
 #if OPT_EXEC_XTERM
 extern char *ProcGetCWD(pid_t /* pid */);

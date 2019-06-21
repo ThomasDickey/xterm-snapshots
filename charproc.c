@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1664 2019/06/19 23:22:04 Mike.Thornburg Exp $ */
+/* $XTermId: charproc.c,v 1.1666 2019/06/20 23:21:49 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5378,20 +5378,14 @@ in_put(XtermWidget xw)
 		break;
 	    }
 #if OPT_DOUBLE_BUFFER
-	    if (should_wait) {
+	    if (resource.buffered && should_wait) {
 		/* wait 25 msec for potential extra data (avoids some bogus flickering) */
 		/* that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :) */
 		usleep(25000);
 		should_wait = 0;
 	    }
-	    select_timeout.tv_sec = 0;
-	    i = Select(max_plus1, &select_mask, &write_mask, 0,
-		       &select_timeout);
-	    if (i > 0 && FD_ISSET(screen->respond, &select_mask))
-		continue;
-	    else
-		break;
-#elif defined(HAVE_SCHED_YIELD)
+#endif
+#if defined(HAVE_SCHED_YIELD)
 	    /*
 	     * If we've read a full (small/fragment) buffer, let the operating
 	     * system have a turn, and we'll resume reading until we've either
@@ -5466,16 +5460,7 @@ in_put(XtermWidget xw)
 	}
 	if (need_cleanup)
 	    NormalExit();
-#if OPT_DOUBLE_BUFFER
-	if (screen->needSwap) {
-	    XdbeSwapInfo swap;
-	    swap.swap_window = VWindow(screen);
-	    swap.swap_action = XdbeCopied;
-	    XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
-	    XFlush(XtDisplay(xw));
-	    screen->needSwap = 0;
-	}
-#endif
+	xtermFlushDbe(xw);
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
 		   (time_select ? &select_timeout : 0));
 	if (i < 0) {
@@ -10240,14 +10225,16 @@ initBorderGC(XtermWidget xw, VTwin *win)
      * without requiring a separate GC.
      */
 #if OPT_DOUBLE_BUFFER
-    filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
-	      ? (unsigned long) xw->cur_background
-	      : xw->core.background_pixel);
+    if (resource.buffered) {
+	filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
+		  ? (unsigned long) xw->cur_background
+		  : xw->core.background_pixel);
 
-    setCgsFore(xw, win, gcFiller, filler);
-    setCgsBack(xw, win, gcFiller, filler);
+	setCgsFore(xw, win, gcFiller, filler);
+	setCgsBack(xw, win, gcFiller, filler);
 
-    win->filler_gc = getCgsGC(xw, win, gcFiller);
+	win->filler_gc = getCgsGC(xw, win, gcFiller);
+    }
 #endif
 }
 
@@ -10475,7 +10462,7 @@ VTRealize(Widget w,
 #if OPT_DOUBLE_BUFFER
     screen->fullVwin.drawable = screen->fullVwin.window;
 
-    {
+    if (resource.buffered) {
 	Window win = screen->fullVwin.window;
 	Drawable d;
 	int major, minor;
@@ -10490,6 +10477,7 @@ VTRealize(Widget w,
 	}
 	screen->fullVwin.drawable = d;
 	screen->needSwap = 1;
+	TRACE(("initialized double-buffering\n"));
     }
 #endif /* OPT_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;

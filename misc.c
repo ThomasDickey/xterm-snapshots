@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.877 2019/06/15 00:37:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.878 2019/06/20 23:23:57 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -113,6 +113,10 @@
 #undef ALLOWLOGFILEEXEC
 #endif
 #endif /* VMS */
+
+#if OPT_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
+#endif
 
 #if OPT_TEK4014
 #define OUR_EVENT(event,Type) \
@@ -5716,6 +5720,7 @@ NormalExit(void)
     if (hold_screen) {
 	hold_screen = 2;
 	while (hold_screen) {
+	    xtermFlushDbe(term);
 	    xevents(term);
 	    Sleep(EVENT_DELAY);
 	}
@@ -5729,6 +5734,22 @@ NormalExit(void)
 #endif
     Cleanup(0);
 }
+
+#if OPT_DOUBLE_BUFFER
+void
+xtermFlushDbe(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    if (resource.buffered && screen->needSwap) {
+	XdbeSwapInfo swap;
+	swap.swap_window = VWindow(screen);
+	swap.swap_action = XdbeCopied;
+	XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
+	XFlush(XtDisplay(xw));
+	screen->needSwap = 0;
+    }
+}
+#endif
 
 /*
  * cleanup by sending SIGHUP to client processes
