@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.573 2019/06/15 00:35:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.574 2019/06/25 00:10:27 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2542,6 +2542,8 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 	    int row, col;
 	    Cardinal j, k;
 	    LineData *ld;
+	    int b_left = 0;
+	    int b_right = 0;
 
 	    CellData *cells = newCellData(xw, size);
 
@@ -2556,6 +2558,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 		    if (ld == 0)
 			continue;
 		    j = (Cardinal) (row - (source->top - 1));
+		    TRACE2(("ROW %d\n", row + 1));
 		    for (col = source->left - 1; col < source->right; ++col) {
 			k = (Cardinal) (col - (source->left - 1));
 			saveCellData(screen, cells,
@@ -2568,22 +2571,31 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 		    if (ld == 0)
 			continue;
 		    j = (Cardinal) (row - (target.top - 1));
+		    TRACE2(("ROW %d\n", row + 1));
 		    for (col = target.left - 1; col < target.right; ++col) {
 			k = (Cardinal) (col - (target.left - 1));
 			if (row >= getMinRow(screen)
 			    && row <= getMaxRow(screen)
 			    && col >= getMinCol(screen)
-			    && col <= getMaxCol(screen)) {
-			    if (j < high && k < wide) {
-				restoreCellData(screen, cells,
-						(j * wide) + k,
-						ld, &target, col);
-			    } else {
-				/* EMPTY */
-				/* FIXME - clear the target cell? */
-			    }
-			    ld->attribs[col] |= CHARDRAWN;
+			    && col <= getMaxCol(screen)
+			    && (j < high)
+			    && (k < wide)) {
+			    if_OPT_WIDE_CHARS(screen, {
+				if (ld->charData[col] == HIDDEN_CHAR
+				    && (col + 1) == target.left) {
+				    b_left = 1;
+				    Clear1Cell(ld, col - 1);
+				}
+				if ((col + 1) == target.right
+				    && ld->charData[col] == HIDDEN_CHAR) {
+				    b_right = 1;
+				}
+			    });
+			    restoreCellData(screen, cells,
+					    (j * wide) + k,
+					    ld, &target, col);
 			}
+			ld->attribs[col] |= CHARDRAWN;
 		    }
 #if OPT_BLINK_TEXT
 		    if (LineHasBlinking(screen, ld)) {
@@ -2597,9 +2609,9 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 
 		ScrnUpdate(xw,
 			   (target.top - 1),
-			   (target.left - 1),
+			   (target.left - (1 + b_left)),
 			   (target.bottom - target.top) + 1,
-			   ((target.right - target.left) + 1),
+			   ((target.right - target.left) + (1 + b_right)),
 			   False);
 	    }
 	}
