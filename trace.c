@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.207 2019/05/13 08:11:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.208 2019/06/23 23:12:54 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -377,7 +377,7 @@ visibleIChars(const IChar *buf, unsigned len)
 		unsigned value = *buf++;
 #if OPT_WIDE_CHARS
 		if (value > 255)
-		    sprintf(dst, "\\u+%04X", value);
+		    sprintf(dst, "\\U+%04X", value);
 		else
 #endif
 		    formatAscii(dst, value);
