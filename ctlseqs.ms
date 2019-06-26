@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.503 2019/05/29 00:23:45 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.505 2019/06/26 08:31:15 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #347
-.ds RF 2019/05/28
+.ds RF 2019/06/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1117,9 +1117,8 @@ Cursor Backward Tabulation \*(Ps tab stops (default = 1) (CBT).
 .IP \\*(Cs\\*(Ps\\*s\\*^
 Scroll down \*(Ps lines (default = 1) (SD), ECMA-48.
 .br
-This is probably an error in ECMA-48, because the standard writes
-codes as pairs of decimal values,
-and this is \*(``14\*('' versus the VT420 \*(``4\*(''.
+This was a publication error in the original ECMA-48 5th edition (1991)
+corrected in 2003.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*`
@@ -3615,6 +3614,27 @@ The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus \fIextensions\fP, e.g., \*(``private modes\*(''.
 Not all commonly-used features are standard.
 For example, scrolling regions are not found in ECMA-48.
+.LP
+Again, it is possible to find discrepancies in the standards:
+.bP
+The printed ECMA-48 5th edition (1991)
+and the first PDF produced for that edition (April 1998)
+state that \fBSD\fP (scroll down) ends with 05/14, i.e., \*^,
+which disagrees with DEC's VT420 hardware implementation and
+DEC's manuals which use 05/04 \*T.
+(A few other terminals such as AT&T 5620 and IBM 5151 also used 05/04,
+but the documentation and dates are lacking).
+.IP
+ECMA created a new PDF in April 2003 which changed that detail to use \*T,
+and later in 2008 provided PDFs of the earlier editions which used \*T.
+.bP
+The VT320, VT420, VT520 manuals claim that \fBDECSCL\fP does a
+hard reset (\fBRIS\fP).
+.IP
+Both the VT220 manual and DEC STD 070 (which documents
+levels 1-4 in detail) state that it is a soft reset, e.g., \fBDECSTR\fP.
+.LP
+Here are the relevant standards:
 .bP
 \fIECMA-35: Character Code Structure and Extension Techniques\fP
 .br
