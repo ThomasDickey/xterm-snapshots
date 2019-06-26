@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.574 2019/06/25 00:10:27 tom Exp $ */
+/* $XTermId: screen.c,v 1.576 2019/06/26 08:39:48 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2532,7 +2532,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
     if (validRect(xw, source)) {
 	XTermRect target;
 	xtermParseRect(xw,
-		       ((nparam > 3) ? 2 : (nparam - 1)),
+		       ((nparam > 3) ? 2 : nparam),
 		       params,
 		       &target);
 	if (validRect(xw, &target)) {
@@ -2611,7 +2611,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 			   (target.top - 1),
 			   (target.left - (1 + b_left)),
 			   (target.bottom - target.top) + 1,
-			   ((target.right - target.left) + (1 + b_right)),
+			   ((target.right - target.left) + (1 + b_left + b_right)),
 			   False);
 	    }
 	}
