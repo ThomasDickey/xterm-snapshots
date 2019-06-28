@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.831 2019/06/20 22:52:33 tom Exp $ */
+/* $XTermId: xterm.h,v 1.832 2019/06/27 23:46:05 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1159,8 +1159,10 @@ extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, 
 
 #if OPT_DOUBLE_BUFFER
 extern void xtermFlushDbe(XtermWidget /* xw */);
+#define xtermNeedSwap(xw,why)	TScreenOf(xw)->needSwap |= (why)
 #else
 #define xtermFlushDbe(xw)	/* nothing */
+#define xtermNeedSwap(xw,why)	/* nothing */
 #endif /* OPT_DOUBLE_BUFFER */
 
 #if OPT_EXEC_XTERM

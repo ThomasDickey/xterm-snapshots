@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.792 2019/06/21 00:00:53 tom Exp $ */
+/* $XTermId: util.c,v 1.794 2019/06/28 00:11:11 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -196,6 +196,7 @@ FlushScroll(XtermWidget xw)
 	   screen->scroll_amt,
 	   screen->refresh_amt));
 
+    xtermNeedSwap(xw, !(screen->fastscroll) && (screen->scroll_amt != 0));
     if (screen->scroll_amt > 0) {
 	/*
 	 * Lines will be scrolled "up".
@@ -296,6 +297,7 @@ FlushScroll(XtermWidget xw)
 		    MaxCols(screen),
 		    False);
     }
+    xtermFlushDbe(xw);
     return;
 }
 
@@ -3061,9 +3063,7 @@ xtermXftDrawString(XtermWidget xw,
 	}
 	ncells = (int) len;
 #endif
-#if OPT_DOUBLE_BUFFER
-	screen->needSwap = 1;
-#endif
+	xtermNeedSwap(xw, 1);
     }
     return ncells;
 }
