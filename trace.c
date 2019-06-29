@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.209 2019/06/26 22:11:36 tom Exp $ */
+/* $XTermId: trace.c,v 1.210 2019/06/28 09:58:39 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -1222,6 +1222,7 @@ TraceXtermResources(void)
 #endif
 #if OPT_DOUBLE_BUFFER
     XRES_B(buffered);
+    XRES_I(buffered_fps);
 #endif
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.135 2019/06/20 23:02:46 tom Exp $ */
+/* $XTermId: data.h,v 1.136 2019/06/28 09:55:29 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -243,6 +243,7 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_DOUBLE_BUFFER
     Boolean buffered;
+    int buffered_fps;
 #endif
 } XTERM_RESOURCE;
 

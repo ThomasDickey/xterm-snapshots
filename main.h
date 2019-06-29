@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.70 2019/04/23 09:03:53 tom Exp $ */
+/* $XTermId: main.h,v 1.71 2019/06/28 10:01:15 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -199,6 +199,10 @@
 #else
 #define DEF_PTY_STTY_SIZE	True
 #endif
+#endif
+
+#ifndef DEF_BUFFER_RATE
+#define DEF_BUFFER_RATE		40	/* frames/second, limited to 100 */
 #endif
 
 #ifndef DEF_LIMIT_RESPONSE

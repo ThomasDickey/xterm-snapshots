@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.794 2019/06/28 00:11:11 tom Exp $ */
+/* $XTermId: util.c,v 1.798 2019/06/28 22:31:48 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -196,7 +196,6 @@ FlushScroll(XtermWidget xw)
 	   screen->scroll_amt,
 	   screen->refresh_amt));
 
-    xtermNeedSwap(xw, !(screen->fastscroll) && (screen->scroll_amt != 0));
     if (screen->scroll_amt > 0) {
 	/*
 	 * Lines will be scrolled "up".
@@ -236,7 +235,7 @@ FlushScroll(XtermWidget xw)
 		    i = screen->savelines;
 		}
 		screen->savedlines = i;
-		ScrollBarDrawThumb(screen->scrollWidget);
+		ScrollBarDrawThumb(xw, 1);
 	    }
 	} else {
 	    scrolltop = screen->top_marg + shift;
@@ -297,7 +296,7 @@ FlushScroll(XtermWidget xw)
 		    MaxCols(screen),
 		    False);
     }
-    xtermFlushDbe(xw);
+    xtermTimedDbe(xw);
     return;
 }
 
@@ -691,7 +690,7 @@ xtermScroll(XtermWidget xw, int amount)
 		    if ((i += amount) > screen->savelines)
 			i = screen->savelines;
 		    screen->savedlines = i;
-		    ScrollBarDrawThumb(screen->scrollWidget);
+		    ScrollBarDrawThumb(xw, 1);
 		}
 	    } else {
 		scrolltop = screen->top_marg + shift;
@@ -1376,7 +1375,7 @@ DeleteLine(XtermWidget xw, int n)
 		if ((i += n) > screen->savelines)
 		    i = screen->savelines;
 		screen->savedlines = i;
-		ScrollBarDrawThumb(screen->scrollWidget);
+		ScrollBarDrawThumb(xw, 1);
 	    }
 	} else {
 	    scrolltop = screen->cur_row + shift;
@@ -1974,7 +1973,7 @@ do_erase_display(XtermWidget xw, int param, int mode)
 	/* xterm addition - erase saved lines. */
 	if (screen->eraseSavedLines) {
 	    screen->savedlines = 0;
-	    ScrollBarDrawThumb(screen->scrollWidget);
+	    ScrollBarDrawThumb(xw, 1);
 	}
 	break;
     }

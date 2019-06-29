@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.832 2019/06/27 23:46:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.835 2019/06/28 22:32:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -413,6 +413,7 @@ extern char **environ;
 #define XtNbrokenSelections	"brokenSelections"
 #define XtNbrokenStringTerm	"brokenStringTerm"
 #define XtNbuffered		"buffered"
+#define XtNbufferedFPS		"bufferedFPS"
 #define XtNc132			"c132"
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcdXtraScroll		"cdXtraScroll"
@@ -618,6 +619,7 @@ extern char **environ;
 #define XtCBrokenSelections	"BrokenSelections"
 #define XtCBrokenStringTerm	"BrokenStringTerm"
 #define XtCBuffered		"Buffered"
+#define XtCBufferedFPS		"BufferedFPS"
 #define XtCC132			"C132"
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCdXtraScroll		"CdXtraScroll"
@@ -1159,9 +1161,11 @@ extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, 
 
 #if OPT_DOUBLE_BUFFER
 extern void xtermFlushDbe(XtermWidget /* xw */);
+extern void xtermTimedDbe(XtermWidget /* xw */);
 #define xtermNeedSwap(xw,why)	TScreenOf(xw)->needSwap |= (why)
 #else
 #define xtermFlushDbe(xw)	/* nothing */
+#define xtermTimedDbe(xw)	/* nothing */
 #define xtermNeedSwap(xw,why)	/* nothing */
 #endif /* OPT_DOUBLE_BUFFER */
 
@@ -1412,7 +1416,7 @@ extern void HandleScrollBack           PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward        PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollTo             PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget  /* xw */);
-extern void ScrollBarDrawThumb (Widget  /* scrollWidget */);
+extern void ScrollBarDrawThumb (XtermWidget  /* xw */, int /* mode */);
 extern void ScrollBarOff (XtermWidget  /* xw */);
 extern void ScrollBarOn (XtermWidget  /* xw */, Bool /* init */);
 extern void ScrollBarReverseVideo (Widget  /* scrollWidget */);
