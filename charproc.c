@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1666 2019/06/20 23:21:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1671 2019/06/29 14:11:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5379,9 +5379,8 @@ in_put(XtermWidget xw)
 	    }
 #if OPT_DOUBLE_BUFFER
 	    if (resource.buffered && should_wait) {
-		/* wait 25 msec for potential extra data (avoids some bogus flickering) */
-		/* that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :) */
-		usleep(25000);
+		/* wait for potential extra data (avoids some flickering) */
+		usleep((unsigned) DbeMsecs(xw));
 		should_wait = 0;
 	    }
 #endif
@@ -11916,7 +11915,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
     if (saved) {
 	screen->savedlines = 0;
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 0);
     }
 
     /* make cursor visible */

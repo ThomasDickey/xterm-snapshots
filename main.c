@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.849 2019/06/20 23:47:32 tom Exp $ */
+/* $XTermId: main.c,v 1.850 2019/06/28 19:50:07 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -954,6 +954,7 @@ static XtResource application_resources[] =
 #endif
 #if OPT_DOUBLE_BUFFER
     Bres(XtNbuffered, XtCBuffered, buffered, True),
+    Ires(XtNbufferedFPS, XtCBufferedFPS, buffered_fps, 40),
 #endif
 };
 
@@ -2426,6 +2427,12 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#if OPT_DOUBLE_BUFFER
+	if (resource.buffered_fps <= 0)
+	    resource.buffered_fps = DEF_BUFFER_RATE;
+	if (resource.buffered_fps > 100)
+	    resource.buffered_fps = 100;
+#endif
 #if OPT_MAXIMIZE
 	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
 					      tblFullscreen,

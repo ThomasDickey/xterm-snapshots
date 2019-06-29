@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.205 2019/06/11 20:43:28 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.206 2019/06/28 08:39:12 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -308,19 +308,32 @@ ScrollBarReverseVideo(Widget scrollWidget)
 }
 
 void
-ScrollBarDrawThumb(Widget scrollWidget)
+ScrollBarDrawThumb(XtermWidget xw, int mode)
 {
-    XtermWidget xw = getXtermWidget(scrollWidget);
+    TScreen *screen = TScreenOf(xw);
 
-    if (xw != 0) {
-	TScreen *screen = TScreenOf(xw);
+    if (screen->scrollWidget != 0) {
 	int thumbTop, thumbHeight, totalHeight;
+
+#if OPT_DOUBLE_BUFFER
+	if (mode == 1) {
+	    screen->buffered_sb++;
+	    return;
+	} else if (mode == 2) {
+	    if (resource.buffered && (screen->buffered_sb == 0)) {
+		return;
+	    }
+	}
+	screen->buffered_sb = 0;
+#else
+	(void) mode;
+#endif
 
 	thumbTop = ROW2INX(screen, screen->savedlines);
 	thumbHeight = MaxRows(screen);
 	totalHeight = thumbHeight + screen->savedlines;
 
-	XawScrollbarSetThumb(scrollWidget,
+	XawScrollbarSetThumb(screen->scrollWidget,
 			     ((float) thumbTop) / (float) totalHeight,
 			     ((float) thumbHeight) / (float) totalHeight);
     }
@@ -354,7 +367,7 @@ ResizeScrollBar(XtermWidget xw)
 			     (Dimension) width,
 			     (Dimension) height,
 			     BorderWidth(screen->scrollWidget));
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 1);
     }
 }
 
@@ -413,7 +426,7 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 #endif
 	}
     }
-    ScrollBarDrawThumb(screen->scrollWidget);
+    ScrollBarDrawThumb(xw, 1);
 }
 
 #ifdef SCROLLBAR_RIGHT
@@ -476,7 +489,7 @@ ScrollBarOn(XtermWidget xw, Bool init)
 	       screen->scrollWidget->core.width,
 	       BorderWidth(screen->scrollWidget)));
 
-	ScrollBarDrawThumb(screen->scrollWidget);
+	ScrollBarDrawThumb(xw, 1);
 	DoResizeScreen(xw);
 
 #ifdef SCROLLBAR_RIGHT

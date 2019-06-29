@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.878 2019/06/20 23:23:57 tom Exp $ */
+/* $XTermId: misc.c,v 1.884 2019/06/29 10:14:23 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -100,12 +100,6 @@
 #include <graphics_sixel.h>
 
 #include <assert.h>
-
-#if (XtSpecificationRelease < 6)
-#ifndef X_GETTIMEOFDAY
-#define X_GETTIMEOFDAY(t) gettimeofday(t,(struct timezone *)0)
-#endif
-#endif
 
 #ifdef VMS
 #define XTERM_VMS_LOGFILE "SYS$SCRATCH:XTERM_LOG.TXT"
@@ -5747,6 +5741,31 @@ xtermFlushDbe(XtermWidget xw)
 	XdbeSwapBuffers(XtDisplay(xw), &swap, 1);
 	XFlush(XtDisplay(xw));
 	screen->needSwap = 0;
+	ScrollBarDrawThumb(xw, 2);
+	X_GETTIMEOFDAY(&screen->buffered_at);
+    }
+}
+
+void
+xtermTimedDbe(XtermWidget xw)
+{
+    if (resource.buffered) {
+	TScreen *screen = TScreenOf(xw);
+	struct timeval now;
+	long elapsed;
+	long limit = DbeMsecs(xw);
+
+	X_GETTIMEOFDAY(&now);
+	if (screen->buffered_at.tv_sec) {
+	    elapsed = (1000L * (now.tv_sec - screen->buffered_at.tv_sec)
+		       + (now.tv_usec - screen->buffered_at.tv_usec) / 1000L);
+	} else {
+	    elapsed = limit;
+	}
+	if (elapsed >= limit) {
+	    xtermNeedSwap(xw, 1);
+	    xtermFlushDbe(xw);
+	}
     }
 }
 #endif
