@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.95 2019/06/21 08:32:19 tom Exp $ */
+/* $XTermId: linedata.c,v 1.97 2019/06/30 19:10:53 tom Exp $ */
 
 /*
  * Copyright 2009-2018,2019 by Thomas E. Dickey
@@ -76,6 +76,9 @@ getLineData(TScreen *screen, int row)
 void
 copyLineData(LineData *dst, CLineData *src)
 {
+    if (dst == NULL || src == NULL)
+	return;
+
     dst->bufHead = src->bufHead;
 
 #if OPT_WIDE_CHARS
@@ -248,7 +251,7 @@ saveCellData(TScreen *screen,
 			      && (limits == NULL
 				  || (column + 1) >= limits->right)));
 	    if (blank) {
-		item->charData = ' ';
+		item->charData = (Char) ' ';
 	    }
 	    item->combSize = blank ? 0 : ld->combSize;
 	    for_each_combData(off, item) {

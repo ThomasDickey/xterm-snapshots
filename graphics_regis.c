@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.109 2019/06/20 23:02:13 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.111 2019/06/29 17:26:40 tom Exp $ */
 
 /*
  * Copyright 2014-2018,2019 by Ross Combs
@@ -1586,7 +1586,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
     XftDrawString32(draw, &fg, font, 0, font->ascent - (int) ymin,
 		    &ch, 1);
 
-    image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1, XYPixmap);
+    image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1UL, XYPixmap);
     if (!image) {
 	TRACE(("Unable to create XImage\n"));
 	XftDrawDestroy(draw);
@@ -2002,7 +2002,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
     return 1;
 #else
     (void) context;
-    (void) context;
+    (void) fontname;
     (void) ch;
     (void) maxw;
     (void) maxh;

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.850 2019/06/28 19:50:07 tom Exp $ */
+/* $XTermId: main.c,v 1.851 2019/06/30 19:31:46 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -3160,6 +3160,8 @@ typedef enum {			/* c == child, p == parent                        */
     PTY_EXEC			/* p->c: window has been mapped the first time    */
 } status_t;
 
+#define HANDSHAKE_LEN	1024
+
 typedef struct {
     status_t status;
     int error;
@@ -3167,12 +3169,12 @@ typedef struct {
     int tty_slot;
     int rows;
     int cols;
-    char buffer[1024];
+    char buffer[HANDSHAKE_LEN];
 } handshake_t;
 
 /* the buffer is large enough that we can always have a trailing null */
 #define copy_handshake(dst, src) \
-	strncpy(dst.buffer, src, sizeof(dst.buffer) - 1)[sizeof(dst.buffer) - 1] = '\0'
+	strncpy(dst.buffer, src, HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
 
 #if OPT_TRACE
 static void
@@ -5119,6 +5121,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    tslot = handshake.tty_slot;
 #endif /* USE_SYSV_UTMP */
 		    free(ttydev);
+		    handshake.buffer[HANDSHAKE_LEN - 1] = '\0';
 		    ttydev = x_strdup(handshake.buffer);
 		    break;
 		case PTY_NEW:

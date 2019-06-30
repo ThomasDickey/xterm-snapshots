@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.835 2019/06/28 22:32:19 tom Exp $ */
+/* $XTermId: xterm.h,v 1.836 2019/06/29 15:21:31 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1138,7 +1138,7 @@ extern void switch_modes (Bool /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
 extern void update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern void xevents (XtermWidget /* xw */);
-extern void xt_error (String /* message */) _X_NORETURN;
+extern void xt_error (String /* message */) GCC_NORETURN;
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);

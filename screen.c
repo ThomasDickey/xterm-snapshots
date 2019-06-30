@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.576 2019/06/26 08:39:48 tom Exp $ */
+/* $XTermId: screen.c,v 1.577 2019/06/30 18:45:09 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2390,11 +2390,16 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect *target)
     target->left = LimitedParse(1, limitedParseCol, minRectCol(screen), 1);
     target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen), 0);
     target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen), 0);
-    TRACE(("parsed rectangle %d,%d %d,%d\n",
+    TRACE(("parsed %d params for rectangle %d,%d %d,%d default %d,%d %d,%d\n",
+	   nparams,
 	   target->top,
 	   target->left,
 	   target->bottom,
-	   target->right));
+	   target->right,
+	   minRectRow(screen),
+	   minRectCol(screen),
+	   maxRectRow(screen),
+	   maxRectCol(screen)));
 }
 
 static Bool
@@ -2532,7 +2537,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
     if (validRect(xw, source)) {
 	XTermRect target;
 	xtermParseRect(xw,
-		       ((nparam > 3) ? 2 : nparam),
+		       ((nparam > 2) ? 2 : nparam),
 		       params,
 		       &target);
 	if (validRect(xw, &target)) {
