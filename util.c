@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.798 2019/06/28 22:31:48 tom Exp $ */
+/* $XTermId: util.c,v 1.799 2019/06/30 22:26:36 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5125,12 +5125,14 @@ extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 	       || (x_strcasecmp(value, "off") == 0)) {
 	result = False;
     } else if ((check = strtol(value, &next, 0)) >= 0 && FullS2L(value, next)) {
-	if (check >= (long) (limit + 2))	/* 2 is past False=0, True=1 */
+	if (check >= (long) limit)	/* i.e., past False=0, True=1 */
 	    check = True;
 	result = (int) check;
     } else {
-	for (n = 0; n < limit; ++n) {
-	    if (table[n].name != 0 && x_strcasecmp(value, table[n].name) == 0) {
+	for (n = 0; n < limit - 2; ++n) {
+	    if (table[n].name == NULL) {
+		break;
+	    } else if (x_strcasecmp(value, table[n].name) == 0) {
 		result = table[n].code;
 		break;
 	    }

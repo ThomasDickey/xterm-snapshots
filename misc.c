@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.886 2019/06/30 19:02:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.888 2019/06/30 22:44:46 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2076,12 +2076,8 @@ StartLogExec(TScreen *screen)
 	if (xtermResetIds(screen) < 0)
 	    exit(ERROR_SETUID);
 
-	if (access(shell, X_OK) == 0) {
-	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
-	    xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
-	} else {
-	    xtermWarning("Can't execute `%s'\n", shell);
-	}
+	execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
+	xtermWarning("Can't exec `%s -c %s'\n", shell, &screen->logfile[1]);
 	exit(ERROR_LOGEXEC);
     }
     close(p[0]);
