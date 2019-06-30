@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1671 2019/06/29 14:11:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1675 2019/06/30 19:18:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5013,7 +5013,6 @@ VTparse(XtermWidget xw)
     (void) setjmp(vtjmpbuf);
     init_parser(xw, &myState);
 
-    keep_running = False;
     do {
 	keep_running = doparsing(xw, doinput(xw), &myState);
 	while (myState.defer_used) {
@@ -9425,7 +9424,7 @@ VTInitialize(Widget wrequest,
 
     init_Sres(screen.eight_bit_meta_s);
     wnew->screen.eight_bit_meta =
-	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, uLast);
+	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, ebLast);
     if (wnew->screen.eight_bit_meta == ebLocale) {
 #if OPT_WIDE_CHARS
 	if (xtermEnvUTF8()) {
@@ -9659,7 +9658,7 @@ VTInitialize(Widget wrequest,
     if ((int) screen->unparse_max < 256)
 	screen->unparse_max = 256;
     screen->unparse_bfr = (IChar *) (void *) XtCalloc(screen->unparse_max,
-						      sizeof(IChar));
+						      (Cardinal) sizeof(IChar));
 
     if (screen->savelines < 0)
 	screen->savelines = 0;
@@ -10191,9 +10190,6 @@ void
 initBorderGC(XtermWidget xw, VTwin *win)
 {
     TScreen *screen = TScreenOf(xw);
-#if OPT_DOUBLE_BUFFER
-    unsigned long filler;
-#endif
 
     TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
 	   xw->core.background_pixel,
@@ -10225,6 +10221,7 @@ initBorderGC(XtermWidget xw, VTwin *win)
      */
 #if OPT_DOUBLE_BUFFER
     if (resource.buffered) {
+	unsigned long filler;
 	filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
 		  ? (unsigned long) xw->cur_background
 		  : xw->core.background_pixel);
@@ -10469,7 +10466,7 @@ VTRealize(Widget w,
 	    fprintf(stderr, "XdbeQueryExtension returned zero!\n");
 	    exit(3);
 	}
-	d = XdbeAllocateBackBufferName(XtDisplay(xw), win, XdbeCopied);
+	d = XdbeAllocateBackBufferName(XtDisplay(xw), win, (XdbeSwapAction) XdbeCopied);
 	if (d == None) {
 	    fprintf(stderr, "Couldn't allocate a back buffer!\n");
 	    exit(3);

@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.117 2019/05/29 00:19:05 tom Exp $
+# $XTermId: xterm.spec,v 1.118 2019/06/29 18:26:26 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -114,20 +114,17 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--disable-imake \
 	--enable-dabbrev \
 	--enable-dec-locator \
+	--enable-double-buffer \
 	--enable-exec-xterm \
 	--enable-hp-fkeys \
 	--enable-load-vt-fonts \
 	--enable-logfile-exec \
 	--enable-logging \
 	--enable-mini-luit \
-	--enable-paste64 \
 	--enable-regis-graphics \
 	--enable-sco-fkeys \
 	--enable-sixel-graphics \
-	--enable-tcap-fkeys \
-	--enable-tcap-query \
 	--enable-toolbar \
-	--enable-wide-chars \
 	--enable-xmc-glitch \
 	--with-app-defaults=%{_xresdir} \
 	--with-pixmapdir=%{_pixmapsdir} \

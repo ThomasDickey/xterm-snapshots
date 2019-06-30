@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.573 2019/05/09 09:27:01 tom Exp $ */
+/* $XTermId: button.c,v 1.574 2019/06/30 19:36:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -317,8 +317,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 		my_event->button == Button1) {
 		TrackDown(xw, my_event);
 		result = True;
-	    } else if (BtnModifiers(my_event) == 0
-		       || BtnModifiers(my_event) == ControlMask) {
+	    } else if (BtnModifiers(my_event) == 0) {
 		EditorButton(xw, my_event);
 		result = True;
 	    }
@@ -327,8 +326,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 
     case VT200_MOUSE:		/* DEC vt200 compatible */
 	if (IsBtnEvent(event)) {
-	    if (BtnModifiers(my_event) == 0
-		|| BtnModifiers(my_event) == ControlMask) {
+	    if (BtnModifiers(my_event) == 0) {
 		EditorButton(xw, my_event);
 		result = True;
 	    }
@@ -386,7 +384,7 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
     /* Make sure the event is an appropriate type */
     if ((!IsBtnEvent(event) &&
 	 !screen->loc_filter) ||
-	(BtnModifiers(event) != 0 && BtnModifiers(event) != ControlMask))
+	(BtnModifiers(event) != 0))
 	return (False);
 
     if ((event->type == ButtonPress &&

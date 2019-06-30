@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.884 2019/06/29 10:14:23 tom Exp $ */
+/* $XTermId: misc.c,v 1.886 2019/06/30 19:02:40 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1822,7 +1822,7 @@ create_printfile(XtermWidget xw, const char *suffix)
     sprintf(fname, "xterm%s", suffix);
 #endif
     fd = open_userfile(screen->uid, screen->gid, fname, False);
-    fp = fdopen(fd, "wb");
+    fp = (fd >= 0) ? fdopen(fd, "wb") : NULL;
     return fp;
 }
 
@@ -4565,7 +4565,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			/* XK_COLORS is a fake code for the "Co" entry (maximum
 			 * number of colors) */
 			if (code == XK_COLORS) {
-			    unparseputn(xw, NUM_ANSI_COLORS);
+			    unparseputn(xw, (UParm) NUM_ANSI_COLORS);
 			} else
 #if OPT_DIRECT_COLOR
 			if (code == XK_RGB) {
