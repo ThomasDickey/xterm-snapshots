@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.22 2019/05/02 00:47:16 tom Exp $
+-- $XTermId: THANKS,v 1.23 2019/06/30 23:31:05 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -152,6 +152,8 @@ Mike Castle
 Mike Fabian
 Mike Frysinger
 Mike Hopkirk
+Mike Thornburg
+Mikulas Patocka
 Milan Mehner
 Min Sik Kim
 Miroslav Lichvar
