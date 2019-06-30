@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.574 2019/06/30 19:36:19 tom Exp $ */
+/* $XTermId: button.c,v 1.575 2019/06/30 22:34:03 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -283,7 +283,7 @@ SendMousePosition(XtermWidget xw, XEvent *event)
 
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
-	if (KeyModifiers(event) == 0 || KeyModifiers(event) == ControlMask) {
+	if (KeyModifiers(event) == 0) {
 	    /* xterm extension for motion reporting. June 1998 */
 	    /* EditorButton() will distinguish between the modes */
 	    switch (event->type) {

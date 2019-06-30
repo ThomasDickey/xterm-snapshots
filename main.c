@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.851 2019/06/30 19:31:46 tom Exp $ */
+/* $XTermId: main.c,v 1.852 2019/06/30 22:31:07 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -4198,6 +4198,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		    if (ttyfd >= 0)
 			close(ttyfd);
 		    free(ttydev);
+		    handshake.buffer[HANDSHAKE_LEN - 1] = '\0';
 		    ttydev = x_strdup(handshake.buffer);
 		}
 
