@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2068 2019/06/30 23:30:42 tom Exp $
+  $XTermId: xterm.log.html,v 1.2070 2019/07/01 00:23:22 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -53,7 +53,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2017,2018 by <a href=
+  <p>Copyright &copy; 1997-2018,2019 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_dev">Development</a></li>
+
     <li><a href="#xterm_347">Patch #347 - 2019/06/30</a></li>
 
     <li><a href="#xterm_346">Patch #346 - 2019/05/27</a></li>
@@ -979,6 +981,8 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
+
   <h1><a name="xterm_347" id="xterm_347">Patch #347 -
   2019/06/30</a></h1>
 
@@ -1050,7 +1054,8 @@
 
     <li>ensure that window-manager name comparisons work when
     active-icon is enabled, since <code><em>CSI</em>13t</code> uses
-    the window-manager name (Arch #62818).</li>
+    the window-manager name (report by Glenn Golden, Arch
+    #62818).</li>
 
     <li>trim a stray &ldquo;experimental&rdquo; in one of the
     comments about the tcap-query feature, which has been a
