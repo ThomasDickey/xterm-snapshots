@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.836 2019/06/29 15:21:31 tom Exp $ */
+/* $XTermId: xterm.h,v 1.838 2019/07/05 23:54:38 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -43,25 +43,6 @@
 #ifdef HAVE_CONFIG_H
 #include <xtermcfg.h>
 #endif
-
-#ifndef GCC_PRINTFLIKE
-#define GCC_PRINTFLIKE(f,n)	/* nothing */
-#endif
-
-#ifndef GCC_UNUSED
-#define GCC_UNUSED		/* nothing */
-#endif
-
-#ifndef GCC_NORETURN
-#define GCC_NORETURN		/* nothing */
-#endif
-
-#if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
-#define USE_IGNORE_RC
-#define IGNORE_RC(func) ignore_unused = (int) func
-#else
-#define IGNORE_RC(func) (void) func
-#endif /* gcc workarounds */
 
 #undef bcopy
 #include <X11/Xos.h>
@@ -317,6 +298,40 @@ extern int errno;
 
 #include <ptyx.h>
 
+/***====================================================================***/
+
+#ifndef GCC_PRINTFLIKE
+#ifdef _X_ATTRIBUTE_PRINTF
+#define GCC_PRINTFLIKE(f,n)	_X_ATTRIBUTE_PRINTF(f,n)
+#else
+#define GCC_PRINTFLIKE(f,n)	/* nothing */
+#endif
+#endif
+
+#ifndef GCC_UNUSED
+#ifdef _X_UNUSED
+#define GCC_UNUSED		_X_UNUSED
+#else
+#define GCC_UNUSED		/* nothing */
+#endif
+#endif
+
+#ifndef GCC_NORETURN
+#ifdef _X_NORETURN
+#define GCC_NORETURN		_X_NORETURN
+#else
+#define GCC_NORETURN		/* nothing */
+#endif
+#endif
+
+/***====================================================================***/
+
+#if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
+#define USE_IGNORE_RC
+#define IGNORE_RC(func) ignore_unused = (int) func
+#else
+#define IGNORE_RC(func) (void) func
+#endif /* gcc workarounds */
 #if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H) && !defined(sun)
 #include <X11/Xpoll.h>
 #define USE_XPOLL_H 1
