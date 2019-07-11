@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.511 2019/07/11 00:35:38 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.512 2019/07/11 09:52:42 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #347
-.ds RF 2019/07/10
+.ds RF 2019/07/11
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -323,6 +323,8 @@
 .ds Pt \fIP\v'.3m'\h'-.2m'\s-2t\s0\v'-.3m'\fP
 .ds Pu \fIP\v'.3m'\h'-.2m'\s-2u\s0\v'-.3m'\fP
 .ds Pv \fIP\v'.3m'\h'-.2m'\s-2v\s0\v'-.3m'\fP
+.ds Px \fIP\v'.3m'\h'-.2m'\s-2x\s0\v'-.3m'\fP
+.ds Py \fIP\v'.3m'\h'-.2m'\s-2y\s0\v'-.3m'\fP
 .ds Ix \fIx\fP
 .ds Iy \fIy\fP
 .ds Iw \fIw\fP
@@ -3179,17 +3181,25 @@ unless extended mouse mode is active.
 This scheme has the drawback that the encoded coordinates will not
 pass through \fIluit\fP unchanged, e.g., for locales using non-UTF-8 encoding.
 .IP "SGR (1006)"
-The normal mouse response is altered to use \*(Cs\*<
-followed by semicolon-separated
-encoded button value,
-the \*(Cx and \*(Cy ordinates and a final character which
-is \*M for button press
-and \*m for button release.
+The normal mouse response is altered to use
 .RS
 .bP
+\*(Cs\*<
+followed by semicolon-separated
+.bP
+encoded button value,
+.bP
+\*(Px and \*(Py ordinates and
+.bP
+a final character which
+is \*M for button press
+and \*m for button release.
+.RE
+.IP
 The encoded button value in this case does not add 32 since
 that was useful only in the X10 scheme for ensuring that the
 byte containing the button value is a printable code.
+.RS
 .bP
 The modifiers are encoded in the same way.
 .bP
@@ -3200,10 +3210,16 @@ to resolve the X10 ambiguity regarding which button was released.
 The highlight tracking responses are also modified to an SGR-like format,
 using the same SGR-style scheme and button-encodings.
 .IP "URXVT (1015)"
-The normal mouse response is altered to use \*(Cs
+The normal mouse response is altered to use
+.RS
+.bP
+\*(Cs
 followed by semicolon-separated
+.bP
 encoded button value,
-the \*(Cx and \*(Cy ordinates and final character \*M.
+.bP
+the \*(Px and \*(Py ordinates and final character \*M.
+.RE
 .IP
 This uses the same button encoding as X10, but printing it as
 a decimal integer rather than as a single byte.
