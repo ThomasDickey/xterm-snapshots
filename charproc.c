@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1675 2019/06/30 19:18:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1677 2019/07/10 20:54:06 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -417,7 +417,6 @@ static XtActionsRec actionsList[] = {
 #endif
 };
 /* *INDENT-ON* */
-
 #define SPS screen.printer_state
 
 static XtResource xterm_resources[] =
@@ -948,7 +947,6 @@ xtermAddInput(Widget w)
 #endif
     };
     /* *INDENT-ON* */
-
     TRACE_TRANS("BEFORE", w);
     XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
@@ -1779,7 +1777,6 @@ static struct {
 #endif
 };
 /* *INDENT-ON* */
-
 #if OPT_DEC_RECTOPS
 static char *
 encode_scs(DECNRCM_codes value)
@@ -3062,13 +3059,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 8;	/* user-defined-keys */
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
+		    reply.a_param[count++] = 16;	/* locator port */
 		    if (screen->terminal_id >= 400) {
-			reply.a_param[count++] = 18;	/* windowing capability */
+			reply.a_param[count++] = 17;	/* terminal state interrogation */
+			reply.a_param[count++] = 18;	/* windowing extension */
 			reply.a_param[count++] = 21;	/* horizontal scrolling */
 		    }
 		    if_OPT_ISO_COLORS(screen, {
 			reply.a_param[count++] = 22;	/* ANSI color, VT525 */
 		    });
+		    reply.a_param[count++] = 28;	/* rectangular editing */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 29;	/* ANSI text locator */
 #endif
@@ -8362,7 +8362,6 @@ lookupSelectUnit(XtermWidget xw, Cardinal item, String value)
 #endif
     };
     /* *INDENT-ON* */
-
     TScreen *screen = TScreenOf(xw);
     String next = x_skip_nonblanks(value);
     Cardinal n;
@@ -12637,7 +12636,6 @@ VTInitTranslations(void)
     };
 #undef DATA
     /* *INDENT-ON* */
-
     char *result = 0;
 
     int pass;

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.799 2019/06/30 22:26:36 tom Exp $ */
+/* $XTermId: util.c,v 1.800 2019/07/10 08:48:05 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -779,7 +779,7 @@ void
 xtermScrollLR(XtermWidget xw, int amount, Bool toLeft)
 {
     if (amount > 0) {
-	xtermColScroll(xw, amount, toLeft, 0);
+	xtermColScroll(xw, amount, toLeft, ScrnLeftMargin(xw));
     }
 }
 
