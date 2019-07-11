@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.505 2019/06/26 08:31:15 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.511 2019/07/11 00:35:38 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #347
-.ds RF 2019/06/26
+.ds RF 2019/07/10
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1155,10 +1155,20 @@ telling the host what features the terminal supports:
   \*(Ps = \*8 \(-> User-defined keys.
   \*(Ps = \*9 \(-> National Replacement Character sets.
   \*(Ps = \*1\*5 \(-> Technical characters.
+  \*(Ps = \*1\*6 \(-> Locator port.
+  \*(Ps = \*1\*7 \(-> Terminal state interrogation.
   \*(Ps = \*1\*8 \(-> User windows.
   \*(Ps = \*2\*1 \(-> Horizontal scrolling.
   \*(Ps = \*2\*2 \(-> ANSI color, e.g., VT525.
+  \*(Ps = \*2\*8 \(-> Rectangular editing.
   \*(Ps = \*2\*9 \(-> ANSI text locator (i.e., DEC Locator mode).
+.iP
+\fI\*(XT\fP supports part of the \fIUser windows\fP feature,
+providing a single page (which corresponds to its visible window).
+Rather than resizing the font to change the number of lines/columns in
+a fixed-size display, \fI\*(xt\fP uses the window extension controls
+(DECSNLS, DECSCPP, DECSLPP) to adjust its visible window's size.
+The \*(``cursor coupling\*('' controls (DECHCCM, DECPCCM, DECVCCM) are ignored.
 .
 .iP
 .IP \\*(Cs\\*=\\*(Ps\\*s\\*c
@@ -1261,8 +1271,8 @@ This may be disabled by the \fBtiteInhibit\fP resource.
 See the section \fBMouse Tracking\fP.
 This is the X11 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion (button event) Mouse Tracking, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion (any event) Mouse Tracking, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode, \fI\*(xt\fP.
@@ -1385,8 +1395,8 @@ VT510 and up.
 release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Don't use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion (button event) Mouse Tracking, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion (any event) Mouse Tracking, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode, \fI\*(xt\fP.
@@ -1910,7 +1920,7 @@ Result is
 .br
 Result is
 \*(Cs\*s\*5\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
-  \*(Ps = \*1\*6 \(-> Report \fI\*(xt\fP character size in pixels.
+  \*(Ps = \*1\*6 \(-> Report \fI\*(xt\fP character cell size in pixels.
 .br
 Result is
 \*(Cs\*s\*6\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
@@ -2066,7 +2076,7 @@ The bits of \*(Ps modify the calculation of the checksum returned by DECRQCRA:
 Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
 Response is
 .br
-\*(Dc\*(Pi\*s\*!x\*sx\*sx\*sx\*s\*(ST
+\*(Dc\*(Pi\*s\*!\*~x\*sx\*sx\*sx\*s\*(ST
 .br
   \*(Pi is the request id.
   \*(Pg is the page number.
@@ -2690,38 +2700,57 @@ The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
 .TS H
 center;
-lf3w(2c)	lf3w(2c)	lf3w(2c) .
-Key	Numeric	Application
+lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application	VT100?
 _
 .TH
 .T&
-l | l | l .
-Space	\*(Sp	\*(S3\*(Sp
-Tab	\*(Ta	\*(S3\*I
-Enter	\*(Cr	\*(S3\*M
-PF1	\*(S3\*P	\*(S3\*P
-PF2	\*(S3\*Q	\*(S3\*Q
-PF3	\*(S3\*R	\*(S3\*R
-PF4	\*(S3\*S	\*(S3\*S
-* \f1(multiply)\fP	\**	\*(S3\*j
-+ \f1(add)\fP	\*+	\*(S3\*k
-, \f1(comma)\fP	\*,	\*(S3\*l
-- \f1(minus)\fP	\*-	\*(S3\*m
-\&. \f1(period)\fP	\*.	\*(S3\*n
-/ \f1(divide)\fP	\*/	\*(S3\*o
-0	\*0	\*(S3\*p
-1	\*1	\*(S3\*q
-2	\*2	\*(S3\*r
-3	\*3	\*(S3\*(cs
-4	\*4	\*(S3\*t
-5	\*5	\*(S3\*u
-6	\*6	\*(S3\*v
-7	\*7	\*(S3\*w
-8	\*8	\*(S3\*x
-9	\*9	\*(S3\*y
-= (equal)	\*=	\*(S3\*(XX
+l | l | l | l .
+Space	\*(Sp	\*(S3\*(Sp	no
+Tab	\*(Ta	\*(S3\*I	no
+Enter	\*(Cr	\*(S3\*M	yes
+PF1	\*(S3\*P	\*(S3\*P	yes
+PF2	\*(S3\*Q	\*(S3\*Q	yes
+PF3	\*(S3\*R	\*(S3\*R	yes
+PF4	\*(S3\*S	\*(S3\*S	yes
+* \f1(multiply)\fP	\**	\*(S3\*j	no
++ \f1(add)\fP	\*+	\*(S3\*k	no
+, \f1(comma)\fP	\*,	\*(S3\*l	yes
+- \f1(minus)\fP	\*-	\*(S3\*m	yes
+\&. \f1(period)\fP	\*.	\*(S3\*n	yes
+/ \f1(divide)\fP	\*/	\*(S3\*o	no
+0	\*0	\*(S3\*p	yes
+1	\*1	\*(S3\*q	yes
+2	\*2	\*(S3\*r	yes
+3	\*3	\*(S3\*(cs	yes
+4	\*4	\*(S3\*t	yes
+5	\*5	\*(S3\*u	yes
+6	\*6	\*(S3\*v	yes
+7	\*7	\*(S3\*w	yes
+8	\*8	\*(S3\*x	yes
+9	\*9	\*(S3\*y	yes
+= (equal)	\*=	\*(S3\*(XX	no
 _
 .TE
+.LP
+The VT100/VT220 keypad did not have all of those keys.
+They were implemented in \fI\*(xt\fP in X11R1 (1987),
+defining a mapping of all X11 keys which might be provided on a keypad.
+For instance, a Sun4/II type-4 keyboard provided 
+\*(``=\*('' (equal),
+\*(``/\*('' (divide), and
+\*(``*\*('' (multiply).
+.LP
+While the VT420 provided the same keypad,
+the VT520 used a PC-keyboard.
+Because that keyboard's keypad lacks the \*(``,\*('' (comma),
+it was not possible to use EDT's delete-character function with the keypad.
+\fI\*(XT\fP solves that problem for the VT220-keyboard configuration
+by mapping
+.sp
+  \fICtrl\fP \*+ to \*, and
+  \fICtrl\fP \*- to \*-
+.LP
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
 It is not affected by \fBDECCKM\fP or \fBDECKPNM\fP/\fBDECKPAM\fP:
@@ -2785,36 +2814,36 @@ _
 The keypad is similar:
 .TS H
 center;
-lf3w(2c)	lf3w(2c)	lf3w(2c) .
-Key	Numeric	Application
+lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application	VT52?
 _
 .TH
 .T&
-l | l | l .
-Space	\*(Sp	\*(Es\*?\*(Sp
-Tab	\*(Ta	\*(Es\*?\*I
-Enter	\*(Cr	\*(Es\*?\*M
-PF1	\*(Es\*P	\*(Es\*P
-PF2	\*(Es\*Q	\*(Es\*Q
-PF3	\*(Es\*R	\*(Es\*R
-PF4	\*(Es\*S	\*(Es\*S
-* \f1(multiply)\fP	\**	\*(Es\*?\*j
-+ \f1(add)\fP	\*+	\*(Es\*?\*k
-, \f1(comma)\fP	\*,	\*(Es\*?\*l
-- \f1(minus)\fP	\*-	\*(Es\*?\*m
-\&. \f1(period)\fP	\*.	\*(Es\*?\*n
-/ \f1(divide)\fP	\*/	\*(Es\*?\*o
-0	\*0	\*(Es\*?\*p
-1	\*1	\*(Es\*?\*q
-2	\*2	\*(Es\*?\*r
-3	\*3	\*(Es\*?\*(cs
-4	\*4	\*(Es\*?\*t
-5	\*5	\*(Es\*?\*u
-6	\*6	\*(Es\*?\*v
-7	\*7	\*(Es\*?\*w
-8	\*8	\*(Es\*?\*x
-9	\*9	\*(Es\*?\*y
-= (equal)	\*=	\*(Es\*?\*(XX
+l | l | l | l .
+Space	\*(Sp	\*(Es\*?\*(Sp	no
+Tab	\*(Ta	\*(Es\*?\*I	no
+Enter	\*(Cr	\*(Es\*?\*M	no
+PF1	\*(Es\*P	\*(Es\*P	yes
+PF2	\*(Es\*Q	\*(Es\*Q	yes
+PF3	\*(Es\*R	\*(Es\*R	yes
+PF4	\*(Es\*S	\*(Es\*S	no
+* \f1(multiply)\fP	\**	\*(Es\*?\*j	no
++ \f1(add)\fP	\*+	\*(Es\*?\*k	no
+, \f1(comma)\fP	\*,	\*(Es\*?\*l	no
+- \f1(minus)\fP	\*-	\*(Es\*?\*m	no
+\&. \f1(period)\fP	\*.	\*(Es\*?\*n	yes
+/ \f1(divide)\fP	\*/	\*(Es\*?\*o	no
+0	\*0	\*(Es\*?\*p	yes
+1	\*1	\*(Es\*?\*q	yes
+2	\*2	\*(Es\*?\*r	yes
+3	\*3	\*(Es\*?\*(cs	yes
+4	\*4	\*(Es\*?\*t	yes
+5	\*5	\*(Es\*?\*u	yes
+6	\*6	\*(Es\*?\*v	yes
+7	\*7	\*(Es\*?\*w	yes
+8	\*8	\*(Es\*?\*x	yes
+9	\*9	\*(Es\*?\*y	yes
+= (equal)	\*=	\*(Es\*?\*(XX	no
 _
 .TE
 .Sh "Sun-Style Function Keys"

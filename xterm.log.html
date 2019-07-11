@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2071 2019/07/06 00:19:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.2076 2019/07/10 23:49:20 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -981,6 +981,27 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>explain in <code>ctlseqs.ms</code> that some of the numeric
+    keypad keys were xterm extensions rather than VT100/VT220
+    terminal features (prompted by discussion with Thomas
+    Wolff).</li>
+
+    <li>explain in <code>ctlseqs.ms</code> how the DEC windowing
+    extension is supported by xterm.</li>
+
+    <li>add 28 rectangular editing to the primary response
+    (suggested by Thomas Wolff).</li>
+
+    <li>fix a typo, improve wording in <code>ctlseqs.ms</code>
+    (Thomas Wolff).</li>
+
+    <li>fix internal column-parameter when <code>SL</code> or
+    <code>SR</code> is used with left/right margins (patch by
+    Thomas Wolff).</li>
+
+    <li>fix off-by-one in VT52 graphics character mapping (patch by
+    Thomas Wolff).</li>
+
     <li>use <code>_X_UNUSED</code>, etc., when available as a
     fallback for <code>GCC_UNUSED</code>, etc., to reduce compiler
     warnings when building with <code><em>imake</em></code>.</li>

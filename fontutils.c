@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.629 2019/01/11 02:14:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.630 2019/07/08 20:52:44 Thomas.Wolff Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -4044,38 +4044,38 @@ dec2ucs(TScreen *screen, unsigned ch)
 #if OPT_VT52_MODE
 	if (screen != 0 && !(screen->vtXX_level)) {
 	    switch (ch) {
-		MY_UCS(0x0020, 0);	/* reserved, treat as blank           */
-		MY_UCS(0x25ae, 1);	/* black vertical rectangle           */
-		MY_UCS(0x215f, 2);	/* "1/"                               */
-		MY_UCS(0x0020, 3);	/* "3/", not in Unicode, ignore       */
-		MY_UCS(0x0020, 4);	/* "5/", not in Unicode, ignore       */
-		MY_UCS(0x0020, 5);	/* "7/", not in Unicode, ignore       */
-		MY_UCS(0x00b0, 6);	/* degree sign                        */
-		MY_UCS(0x00b1, 7);	/* plus-minus sign                    */
-		MY_UCS(0x2192, 8);	/* right-arrow                        */
-		MY_UCS(0x2026, 9);	/* ellipsis                           */
-		MY_UCS(0x00f7, 10);	/* divide by                          */
-		MY_UCS(0x2193, 11);	/* down arrow                         */
-		MY_UCS(0x23ba, 12);	/* bar at scan 0                      */
-		MY_UCS(0x23ba, 13);	/* bar at scan 1                      */
-		MY_UCS(0x23bb, 14);	/* bar at scan 2                      */
-		MY_UCS(0x23bb, 15);	/* bar at scan 3                      */
-		MY_UCS(0x23bc, 16);	/* bar at scan 4                      */
-		MY_UCS(0x23bc, 17);	/* bar at scan 5                      */
-		MY_UCS(0x23bd, 18);	/* bar at scan 6                      */
-		MY_UCS(0x23bd, 19);	/* bar at scan 7                      */
-		MY_UCS(0x2080, 20);	/* subscript 0                        */
-		MY_UCS(0x2081, 21);	/* subscript 1                        */
-		MY_UCS(0x2082, 22);	/* subscript 2                        */
-		MY_UCS(0x2083, 23);	/* subscript 3                        */
-		MY_UCS(0x2084, 24);	/* subscript 4                        */
-		MY_UCS(0x2085, 25);	/* subscript 5                        */
-		MY_UCS(0x2086, 26);	/* subscript 6                        */
-		MY_UCS(0x2087, 27);	/* subscript 7                        */
-		MY_UCS(0x2088, 28);	/* subscript 8                        */
-		MY_UCS(0x2089, 29);	/* subscript 9                        */
-		MY_UCS(0x00b6, 30);	/* paragraph                          */
-		MY_UCS(0x007f, 31);	/* invalid, treat as rubout           */
+		MY_UCS(0x0020, 0);	/* nbsp, treat as blank           */
+		MY_UCS(0x0020, 1);	/* reserved, treat as blank       */
+		MY_UCS(0x25ae, 2);	/* black vertical rectangle       */
+		MY_UCS(0x215f, 3);	/* "1/"                           */
+		MY_UCS(0x0020, 4);	/* "3/", not in Unicode, ignore   */
+		MY_UCS(0x0020, 5);	/* "5/", not in Unicode, ignore   */
+		MY_UCS(0x0020, 6);	/* "7/", not in Unicode, ignore   */
+		MY_UCS(0x00b0, 7);	/* degree sign                    */
+		MY_UCS(0x00b1, 8);	/* plus-minus sign                */
+		MY_UCS(0x2192, 9);	/* right-arrow                    */
+		MY_UCS(0x2026, 10);	/* ellipsis                       */
+		MY_UCS(0x00f7, 11);	/* divide by                      */
+		MY_UCS(0x2193, 12);	/* down arrow                     */
+		MY_UCS(0x23ba, 13);	/* bar at scan 0                  */
+		MY_UCS(0x23ba, 14);	/* bar at scan 1                  */
+		MY_UCS(0x23bb, 15);	/* bar at scan 2                  */
+		MY_UCS(0x23bb, 16);	/* bar at scan 3                  */
+		MY_UCS(0x23bc, 17);	/* bar at scan 4                  */
+		MY_UCS(0x23bc, 18);	/* bar at scan 5                  */
+		MY_UCS(0x23bd, 19);	/* bar at scan 6                  */
+		MY_UCS(0x23bd, 20);	/* bar at scan 7                  */
+		MY_UCS(0x2080, 21);	/* subscript 0                    */
+		MY_UCS(0x2081, 22);	/* subscript 1                    */
+		MY_UCS(0x2082, 23);	/* subscript 2                    */
+		MY_UCS(0x2083, 24);	/* subscript 3                    */
+		MY_UCS(0x2084, 25);	/* subscript 4                    */
+		MY_UCS(0x2085, 26);	/* subscript 5                    */
+		MY_UCS(0x2086, 27);	/* subscript 6                    */
+		MY_UCS(0x2087, 28);	/* subscript 7                    */
+		MY_UCS(0x2088, 29);	/* subscript 8                    */
+		MY_UCS(0x2089, 30);	/* subscript 9                    */
+		MY_UCS(0x00b6, 31);	/* paragraph                      */
 	    }
 	} else
 #endif

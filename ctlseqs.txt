@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #347 (2019/06/26)
+               updated for XTerm Patch #347 (2019/07/10)
 
 
 
@@ -617,10 +617,21 @@ CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 8  -> User-defined keys.
             Ps = 9  -> National Replacement Character sets.
             Ps = 1 5  -> Technical characters.
+            Ps = 1 6  -> Locator port.
+            Ps = 1 7  -> Terminal state interrogation.
             Ps = 1 8  -> User windows.
             Ps = 2 1  -> Horizontal scrolling.
             Ps = 2 2  -> ANSI color, e.g., VT525.
+            Ps = 2 8  -> Rectangular editing.
             Ps = 2 9  -> ANSI text locator (i.e., DEC Locator mode).
+
+          XTerm supports part of the User windows feature, providing a
+          single page (which corresponds to its visible window).  Rather
+          than resizing the font to change the number of lines/columns
+          in a fixed-size display, xterm uses the window extension con-
+          trols (DECSNLS, DECSCPP, DECSLPP) to adjust its visible win-
+          dow's size.  The "cursor coupling" controls (DECHCCM, DECPCCM,
+          DECVCCM) are ignored.
 
 CSI = Ps c
           Send Device Attributes (Tertiary DA).
@@ -718,8 +729,10 @@ CSI ? Pm h
           release.  See the section Mouse Tracking.  This is the X11
           xterm mouse protocol.
             Ps = 1 0 0 1  -> Use Hilite Mouse Tracking, xterm.
-            Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking, xterm.
-            Ps = 1 0 0 3  -> Use All Motion Mouse Tracking, xterm.
+            Ps = 1 0 0 2  -> Use Cell Motion (button event) Mouse Track-
+          ing, xterm.
+            Ps = 1 0 0 3  -> Use All Motion (any event) Mouse Tracking,
+          xterm.
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events, xterm.
             Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode, xterm.
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode, xterm.
@@ -835,9 +848,10 @@ CSI ? Pm l
             Ps = 1 0 0 0  -> Don't send Mouse X & Y on button press and
           release.  See the section Mouse Tracking.
             Ps = 1 0 0 1  -> Don't use Hilite Mouse Tracking, xterm.
-            Ps = 1 0 0 2  -> Don't use Cell Motion Mouse Tracking,
-          xterm.
-            Ps = 1 0 0 3  -> Don't use All Motion Mouse Tracking, xterm.
+            Ps = 1 0 0 2  -> Don't use Cell Motion (button event) Mouse
+          Tracking, xterm.
+            Ps = 1 0 0 3  -> Don't use All Motion (any event) Mouse
+          Tracking, xterm.
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events, xterm.
             Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode, xterm.
             Ps = 1 0 0 6  -> Disable SGR Mouse Mode, xterm.
@@ -1277,7 +1291,7 @@ CSI Ps ; Ps ; Ps t
           Result is CSI  4 ;  height ;  width t
             Ps = 1 5  -> Report size of the screen in pixels.
           Result is CSI  5 ;  height ;  width t
-            Ps = 1 6  -> Report xterm character size in pixels.
+            Ps = 1 6  -> Report xterm character cell size in pixels.
           Result is CSI  6 ;  height ;  width t
             Ps = 1 8  -> Report the size of the text area in characters.
           Result is CSI  8 ;  height ;  width t
@@ -1398,7 +1412,7 @@ CSI Ps # y
 CSI Pi ; Pg ; Pt ; Pl ; Pb ; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
           Response is
-          DCS Pi ! x x x x ST
+          DCS Pi ! ~ x x x x ST
             Pi is the request id.
             Pg is the page number.
             Pt ; Pl ; Pb ; Pr denotes the rectangle.
@@ -1923,33 +1937,47 @@ The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling key-
 pad:
 
-                  Key            Numeric    Application
-                  -------------+----------+-------------
-                  Space        | SP       | SS3 SP
-                  Tab          | TAB      | SS3 I
-                  Enter        | CR       | SS3 M
-                  PF1          | SS3 P    | SS3 P
-                  PF2          | SS3 Q    | SS3 Q
-                  PF3          | SS3 R    | SS3 R
-                  PF4          | SS3 S    | SS3 S
-                  * (multiply) | *        | SS3 j
-                  + (add)      | +        | SS3 k
-                  , (comma)    | ,        | SS3 l
-                  - (minus)    | -        | SS3 m
-                  . (period)   | .        | SS3 n
-                  / (divide)   | /        | SS3 o
-                  0            | 0        | SS3 p
-                  1            | 1        | SS3 q
-                  2            | 2        | SS3 r
-                  3            | 3        | SS3 s
-                  4            | 4        | SS3 t
-                  5            | 5        | SS3 u
-                  6            | 6        | SS3 v
-                  7            | 7        | SS3 w
-                  8            | 8        | SS3 x
-                  9            | 9        | SS3 y
-                  = (equal)    | =        | SS3 X
-                  -------------+----------+-------------
+            Key            Numeric    Application   VT100?
+            -------------+----------+-------------+----------
+            Space        | SP       | SS3 SP      | no
+            Tab          | TAB      | SS3 I       | no
+            Enter        | CR       | SS3 M       | yes
+            PF1          | SS3 P    | SS3 P       | yes
+            PF2          | SS3 Q    | SS3 Q       | yes
+            PF3          | SS3 R    | SS3 R       | yes
+            PF4          | SS3 S    | SS3 S       | yes
+            * (multiply) | *        | SS3 j       | no
+            + (add)      | +        | SS3 k       | no
+            , (comma)    | ,        | SS3 l       | yes
+            - (minus)    | -        | SS3 m       | yes
+            . (period)   | .        | SS3 n       | yes
+            / (divide)   | /        | SS3 o       | no
+            0            | 0        | SS3 p       | yes
+            1            | 1        | SS3 q       | yes
+            2            | 2        | SS3 r       | yes
+            3            | 3        | SS3 s       | yes
+            4            | 4        | SS3 t       | yes
+            5            | 5        | SS3 u       | yes
+            6            | 6        | SS3 v       | yes
+            7            | 7        | SS3 w       | yes
+            8            | 8        | SS3 x       | yes
+            9            | 9        | SS3 y       | yes
+            = (equal)    | =        | SS3 X       | no
+            -------------+----------+-------------+----------
+
+
+The VT100/VT220 keypad did not have all of those keys.  They were imple-
+mented in xterm in X11R1 (1987), defining a mapping of all X11 keys
+which might be provided on a keypad.  For instance, a Sun4/II type-4
+keyboard provided "=" (equal), "/" (divide), and "*" (multiply).
+
+While the VT420 provided the same keypad, the VT520 used a PC-keyboard.
+Because that keyboard's keypad lacks the "," (comma), it was not possi-
+ble to use EDT's delete-character function with the keypad.  XTerm
+solves that problem for the VT220-keyboard configuration by mapping
+
+  Ctrl +  to ,  and
+  Ctrl -  to -
 
 The VT220 provides a 6-key editing keypad, which is analogous to that on
 the PC keyboard.  It is not affected by DECCKM or DECKPNM/DECKPAM:
@@ -1998,33 +2026,33 @@ Also, the cursor keys do not change:
 
 The keypad is similar:
 
-                  Key            Numeric    Application
-                  -------------+----------+-------------
-                  Space        | SP       | ESC ? SP
-                  Tab          | TAB      | ESC ? I
-                  Enter        | CR       | ESC ? M
-                  PF1          | ESC P    | ESC P
-                  PF2          | ESC Q    | ESC Q
-                  PF3          | ESC R    | ESC R
-                  PF4          | ESC S    | ESC S
-                  * (multiply) | *        | ESC ? j
-                  + (add)      | +        | ESC ? k
-                  , (comma)    | ,        | ESC ? l
-                  - (minus)    | -        | ESC ? m
-                  . (period)   | .        | ESC ? n
-                  / (divide)   | /        | ESC ? o
-                  0            | 0        | ESC ? p
-                  1            | 1        | ESC ? q
-                  2            | 2        | ESC ? r
-                  3            | 3        | ESC ? s
-                  4            | 4        | ESC ? t
-                  5            | 5        | ESC ? u
-                  6            | 6        | ESC ? v
-                  7            | 7        | ESC ? w
-                  8            | 8        | ESC ? x
-                  9            | 9        | ESC ? y
-                  = (equal)    | =        | ESC ? X
-                  -------------+----------+-------------
+            Key            Numeric    Application   VT52?
+            -------------+----------+-------------+----------
+            Space        | SP       | ESC ? SP    | no
+            Tab          | TAB      | ESC ? I     | no
+            Enter        | CR       | ESC ? M     | no
+            PF1          | ESC P    | ESC P       | yes
+            PF2          | ESC Q    | ESC Q       | yes
+            PF3          | ESC R    | ESC R       | yes
+            PF4          | ESC S    | ESC S       | no
+            * (multiply) | *        | ESC ? j     | no
+            + (add)      | +        | ESC ? k     | no
+            , (comma)    | ,        | ESC ? l     | no
+            - (minus)    | -        | ESC ? m     | no
+            . (period)   | .        | ESC ? n     | yes
+            / (divide)   | /        | ESC ? o     | no
+            0            | 0        | ESC ? p     | yes
+            1            | 1        | ESC ? q     | yes
+            2            | 2        | ESC ? r     | yes
+            3            | 3        | ESC ? s     | yes
+            4            | 4        | ESC ? t     | yes
+            5            | 5        | ESC ? u     | yes
+            6            | 6        | ESC ? v     | yes
+            7            | 7        | ESC ? w     | yes
+            8            | 8        | ESC ? x     | yes
+            9            | 9        | ESC ? y     | yes
+            = (equal)    | =        | ESC ? X     | no
+            -------------+----------+-------------+----------
 
 
 
@@ -2802,12 +2830,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
+    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -2817,7 +2845,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.
