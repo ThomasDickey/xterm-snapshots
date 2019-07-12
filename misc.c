@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.888 2019/06/30 22:44:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.889 2019/07/12 01:09:26 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5666,7 +5666,6 @@ SysReasonMsg(int code)
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
     };
     /* *INDENT-ON* */
-
     Cardinal n;
     const char *result = "?";
 
@@ -6803,6 +6802,7 @@ xtermPushSGR(XtermWidget xw, int value)
 #if OPT_ISO_COLORS
 	PUSH_DATA(sgr_foreground);
 	PUSH_DATA(sgr_background);
+	PUSH_DATA(sgr_38_xcolors);
 #endif
     }
     s->used++;
@@ -6923,6 +6923,7 @@ xtermPopSGR(XtermWidget xw)
 #if OPT_ISO_COLORS
 	    POP_DATA(FG_COLOR, sgr_foreground);
 	    POP_DATA(BG_COLOR, sgr_background);
+	    POP_DATA(BG_COLOR, sgr_38_xcolors);
 #if OPT_DIRECT_COLOR
 	    POP_FLAG2(FG_COLOR, ATR_DIRECT_FG);
 	    POP_FLAG2(BG_COLOR, ATR_DIRECT_BG);
@@ -6935,10 +6936,11 @@ xtermPopSGR(XtermWidget xw)
 #endif
 	}
 #if OPT_ISO_COLORS
-	TRACE(("xtermP -> flags%s, fg=%d bg=%d\n",
+	TRACE(("xtermP -> flags%s, fg=%d bg=%d%s\n",
 	       traceIFlags(xw->flags),
 	       xw->sgr_foreground,
-	       xw->sgr_background));
+	       xw->sgr_background,
+	       xw->sgr_38_xcolors ? " (SGR 38)" : ""));
 #else
 	TRACE(("xtermP -> flags%s\n",
 	       traceIFlags(xw->flags)));

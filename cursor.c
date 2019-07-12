@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.76 2019/06/11 08:58:26 tom Exp $ */
+/* $XTermId: cursor.c,v 1.77 2019/07/12 01:11:59 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -332,6 +332,7 @@ CursorSave(XtermWidget xw)
     sc->cur_foreground = xw->cur_foreground;
     sc->cur_background = xw->cur_background;
     sc->sgr_foreground = xw->sgr_foreground;
+    sc->sgr_38_xcolors = xw->sgr_38_xcolors;
 #endif
     saveCharsets(screen, sc->gsets);
 }
@@ -378,6 +379,7 @@ CursorRestore(XtermWidget xw)
 
 #if OPT_ISO_COLORS
     xw->sgr_foreground = sc->sgr_foreground;
+    xw->sgr_38_xcolors = sc->sgr_38_xcolors;
     SGR_Foreground(xw, (xw->flags & FG_COLOR) ? sc->cur_foreground : -1);
     SGR_Background(xw, (xw->flags & BG_COLOR) ? sc->cur_background : -1);
 #endif
