@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1677 2019/07/10 20:54:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1678 2019/07/12 00:50:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1095,7 +1095,7 @@ setExtendedFG(XtermWidget xw)
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
-	&& (!hasDirectFG(xw->flags))
+	&& (!xw->sgr_38_xcolors)
 	&& (fg >= 0)
 	&& (fg < 8)
 	&& (xw->flags & BOLD))
@@ -1133,6 +1133,7 @@ static void
 reset_SGR_Foreground(XtermWidget xw)
 {
     xw->sgr_foreground = -1;
+    xw->sgr_38_xcolors = False;
     clrDirectFG(xw->flags);
     setExtendedFG(xw);
 }
@@ -3336,6 +3337,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
+			xw->sgr_38_xcolors = False;
 			clrDirectFG(xw->flags);
 			setExtendedFG(xw);
 		    });
@@ -3349,6 +3351,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_foreground = value;
+			    xw->sgr_38_xcolors = True;
 			    setDirectFG(xw->flags, extended);
 			    setExtendedFG(xw);
 			}
@@ -3376,6 +3379,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
+			xw->sgr_38_xcolors = False;
 			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
@@ -3386,6 +3390,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			if (parse_extended_colors(xw, &value, &item,
 						  &extended)) {
 			    xw->sgr_background = value;
+			    xw->sgr_38_xcolors = True;
 			    setDirectBG(xw->flags, extended);
 			    setExtendedBG(xw);
 			}
@@ -9236,6 +9241,7 @@ VTInitialize(Widget wrequest,
     }
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
+    wnew->sgr_38_xcolors = False;
     clrDirectFG(wnew->flags);
     clrDirectFG(wnew->flags);
 #endif /* OPT_ISO_COLORS */

@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.361 2018/12/15 19:21:09 tom Exp $ */
+/* $XTermId: input.c,v 1.362 2019/07/11 21:00:12 tom Exp $ */
 
 /*
- * Copyright 1999-2017,2018 by Thomas E. Dickey
+ * Copyright 1999-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -72,6 +72,10 @@
 
 #if HAVE_X11_XF86KEYSYM_H
 #include <X11/XF86keysym.h>
+#endif
+
+#if !defined(HAVE_CONFIG_H) && defined(_X_DEPRECATED)
+#define HAVE_XKBKEYCODETOKEYSYM 1
 #endif
 
 #ifdef HAVE_XKBKEYCODETOKEYSYM

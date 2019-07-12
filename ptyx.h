@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.962 2019/06/29 10:13:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.963 2019/07/12 00:49:18 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2053,6 +2053,7 @@ typedef struct {
 	int		cur_background;  /* current background color	*/
 	int		sgr_foreground;  /* current SGR foreground color */
 	int		sgr_background;  /* current SGR background color */
+	Boolean		sgr_38_xcolors;  /* true if ISO 8613 extension	*/
 #endif
 } SavedCursor;
 
@@ -3111,6 +3112,7 @@ typedef	struct {
 #if OPT_ISO_COLORS
 	int	sgr_foreground;
 	int	sgr_background;
+	Boolean	sgr_38_xcolors;
 #endif
     } stack[MAX_SAVED_SGR];
 } SavedSGR;
@@ -3137,6 +3139,7 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
+    Boolean	sgr_38_xcolors;	/* true if ISO 8613 extension	*/
 #endif
     IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
