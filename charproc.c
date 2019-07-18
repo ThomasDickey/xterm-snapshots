@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1678 2019/07/12 00:50:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1682 2019/07/18 21:41:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -10195,6 +10195,7 @@ void
 initBorderGC(XtermWidget xw, VTwin *win)
 {
     TScreen *screen = TScreenOf(xw);
+    Pixel filler;
 
     TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
 	   xw->core.background_pixel,
@@ -10208,14 +10209,16 @@ initBorderGC(XtermWidget xw, VTwin *win)
 	 */
 	if ((xw->core.background_pixel == T_COLOR(screen, TEXT_BG)) &&
 	    (xw->core.border_pixel == T_COLOR(screen, TEXT_FG))) {
-	    setCgsFore(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
-	    setCgsBack(xw, win, gcBorder, T_COLOR(screen, TEXT_BG));
+	    filler = T_COLOR(screen, TEXT_BG);
 	} else {
-	    setCgsFore(xw, win, gcBorder, xw->core.border_pixel);
-	    setCgsBack(xw, win, gcBorder, xw->core.border_pixel);
+	    filler = xw->core.border_pixel;
 	}
+	TRACE((" border %#lx\n", filler));
+	setCgsFore(xw, win, gcBorder, filler);
+	setCgsBack(xw, win, gcBorder, filler);
 	win->border_gc = getCgsGC(xw, win, gcBorder);
     } else {
+	TRACE((" border unused\n"));
 	win->border_gc = 0;
     }
 
@@ -10226,10 +10229,13 @@ initBorderGC(XtermWidget xw, VTwin *win)
      */
 #if OPT_DOUBLE_BUFFER
     if (resource.buffered) {
-	unsigned long filler;
 	filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
-		  ? (unsigned long) xw->cur_background
-		  : xw->core.background_pixel);
+		  ? getXtermBG(xw, xw->flags, xw->cur_background)
+		  : T_COLOR(screen, TEXT_BG));
+
+	TRACE((" filler %#lx %s\n",
+	       filler,
+	       xw->misc.re_verse ? "reverse" : "normal"));
 
 	setCgsFore(xw, win, gcFiller, filler);
 	setCgsBack(xw, win, gcFiller, filler);
