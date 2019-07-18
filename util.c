@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.800 2019/07/10 08:48:05 tom Exp $ */
+/* $XTermId: util.c,v 1.801 2019/07/17 23:05:19 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2703,7 +2703,7 @@ ReverseVideo(XtermWidget xw)
     ToSwap listToSwap[5];
     int numToSwap = 0;
 
-    TRACE(("ReverseVideo\n"));
+    TRACE(("ReverseVideo now %s\n", BtoS(xw->misc.re_verse)));
 
     /*
      * Swap SGR foreground and background colors.  By convention, these are
@@ -2736,6 +2736,7 @@ ReverseVideo(XtermWidget xw)
 #endif /* NO_ACTIVE_ICON */
 
     xw->misc.re_verse = (Boolean) !xw->misc.re_verse;
+    TRACE(("...swapping done, set ReverseVideo %s\n", BtoS(xw->misc.re_verse)));
 
     if (XtIsRealized((Widget) xw)) {
 	xtermDisplayCursor(xw);
@@ -2772,7 +2773,7 @@ ReverseVideo(XtermWidget xw)
     ReverseOldColors(xw);
     set_cursor_gcs(xw);
     update_reversevideo();
-    TRACE(("...ReverseVideo\n"));
+    TRACE(("...ReverseVideo now %s\n", BtoS(xw->misc.re_verse)));
 }
 
 void
@@ -4160,7 +4161,6 @@ drawXtermText(XtermWidget xw,
 		else if Map2Sbuf(0xbd, 0x0153)
 		else if Map2Sbuf(0xbe, 0x0178)
 		/* *INDENT-ON* */
-
 	    }
 	    if (screen->unicode_font
 		&& (text[src] == ANSI_DEL ||
