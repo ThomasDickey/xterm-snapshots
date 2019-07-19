@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.963 2019/07/12 00:49:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.964 2019/07/19 00:40:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2098,7 +2098,7 @@ typedef struct {
 	SbInfo		sb_info;
 	GC		filler_gc;	/* filler's fg/bg		*/
 	GC		border_gc;	/* inner border's fg/bg		*/
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	Drawable	drawable;	/* X drawable id                */
 #endif
 #if OPT_TOOLBAR
@@ -2459,7 +2459,7 @@ typedef struct {
 	int		lft_marg;	/* left column of "	    "	*/
 	int		rgt_marg;	/* right column of "	    "	*/
 	Widget		scrollWidget;	/* pointer to scrollbar struct	*/
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	int		buffered_sb;	/* nonzero when pending update	*/
 	struct timeval	buffered_at;	/* reference time, for FPS	*/
 #define DbeMsecs(xw)	(1000L / (long) resource.buffered_fps)
@@ -3266,7 +3266,7 @@ typedef struct _TekWidgetRec {
 /* set when the line contains blinking text.
  */
 
-#if OPT_ZICONBEEP || OPT_TOOLBAR || (OPT_DOUBLE_BUFFER && OPT_RENDERFONT)
+#if OPT_ZICONBEEP || OPT_TOOLBAR || (USE_DOUBLE_BUFFER && OPT_RENDERFONT)
 #define HANDLE_STRUCT_NOTIFY 1
 #else
 #define HANDLE_STRUCT_NOTIFY 0
@@ -3350,7 +3350,7 @@ typedef struct _TekWidgetRec {
 #define TWindow(screen)		WhichTWin(screen)->window
 #define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 extern Window VDrawable(TScreen * /* screen */);
 #else
 #define VDrawable(screen)	VWindow(screen)

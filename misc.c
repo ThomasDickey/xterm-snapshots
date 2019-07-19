@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.889 2019/07/12 01:09:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.890 2019/07/19 00:38:20 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -108,7 +108,7 @@
 #endif
 #endif /* VMS */
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 #include <X11/extensions/Xdbe.h>
 #endif
 
@@ -5724,7 +5724,7 @@ NormalExit(void)
     Cleanup(0);
 }
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 void
 xtermFlushDbe(XtermWidget xw)
 {

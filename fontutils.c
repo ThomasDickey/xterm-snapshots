@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.630 2019/07/08 20:52:44 Thomas.Wolff Exp $ */
+/* $XTermId: fontutils.c,v 1.631 2019/07/19 00:40:42 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -3288,9 +3288,9 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     int scrollbar_width;
     VTwin *win = &(screen->fullVwin);
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     discardRenderDraw(TScreenOf(xw));
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
 
     scrollbar_width = (xw->misc.scrollbar
 		       ? (screen->scrollWidget->core.width +

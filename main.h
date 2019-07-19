@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.71 2019/06/28 10:01:15 tom Exp $ */
+/* $XTermId: main.h,v 1.72 2019/07/19 00:45:03 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -147,6 +147,12 @@
 #define DEFBLINKASBOLD		False
 #else
 #define DEFBLINKASBOLD		True
+#endif
+
+#if OPT_DOUBLE_BUFFER
+#define DEF_DOUBLE_BUFFER	True
+#else
+#define DEF_DOUBLE_BUFFER	False
 #endif
 
 #ifndef DEFDELETE_DEL

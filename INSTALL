@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.182 2019/05/27 18:17:01 tom Exp $
+-- $XTermId: INSTALL,v 1.183 2019/07/19 00:46:40 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2018,2019 by Thomas E. Dickey
 --
@@ -437,11 +437,8 @@ The options (in alphabetic order):
 
   --enable-double-buffer  enable double-buffering
 
-	Use experimental double-buffering for display to reduce flicker.
-
-	This option was introduced in patch #282; at that point it needs
-	further work because colors used for clearing the screen do not
-	match the expected behavior (see vttest for instance).
+	Set the initial value of the "buffered" resource, which tells
+	xterm to use double-buffering for display to reduce flicker.
 
   --enable-env-terminfo   setenv $TERMINFO if --with-own-terminfo gives value
 

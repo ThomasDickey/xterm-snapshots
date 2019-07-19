@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.207 2019/07/17 08:44:13 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.208 2019/07/19 00:40:41 tom Exp $ */
 
 /*
  * Copyright 2000-2018,2019 by Thomas E. Dickey
@@ -315,7 +315,7 @@ ScrollBarDrawThumb(XtermWidget xw, int mode)
     if (screen->scrollWidget != 0) {
 	int thumbTop, thumbHeight, totalHeight;
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	if (resource.buffered) {
 	    if (mode == 1) {
 		screen->buffered_sb++;

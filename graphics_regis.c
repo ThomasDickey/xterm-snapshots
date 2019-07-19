@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.111 2019/06/29 17:26:40 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.112 2019/07/19 00:29:55 tom Exp $ */
 
 /*
  * Copyright 2014-2018,2019 by Ross Combs
@@ -36,10 +36,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
-
-#if OPT_DOUBLE_BUFFER
-#include <X11/extensions/Xdbe.h>
-#endif
 
 #include <fontutils.h>
 #include <ptyx.h>

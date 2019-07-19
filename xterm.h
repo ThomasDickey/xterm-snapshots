@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.838 2019/07/05 23:54:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.839 2019/07/19 00:40:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -223,6 +223,12 @@
 
 #ifndef HAVE_X11_XF86KEYSYM_H
 #define HAVE_X11_XF86KEYSYM_H 0
+#endif
+
+#if defined(HAVE_X11_EXTENSIONS_XDBE_H) && defined(HAVE_XDBESWAPBUFFERS)
+#define USE_DOUBLE_BUFFER 1
+#else
+#define USE_DOUBLE_BUFFER 0
 #endif
 
 /***====================================================================***/
@@ -1174,7 +1180,7 @@ extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 extern int getDirectColor(XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
 #endif /* OPT_DIRECT_COLOR */
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 extern void xtermFlushDbe(XtermWidget /* xw */);
 extern void xtermTimedDbe(XtermWidget /* xw */);
 #define xtermNeedSwap(xw,why)	TScreenOf(xw)->needSwap |= (why)
@@ -1182,7 +1188,7 @@ extern void xtermTimedDbe(XtermWidget /* xw */);
 #define xtermFlushDbe(xw)	/* nothing */
 #define xtermTimedDbe(xw)	/* nothing */
 #define xtermNeedSwap(xw,why)	/* nothing */
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
 
 #if OPT_EXEC_XTERM
 extern char *ProcGetCWD(pid_t /* pid */);
