@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.801 2019/07/17 23:05:19 tom Exp $ */
+/* $XTermId: util.c,v 1.802 2019/07/19 00:40:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2045,7 +2045,7 @@ CopyWait(XtermWidget xw)
     XEvent reply;
     XEvent *rep = &reply;
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     if (resource.buffered)
 	return;
 #endif
@@ -2310,7 +2310,7 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	    }
 	    if ((ww > 0) && (x < hmark2)) {
 		int w2 = (xx <= hmark2) ? (xx - x) : (hmark2 - x);
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 		if (resource.buffered) {
 		    XFillRectangle(screen->display, draw,
 				   FillerGC(xw, screen),
@@ -2333,7 +2333,7 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 	    XFillRectangle(screen->display, draw, gc, x, y, width, height);
 	}
     } else {
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	if (resource.buffered) {
 	    gc = FillerGC(xw, screen);
 	    XFillRectangle(screen->display, draw, gc,
@@ -5267,7 +5267,7 @@ XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geom
     return XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h);
 }
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 Window
 VDrawable(TScreen *screen)
 {
@@ -5282,7 +5282,7 @@ void
 discardRenderDraw(TScreen *screen)
 {
     if (
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	   resource.buffered &&
 #endif
 	   screen->renderDraw) {

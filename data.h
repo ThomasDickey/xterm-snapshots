@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.136 2019/06/28 09:55:29 tom Exp $ */
+/* $XTermId: data.h,v 1.137 2019/07/19 00:40:42 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -241,7 +241,7 @@ typedef struct XTERM_RESOURCE {
     String fullscreen_s;	/* resource for "fullscreen" */
     int fullscreen;		/* derived from fullscreen_s */
 #endif
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     Boolean buffered;
     int buffered_fps;
 #endif

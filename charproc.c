@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1682 2019/07/18 21:41:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1683 2019/07/19 01:10:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -104,10 +104,6 @@
 
 #endif
 
-#if OPT_DOUBLE_BUFFER
-#include <X11/extensions/Xdbe.h>
-#endif
-
 #if OPT_WIDE_CHARS
 #include <xutf8.h>
 #include <wcwidth.h>
@@ -115,6 +111,10 @@
 #ifdef HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif
+#endif
+
+#if USE_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
 #endif
 
 #if OPT_INPUT_METHOD
@@ -5344,7 +5344,7 @@ in_put(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     int i;
     int update = VTbuffer->update;
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     int should_wait = 1;
 #endif
 
@@ -5381,7 +5381,7 @@ in_put(XtermWidget xw)
 		FD_CLR(screen->respond, &select_mask);
 		break;
 	    }
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	    if (resource.buffered && should_wait) {
 		/* wait for potential extra data (avoids some flickering) */
 		usleep((unsigned) DbeMsecs(xw));
@@ -5817,9 +5817,9 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   event->xconfigure.y, event->xconfigure.x,
 		   event->xconfigure.height, event->xconfigure.width));
 
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	    discardRenderDraw(TScreenOf(xw));
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
 
 #if OPT_TOOLBAR
 	    /*
@@ -10227,7 +10227,7 @@ initBorderGC(XtermWidget xw, VTwin *win)
      * in xtermClear2().  When not double-buffering, the XClearArea call works,
      * without requiring a separate GC.
      */
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     if (resource.buffered) {
 	filler = (((xw->flags & BG_COLOR) && (xw->cur_background >= 0))
 		  ? getXtermBG(xw, xw->flags, xw->cur_background)
@@ -10466,7 +10466,7 @@ VTRealize(Widget w,
 		      (int) xw->core.depth,
 		      InputOutput, CopyFromParent,
 		      *valuemask | CWBitGravity, values);
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
     screen->fullVwin.drawable = screen->fullVwin.window;
 
     if (resource.buffered) {
@@ -10486,7 +10486,7 @@ VTRealize(Widget w,
 	screen->needSwap = 1;
 	TRACE(("initialized double-buffering\n"));
     }
-#endif /* OPT_DOUBLE_BUFFER */
+#endif /* USE_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
@@ -10561,7 +10561,7 @@ VTRealize(Widget w,
 			  InputOutput, CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
-#if OPT_DOUBLE_BUFFER
+#if USE_DOUBLE_BUFFER
 	screen->iconVwin.drawable = screen->iconVwin.window;
 #endif
 	XtVaSetValues(shell,

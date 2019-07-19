@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.432 2019/06/16 13:45:01 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.433 2019/07/19 01:09:40 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4603,6 +4603,15 @@ AC_DEFUN([CF_X_EXT],[
 CF_TRY_PKG_CONFIG(Xext,,[
 	AC_CHECK_LIB(Xext,XextCreateExtension,
 		[CF_ADD_LIB(Xext)])])
+])dnl
+dnl ---------------------------------------------------------------------------
+AC_DEFUN([CF_X_EXT_DOUBLE_BUFFER],[
+AC_REQUIRE([CF_X_EXT])
+AC_CHECK_HEADER(X11/extensions/Xdbe.h,
+	AC_DEFINE(HAVE_X11_EXTENSIONS_XDBE_H,1,[Define to 1 if we have X11/extensions/Xdbe.h])
+	AC_CHECK_FUNC(XdbeSwapBuffers,
+				  [AC_DEFINE(HAVE_XDBESWAPBUFFERS,1,[Define to 1 if we have XdbeSwapBuffers])
+				   cf_x_ext_double_buffer=yes]))
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_X_FONTCONFIG version: 6 updated: 2015/04/12 15:39:00

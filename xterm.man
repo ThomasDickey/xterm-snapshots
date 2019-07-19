@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.790 2019/06/28 22:49:47 tom Exp $
+.\" $XTermId: xterm.man,v 1.791 2019/07/19 00:51:18 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -1569,11 +1569,12 @@ c l l c c.
 .TE
 .TP 8
 .B "buffered\fP (class\fB Buffered\fP)"
-When \fI\*n\fP is built with double-buffer support,
-this resource can be used to turn it off.
-The default is
+Normally \fI\*n\fP is built with double-buffer support.
+This resource can be used to turn it on or off.
+Setting the resource to
 \*(``true\*(''
-which turns double-buffering on.
+turns double-buffering on.
+The default value is \*(``__double_buffer__\*(''.
 .TP 8
 .B "bufferedFPS\fP (class\fB BufferedFPS\fP)"
 When \fI\*n\fP is built with double-buffer support,
