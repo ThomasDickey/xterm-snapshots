@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.802 2019/07/19 00:40:41 tom Exp $ */
+/* $XTermId: util.c,v 1.803 2019/07/20 00:10:34 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3687,6 +3687,7 @@ drawXtermText(XtermWidget xw,
 #define NOT_BOLD (attr_flags & ~BOLDATTR(screen))
 	font = getNormXftFont(xw, attr_flags, &did_ul);
 	font0 = IS_BOLD ? getNormXftFont(xw, NOT_BOLD, &did_ul) : font;
+	(void) font0;
 #if OPT_RENDERWIDE
 	wfont = getWideXftFont(xw, attr_flags);
 	wfont0 = IS_BOLD ? getWideXftFont(xw, NOT_BOLD) : wfont;

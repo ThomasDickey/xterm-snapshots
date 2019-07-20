@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.577 2019/06/30 18:45:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.578 2019/07/19 22:35:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2236,8 +2236,7 @@ ScreenResize(XtermWidget xw,
 	}
 
 	/* adjust scrolling region */
-	set_tb_margins(screen, 0, screen->max_row);
-	set_lr_margins(screen, 0, screen->max_col);
+	resetMargins(xw);
 	UIntClr(*flags, ORIGIN);
 
 	if (screen->cur_row > screen->max_row)
