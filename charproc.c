@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1683 2019/07/19 01:10:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1686 2019/07/20 00:21:36 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1280,7 +1280,7 @@ set_ansi_conformance(TScreen *screen, int level)
  * Set scrolling margins.  VTxxx terminals require that the top/bottom are
  * different, so we have at least two lines in the scrolling region.
  */
-void
+static void
 set_tb_margins(TScreen *screen, int top, int bottom)
 {
     TRACE(("set_tb_margins %d..%d, prior %d..%d\n",
@@ -1297,7 +1297,7 @@ set_tb_margins(TScreen *screen, int top, int bottom)
 	screen->bot_marg = screen->max_row;
 }
 
-void
+static void
 set_lr_margins(TScreen *screen, int left, int right)
 {
     TRACE(("set_lr_margins %d..%d, prior %d..%d\n",
@@ -1317,11 +1317,27 @@ set_lr_margins(TScreen *screen, int left, int right)
 #define reset_tb_margins(screen) set_tb_margins(screen, 0, screen->max_row)
 #define reset_lr_margins(screen) set_lr_margins(screen, 0, screen->max_col)
 
-static void
-reset_margins(TScreen *screen)
+void
+resetMargins(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
+    UIntClr(xw->flags, LEFT_RIGHT);
     reset_tb_margins(screen);
     reset_lr_margins(screen);
+}
+
+static void
+resetRendition(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    ResetItalics(xw);
+    UIntClr(xw->flags,
+	    (SGR_MASK | SGR_MASK2 | INVISIBLE));
+    if_OPT_ISO_COLORS(screen, {
+	reset_SGR_Colors(xw);
+    });
 }
 
 void
@@ -3212,12 +3228,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case DEFAULT:
 		    /* FALLTHRU */
 		case 0:
-		    ResetItalics(xw);
-		    UIntClr(xw->flags,
-			    (SGR_MASK | SGR_MASK2 | INVISIBLE));
-		    if_OPT_ISO_COLORS(screen, {
-			reset_SGR_Colors(xw);
-		    });
+		    resetRendition(xw);
 		    break;
 		case 1:	/* Bold                 */
 		    UIntSet(xw->flags, BOLD);
@@ -3695,7 +3706,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECALN - alignment test\n"));
 	    if (screen->cursor_state)
 		HideCursor();
-	    reset_margins(screen);
+	    /*
+	     * DEC STD 070 does not mention left/right margins.  Likely the
+	     * text was for VT100, and not updated for VT420.
+	     */
+	    resetRendition(xw);
+	    resetMargins(xw);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
@@ -6058,16 +6074,13 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    if (screen->c132) {
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
-		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = IsSM()? 132 : 80) !=
 		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||
 		    j != MaxCols(screen))
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
-		if (xw->flags & IN132COLUMNS) {
-		    UIntClr(xw->flags, LEFT_RIGHT);
-		    reset_lr_margins(screen);
-		}
+		resetMargins(xw);
+		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
 	case srm_DECSCLM:	/* (slow scroll)        */
@@ -10623,7 +10636,7 @@ VTRealize(Widget w,
     set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
-    reset_margins(screen);
+    resetMargins(xw);
 
     memset(screen->sc, 0, sizeof(screen->sc));
 
@@ -11938,7 +11951,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #endif
 
     /* reset scrolling region */
-    reset_margins(screen);
+    resetMargins(xw);
 
     bitclr(&xw->flags, ORIGIN);
 

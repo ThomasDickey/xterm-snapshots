@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.839 2019/07/19 00:40:41 tom Exp $ */
+/* $XTermId: xterm.h,v 1.841 2019/07/19 22:35:06 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -957,12 +957,11 @@ extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
+extern void resetMargins (XtermWidget /* xw */);
 extern void restoreCharsets (TScreen * /* screen */, DECNRCM_codes * /* source */);
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
 extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
-extern void set_lr_margins (TScreen * /* screen */, int  /* left */, int  /* right */);
-extern void set_tb_margins (TScreen * /* screen */, int  /* top */, int  /* bottom */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
@@ -1407,6 +1406,17 @@ extern void LineSetFlag(LineData /* ld */, int /* flag */);
 #define ScrnIsColInMargins(screen, col) \
 	((col) >= (screen)->lft_marg && (col) <= (screen)->rgt_marg)
 
+/*
+ * If the vertical scrolling margins are active, they will be something other
+ * than the first/last row of the visible screen, as well as being distinct.
+ */
+#define IsTopBottomMode(xw)	(ScrnTopMargin(xw) < ScrnBottomMargin(xw))
+#define ScrnTopMargin(xw)	TScreenOf(xw)->top_marg
+#define ScrnBottomMargin(xw)	TScreenOf(xw)->bot_marg
+
+/*
+ * Left/right horizontal scrolling margins are only active when DECLRMM is.
+ */
 #define IsLeftRightMode(xw) ((xw)->flags & LEFT_RIGHT)
 #define ScrnLeftMargin(xw)  (IsLeftRightMode(xw) \
 			     ? TScreenOf(xw)->lft_marg \
