@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1687 2019/07/22 08:35:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1688 2019/07/22 21:14:11 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1335,9 +1335,6 @@ resetRendition(XtermWidget xw)
     ResetItalics(xw);
     UIntClr(xw->flags,
 	    (SGR_MASK | SGR_MASK2 | INVISIBLE));
-    if_OPT_ISO_COLORS(screen, {
-	reset_SGR_Colors(xw);
-    });
 }
 
 void
@@ -3229,6 +3226,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    /* FALLTHRU */
 		case 0:
 		    resetRendition(xw);
+		    if_OPT_ISO_COLORS(screen, {
+			reset_SGR_Colors(xw);
+		    });
 		    break;
 		case 1:	/* Bold                 */
 		    UIntSet(xw->flags, BOLD);
