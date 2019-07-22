@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.362 2019/07/19 01:21:52 tom Exp $
+dnl $XTermId: configure.in,v 1.363 2019/07/21 19:41:39 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -285,6 +285,7 @@ CF_WITH_XINERAMA
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
+CF_TERMIOS_TYPES
 
 # If we notice Xcursor, there is a workaround needed.
 AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR)])
