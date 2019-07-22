@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.235 2019/06/11 20:07:02 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.236 2019/07/22 20:01:06 Jonathan.Irwin Exp $ */
 
 /*
  * Copyright 2001-2018,2019 by Thomas E. Dickey
@@ -1369,6 +1369,7 @@ TekRun(void)
 	    Ttoggled = True;
 	}
 	TEK4014_ACTIVE(xw) = False;
+	xtermSetWinSize(xw);
     } else {
 	TEK4014_ACTIVE(xw) = False;
 	if (VWindow(TScreenOf(xw)) == 0) {
