@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1686 2019/07/20 00:21:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1687 2019/07/22 08:35:55 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1331,7 +1331,7 @@ static void
 resetRendition(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-
+    (void) screen;
     ResetItalics(xw);
     UIntClr(xw->flags,
 	    (SGR_MASK | SGR_MASK2 | INVISIBLE));
