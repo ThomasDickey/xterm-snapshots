@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.853 2019/07/19 00:45:33 tom Exp $ */
+/* $XTermId: main.c,v 1.854 2019/07/23 20:43:58 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -2436,7 +2436,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #if OPT_MAXIMIZE
 	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
 					      tblFullscreen,
-					      XtNumber(tblFullscreen));
+					      esLAST);
 #endif
 	VTInitTranslations();
 #if OPT_PTY_HANDSHAKE
