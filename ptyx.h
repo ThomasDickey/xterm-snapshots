@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.964 2019/07/19 00:40:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.965 2019/07/23 20:43:30 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1204,6 +1204,7 @@ typedef enum {
     , esTrue
     , esAlways
     , esNever
+    , esLAST
 } FullscreenOps;
 
 #ifndef NO_ACTIVE_ICON

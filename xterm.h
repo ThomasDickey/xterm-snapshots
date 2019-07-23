@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.841 2019/07/19 22:35:06 tom Exp $ */
+/* $XTermId: xterm.h,v 1.842 2019/07/23 20:51:34 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -859,8 +859,8 @@ extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 extern Bool SendMousePosition (XtermWidget  /* w */, XEvent*  /* event */);
 extern XtermMouseModes okSendMousePos(XtermWidget /* xw */);
 extern void DiredButton                PROTO_XT_ACTIONS_ARGS;
-extern void DisownSelection (XtermWidget  /* termw */);
-extern void UnhiliteSelection (XtermWidget  /* termw */);
+extern void DisownSelection (XtermWidget  /* xw */);
+extern void UnhiliteSelection (XtermWidget  /* xw */);
 extern void HandleCopySelection        PROTO_XT_ACTIONS_ARGS;
 extern void HandleInsertSelection      PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectEnd    PROTO_XT_ACTIONS_ARGS;
@@ -1097,7 +1097,7 @@ extern FILE * create_printfile(XtermWidget /* xw */, const char * /* suffix */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern String xtermEnvLocale (void);
 extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, char **/* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
-extern Window WMFrameWindow (XtermWidget /* termw */);
+extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
@@ -1196,12 +1196,12 @@ extern char *ProcGetCWD(pid_t /* pid */);
 #endif
 
 #if OPT_MAXIMIZE
-extern int QueryMaximize (XtermWidget  /* termw */, unsigned * /* width */, unsigned * /* height */);
+extern int QueryMaximize (XtermWidget  /* xw */, unsigned * /* width */, unsigned * /* height */);
 extern void HandleDeIconify            PROTO_XT_ACTIONS_ARGS;
 extern void HandleIconify              PROTO_XT_ACTIONS_ARGS;
 extern void HandleMaximize             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRestoreSize          PROTO_XT_ACTIONS_ARGS;
-extern void RequestMaximize (XtermWidget  /* termw */, int  /* maximize */);
+extern void RequestMaximize (XtermWidget  /* xw */, int  /* maximize */);
 #endif
 
 #if OPT_REPORT_ICONS
@@ -1491,7 +1491,7 @@ extern void GetColors (XtermWidget  /* xw */, ScrnColors * /* pColors */);
 extern void InsertChar (XtermWidget /* xw */, unsigned /* n */);
 extern void InsertLine (XtermWidget /* xw */, int  /* n */);
 extern void RevScroll (XtermWidget /* xw */, int  /* amount */);
-extern void ReverseVideo (XtermWidget  /* termw */);
+extern void ReverseVideo (XtermWidget /* xw */);
 extern void WriteText (XtermWidget /* xw */, IChar * /* str */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
 extern void decode_wcwidth (XtermWidget  /* xw */);

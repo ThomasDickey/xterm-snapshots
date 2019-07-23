@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1688 2019/07/22 21:14:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1689 2019/07/23 20:52:07 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -157,7 +157,7 @@ static void SwitchBufs(XtermWidget /* xw */ ,
 		       Bool /* clearFirst */ );
 static void ToAlternate(XtermWidget /* xw */ ,
 			Bool /* clearFirst */ );
-static void ansi_modes(XtermWidget termw,
+static void ansi_modes(XtermWidget /* xw */ ,
 		       BitFunc /* func */ );
 static int bitclr(unsigned *p, unsigned mask);
 static int bitcpy(unsigned *p, unsigned q, unsigned mask);
