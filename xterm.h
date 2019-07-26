@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.842 2019/07/23 20:51:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.843 2019/07/25 23:59:11 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1631,6 +1631,7 @@ extern void resetZIconBeep(XtermWidget /* xw */);
 extern Boolean showZIconBeep(XtermWidget /* xw */, char * /* name */);
 #else
 #define initZIconBeep() /* nothing */
+#define resetZIconBeep(xw) /* nothing */
 #define showZIconBeep(xw, name) False
 #endif
 
