@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1689 2019/07/23 20:52:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1690 2019/08/28 18:00:31 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -10210,11 +10210,13 @@ initBorderGC(XtermWidget xw, VTwin *win)
     TScreen *screen = TScreenOf(xw);
     Pixel filler;
 
-    TRACE(("initBorderGC core %#lx, %#lx text %#lx, %#lx\n",
+    TRACE(("initBorderGC(%s) core bg %#lx, bd %#lx text fg %#lx, bg %#lx %s\n",
+	   (win == &(screen->fullVwin)) ? "full" : "icon",
 	   xw->core.background_pixel,
 	   xw->core.border_pixel,
 	   T_COLOR(screen, TEXT_FG),
-	   T_COLOR(screen, TEXT_BG)));
+	   T_COLOR(screen, TEXT_BG),
+	   xw->misc.re_verse ? "reverse" : "normal"));
     if (xw->misc.color_inner_border
 	&& (xw->core.background_pixel != xw->core.border_pixel)) {
 	/*
@@ -10230,7 +10232,17 @@ initBorderGC(XtermWidget xw, VTwin *win)
 	setCgsFore(xw, win, gcBorder, filler);
 	setCgsBack(xw, win, gcBorder, filler);
 	win->border_gc = getCgsGC(xw, win, gcBorder);
-    } else {
+    }
+#if USE_DOUBLE_BUFFER
+    else if (resource.buffered) {
+	filler = T_COLOR(screen, TEXT_BG);
+	TRACE((" border %#lx (buffered)\n", filler));
+	setCgsFore(xw, win, gcBorder, filler);
+	setCgsBack(xw, win, gcBorder, filler);
+	win->border_gc = getCgsGC(xw, win, gcBorder);
+    }
+#endif
+    else {
 	TRACE((" border unused\n"));
 	win->border_gc = 0;
     }
