@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2095 2019/08/28 22:15:10 tom Exp $
+  $XTermId: xterm.log.html,v 1.2098 2019/08/31 00:11:03 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -982,6 +982,17 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve font-warning messages by showing which are
+    <em>derived</em> rather than directly from resource settings
+    (suggested by Tomas Korbar). Also filter repeated font-warning
+    messages, to accommodate broken X configurations.</li>
+
+    <li>fix an inconsistency between failure to load derived wide
+    font versus failure to load derived wide-bold font (Redhat
+    #1679790). That relies upon the &ldquo;:unscaled&rdquo;
+    property which is broken in some distributions (however, recent
+    Debian and the BSDs such as MacOS work).</li>
+
     <li>updated autoconf-252 to check X11R7 include/lib directories
     found on some older configurations.</li>
 

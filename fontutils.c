@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.631 2019/07/19 00:40:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.637 2019/08/30 23:08:04 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -207,6 +207,40 @@ setupPackedFonts(XtermWidget xw)
     SetItemSensitivity(fontMenuEntries[fontMenu_font_packedfont].widget, value);
 }
 #endif
+
+typedef struct _nameList {
+    struct _nameList *next;
+    char *name;
+} NameList;
+
+static NameList *derived_fonts;
+
+static Boolean
+is_derived_font_name(const char *name)
+{
+    Boolean result = False;
+    NameList *list;
+    if (!IsEmpty(name)) {
+	for (list = derived_fonts; list != 0; list = list->next) {
+	    if (!x_strcasecmp(name, list->name)) {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+void
+xtermDerivedFont(const char *name)
+{
+    if (!IsEmpty(name) && !is_derived_font_name(name)) {
+	NameList *list = TypeCalloc(NameList);
+	list->name = x_strdup(name);
+	list->next = derived_fonts;
+	derived_fonts = list;
+    }
+}
 
 /*
  * Returns the fields from start to stop in a dash- separated string.  This
@@ -451,6 +485,7 @@ derive_font_name(FontNameProperties *props,
     append_fontname_num(&result, use_average_width);
     append_fontname_str(&result, use_encoding);
 
+    xtermDerivedFont(result);
     return result;
 }
 
@@ -612,6 +647,7 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     append_fontname_str(&result, 0);
     append_fontname_str(&result, props->end);
 
+    xtermDerivedFont(result);
     return result;
 }
 #endif /* OPT_DEC_CHRSET */
@@ -876,36 +912,36 @@ cache_menu_font_name(TScreen *screen, int fontnum, int which, const char *name)
     }
 }
 
-typedef struct _cannotFont {
-    struct _cannotFont *next;
-    char *where;
-} CannotFont;
-
 static void
-cannotFont(XtermWidget xw, const char *who, const char *what, const char *where)
+cannotFont(XtermWidget xw, const char *who, const char *tag, const char *name)
 {
-    static CannotFont *ignored;
-    CannotFont *list;
+    static NameList *reported;
+    NameList *list;
 
     switch (xw->misc.fontWarnings) {
     case fwNever:
 	return;
     case fwResource:
-	for (list = ignored; list != 0; list = list->next) {
-	    if (!strcmp(where, list->where)) {
-		return;
-	    }
-	}
-	if ((list = TypeMalloc(CannotFont)) != 0) {
-	    list->where = x_strdup(where);
-	    list->next = ignored;
-	    ignored = list;
-	}
+	if (is_derived_font_name(name))
+	    return;
 	break;
     case fwAlways:
 	break;
     }
-    xtermWarning("cannot %s%s%s font \"%s\"\n", who, *what ? " " : "", what, where);
+    for (list = reported; list != 0; list = list->next) {
+	if (!x_strcasecmp(name, list->name)) {
+	    return;
+	}
+    }
+    if ((list = TypeMalloc(NameList)) != 0) {
+	list->name = x_strdup(name);
+	list->next = reported;
+	reported = list;
+    }
+    xtermWarning("cannot %s%s%s %sfont \"%s\"\n",
+		 who, *tag ? " " : "", tag,
+		 is_derived_font_name(name) ? "derived " : "",
+		 name);
 }
 
 /*
@@ -921,6 +957,8 @@ xtermOpenFont(XtermWidget xw,
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("xtermOpenFont %d:%d '%s'\n",
+	   result->warn, xw->misc.fontWarnings, NonNull(name)));
     if (!IsEmpty(name)) {
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
@@ -1306,22 +1344,30 @@ loadWideFP(XtermWidget xw,
 
     TRACE(("loadWideFP (%s)\n", NonNull(*nameOutP)));
 
-    if (check_fontname(*nameOutP)) {
-	cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
-    } else if (screen->utf8_fonts && !is_double_width_font(infoRef->fs)) {
+    if (!check_fontname(*nameOutP)
+	&& (screen->utf8_fonts && !is_double_width_font(infoRef->fs))) {
 	char *normal = x_strdup(nameRef);
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
 	if (fp != 0) {
 	    *nameOutP = wide_font_name(fp);
-	    TRACE(("...derived wide %s\n", NonNull(*nameOutP)));
-	    cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
+	    NoFontWarning(infoOut);
 	}
 	free(normal);
     }
 
     if (check_fontname(*nameOutP)) {
-	if (!xtermOpenFont(xw, *nameOutP, infoOut, False)) {
+	if (xtermOpenFont(xw, *nameOutP, infoOut, False)
+	    && is_derived_font_name(*nameOutP)
+	    && EmptyFont(infoOut->fs)) {
+	    xtermCloseFont2(xw, infoOut - fWide, fWide);
+	}
+	if (infoOut->fs == 0) {
 	    xtermCopyFontInfo(infoOut, infoRef);
+	} else {
+	    TRACE(("...%s wide %s\n",
+		   is_derived_font_name(*nameOutP) ? "derived" : "given",
+		   NonNull(*nameOutP)));
+	    cache_menu_font_name(screen, fontnum, fWide, *nameOutP);
 	}
     } else {
 	xtermCopyFontInfo(infoOut, infoRef);
@@ -1339,18 +1385,15 @@ loadWBoldFP(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     Bool status = True;
-    Boolean derived;
     char *bold = NULL;
 
     TRACE(("loadWBoldFP (%s)\n", NonNull(*nameOutP)));
 
-    derived = False;
     if (!check_fontname(*nameOutP)) {
 	FontNameProperties *fp;
 	fp = get_font_name_props(screen->display, boldInfoRef->fs, &bold);
 	if (fp != 0) {
 	    *nameOutP = widebold_font_name(fp);
-	    derived = True;
 	    NoFontWarning(infoOut);
 	}
     }
@@ -1358,13 +1401,13 @@ loadWBoldFP(XtermWidget xw,
     if (check_fontname(*nameOutP)) {
 
 	if (xtermOpenFont(xw, *nameOutP, infoOut, False)
-	    && derived
+	    && is_derived_font_name(*nameOutP)
 	    && !compatibleWideCounts(wideInfoRef->fs, infoOut->fs)) {
 	    xtermCloseFont2(xw, infoOut - fWBold, fWBold);
 	}
 
 	if (infoOut->fs == 0) {
-	    if (derived)
+	    if (is_derived_font_name(*nameOutP))
 		free(*nameOutP);
 	    if (IsEmpty(wideNameRef)) {
 		*nameOutP = x_strdup(boldNameRef);
@@ -1379,7 +1422,7 @@ loadWBoldFP(XtermWidget xw,
 	    }
 	} else {
 	    TRACE(("...%s wide/bold %s\n",
-		   derived ? "derived" : "given",
+		   is_derived_font_name(*nameOutP) ? "derived" : "given",
 		   NonNull(*nameOutP)));
 	    cache_menu_font_name(screen, fontnum, fWBold, *nameOutP);
 	}

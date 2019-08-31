@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.128 2018/11/29 00:03:41 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.129 2019/08/30 22:07:08 tom Exp $ */
 
 /*
- * Copyright 1998-2017,2018 by Thomas E. Dickey
+ * Copyright 1998-2018,2019 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,6 +60,7 @@ extern void xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);
 extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
 extern void xtermCopyFontInfo (XTermFonts * /* target */, XTermFonts * /* source */);
+extern void xtermDerivedFont (const char * /* name */);
 extern void xtermFreeFontInfo (XTermFonts * /* target */);
 extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
