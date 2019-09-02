@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.578 2019/07/19 22:35:41 tom Exp $ */
+/* $XTermId: screen.c,v 1.585 2019/09/02 22:01:51 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1478,6 +1478,7 @@ ScrnRefresh(XtermWidget xw,
 	    Bool force)		/* ... leading/trailing spaces */
 {
     TScreen *screen = TScreenOf(xw);
+    XTermDraw params;
     CLineData *ld;
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
@@ -1717,17 +1718,24 @@ ScrnRefresh(XtermWidget xw,
 		test = flags;
 		checkVeryBoldColors(test, fg);
 
-		x = drawXtermText(xw,
-				  test & DRAWX_MASK,
-				  0,
+		/* *INDENT-EQLS* */
+		params.xw          = xw;
+		params.attr_flags  = (test & DRAWX_MASK);
+		params.draw_flags  = 0;
+		params.this_chrset = GetLineDblCS(ld);
+		params.real_chrset = -1;
+		params.on_wide     = 0;
+
+		x = drawXtermText(&params,
 				  gc, x, y,
-				  GetLineDblCS(ld),
 				  &chars[lastind],
-				  (unsigned) (col - lastind), 0);
+				  (unsigned) (col - lastind));
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int i;
 		    size_t off;
+
+		    params.draw_flags = NOBACKGROUND;
 
 		    for_each_combData(off, ld) {
 			IChar *com_off = ld->combData[off];
@@ -1736,17 +1744,14 @@ ScrnRefresh(XtermWidget xw,
 			    int my_x = LineCursorX(screen, ld, i);
 			    IChar base = chars[i];
 
-			    if (isWide((int) base))
+			    if ((params.on_wide = isWide((int) base)))
 				my_x = LineCursorX(screen, ld, i - 1);
 
 			    if (com_off[i] != 0)
-				drawXtermText(xw,
-					      (test & DRAWX_MASK),
-					      NOBACKGROUND,
+				drawXtermText(&params,
 					      gc, my_x, y,
-					      GetLineDblCS(ld),
 					      com_off + i,
-					      1, isWide((int) base));
+					      1);
 			}
 		    }
 		});
@@ -1788,17 +1793,24 @@ ScrnRefresh(XtermWidget xw,
 	test = flags;
 	checkVeryBoldColors(test, fg);
 
-	drawXtermText(xw,
-		      test & DRAWX_MASK,
-		      0,
+	/* *INDENT-EQLS* */
+	params.xw          = xw;
+	params.attr_flags  = (test & DRAWX_MASK);
+	params.draw_flags  = 0;
+	params.this_chrset = GetLineDblCS(ld);
+	params.real_chrset = -1;
+	params.on_wide     = 0;
+
+	drawXtermText(&params,
 		      gc, x, y,
-		      GetLineDblCS(ld),
 		      &chars[lastind],
-		      (unsigned) (col - lastind), 0);
+		      (unsigned) (col - lastind));
 
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
 	    size_t off;
+
+	    params.draw_flags = NOBACKGROUND;
 
 	    for_each_combData(off, ld) {
 		IChar *com_off = ld->combData[off];
@@ -1807,17 +1819,14 @@ ScrnRefresh(XtermWidget xw,
 		    int my_x = LineCursorX(screen, ld, i);
 		    int base = (int) chars[i];
 
-		    if (isWide(base))
+		    if ((params.on_wide = isWide(base)))
 			my_x = LineCursorX(screen, ld, i - 1);
 
 		    if (com_off[i] != 0)
-			drawXtermText(xw,
-				      (test & DRAWX_MASK),
-				      NOBACKGROUND,
+			drawXtermText(&params,
 				      gc, my_x, y,
-				      GetLineDblCS(ld),
 				      com_off + i,
-				      1, isWide(base));
+				      1);
 		}
 	    }
 	});

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1690 2019/08/28 18:00:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1697 2019/09/02 22:01:51 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -417,6 +417,7 @@ static XtActionsRec actionsList[] = {
 #endif
 };
 /* *INDENT-ON* */
+
 #define SPS screen.printer_state
 
 static XtResource xterm_resources[] =
@@ -947,6 +948,7 @@ xtermAddInput(Widget w)
 #endif
     };
     /* *INDENT-ON* */
+
     TRACE_TRANS("BEFORE", w);
     XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
@@ -1791,6 +1793,7 @@ static struct {
 #endif
 };
 /* *INDENT-ON* */
+
 #if OPT_DEC_RECTOPS
 static char *
 encode_scs(DECNRCM_codes value)
@@ -8380,6 +8383,7 @@ lookupSelectUnit(XtermWidget xw, Cardinal item, String value)
 #endif
     };
     /* *INDENT-ON* */
+
     TScreen *screen = TScreenOf(xw);
     String next = x_skip_nonblanks(value);
     Cardinal n;
@@ -11198,6 +11202,7 @@ void
 ShowCursor(void)
 {
     XtermWidget xw = term;
+    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
     IChar base;
     unsigned flags;
@@ -11534,26 +11539,32 @@ ShowCursor(void)
 	    currentGC = getCgsGC(xw, currentWin, currentCgs);
 #endif /* OPT_WIDE_ATTRS */
 
-	    drawXtermText(xw,
-			  flags & DRAWX_MASK,
-			  0,
+	    /* *INDENT-EQLS* */
+	    params.xw          = xw;
+	    params.attr_flags  = (flags & DRAWX_MASK);
+	    params.draw_flags  = 0;
+	    params.this_chrset = LineCharSet(screen, ld);
+	    params.real_chrset = -1;
+	    params.on_wide     = 0;
+
+	    drawXtermText(&params,
 			  currentGC, x, y,
-			  LineCharSet(screen, ld),
-			  &base, 1, 0);
+			  &base, 1);
 
 #if OPT_WIDE_CHARS
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
+
+		/* *INDENT-EQLS* */
+		params.draw_flags = NOBACKGROUND;
+		params.on_wide    = isWide((int) base);
+
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
 			break;
-		    drawXtermText(xw,
-				  (flags & DRAWX_MASK),
-				  NOBACKGROUND,
+		    drawXtermText(&params,
 				  currentGC, x, y,
-				  LineCharSet(screen, ld),
-				  ld->combData[off] + my_col,
-				  1, isWide((int) base));
+				  ld->combData[off] + my_col, 1);
 		}
 	    });
 #endif
@@ -11589,6 +11600,7 @@ void
 HideCursor(void)
 {
     XtermWidget xw = term;
+    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
     GC currentGC;
     int x, y;
@@ -11707,26 +11719,32 @@ HideCursor(void)
     x = LineCursorX(screen, ld, cursor_col);
     y = CursorY(screen, screen->cursorp.row);
 
-    drawXtermText(xw,
-		  flags & DRAWX_MASK,
-		  0,
+    /* *INDENT-EQLS* */
+    params.xw          = xw;
+    params.attr_flags  = (flags & DRAWX_MASK);
+    params.draw_flags  = 0;
+    params.this_chrset = LineCharSet(screen, ld);
+    params.real_chrset = -1;
+    params.on_wide     = 0;
+
+    drawXtermText(&params,
 		  currentGC, x, y,
-		  LineCharSet(screen, ld),
-		  &base, 1, 0);
+		  &base, 1);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
+
+	/* *INDENT-EQLS* */
+	params.draw_flags  = NOBACKGROUND;
+	params.on_wide     = isWide((int) base);
+
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))
 		break;
-	    drawXtermText(xw,
-			  (flags & DRAWX_MASK),
-			  NOBACKGROUND,
+	    drawXtermText(&params,
 			  currentGC, x, y,
-			  LineCharSet(screen, ld),
-			  ld->combData[off] + my_col,
-			  1, isWide((int) base));
+			  ld->combData[off] + my_col, 1);
 	}
     });
 #endif
@@ -12673,6 +12691,7 @@ VTInitTranslations(void)
     };
 #undef DATA
     /* *INDENT-ON* */
+
     char *result = 0;
 
     int pass;
