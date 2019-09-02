@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.965 2019/07/23 20:43:30 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.967 2019/09/02 22:35:54 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1502,9 +1502,8 @@ typedef enum {
 #else
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
-
-#define GetLineDblCS(ld)       0
-
+#define CSET_SWL                        0
+#define GetLineDblCS(ld)                0
 #define LineCharSet(screen, ld)         0
 #define LineMaxCol(screen, ld)          screen->max_col
 #define LineCursorX(screen, ld, col)    CursorX(screen, col)
@@ -1900,6 +1899,8 @@ typedef struct {
 	int		bottom;
 	int		right;
 } XTermRect;
+
+/***====================================================================***/
 
 	/* indices into save_modes[] */
 typedef enum {
@@ -3284,6 +3285,22 @@ typedef struct _TekWidgetRec {
 #define OFF_PROTECT 0
 #define DEC_PROTECT 1
 #define ISO_PROTECT 2
+
+/***====================================================================***/
+
+/*
+ * Reduce parameter-count of drawXtermText by putting less-modified data here.
+ */
+typedef struct {
+	XtermWidget	xw;
+	unsigned	attr_flags;
+	unsigned	draw_flags;
+	int		this_chrset;
+	int		real_chrset;
+	int		on_wide;
+} XTermDraw;
+
+/***====================================================================***/
 
 #define TScreenOf(xw)	(&(xw)->screen)
 #define TekScreenOf(tw) (&(tw)->screen)

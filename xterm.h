@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.843 2019/07/25 23:59:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.849 2019/09/02 22:02:15 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1479,7 +1479,7 @@ extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int 
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, const IChar * /* text */, Cardinal /* len */, int /* on_wide */);
+extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
 extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
