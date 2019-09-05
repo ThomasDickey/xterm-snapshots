@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1697 2019/09/02 22:01:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1698 2019/09/03 19:53:06 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -11544,7 +11544,7 @@ ShowCursor(void)
 	    params.attr_flags  = (flags & DRAWX_MASK);
 	    params.draw_flags  = 0;
 	    params.this_chrset = LineCharSet(screen, ld);
-	    params.real_chrset = -1;
+	    params.real_chrset = CSET_SWL;
 	    params.on_wide     = 0;
 
 	    drawXtermText(&params,
@@ -11724,7 +11724,7 @@ HideCursor(void)
     params.attr_flags  = (flags & DRAWX_MASK);
     params.draw_flags  = 0;
     params.this_chrset = LineCharSet(screen, ld);
-    params.real_chrset = -1;
+    params.real_chrset = CSET_SWL;
     params.on_wide     = 0;
 
     drawXtermText(&params,

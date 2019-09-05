@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.129 2019/08/30 22:07:08 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.131 2019/09/03 00:27:09 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -86,7 +86,7 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 #define DefaultFontWB(xw)   ((xw)->work.fonts.x11.list_wb[0])
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
+extern char *xtermSpecialFont (XTermDraw * /* params */);
 #endif
 
 #define FontLacksMetrics(font) \
@@ -124,7 +124,7 @@ extern char *xtermSpecialFont (XtermWidget /* xw */, unsigned /* attr_flags */, 
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
-extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
+extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif
