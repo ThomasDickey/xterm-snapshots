@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.849 2019/09/02 22:02:15 tom Exp $ */
+/* $XTermId: xterm.h,v 1.850 2019/09/03 00:11:10 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1029,8 +1029,8 @@ extern void xterm_DECSWL (XtermWidget /* xw */);
 extern void xterm_DECDWL (XtermWidget /* xw */);
 extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
-extern int xterm_Double_index(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */);
-extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* attr_flags */, unsigned  /* draw_flags */, GC  /* old_gc */, int * /* inxp */);
+extern int xterm_Double_index(XTermDraw * /* params */);
+extern GC xterm_DoubleGC(XTermDraw * /* params */, GC /* old_gc */, int * /* inxp */);
 #endif
 
 /* input.c */

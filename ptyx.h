@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.967 2019/09/02 22:35:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.969 2019/09/04 08:34:08 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3219,7 +3219,7 @@ typedef struct _TekWidgetRec {
 #define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
 #define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
-#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+#define DrawBIT(n)	xBIT(n + 8)	/* XTermDraw.draw_flags */
 /* The following attributes are used in the argument of drawXtermText()  */
 #define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
 #define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
@@ -3295,8 +3295,8 @@ typedef struct {
 	XtermWidget	xw;
 	unsigned	attr_flags;
 	unsigned	draw_flags;
-	int		this_chrset;
-	int		real_chrset;
+	unsigned	this_chrset;
+	unsigned	real_chrset;
 	int		on_wide;
 } XTermDraw;
 

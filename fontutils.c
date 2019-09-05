@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.637 2019/08/30 23:08:04 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.639 2019/09/03 00:29:53 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -579,9 +579,9 @@ widebold_font_name(FontNameProperties *props)
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsigned chrset)
+xtermSpecialFont(XTermDraw * params)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(params->xw);
 #if OPT_TRACE
     static char old_spacing[80];
     static FontNameProperties old_props;
@@ -601,16 +601,16 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     pixel_size = props->pixel_size;
     res_x = props->res_x;
     res_y = props->res_y;
-    if (attr_flags & BOLD)
+    if (params->attr_flags & BOLD)
 	weight = "bold";
     else
 	weight = props->weight;
 
-    if (CSET_DOUBLE(chrset))
+    if (CSET_DOUBLE(params->this_chrset))
 	res_x *= 2;
 
-    if (chrset == CSET_DHL_TOP
-	|| chrset == CSET_DHL_BOT) {
+    if (params->this_chrset == CSET_DHL_TOP
+	|| params->this_chrset == CSET_DHL_BOT) {
 	res_y *= 2;
 	pixel_size *= 2;
     }
@@ -620,7 +620,7 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
 	|| old_props.pixel_size != pixel_size
 	|| strcmp(old_props.spacing, props->spacing)) {
 	TRACE(("xtermSpecialFont(atts = %#x, draw = %#x, chrset = %#x)\n",
-	       attr_flags, draw_flags, chrset));
+	       params->attr_flags, params->draw_flags, params->this_chrset));
 	TRACE(("res_x      = %d\n", res_x));
 	TRACE(("res_y      = %d\n", res_y));
 	TRACE(("point_size = %s\n", props->point_size));
@@ -641,8 +641,8 @@ xtermSpecialFont(XtermWidget xw, unsigned attr_flags, unsigned draw_flags, unsig
     append_fontname_str(&result, props->add_style);
     append_fontname_num(&result, pixel_size);
     append_fontname_str(&result, props->point_size);
-    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_x);
-    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_y);
+    append_fontname_num(&result, (params->draw_flags & NORESOLUTION) ? -1 : res_x);
+    append_fontname_num(&result, (params->draw_flags & NORESOLUTION) ? -1 : res_y);
     append_fontname_str(&result, props->spacing);
     append_fontname_str(&result, 0);
     append_fontname_str(&result, props->end);
@@ -3427,16 +3427,14 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
  * line-drawing character).
  */
 void
-xtermDrawBoxChar(XtermWidget xw,
+xtermDrawBoxChar(XTermDraw * params,
 		 unsigned ch,
-		 unsigned attr_flags,
-		 unsigned draw_flags,
 		 GC gc,
 		 int x,
 		 int y,
 		 int cells)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(params->xw);
     /* *INDENT-OFF* */
     static const short glyph_ht[] = {
 	SEG(1*BOX_WIDE/10,  0,		1*BOX_WIDE/10,5*MID_HIGH/6),	/* H */
@@ -3615,10 +3613,10 @@ xtermDrawBoxChar(XtermWidget xw,
     CgsEnum cgsId = (ch == 2) ? gcDots : gcLine;
     VTwin *cgsWin = WhichVWin(screen);
     const short *p;
-    unsigned font_width = (unsigned) (((draw_flags & DOUBLEWFONT) ? 2 : 1)
-				      * screen->fnt_wide);
-    unsigned font_height = (unsigned) (((draw_flags & DOUBLEHFONT) ? 2 : 1)
-				       * screen->fnt_high);
+    unsigned font_width = (((params->draw_flags & DOUBLEWFONT) ? 2U : 1U)
+			   * screen->fnt_wide);
+    unsigned font_height = (((params->draw_flags & DOUBLEHFONT) ? 2U : 1U)
+			    * screen->fnt_high);
 
     if (cells > 1)
 	font_width *= (unsigned) cells;
@@ -3630,11 +3628,11 @@ xtermDrawBoxChar(XtermWidget xw,
      */
     if (screen->utf8_mode
 #if OPT_RENDERFONT
-	&& !UsingRenderFont(xw)
+	&& !UsingRenderFont(params->xw)
 #endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
-	int which = (attr_flags & BOLD) ? fBold : fNorm;
+	int which = (params->attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (xtermMissingChar(n, getNormalFont(screen, which)))
@@ -3668,29 +3666,29 @@ xtermDrawBoxChar(XtermWidget xw,
 	    : "")));
 
     if (cgsId == gcDots) {
-	setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-	setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, gc));
-	setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
+	setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+	setCgsFore(params->xw, cgsWin, cgsId, getCgsFore(params->xw, cgsWin, gc));
+	setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     } else {
-	setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-	setCgsFore(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
-	setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
+	setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+	setCgsFore(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
+	setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     }
-    gc2 = getCgsGC(xw, cgsWin, cgsId);
+    gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
-    if (!(draw_flags & NOBACKGROUND)) {
+    if (!(params->draw_flags & NOBACKGROUND)) {
 	XFillRectangle(screen->display, VDrawable(screen), gc2, x, y,
 		       font_width,
 		       font_height);
     }
 
-    setCgsFont(xw, cgsWin, cgsId, getCgsFont(xw, cgsWin, gc));
-    setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, gc));
-    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, gc));
-    gc2 = getCgsGC(xw, cgsWin, cgsId);
+    setCgsFont(params->xw, cgsWin, cgsId, getCgsFont(params->xw, cgsWin, gc));
+    setCgsFore(params->xw, cgsWin, cgsId, getCgsFore(params->xw, cgsWin, gc));
+    setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
+    gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
     XSetLineAttributes(screen->display, gc2,
-		       (attr_flags & BOLD)
+		       (params->attr_flags & BOLD)
 		       ? ((font_height > 12)
 			  ? font_height / 12
 			  : 1)
