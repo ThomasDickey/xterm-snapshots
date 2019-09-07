@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1698 2019/09/03 19:53:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1700 2019/09/07 00:27:18 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -6075,15 +6075,41 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_DECCOLM:
 	    if (screen->c132) {
+		Boolean willResize = ((j = IsSM()
+				       ? 132
+				       : 80)
+				      != ((xw->flags & IN132COLUMNS)
+					  ? 132
+					  : 80)
+				      || j != MaxCols(screen));
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+		/*
+		 * Work around a bug seen when vttest switches from 132 columns
+		 * back to 80 columns, while double-buffering is active.  If
+		 * Xft is active during the resize, the screen will be blank
+		 * thereafter.  This workaround causes some extra flickering,
+		 * but that is preferable.
+		 */
+#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
+		Boolean buggyXft = False;
+		Cardinal ignore = 0;
+		if (willResize && resource.buffered && UsingRenderFont(xw)) {
+		    ToggleXft();
+		    buggyXft = True;
+		}
+#endif
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
-		if ((j = IsSM()? 132 : 80) !=
-		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||
-		    j != MaxCols(screen))
+		if (willResize)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
 		resetMargins(xw);
 		CursorSet(screen, 0, 0, xw->flags);
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+		if (buggyXft) {
+		    ToggleXft();
+		}
+#endif
 	    }
 	    break;
 	case srm_DECSCLM:	/* (slow scroll)        */
@@ -10502,18 +10528,19 @@ VTRealize(Widget w,
 	Window win = screen->fullVwin.window;
 	Drawable d;
 	int major, minor;
-	if (!XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
-	    fprintf(stderr, "XdbeQueryExtension returned zero!\n");
-	    exit(3);
+	if (XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
+	    d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
+					   (XdbeSwapAction) XdbeCopied);
+	    if (d == None) {
+		fprintf(stderr, "Couldn't allocate a back buffer!\n");
+		exit(3);
+	    }
+	    screen->fullVwin.drawable = d;
+	    screen->needSwap = 1;
+	    TRACE(("initialized double-buffering\n"));
+	} else {
+	    resource.buffered = False;
 	}
-	d = XdbeAllocateBackBufferName(XtDisplay(xw), win, (XdbeSwapAction) XdbeCopied);
-	if (d == None) {
-	    fprintf(stderr, "Couldn't allocate a back buffer!\n");
-	    exit(3);
-	}
-	screen->fullVwin.drawable = d;
-	screen->needSwap = 1;
-	TRACE(("initialized double-buffering\n"));
     }
 #endif /* USE_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;
