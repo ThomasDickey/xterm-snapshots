@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.829 2019/09/05 19:22:10 tom Exp $ */
+/* $XTermId: util.c,v 1.838 2019/09/11 09:23:00 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2951,12 +2951,22 @@ getNormXftFont(XTermDraw * params,
     XftFont *font;
 
     (void) did_ul;
-#if OPT_WIDE_ATTRS
-    if ((attr_flags & ATR_ITALIC)
-#if OPT_ISO_COLORS
-	&& !screen->colorITMode
+#if OPT_DEC_CHRSET
+    if (CSET_DOUBLE(params->real_chrset)) {
+	font = xterm_DoubleFT(params, params->real_chrset, attr_flags);
+    } else {
+	font = 0;
+    }
+    if (font != 0) {
+	;			/* found a usable double-sized font */
+    } else
 #endif
-	&& XFT_FONT(fItal)) {
+#if OPT_WIDE_ATTRS
+	if ((attr_flags & ATR_ITALIC)
+#if OPT_ISO_COLORS
+	    && !screen->colorITMode
+#endif
+	    && XFT_FONT(fItal)) {
 	font = XFT_FONT(fItal);
     } else
 #endif
@@ -3350,41 +3360,6 @@ xtermSetClipRectangles(Display *dpy,
 #define endClipping(screen,gc)	/* nothing */
 #endif /* OPT_CLIP_BOLD */
 
-#if OPT_CLIP_BOLD && OPT_RENDERFONT && defined(HAVE_XFTDRAWSETCLIP) && defined(HAVE_XFTDRAWSETCLIPRECTANGLES)
-#define beginXftClipping(screen,px,py,plength) \
-	if (FontWidth(screen) > 2) { \
-	    if (screen->use_clipping) { \
-		XRectangle clip; \
-		double adds = (screen->scale_height - 1.0) * FontHeight(screen); \
-		int height = dimRound(adds + FontHeight(screen)); \
-		int descnt = dimRound(adds / 2.0) + FontDescent(screen); \
-		int clip_x = (px); \
-		int clip_y = (py) - height + descnt; \
-		clip.x = 0; \
-		clip.y = 0; \
-		clip.height = (unsigned short) height; \
-		clip.width = (unsigned short) (FontWidth(screen) * (Dimension)(plength)); \
-		XftDrawSetClipRectangles (screen->renderDraw, \
-					  clip_x, clip_y, \
-					  &clip, 1); \
-	    } else if (screen->use_border_clipping) { \
-		XRectangle clip; \
-		clip.x = (short) OriginX(screen); \
-		clip.y = (short) OriginY(screen); \
-		clip.height = (unsigned short) Height(screen); \
-		clip.width = (unsigned short) Width(screen); \
-		XftDrawSetClipRectangles (screen->renderDraw, \
-					  0, 0, \
-					  &clip, 1); \
-	    } \
-	}
-#define endXftClipping(screen) \
-	    XftDrawSetClip (screen->renderDraw, 0)
-#else
-#define beginXftClipping(screen,px,py,plength)	/* nothing */
-#define endXftClipping(screen)	/* nothing */
-#endif /* OPT_CLIP_BOLD */
-
 #if OPT_RENDERFONT
 static int
 drawClippedXftString(XTermDraw * params,
@@ -3402,15 +3377,115 @@ drawClippedXftString(XTermDraw * params,
 			       text,
 			       len);
     TScreen *screen = TScreenOf(params->xw);
+    int fontHigh = FontHeight(screen);
+    int fontWide = FontWidth(screen);
 
-    beginXftClipping(screen, x, y, ncells ? ncells : 1);
+    if (fontWide > 2) {
+	int plength = (ncells ? ncells : 1);
+#if OPT_DEC_CHRSET
+	Boolean halfHigh = False;
+	Boolean halfWide = False;
+
+	switch (params->real_chrset) {
+	case CSET_SWL:
+	    break;
+	case CSET_DWL:
+	    halfWide = True;
+	    break;
+	case CSET_DHL_TOP:
+	    halfHigh = True;
+	    halfWide = True;
+	    break;
+	case CSET_DHL_BOT:
+	    halfHigh = True;
+	    halfWide = True;
+	    break;
+	}
+	if (CSET_DOUBLE(params->real_chrset)) {
+	    fontHigh = font->height;
+	    fontWide = font->max_advance_width;
+	    /* check if this is really a double-height font */
+	    if (halfHigh) {
+		int wantHigh = (int) (FontHeight(screen) * 1.8);
+		halfHigh = (fontHigh >= wantHigh);
+		TRACE(("comparing fontHigh %d/%d vs %d:"
+		       " double-height %s for %s\n",
+		       fontHigh, FontHeight(screen),
+		       wantHigh, BtoS(halfHigh),
+		       visibleDblChrset(params->real_chrset)));
+	    }
+	    fontHigh = (halfHigh
+			? (2 * FontHeight(screen))
+			: FontHeight(screen));
+	    /* check if this is really a double-width font */
+	    if (halfWide) {
+		int wantWide = (int) (FontWidth(screen) * 1.8);
+		halfHigh = (fontWide >= wantWide);
+		TRACE(("comparing fontWide %d/%d vs %d:"
+		       " double-width %s for %s\n",
+		       fontWide, FontWidth(screen),
+		       wantWide, BtoS(halfWide),
+		       visibleDblChrset(params->real_chrset)));
+	    }
+	    fontWide = (halfWide
+			? (2 * FontWidth(screen))
+			: FontWidth(screen));
+	}
+#endif
+	if (screen->use_clipping || halfHigh) {
+	    XRectangle clip;
+	    double adds = (screen->scale_height - 1.0) * fontHigh;
+	    int height = dimRound(adds + fontHigh);
+	    int descnt = dimRound(adds / 2.0) + FontDescent(screen);
+	    int clip_x = (x);
+	    int clip_y = (y) - height + descnt;
+
+	    clip.x = 0;
+	    clip.y = 0;
+	    clip.height = (Dimension) height;
+	    clip.width = (Dimension) (fontWide * (Dimension) (plength));
+
+#if OPT_DEC_CHRSET
+	    if (halfHigh) {
+		int adjust;
+
+		clip.height = (unsigned short) FontHeight(screen);
+		clip_y += descnt;
+		if (params->real_chrset == CSET_DHL_BOT) {
+		    y -= clip.height;
+		}
+		adjust = ((clip_y - OriginY(screen)) % FontHeight(screen));
+		if (adjust) {
+		    if (adjust > FontHeight(screen) / 2)
+			adjust -= FontHeight(screen);
+		    clip_y -= adjust;
+		}
+	    }
+#endif
+	    XftDrawSetClipRectangles(screen->renderDraw,
+				     clip_x, clip_y,
+				     &clip, 1);
+	} else if (screen->use_border_clipping) {
+	    XRectangle clip;
+
+	    clip.x = (Position) OriginX(screen);
+	    clip.y = (Position) OriginY(screen);
+	    clip.height = (Dimension) Height(screen);
+	    clip.width = (Dimension) Width(screen);
+
+	    XftDrawSetClipRectangles(screen->renderDraw,
+				     0, 0,
+				     &clip, 1);
+	}
+    }
+
     xtermXftDrawString(params, attr_flags,
 		       fg_color,
 		       font, x, y,
 		       text,
 		       len,
 		       True);
-    endXftClipping(screen);
+    XftDrawSetClip(screen->renderDraw, 0);
     return ncells;
 }
 #endif
@@ -4212,6 +4287,7 @@ drawXtermText(XTermDraw * params,
 		else if Map2Sbuf(0xbd, 0x0153)
 		else if Map2Sbuf(0xbe, 0x0178)
 		/* *INDENT-ON* */
+
 	    }
 	    if (screen->unicode_font
 		&& (text[src] == ANSI_DEL ||

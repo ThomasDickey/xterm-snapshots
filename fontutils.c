@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.639 2019/09/03 00:29:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.651 2019/09/11 08:59:55 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -5071,7 +5071,51 @@ getDoubleFont(TScreen *screen, int which)
 	result = GetDoubleFont(screen, which);
     return result;
 }
+
+#if OPT_RENDERFONT
+XftFont *
+getDoubleXftFont(XTermDraw * params, unsigned chrset, unsigned attr_flags)
+{
+    XftFont *result = 0;
+
+    XtermWidget xw = params->xw;
+    TScreen *screen = TScreenOf(xw);
+    XftPattern *top_pattern;
+    int fontnum = screen->menu_font_number;
+    const char *face_name = getFaceName(xw, False);
+
+    if (chrset != CSET_SWL
+	&& (top_pattern = XftNameParse(face_name)) != 0) {
+	double face_size = xw->misc.face_size[fontnum];
+	XftPattern *sub_pattern = XftPatternDuplicate(top_pattern);
+
+	switch (chrset) {
+	case CSET_DHL_TOP:
+	    /* FALLTHRU */
+	case CSET_DHL_BOT:
+	    face_size *= 2;
+	    XftPatternBuild(sub_pattern,
+			    NormXftPattern,
+			    (void *) 0);
+	    break;
+	case CSET_DWL:
+	    XftPatternBuild(sub_pattern,
+			    NormXftPattern,
+			    FC_ASPECT, XftTypeDouble, 2.0,
+			    (void *) 0);
+	    break;
+	}
+	if (attr_flags & BOLD) {
+	    XftPatternBuild(sub_pattern,
+			    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+			    (void *) 0);
+	}
+	result = xtermOpenXft(xw, face_name, sub_pattern, "doublesize");
+    }
+    return result;
+}
 #endif
+#endif /* OPT_DEC_CHRSET */
 
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
 XTermFonts *
