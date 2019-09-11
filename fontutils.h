@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.131 2019/09/03 00:27:09 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.132 2019/09/08 22:27:55 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -152,6 +152,9 @@ extern XftFont *findXftGlyph (XtermWidget /* xw */, XftFont * /* given */, unsig
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
 extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);
+#if OPT_DEC_CHRSET
+extern XftFont * getDoubleXftFont(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
+#endif
 #endif
 
 #if OPT_SHIFT_FONTS

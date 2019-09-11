@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.95 2019/09/03 00:21:48 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.100 2019/09/10 00:25:30 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -216,7 +216,7 @@ pushback_font(XtermWidget xw, XTermFonts * source)
     return data;
 }
 
-int
+static int
 xterm_Double_index(XTermDraw * params)
 {
     XTermDraw local = *params;
@@ -336,4 +336,27 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 
     return result;
 }
-#endif
+
+#if OPT_RENDERFONT
+/*
+ * Like xterm_DoubleGC(), but returning an Xft font.
+ */
+XftFont *
+xterm_DoubleFT(XTermDraw * params, unsigned chrset, unsigned attr_flags)
+{
+    XftFont *result;
+    TScreen *screen = TScreenOf(params->xw);
+    unsigned num = (chrset & CSET_DWL);
+
+    if ((attr_flags &= BOLD) != 0)
+	num |= 4;
+
+    if ((result = screen->double_xft_fonts[num]) == 0) {
+	result = getDoubleXftFont(params, chrset, attr_flags);
+	screen->double_xft_fonts[num] = result;
+    }
+    return result;
+}
+#endif /* OPT_RENDERFONT */
+
+#endif /* OPT_DEC_CHRSET */

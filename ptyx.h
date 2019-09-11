@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.969 2019/09/04 08:34:08 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.970 2019/09/10 00:21:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2228,14 +2228,17 @@ typedef struct {
 #if OPT_DIRECT_COLOR
 	Boolean		direct_color;	/* direct-color enabled?	*/
 #endif
-#endif
+#endif /* OPT_ISO_COLORS */
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
 	int		cache_doublesize;/* limit of our cache		*/
 	Char		cur_chrset;	/* character-set index & code	*/
 	int		fonts_used;	/* count items in double_fonts	*/
 	XTermFonts	double_fonts[NUM_CHRSET];
+#if OPT_RENDERFONT
+	XftFont *	double_xft_fonts[NUM_CHRSET];
 #endif
+#endif /* OPT_DEC_CHRSET */
 #if OPT_DEC_RECTOPS
 	int		cur_decsace;	/* parameter for DECSACE	*/
 	int		checksum_ext;	/* extensions for DECRQCRA	*/
