@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.651 2019/09/11 08:59:55 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.652 2019/09/12 00:29:00 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -3088,6 +3088,9 @@ xtermComputeFontInfo(XtermWidget xw,
 #define HAVE_ITALICS 0
 #endif
 
+#if OPT_DEC_CHRSET
+	    freeall_DoubleFT(xw);
+#endif
 	    if ((pat = XftNameParse(face_name)) != 0) {
 #define OPEN_XFT(name, tag) name.font = xtermOpenXft(xw, face_name, name.pattern, tag)
 		norm.pattern = XftPatternDuplicate(pat);

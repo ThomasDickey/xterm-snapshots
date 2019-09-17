@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.100 2019/09/10 00:25:30 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.101 2019/09/12 00:24:07 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -356,6 +356,18 @@ xterm_DoubleFT(XTermDraw * params, unsigned chrset, unsigned attr_flags)
 	screen->double_xft_fonts[num] = result;
     }
     return result;
+}
+
+void
+freeall_DoubleFT(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned num;
+
+    for (num = 0; num < XtNumber(screen->double_xft_fonts); ++num) {
+	closeCachedXft(screen, screen->double_xft_fonts[num]);
+	screen->double_xft_fonts[num] = 0;
+    }
 }
 #endif /* OPT_RENDERFONT */
 
