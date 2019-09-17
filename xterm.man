@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.791 2019/07/19 00:51:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.796 2019/09/17 23:40:43 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -523,6 +523,9 @@ This option allows you to override \fI\*n\fP's resource class.
 Normally it is \*(``__default_class__\*('', but
 can be set to another class such as
 \*(``U__default_class__\*('' to override selected resources.
+.IP
+X Toolkit sets the \fBWM_CLASS\fP property using the instance name
+and this class value.
 .TP 8
 .B "\-cm"
 This option disables recognition of ANSI color-change escape sequences.
@@ -1367,6 +1370,8 @@ Note that this is not the same as the toolkit option \fB\-name\fP.
 The default icon name is the application name.
 .IP
 If no suitable icon is found, \fI\*n\fP provides a compiled-in pixmap.
+.IP
+X Toolkit sets the \fBWM_ICON_NAME\fP property using this value.
 .TP 8
 .B \-r
 This option indicates that reverse video should be simulated by swapping
@@ -1461,9 +1466,12 @@ colors.
 .B \-title \fIstring\fP
 This option specifies the window title string, which may be displayed by
 window managers if the user so chooses.
+It is shorthand for specifying the \*(``\fBtitle\fP\*('' resource.
 The default title is the command
 line specified after the \fB\-e\fP option, if any, otherwise the application
 name.
+.IP
+X Toolkit sets the \fBWM_NAME\fP property using this value.
 .TP 8
 .B \-xrm \fIresourcestring\fP
 This option specifies a resource string to be used.
@@ -4914,19 +4922,40 @@ which assume the string is UTF-8.
 However, some users may wish to write a title string encoded in UTF-8.
 The window manager is responsible for drawing window titles.
 Some window managers (not all) support UTF-8 encoding of window titles.
-Set this resource to \*(``true\*('' to allow UTF-8 encoded title strings.
-That cancels the translation to UTF-8,
-allowing UTF-8 strings to be displayed as is.
+Set this resource to \*(``true\*('' to also set UTF-8 encoded title strings
+using the EWMH properties.
 .IP
 This feature is available as a menu entry, since it is related to
 the particular applications you are running within \fI\*n\fP.
 You can also use a control sequence
 (see the discussion of \*(``Title Modes\*(''
-in \fI\*N Control Sequences\fP), to set an equivalent flag.
-The \fBtitleModes\fP resource sets the same value,
-which overrides this resource.
+in \fI\*N Control Sequences\fP), to set an equivalent flag
+(which can also be set using the \fBtitleModes\fP resource).
 .IP
-The default is \*(``false\*(''.
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+Set only ISO-8859-1 title strings, e.g.,
+using the ICCCM \fBWM_NAME\fP STRING property.
+The menu entry is enabled, allowing the choice of title-strings to be changed
+at runtime.
+.TP
+true (1)
+Set both the EWMH (UTF-8 strings) and the ICCCM \fBWM_NAME\fP, etc.
+The menu entry is enabled, allowing the choice to be changed at runtime.
+.TP
+always (2)
+Always set both the EWMH (UTF-8 strings) and the ICCCM \fBWM_NAME\fP, etc.
+This also disables the menu entry.
+.TP
+default (3)
+At startup, the resource is set to true or false,
+according to the effective value of the \fButf8\fP resource.
+.RE
+.IP
+The default is \*(``default\*(''.
 .TP 8
 .B "veryBoldColors\fP (class\fB VeryBoldColors\fP)"
 Specifies whether to combine video attributes with colors specified by
@@ -7942,6 +7971,91 @@ may be defined to a nonstandard location using the configure script.
 .\"
 .
 .
+.SH WINDOW PROPERTIES
+.PP
+In the output from \fBxprop\fP(1), there are several properties.
+.SS Properties set by X Toolkit
+.TP 5
+.B WM_CLASS
+This shows the \fIinstance name\fP and the X resource \fIclass\fP,
+passed to X Toolkit during initialization of \*n,
+e.g.,
+.NS
+WM_CLASS(STRING) = "xterm", "UXTerm"
+.NE
+.TP 5
+.B WM_CLIENT_LEADER
+This shows the window-id which \*n provides
+with an environment variable (\fBWINDOWID\fP),
+e.g.,
+.NS
+WM_CLIENT_LEADER(WINDOW): window id # 0x800023
+.NE
+.TP 5
+.B WM_COMMAND
+This shows the command-line arguments for \*n
+which are passed to X Toolkit during initialization, e.g.,
+.NS
+WM_COMMAND(STRING) = { "xterm", "-class", "UXTerm", "-title", "uxterm", "-u8" }
+.NE
+.TP 5
+.B WM_ICON_NAME
+This holds the icon title,
+which different window managers handle in various ways.
+It is set via the \fBiconName\fP resource.
+Applications can change this using control sequences.
+.TP 5
+.B WM_LOCALE_NAME
+This shows the result from the \fBsetlocale\fP(3) function
+for the \fILC_CTYPE\fP category,
+e.g.,
+.NS
+WM_LOCALE_NAME(STRING) = "en_US.UTF-8"
+.NE
+.TP 5
+.B WM_NAME
+This holds the window title, normally at the top of \*n's window.
+It is set via the \fBtitle\fP resource.
+Applications can change this using control sequences.
+.SS Properties set by Xterm
+X Toolkit does not manage EWMH properties.
+\*N does this directly.
+.TP 5
+.B _NET_WM_ICON_NAME
+stores the icon name.
+.TP 5
+.B _NET_WM_NAME
+stores the title string.
+.TP 5
+.B _NET_WM_PID
+stores the process identifier for \*n's display.
+.SS Properties used by Xterm
+.TP 5
+.B _NET_SUPPORTED
+\*N checks this property on the \fIsupporting window\fP
+to decide if the window manager supports
+specific maximizing styles.
+That may include other window manager hints;
+\*n uses the X library calls to manage those.
+.TP 5
+.B _NET_SUPPORTING_WM_CHECK
+\*N checks this to ensure that it will only update the EWMH
+properties for a window manager which claims EWMH compliance.
+.TP 5
+.B _NET_WM_STATE
+This tells \*n whether its window has been maximized by the window manager,
+and if so, what type of maximizing:
+.RS
+.TP 5
+.B _NET_WM_STATE_FULLSCREEN
+.TP 5
+.B _NET_WM_STATE_MAXIMIZED_HORZ
+.TP 5
+.B _NET_WM_STATE_MAXIMIZED_VERT
+.RE
+.PP
+.
+.
 .SH FILES
 The actual pathnames given may differ on your system.
 .TP 5
@@ -8243,11 +8357,23 @@ https://invisible\-island.net/xterm/xterm.faq.html
 https://invisible\-island.net/xterm/xterm.log.html
 .RE
 .PP
+\fIX Toolkit Intrinsics \(en C Language Interface\fP,
+.br
+Joel McCormack, Paul Asente, Ralph R. Swick (1994),
+.br
+Thomas E. Dickey (2019).
+.PP
 \fIInter-Client Communication Conventions Manual\fR (ICCCM),
 .br
 David Rosenthal and
 Stuart W. Marks (version 2.0, 1994).
 .PP
+\fIExtended Window Manager Hints\fP (EWMH),
+.br
+X Desktop Group (version 1.3, 2005).
+.PP
+EWMH uses \fIUTF8_STRING\fP pervasively without defining it,
+but does mention the ICCCM.
 Version 2.0 of the ICCCM does not address UTF-8.
 That is an extension added in XFree86.
 .bP

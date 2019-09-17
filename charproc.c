@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1703 2019/09/16 20:26:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1705 2019/09/17 08:59:09 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -772,7 +772,6 @@ static XtResource xterm_resources[] =
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
-    Bres(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
@@ -780,6 +779,7 @@ static XtResource xterm_resources[] =
     Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
     Sres(XtNutf8, XtCUtf8, screen.utf8_mode_s, "default"),
     Sres(XtNutf8Fonts, XtCUtf8Fonts, screen.utf8_fonts_s, "default"),
+    Sres(XtNutf8Title, XtCUtf8Title, screen.utf8_title_s, "default"),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
     Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
@@ -8256,6 +8256,27 @@ repairColors(XtermWidget target)
 
 #if OPT_WIDE_CHARS
 static void
+set_utf8_feature(TScreen *screen, int *feature)
+{
+    if (*feature == uDefault) {
+	switch (screen->utf8_mode) {
+	case uFalse:
+	    /* FALLTHRU */
+	case uTrue:
+	    *feature = screen->utf8_mode;
+	    break;
+	case uDefault:
+	    /* should not happen */
+	    *feature = uTrue;
+	    break;
+	case uAlways:
+	    /* use this to disable menu entry */
+	    break;
+	}
+    }
+}
+
+static void
 VTInitialize_locale(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -8264,6 +8285,7 @@ VTInitialize_locale(XtermWidget xw)
     TRACE(("VTInitialize_locale\n"));
     TRACE(("... request screen.utf8_mode = %d\n", screen->utf8_mode));
     TRACE(("... request screen.utf8_fonts = %d\n", screen->utf8_fonts));
+    TRACE(("... request screen.utf8_title = %d\n", screen->utf8_title));
 
     screen->utf8_always = (screen->utf8_mode == uAlways);
     if (screen->utf8_mode < 0)
@@ -8370,27 +8392,14 @@ VTInitialize_locale(XtermWidget xw)
     }
 #endif /* OPT_LUIT_PROG */
 
-    if (screen->utf8_fonts == uDefault) {
-	switch (screen->utf8_mode) {
-	case uFalse:
-	    /* FALLTHRU */
-	case uTrue:
-	    screen->utf8_fonts = screen->utf8_mode;
-	    break;
-	case uDefault:
-	    /* should not happen */
-	    screen->utf8_fonts = uTrue;
-	    break;
-	case uAlways:
-	    /* use this to disable menu entry */
-	    break;
-	}
-    }
+    set_utf8_feature(screen, &screen->utf8_fonts);
+    set_utf8_feature(screen, &screen->utf8_title);
 
     screen->utf8_inparse = (Boolean) (screen->utf8_mode != uFalse);
 
     TRACE(("... updated screen.utf8_mode = %d\n", screen->utf8_mode));
     TRACE(("... updated screen.utf8_fonts = %d\n", screen->utf8_fonts));
+    TRACE(("... updated screen.utf8_title = %d\n", screen->utf8_title));
     TRACE(("...VTInitialize_locale done\n"));
 }
 #endif
@@ -9398,6 +9407,8 @@ VTInitialize(Widget wrequest,
 	extendedBoolean(request->screen.utf8_mode_s, tblUtf8Mode, uLast);
     request->screen.utf8_fonts =
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
+    request->screen.utf8_title =
+	extendedBoolean(request->screen.utf8_title_s, tblUtf8Mode, uLast);
 
     /*
      * Make a copy in the input/request so that DefaultFontN() works for
@@ -9409,7 +9420,6 @@ VTInitialize(Widget wrequest,
     VTInitialize_locale(request);
     init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
-    init_Bres(screen.utf8_title);
 
 #if OPT_LUIT_PROG
     init_Bres(misc.callfilter);
@@ -9421,6 +9431,7 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.utf8_inparse);
     init_Ires(screen.utf8_mode);
     init_Ires(screen.utf8_fonts);
+    init_Ires(screen.utf8_title);
     init_Ires(screen.max_combining);
 
     init_Ires(screen.utf8_always);	/* from utf8_mode, used in doparse */
