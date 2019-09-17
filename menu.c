@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.357 2019/06/12 21:30:29 tom Exp $ */
+/* $XTermId: menu.c,v 1.358 2019/09/17 08:11:55 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3857,8 +3857,8 @@ update_font_utf8_fonts(void)
 void
 update_font_utf8_title(void)
 {
-    Bool active = (TScreenOf(term)->utf8_mode != uFalse);
-    Bool enable = (TScreenOf(term)->utf8_title);
+    Bool active = (TScreenOf(term)->utf8_mode != uAlways);
+    Bool enable = (TScreenOf(term)->utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_title active %d, enable %d\n", active, enable));
     SetItemSensitivity(fontMenuEntries[fontMenu_utf8_title].widget, active);
