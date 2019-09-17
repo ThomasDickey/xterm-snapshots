@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1700 2019/09/07 00:27:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1703 2019/09/16 20:26:52 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2374,7 +2374,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		c &= 0xffff;
 		if (c > 255) {
 		    TRACE(("Found code > 255 while in SOS state: %04X\n", c));
-		    c = '?';
+		    c = BAD_ASCII;
 		}
 	    } else {
 		sp->nextstate = CASE_GROUND_STATE;
@@ -2537,7 +2537,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     */
 	    if ((c & 0xffff) > 255) {
 		sp->nextstate = CASE_PRINT;
-		c = '?';
+		c = BAD_ASCII;
 	    }
 #endif
 	    sp->string_area[(sp->string_used)++] = CharOf(c);
@@ -6082,22 +6082,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 					  ? 132
 					  : 80)
 				      || j != MaxCols(screen));
-#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
-		/*
-		 * Work around a bug seen when vttest switches from 132 columns
-		 * back to 80 columns, while double-buffering is active.  If
-		 * Xft is active during the resize, the screen will be blank
-		 * thereafter.  This workaround causes some extra flickering,
-		 * but that is preferable.
-		 */
-#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
-		Boolean buggyXft = False;
-		Cardinal ignore = 0;
-		if (willResize && resource.buffered && UsingRenderFont(xw)) {
-		    ToggleXft();
-		    buggyXft = True;
-		}
-#endif
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
 		if (willResize)
@@ -6105,11 +6089,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 		(*func) (&xw->flags, IN132COLUMNS);
 		resetMargins(xw);
 		CursorSet(screen, 0, 0, xw->flags);
-#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
-		if (buggyXft) {
-		    ToggleXft();
-		}
-#endif
 	    }
 	    break;
 	case srm_DECSCLM:	/* (slow scroll)        */
@@ -8029,6 +8008,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     Dimension askedWidth, askedHeight;
     XtGeometryResult status;
     XWindowAttributes attrs;
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    Boolean buggyXft = False;
+    Cardinal ignore = 0;
+#endif
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
@@ -8109,6 +8092,21 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     getXtermSizeHints(xw);
 #endif
 
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    /*
+     * Work around a bug seen when vttest switches from 132 columns back to 80
+     * columns, while double-buffering is active.  If Xft is active during the
+     * resize, the screen will be blank thereafter.  This workaround causes
+     * some extra flickering, but that is preferable to a blank screen.
+     */
+#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
+    if (resource.buffered
+	&& UsingRenderFont(xw)) {
+	ToggleXft();
+	buggyXft = True;
+    }
+#endif
+
     TRACE(("...requesting resize %dx%d\n", askedHeight, askedWidth));
     status = REQ_RESIZE((Widget) xw,
 			askedWidth, askedHeight,
@@ -8142,7 +8140,14 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     if (xtermAppPending())
 	xevents(xw);
 
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    if (buggyXft) {
+	ToggleXft();
+    }
+#endif
+
     TRACE(("...RequestResize done\n"));
+    return;
 }
 
 static String xterm_trans =

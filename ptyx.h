@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.970 2019/09/10 00:21:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.972 2019/09/16 22:25:05 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -382,6 +382,13 @@ typedef struct {
 #define	ANSI_OSC	0x9D
 #define	ANSI_PM		0x9E
 #define	ANSI_APC	0x9F
+
+#define BAD_ASCII	'?'
+#define NonLatin1(c)	(((c) != ANSI_LF) && \
+			 ((c) != ANSI_HT) && \
+			 (((c) < ANSI_SPA) || \
+			  ((c) >= ANSI_DEL && (c) <= ANSI_APC)))
+#define OnlyLatin1(c)	(NonLatin1(c) ? BAD_ASCII : (c))
 
 #define L_CURL		'{'
 #define R_CURL		'}'

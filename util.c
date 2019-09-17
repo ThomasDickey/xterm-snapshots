@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.838 2019/09/11 09:23:00 tom Exp $ */
+/* $XTermId: util.c,v 1.839 2019/09/16 20:27:30 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3181,7 +3181,7 @@ ucs_workaround(XTermDraw * params,
 			      &eqv,
 			      1);
 		x += FontWidth(screen);
-		eqv = '?';
+		eqv = BAD_ASCII;
 	    } while (width-- > 1);
 
 	    fixed = True;

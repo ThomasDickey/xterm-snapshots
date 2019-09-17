@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.890 2019/07/19 00:38:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.900 2019/09/17 00:32:26 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -110,6 +110,10 @@
 
 #if USE_DOUBLE_BUFFER
 #include <X11/extensions/Xdbe.h>
+#endif
+
+#if OPT_WIDE_CHARS
+#include <wctype.h>
 #endif
 
 #if OPT_TEK4014
@@ -5334,32 +5338,34 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 void
 ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 {
-#if OPT_WIDE_CHARS
-    static Char *converted;	/* NO_LEAKS */
-#endif
-
     Arg args[1];
     Boolean changed = True;
     Widget w = CURRENT_EMU();
     Widget top = SHELL_OF(w);
 
-    char *my_attr;
-    char *name;
+    char *my_attr = NULL;
+    char *old_value = value;
     size_t limit;
-    Char *c1;
-    Char *cp;
+#if OPT_WIDE_CHARS
+    Boolean titleIsUTF8;
+#endif
 
     if (!AllowTitleOps(xw))
 	return;
 
-    if (value == 0)
-	value = emptyString;
+    /*
+     * Ignore empty or too-long requests.
+     */
+    if (value == 0 || strlen(value) > 1000)
+	return;
+
     if (IsTitleMode(xw, tmSetBase16)) {
 	const char *temp;
 	char *test;
 
+	/* this allocates a new string, if no error is detected */
 	value = x_decode_hex(value, &temp);
-	if (*temp != '\0') {
+	if (value == 0 || *temp != '\0') {
 	    free(value);
 	    return;
 	}
@@ -5370,106 +5376,190 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	    }
 	}
     }
-
-    c1 = (Char *) value;
-    name = value;
-    limit = strlen(name);
-    my_attr = x_strdup(attribute);
-
-    ReportIcons(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
-
-    /*
-     * Ignore titles that are too long to be plausible requests.
-     */
-    if (limit > 0 && limit < 1024) {
-
-	/*
-	 * After all decoding, overwrite nonprintable characters with '?'.
-	 */
-	for (cp = c1; *cp != 0; ++cp) {
-	    Char *c2 = cp;
-	    if (!xtermIsPrintable(xw, &cp, c1 + limit)) {
-		memset(c2, '?', (size_t) (cp + 1 - c2));
-	    }
-	}
-
 #if OPT_WIDE_CHARS
-	/*
-	 * If we're running in UTF-8 mode, and have not been told that the
-	 * title string is in UTF-8, it is likely that non-ASCII text in the
-	 * string will be rejected because it is not printable in the current
-	 * locale.  So we convert it to UTF-8, allowing the X library to
-	 * convert it back.
-	 */
-	if (xtermEnvUTF8() && !IsSetUtf8Title(xw)) {
-	    int n;
+    /*
+     * By design, xterm uses the XtNtitle resource of the X Toolkit for setting
+     * the WM_NAME property, rather than doing this directly.  That relies on
+     * the application to tell it if the format should be something other than
+     * STRING, i.e., by setting the XtNtitleEncoding resource.
+     *
+     * The ICCCM says that WM_NAME is TEXT (i.e., uninterpreted).  In X11R6,
+     * the ICCCM listed STRING and COMPOUND_TEXT as possibilities; XFree86
+     * added UTF8_STRING (the documentation for that was discarded by an Xorg
+     * developer, although the source-code provides this feature).
+     *
+     * Since X11R5, if the X11 library fails to store a text property as
+     * STRING, it falls back to COMPOUND_TEXT.  For best interoperability, we
+     * prefer to use STRING if the data fits, or COMPOUND_TEXT.  In either
+     * case, limit the resulting characters to the printable ISO-8859-1 set.
+     */
+    titleIsUTF8 = isValidUTF8((Char *) value);
+    if (xtermEnvUTF8() && titleIsUTF8) {
+	char *testc = malloc(strlen(value) + 1);
+	Char *nextc = (Char *) value;
+	Char *lastc = (Char *) testc;
+	Boolean ok8bit = True;
 
-	    for (n = 0; name[n] != '\0'; ++n) {
-		if (CharOf(name[n]) > 127) {
-		    if (converted != 0)
-			free(converted);
-		    if ((converted = TypeMallocN(Char, 1 + (6 * limit))) != 0) {
-			Char *temp = converted;
-			while (*name != 0) {
-			    temp = convertToUTF8(temp, CharOf(*name));
-			    ++name;
-			}
-			*temp = 0;
-			name = (char *) converted;
-			ReportIcons(("...converted{%s}\n", name));
+	if (testc != NULL) {
+	    /*
+	     * Check if the data fits in STRING.  Along the way, replace
+	     * control characters.
+	     */
+	    while (*nextc != '\0') {
+		unsigned ch;
+		nextc = convertFromUTF8(nextc, &ch);
+		if (ch > 255) {
+		    ok8bit = False;
+		} else if (!IsLatin1(ch)) {
+		    ch = OnlyLatin1(ch);
+		}
+		*lastc++ = (Char) ch;
+	    }
+	    *lastc = '\0';
+	    if (ok8bit) {
+		TRACE(("ChangeGroup: UTF-8 converted to ISO-8859-1\n"));
+		if (value != old_value)
+		    free(value);
+		value = testc;
+		titleIsUTF8 = False;
+	    } else {
+		TRACE(("ChangeGroup: UTF-8 NOT converted to ISO-8859-1:\n"
+		       "\t%s\n", value));
+		nextc = (Char *) value;
+		while (*nextc != '\0') {
+		    unsigned ch;
+		    Char *skip = convertFromUTF8(nextc, &ch);
+		    if (iswcntrl(ch)) {
+			memset(nextc, BAD_ASCII, (size_t) (skip - nextc));
 		    }
-		    break;
+		    nextc = skip;
 		}
 	    }
 	}
+    } else
+#endif
+    {
+	Char *c1 = (Char *) value;
+
+	TRACE(("ChangeGroup: assume ISO-8859-1\n"));
+	for (c1 = (Char *) value; *c1 != '\0'; ++c1) {
+	    *c1 = OnlyLatin1(*c1);
+	}
+    }
+
+    limit = strlen(value);
+    my_attr = x_strdup(attribute);
+
+    ReportIcons(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, value));
+
+#if OPT_WIDE_CHARS
+    /*
+     * If we're running in UTF-8 mode, and have not been told that the
+     * title string is in UTF-8, it is likely that non-ASCII text in the
+     * string will be rejected because it is not printable in the current
+     * locale.  So we convert it to UTF-8, allowing the X library to
+     * convert it back.
+     */
+    TRACE(("ChangeGroup: value is %sUTF-8\n", titleIsUTF8 ? "" : "NOT "));
+    if (xtermEnvUTF8() && !titleIsUTF8) {
+	Char *c1 = (Char *) value;
+	int n;
+
+	for (n = 0; c1[n] != '\0'; ++n) {
+	    if (c1[n] > 127) {
+		Char *converted;
+		if ((converted = TypeMallocN(Char, 1 + (6 * limit))) != 0) {
+		    Char *temp = converted;
+		    while (*c1 != 0) {
+			temp = convertToUTF8(temp, *c1++);
+		    }
+		    *temp = 0;
+		    if (value != old_value)
+			free(value);
+		    value = (char *) converted;
+		    ReportIcons(("...converted{%s}\n", value));
+		}
+		break;
+	    }
+	}
+    }
 #endif
 
 #if OPT_SAME_NAME
-	/* If the attribute isn't going to change, then don't bother... */
-
-	if (resource.sameName) {
-	    char *buf = 0;
-	    XtSetArg(args[0], my_attr, &buf);
-	    XtGetValues(top, args, 1);
-	    TRACE(("...comparing{%s}\n", buf));
-	    if (buf != 0 && strcmp(name, buf) == 0)
-		changed = False;
-	}
+    /* If the attribute isn't going to change, then don't bother... */
+    if (resource.sameName) {
+	char *buf = 0;
+	XtSetArg(args[0], my_attr, &buf);
+	XtGetValues(top, args, 1);
+	TRACE(("...comparing{%s}\n", NonNull(buf)));
+	if (buf != 0 && strcmp(value, buf) == 0)
+	    changed = False;
+    }
 #endif /* OPT_SAME_NAME */
 
-	if (changed) {
-	    ReportIcons(("...updating %s\n", my_attr));
-	    ReportIcons(("...value is %s\n", name));
-	    XtSetArg(args[0], my_attr, name);
-	    XtSetValues(top, args, 1);
-
+    if (changed) {
+	ReportIcons(("...updating %s\n", my_attr));
+	ReportIcons(("...value is %s\n", value));
+	XtSetArg(args[0], my_attr, value);
+	XtSetValues(top, args, 1);
+    }
 #if OPT_WIDE_CHARS
-	    if (xtermEnvUTF8()) {
-		Display *dpy = XtDisplay(xw);
-		Atom my_atom;
+    if (xtermEnvUTF8()) {
+	Display *dpy = XtDisplay(xw);
+	const char *propname = (!strcmp(my_attr, XtNtitle)
+				? "_NET_WM_NAME"
+				: "_NET_WM_ICON_NAME");
+	Atom my_atom = XInternAtom(dpy, propname, False);
 
-		const char *propname = (!strcmp(my_attr, XtNtitle)
-					? "_NET_WM_NAME"
-					: "_NET_WM_ICON_NAME");
-		if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
-		    if (IsSetUtf8Title(xw)) {
-			ReportIcons(("...updating %s\n", propname));
-			ReportIcons(("...value is %s\n", value));
-			XChangeProperty(dpy, VShellWindow(xw), my_atom,
-					XA_UTF8_STRING(dpy), 8,
-					PropModeReplace,
-					(Char *) value,
-					(int) strlen(value));
-		    } else {
-			ReportIcons(("...deleting %s\n", propname));
-			XDeleteProperty(dpy, VShellWindow(xw), my_atom);
-		    }
+	if (my_atom != None) {
+	    changed = True;
+
+#if OPT_SAME_NAME
+	    if (resource.sameName && IsSetUtf8Title(xw)) {
+		Atom actual_type;
+		Atom requested_type = XA_UTF8_STRING(dpy);
+		int actual_format = 0;
+		long long_length = 1024;
+		unsigned long nitems = 0;
+		unsigned long bytes_after = 0;
+		unsigned char *prop = 0;
+
+		if (xtermGetWinProp(dpy,
+				    VShellWindow(xw),
+				    my_atom,
+				    0L,
+				    long_length,
+				    requested_type,
+				    &actual_type,
+				    &actual_format,
+				    &nitems,
+				    &bytes_after,
+				    &prop)
+		    && actual_type == requested_type
+		    && actual_format == 8
+		    && prop != 0
+		    && nitems == strlen(value)
+		    && memcmp(value, prop, nitems) == 0) {
+		    changed = False;
 		}
 	    }
-#endif
+#endif /* OPT_SAME_NAME */
+	    if (changed && IsSetUtf8Title(xw)) {
+		ReportIcons(("...updating %s\n", propname));
+		ReportIcons(("...value is %s\n", value));
+		XChangeProperty(dpy, VShellWindow(xw), my_atom,
+				XA_UTF8_STRING(dpy), 8,
+				PropModeReplace,
+				(Char *) value,
+				(int) strlen(value));
+	    } else {
+		ReportIcons(("...deleting %s\n", propname));
+		XDeleteProperty(dpy, VShellWindow(xw), my_atom);
+	    }
 	}
     }
-    if (IsTitleMode(xw, tmSetBase16) && (value != emptyString)) {
+#endif
+    if (value != old_value) {
 	free(value);
     }
     free(my_attr);

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.852 2019/09/08 21:52:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.856 2019/09/15 18:44:18 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1032,6 +1032,7 @@ extern void xterm_ResetDouble(XtermWidget /* xw */);
 extern GC xterm_DoubleGC(XTermDraw * /* params */, GC /* old_gc */, int * /* inxp */);
 #if OPT_RENDERFONT
 extern XftFont * xterm_DoubleFT(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
+extern void freeall_DoubleFT(XtermWidget /* xw */);
 #endif
 #endif
 
@@ -1299,9 +1300,11 @@ extern void noleaks_ptydata ( void );
 #endif
 
 #if OPT_WIDE_CHARS
+extern Boolean isValidUTF8 (Char * /* lp */);
 extern Char *convertToUTF8 (Char * /* lp */, unsigned  /* c */);
+extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
-extern PtyData * fakePtyData(PtyData * /* result */, Char * /* next */, Char * /* last */);
+extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (TScreen * /* screen */, int  /* f */);
 extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
