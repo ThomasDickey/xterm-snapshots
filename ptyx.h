@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.973 2019/09/17 08:17:28 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.975 2019/09/18 21:39:31 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1592,9 +1592,12 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
+#define NARROW_ICHAR	0xffff
 #if OPT_WIDER_ICHAR
+#define WIDEST_ICHAR	0x1fffff
 typedef unsigned IChar;		/* for 8-21 bit characters */
 #else
+#define WIDEST_ICHAR	NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
 #else

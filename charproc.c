@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1705 2019/09/17 08:59:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1706 2019/09/18 22:03:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2371,7 +2371,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (sp->parsestate == sp->groundtable) {
 		sp->nextstate = CASE_PRINT;
 	    } else if (sp->parsestate == sos_table) {
-		c &= 0xffff;
+		c &= WIDEST_ICHAR;
 		if (c > 255) {
 		    TRACE(("Found code > 255 while in SOS state: %04X\n", c));
 		    c = BAD_ASCII;
@@ -2535,7 +2535,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * accommodate the application a little by not aborting the
 	     * string.
 	     */
-	    if ((c & 0xffff) > 255) {
+	    if ((c & WIDEST_ICHAR) > 255) {
 		sp->nextstate = CASE_PRINT;
 		c = BAD_ASCII;
 	    }
