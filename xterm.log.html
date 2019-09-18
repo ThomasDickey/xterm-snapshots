@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2102 2019/09/17 20:51:58 tom Exp $
+  $XTermId: xterm.log.html,v 1.2103 2019/09/18 23:27:19 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -987,6 +987,12 @@
     <li>improve title-string feature:
 
       <ul>
+        <li>if any of <code>allowC1Printable</code>,
+        <code>utf8Title</code> or <code>titleModes</code> hint that
+        an application might send a title-string encoded in UTF-8,
+        check if that is the case, and if it is recodable into
+        ISO-8859-1, use that for the ICCCM-style title.</li>
+
         <li>check if the title given by a control sequence happens
         to be already encoded in UTF-8, to avoid double-encoding
         (FreeBSD #240393).</li>

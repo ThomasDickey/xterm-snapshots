@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.900 2019/09/17 00:32:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.901 2019/09/18 23:17:54 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3188,7 +3188,9 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 
 /***====================================================================***/
 
-#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) || (xw->screen.utf8_title))
+#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
+			 || (xw->screen.utf8_title) \
+			 || (xw->screen.c1_printable))
 
 static Bool
 xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
@@ -5394,7 +5396,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
      * case, limit the resulting characters to the printable ISO-8859-1 set.
      */
     titleIsUTF8 = isValidUTF8((Char *) value);
-    if (xtermEnvUTF8() && titleIsUTF8) {
+    if (IsSetUtf8Title(xw) && titleIsUTF8) {
 	char *testc = malloc(strlen(value) + 1);
 	Char *nextc = (Char *) value;
 	Char *lastc = (Char *) testc;

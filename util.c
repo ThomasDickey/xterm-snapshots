@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.839 2019/09/16 20:27:30 tom Exp $ */
+/* $XTermId: util.c,v 1.840 2019/09/18 21:40:15 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4262,7 +4262,7 @@ drawXtermText(XTermDraw * params,
 	    /*
 	     * bitmap-fonts are limited to 16-bits.
 	     */
-	    if (ch > 0xffff) {
+	    if (ch > NARROW_ICHAR) {
 		ch = 0;
 	    }
 #endif

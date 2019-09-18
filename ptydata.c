@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.120 2019/09/17 00:47:24 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.121 2019/09/18 23:28:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -125,7 +125,7 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		if (utf_count == 0) {
 #if !OPT_WIDER_ICHAR
 		    /* characters outside UCS-2 become UCS_REPL */
-		    if (utf_char > 0xffff) {
+		    if (utf_char > NARROW_ICHAR) {
 			TRACE(("using replacement for %#x\n", utf_char));
 			utf_char = UCS_REPL;
 		    }

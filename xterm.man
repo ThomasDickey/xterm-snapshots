@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.796 2019/09/17 23:40:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.797 2019/09/18 23:57:24 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -4767,7 +4767,18 @@ The default for this resource is \*(``false\*(''.
 Tells \fI\*n\fP whether to accept or return
 window- and icon-labels in ISO-8859-1
 (the default) or UTF-8.
-Either can be encoded in hexadecimal.
+Either can be encoded in hexadecimal:
+.RS
+.bP
+UTF-8 titles require special treatment,
+because they may contain bytes which can be mistaken for control characters.
+Hexadecimal-encoding is supported to eliminate that possibility.
+.bP
+As an alternative, you could use the \fBallowC1Printable\fP resource,
+which suppresses \*n's parsing of the relevant control characters
+(and as a result, treats those bytes as data).
+.RE
+.IP
 The default for this resource is \*(``0\*(''.
 .IP
 Each bit (bit \*(``0\*('' is 1, bit \*(``1\*('' is 2, etc.)
@@ -4782,7 +4793,8 @@ Set window/icon labels using hexadecimal
 Query window/icon labels using hexadecimal
 .TP 5
 2
-Set window/icon labels using UTF-8 (overrides \fButf8Title\fP resource).
+Set window/icon labels using UTF-8
+(gives the same effect as the \fButf8Title\fP resource).
 .TP 5
 3
 Query window/icon labels using UTF-8
