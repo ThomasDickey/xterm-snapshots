@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.797 2019/09/18 23:57:24 tom Exp $
+.\" $XTermId: xterm.man,v 1.798 2019/09/20 09:07:49 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -1684,7 +1684,7 @@ That is, \*(``mini.\*n\*('' is the same as \*(``mini.\*n_48x48\*(''.
 .IP
 If no explicit \fBiconHint\fP resource is given
 (or if none of the compiled-in names matches),
-\*n uses \*(``mini.\*n\*('' (which is always compiled-in).
+\fI\*n\fP uses \*(``mini.\*n\*('' (which is always compiled-in).
 .IP
 The \fBiconHint\fP resource has no effect on \*(``desktop\*('' files,
 including \*(``panel\*('' and \*(``menu\*(''.
@@ -4775,7 +4775,7 @@ because they may contain bytes which can be mistaken for control characters.
 Hexadecimal-encoding is supported to eliminate that possibility.
 .bP
 As an alternative, you could use the \fBallowC1Printable\fP resource,
-which suppresses \*n's parsing of the relevant control characters
+which suppresses \fI\*n\fP's parsing of the relevant control characters
 (and as a result, treats those bytes as data).
 .RE
 .IP
@@ -7059,11 +7059,15 @@ scrolled off the top of the screen is now visible.
 The \fIcount\fP argument
 indicates the number of \fIunits\fP (which may be \fIpage\fP, \fIhalfpage\fP,
 \fIpixel\fP, or \fIline\fP) by which to scroll.
+If no \fIcount\fP parameter is given, \fI\*n\fP uses the number of lines
+given by the \fBscrollLines\fP resource.
 .IP
 An adjustment can be specified for the \fIpage\fP or \fIhalfpage\fP units
 by appending a \*(``+\*('' or \*(``\-\*(''
 sign followed by a number,
 e.g., \fIpage\-2\fP to specify 2 lines less than a page.
+.IP
+If the second parameter is omitted \*(``lines\*('' is used.
 .IP
 If the third parameter \fImouse\fP is given, the action is ignored when
 mouse reporting is enabled.
@@ -7990,14 +7994,14 @@ In the output from \fBxprop\fP(1), there are several properties.
 .TP 5
 .B WM_CLASS
 This shows the \fIinstance name\fP and the X resource \fIclass\fP,
-passed to X Toolkit during initialization of \*n,
+passed to X Toolkit during initialization of \fI\*n\fP,
 e.g.,
 .NS
 WM_CLASS(STRING) = "xterm", "UXTerm"
 .NE
 .TP 5
 .B WM_CLIENT_LEADER
-This shows the window-id which \*n provides
+This shows the window-id which \fI\*n\fP provides
 with an environment variable (\fBWINDOWID\fP),
 e.g.,
 .NS
@@ -8005,7 +8009,7 @@ WM_CLIENT_LEADER(WINDOW): window id # 0x800023
 .NE
 .TP 5
 .B WM_COMMAND
-This shows the command-line arguments for \*n
+This shows the command-line arguments for \fI\*n\fP
 which are passed to X Toolkit during initialization, e.g.,
 .NS
 WM_COMMAND(STRING) = { "xterm", "-class", "UXTerm", "-title", "uxterm", "-u8" }
@@ -8026,7 +8030,7 @@ WM_LOCALE_NAME(STRING) = "en_US.UTF-8"
 .NE
 .TP 5
 .B WM_NAME
-This holds the window title, normally at the top of \*n's window.
+This holds the window title, normally at the top of \fI\*n\fP's window.
 It is set via the \fBtitle\fP resource.
 Applications can change this using control sequences.
 .SS Properties set by Xterm
@@ -8040,7 +8044,7 @@ stores the icon name.
 stores the title string.
 .TP 5
 .B _NET_WM_PID
-stores the process identifier for \*n's display.
+stores the process identifier for \fI\*n\fP's display.
 .SS Properties used by Xterm
 .TP 5
 .B _NET_SUPPORTED
@@ -8048,14 +8052,14 @@ stores the process identifier for \*n's display.
 to decide if the window manager supports
 specific maximizing styles.
 That may include other window manager hints;
-\*n uses the X library calls to manage those.
+\fI\*n\fP uses the X library calls to manage those.
 .TP 5
 .B _NET_SUPPORTING_WM_CHECK
 \*N checks this to ensure that it will only update the EWMH
 properties for a window manager which claims EWMH compliance.
 .TP 5
 .B _NET_WM_STATE
-This tells \*n whether its window has been maximized by the window manager,
+This tells \fI\*n\fP whether its window has been maximized by the window manager,
 and if so, what type of maximizing:
 .RS
 .TP 5

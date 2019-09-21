@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1706 2019/09/18 22:03:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1708 2019/09/20 23:04:00 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1167,11 +1167,11 @@ setItalicFont(XtermWidget xw, Bool enable)
 	if ((xw->flags & ATR_ITALIC) == 0) {
 	    xtermLoadItalics(xw);
 	    TRACE(("setItalicFont: enabling Italics\n"));
-	    xtermUpdateFontGCs(xw, True);
+	    xtermUpdateFontGCs(xw, getItalicFont);
 	}
     } else if ((xw->flags & ATR_ITALIC) != 0) {
 	TRACE(("setItalicFont: disabling Italics\n"));
-	xtermUpdateFontGCs(xw, False);
+	xtermUpdateFontGCs(xw, getNormalFont);
     }
 }
 
@@ -11562,6 +11562,7 @@ ShowCursor(void)
 	    int italics_off = ((xw->flags & ATR_ITALIC) != 0);
 	    int fix_italics = (italics_on != italics_off);
 	    int which_font = ((xw->flags & BOLD) ? fBold : fNorm);
+	    MyGetFont getter = italics_on ? getItalicFont : getNormalFont;
 
 	    if_OPT_WIDE_CHARS(screen, {
 		if (isWide((int) base)) {
@@ -11571,13 +11572,8 @@ ShowCursor(void)
 
 	    if (fix_italics && UseItalicFont(screen)) {
 		xtermLoadItalics(xw);
-		if (italics_on) {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getItalicFont(screen, which_font));
-		} else {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getNormalFont(screen, which_font));
-		}
+		setCgsFont(xw, currentWin, currentCgs,
+			   getter(screen, which_font));
 	    }
 	    currentGC = getCgsGC(xw, currentWin, currentCgs);
 #endif /* OPT_WIDE_ATTRS */
@@ -11620,13 +11616,8 @@ ShowCursor(void)
 	    }
 #if OPT_WIDE_ATTRS
 	    if (fix_italics && UseItalicFont(screen)) {
-		if (italics_on) {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getNormalFont(screen, which_font));
-		} else {
-		    setCgsFont(xw, currentWin, currentCgs,
-			       getItalicFont(screen, which_font));
-		}
+		setCgsFont(xw, currentWin, currentCgs,
+			   getter(screen, which_font));
 	    }
 #endif
 	}
@@ -11660,6 +11651,7 @@ HideCursor(void)
     int which_Cgs = gcMAX;
     unsigned attr_flags;
     int which_font = fNorm;
+    MyGetFont getter = getNormalFont;
 #endif
 
     if (screen->cursor_state == OFF)
@@ -11736,6 +11728,8 @@ HideCursor(void)
     attr_flags = ld->attribs[cursor_col];
     if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
 	which_font = ((attr_flags & BOLD) ? fBold : fNorm);
+	if ((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
+	    getter = getItalicFont;
 
 	if_OPT_WIDE_CHARS(screen, {
 	    if (isWide((int) base)) {
@@ -11747,9 +11741,7 @@ HideCursor(void)
 	if (which_Cgs != gcMAX) {
 	    setCgsFont(xw, WhichVWin(screen),
 		       (CgsEnum) which_Cgs,
-		       (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
-			? getItalicFont(screen, which_font)
-			: getNormalFont(screen, which_font)));
+		       getter(screen, which_font));
 	}
     }
 #endif
@@ -11797,9 +11789,7 @@ HideCursor(void)
     if (which_Cgs != gcMAX) {
 	setCgsFont(xw, WhichVWin(screen),
 		   (CgsEnum) which_Cgs,
-		   (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
-		    ? getItalicFont(screen, which_font)
-		    : getNormalFont(screen, which_font)));
+		   getter(screen, which_font));
     }
 #endif
     resetXtermGC(xw, flags, in_selection);

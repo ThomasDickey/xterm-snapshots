@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.975 2019/09/18 21:39:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.978 2019/09/20 23:54:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -892,11 +892,13 @@ typedef enum {
     , fBold			/* bold font */
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     , fItal			/* italic font */
+    , fBtal			/* bold-italic font */
 #endif
 #if OPT_WIDE_CHARS
     , fWide			/* double-width font */
     , fWBold			/* double-width bold font */
     , fWItal			/* double-width italic font */
+    , fWBtal			/* double-width bold-italic font */
 #endif
     , fMAX
 } VTFontEnum;
@@ -2131,13 +2133,9 @@ typedef struct {
 typedef struct {
     char *f_n;			/* the normal font */
     char *f_b;			/* the bold font */
-#if OPT_WIDE_ATTRS
-    char *f_i;			/* italic font (Xft only) */
-#endif
 #if OPT_WIDE_CHARS
     char *f_w;			/* the normal wide font */
     char *f_wb;			/* the bold wide font */
-    char *f_wi;			/* wide italic font (Xft only) */
 #endif
 } VTFontNames;
 
@@ -2146,11 +2144,13 @@ typedef struct {
     char **list_b;		/* the bold font */
 #if OPT_WIDE_ATTRS || OPT_RENDERWIDE
     char **list_i;		/* italic font (Xft only) */
+    char **list_bi;		/* bold-italic font (Xft only) */
 #endif
 #if OPT_WIDE_CHARS
     char **list_w;		/* the normal wide font */
     char **list_wb;		/* the bold wide font */
     char **list_wi;		/* wide italic font (Xft only) */
+    char **list_wbi;		/* wide bold-italic font (Xft only) */
 #endif
 } VTFontList;
 
@@ -2751,10 +2751,12 @@ typedef struct {
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
 	XTermXftFonts	renderFontItal[NMENUFONTS];
+	XTermXftFonts	renderFontBtal[NMENUFONTS];
 #if OPT_RENDERWIDE
 	XTermXftFonts	renderWideNorm[NMENUFONTS];
 	XTermXftFonts	renderWideBold[NMENUFONTS];
 	XTermXftFonts	renderWideItal[NMENUFONTS];
+	XTermXftFonts	renderWideBtal[NMENUFONTS];
 	TypedBuffer(XftCharSpec);
 #else
 	TypedBuffer(XftChar8);
@@ -2771,6 +2773,8 @@ typedef struct {
 	char **		tcap_fkeys;
 #endif
 } TScreen;
+
+typedef XTermFonts *(*MyGetFont) (TScreen *, int);
 
 typedef struct _TekPart {
 	XFontStruct *	Tfont[TEKNUMFONTS];
