@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.901 2019/09/18 23:17:54 tom Exp $ */
+/* $XTermId: misc.c,v 1.902 2019/09/20 00:02:15 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5347,7 +5347,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
     char *my_attr = NULL;
     char *old_value = value;
-    size_t limit;
 #if OPT_WIDE_CHARS
     Boolean titleIsUTF8;
 #endif
@@ -5449,7 +5448,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	}
     }
 
-    limit = strlen(value);
     my_attr = x_strdup(attribute);
 
     ReportIcons(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, value));
@@ -5464,6 +5462,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
      */
     TRACE(("ChangeGroup: value is %sUTF-8\n", titleIsUTF8 ? "" : "NOT "));
     if (xtermEnvUTF8() && !titleIsUTF8) {
+	size_t limit = strlen(value);
 	Char *c1 = (Char *) value;
 	int n;
 

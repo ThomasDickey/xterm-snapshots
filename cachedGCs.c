@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.76 2019/04/26 21:57:07 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.77 2019/09/20 00:58:49 Quinn.Strahl Exp $ */
 
 /*
  * Copyright 2007-2018,2019 by Thomas E. Dickey
@@ -500,7 +500,7 @@ setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 #endif
 
 void
-setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
+setCgsFont2(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font, VTFontEnum which)
 {
     CgsCache *me;
 
@@ -514,7 +514,7 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		font = getIconicFont(screen);
 	    else
 #endif
-		font = GetNormalFont(screen, fNorm);
+		font = GetNormalFont(screen, which);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
 	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %p\n",
@@ -529,6 +529,12 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		    traceCgsEnum(cgsId)));
 	}
     }
+}
+
+void
+setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
+{
+    setCgsFont2(xw, cgsWin, cgsId, font, fNorm);
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.132 2019/09/08 22:27:55 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.133 2019/09/20 22:47:17 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -64,7 +64,7 @@ extern void xtermDerivedFont (const char * /* name */);
 extern void xtermFreeFontInfo (XTermFonts * /* target */);
 extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
-extern void xtermUpdateFontGCs (XtermWidget /* xw */, Bool /* italic */);
+extern void xtermUpdateFontGCs (XtermWidget /* xw */, MyGetFont /* myfunc */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #define getIconicFont(screen) (&((screen)->fnt_icon))

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.840 2019/09/18 21:40:15 tom Exp $ */
+/* $XTermId: util.c,v 1.842 2019/09/21 00:46:41 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2908,15 +2908,24 @@ getWideXftFont(XTermDraw * params,
 {
     TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
-    XftFont *wfont;
+    XftFont *wfont = 0;
 
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
 #if OPT_ISO_COLORS
 	&& !screen->colorITMode
 #endif
-	&& XFT_FONT(fWItal)) {
-	wfont = XFT_FONT(fWItal);
+	) {
+	if ((attr_flags & BOLDATTR(screen))
+	    && UseBoldFont(screen)
+	    && XFT_FONT(fWBtal)) {
+	    wfont = XFT_FONT(fWBtal);
+	} else if (XFT_FONT(fWItal)) {
+	    wfont = XFT_FONT(fWItal);
+	}
+    }
+    if (wfont != 0) {
+	;	/* skip the other tests */
     } else
 #endif
 #if OPT_ISO_COLORS
@@ -2966,8 +2975,17 @@ getNormXftFont(XTermDraw * params,
 #if OPT_ISO_COLORS
 	    && !screen->colorITMode
 #endif
-	    && XFT_FONT(fItal)) {
-	font = XFT_FONT(fItal);
+	) {
+	if ((attr_flags & BOLDATTR(screen))
+	    && UseBoldFont(screen)
+	    && XFT_FONT(fBtal)) {
+	    font = XFT_FONT(fBtal);
+	} else if (XFT_FONT(fItal)) {
+	    font = XFT_FONT(fItal);
+	}
+    }
+    if (font != 0) {
+	;	/* skip the other tests */
     } else
 #endif
 #if OPT_ISO_COLORS
