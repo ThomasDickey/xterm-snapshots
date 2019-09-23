@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.842 2019/09/21 00:46:41 tom Exp $ */
+/* $XTermId: util.c,v 1.843 2019/09/23 20:28:44 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2925,7 +2925,7 @@ getWideXftFont(XTermDraw * params,
 	}
     }
     if (wfont != 0) {
-	;	/* skip the other tests */
+	;			/* skip the other tests */
     } else
 #endif
 #if OPT_ISO_COLORS
@@ -2957,14 +2957,12 @@ getNormXftFont(XTermDraw * params,
 {
     TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
-    XftFont *font;
+    XftFont *font = 0;
 
     (void) did_ul;
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(params->real_chrset)) {
 	font = xterm_DoubleFT(params, params->real_chrset, attr_flags);
-    } else {
-	font = 0;
     }
     if (font != 0) {
 	;			/* found a usable double-sized font */
@@ -2985,7 +2983,7 @@ getNormXftFont(XTermDraw * params,
 	}
     }
     if (font != 0) {
-	;	/* skip the other tests */
+	;			/* skip the other tests */
     } else
 #endif
 #if OPT_ISO_COLORS
@@ -3400,8 +3398,8 @@ drawClippedXftString(XTermDraw * params,
 
     if (fontWide > 2) {
 	int plength = (ncells ? ncells : 1);
-#if OPT_DEC_CHRSET
 	Boolean halfHigh = False;
+#if OPT_DEC_CHRSET
 	Boolean halfWide = False;
 
 	switch (params->real_chrset) {
