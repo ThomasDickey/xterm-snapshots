@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.77 2019/09/20 00:58:49 Quinn.Strahl Exp $ */
+/* $XTermId: cachedGCs.c,v 1.78 2019/09/22 21:32:07 tom Exp $ */
 
 /*
  * Copyright 2007-2018,2019 by Thomas E. Dickey
@@ -500,7 +500,7 @@ setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 #endif
 
 void
-setCgsFont2(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font, VTFontEnum which)
+setCgsFont2(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font, unsigned which)
 {
     CgsCache *me;
 

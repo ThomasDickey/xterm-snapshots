@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.902 2019/09/20 00:02:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.904 2019/09/23 00:17:44 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5430,7 +5430,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		while (*nextc != '\0') {
 		    unsigned ch;
 		    Char *skip = convertFromUTF8(nextc, &ch);
-		    if (iswcntrl(ch)) {
+		    if (iswcntrl((wint_t) ch)) {
 			memset(nextc, BAD_ASCII, (size_t) (skip - nextc));
 		    }
 		    nextc = skip;
@@ -5757,6 +5757,7 @@ SysReasonMsg(int code)
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
     };
     /* *INDENT-ON* */
+
     Cardinal n;
     const char *result = "?";
 
@@ -6718,7 +6719,7 @@ xtermGetWinProp(Display *display,
 		unsigned long *bytes_after_return,
 		unsigned char **prop_return)
 {
-    Boolean result = True;
+    Boolean result = False;
 
     if (win != None) {
 	XErrorHandler save = XSetErrorHandler(catch_x11_error);
