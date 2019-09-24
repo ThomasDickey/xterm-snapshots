@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1708 2019/09/20 23:04:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1709 2019/09/24 22:49:17 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -7129,7 +7129,10 @@ property_to_string(XtermWidget xw, XTextProperty * text)
      */
     if ((text->format != 8)
 	|| IsTitleMode(xw, tmGetUtf8)
-	|| (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
+	|| (text->encoding == XA_UTF8_STRING(dpy) &&
+	    !(screen->wide_chars || screen->c1_printable) &&
+	    (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
+	|| (rc = -1))
 #endif
 	if ((rc = XmbTextPropertyToTextList(dpy, text, &list, &length)) < 0)
 	    rc = XTextPropertyToStringList(text, &list, &length);
