@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.978 2019/09/20 23:54:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.979 2019/09/25 20:37:17 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3485,94 +3485,6 @@ typedef struct Tek_Link
 #endif
 #define	I_SIGNAL	0x02
 #define	I_TEK		0x04
-
-/***====================================================================***/
-
-#if OPT_TRACE
-#undef NDEBUG			/* turn on assert's */
-#else
-#ifndef NDEBUG
-#define NDEBUG			/* not debugging, don't do assert's */
-#endif
-#endif
-
-#include <trace.h>
-
-#ifndef TRACE
-#define TRACE(p) /*nothing*/
-#endif
-
-#ifndef TRACE_CLOSE
-#define TRACE_CLOSE() /*nothing*/
-#endif
-
-#ifndef TRACE_ARGV
-#define TRACE_ARGV(tag,argv) /*nothing*/
-#endif
-
-#ifndef TRACE_CHILD
-#define TRACE_CHILD /*nothing*/
-#endif
-
-#ifndef TRACE_EVENT
-#define TRACE_EVENT(t,e,s,n) /*nothing*/
-#endif
-
-#ifndef TRACE_FALLBACK
-#define TRACE_FALLBACK(w,t,c,n,f) /*nothing*/
-#endif
-
-#ifndef TRACE_FOCUS
-#define TRACE_FOCUS(w,e) /*nothing*/
-#endif
-
-#ifndef TRACE_HINTS
-#define TRACE_HINTS(hints) /*nothing*/
-#endif
-
-#ifndef TRACE_IDS
-#define TRACE_IDS /*nothing*/
-#endif
-
-#ifndef TRACE_OPTS
-#define TRACE_OPTS(opts,ress,lens) /*nothing*/
-#endif
-
-#ifndef TRACE_TRANS
-#define TRACE_TRANS(name,w) /*nothing*/
-#endif
-
-#ifndef TRACE_WIN_ATTRS
-#define TRACE_WIN_ATTRS(w) /*nothing*/
-#endif
-
-#ifndef TRACE_WM_HINTS
-#define TRACE_WM_HINTS(w) /*nothing*/
-#endif
-
-#ifndef TRACE_X_ERR
-#define TRACE_X_ERR(d,e) /*nothing*/
-#endif
-
-#ifndef TRACE_XRES
-#define TRACE_XRES() /*nothing*/
-#endif
-
-#ifndef TRACE2
-#define TRACE2(p) /*nothing*/
-#endif
-
-#if OPT_TRACE && !defined(DEBUG)
-#define DEBUG 1
-#endif
-
-#ifdef DEBUG
-#define if_DEBUG(code) if(debug) code
-#else
-#define if_DEBUG(code) /*nothing*/
-#endif
-
-#define DEBUG_MSG(text) if_DEBUG({ IGNORE_RC(write(2, text, sizeof(text) - 1)); })
 
 /* *INDENT-ON* */
 

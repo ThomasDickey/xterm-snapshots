@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.843 2019/09/23 20:28:44 tom Exp $ */
+/* $XTermId: util.c,v 1.844 2019/09/24 23:47:29 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3436,7 +3436,7 @@ drawClippedXftString(XTermDraw * params,
 	    /* check if this is really a double-width font */
 	    if (halfWide) {
 		int wantWide = (int) (FontWidth(screen) * 1.8);
-		halfHigh = (fontWide >= wantWide);
+		halfWide = (fontWide >= wantWide);
 		TRACE(("comparing fontWide %d/%d vs %d:"
 		       " double-width %s for %s\n",
 		       fontWide, FontWidth(screen),
