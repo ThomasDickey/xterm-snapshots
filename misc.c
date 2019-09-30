@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.904 2019/09/23 00:17:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.905 2019/09/30 00:34:51 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5515,44 +5515,46 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	if (my_atom != None) {
 	    changed = True;
 
+	    if (IsSetUtf8Title(xw)) {
 #if OPT_SAME_NAME
-	    if (resource.sameName && IsSetUtf8Title(xw)) {
-		Atom actual_type;
-		Atom requested_type = XA_UTF8_STRING(dpy);
-		int actual_format = 0;
-		long long_length = 1024;
-		unsigned long nitems = 0;
-		unsigned long bytes_after = 0;
-		unsigned char *prop = 0;
+		if (resource.sameName) {
+		    Atom actual_type;
+		    Atom requested_type = XA_UTF8_STRING(dpy);
+		    int actual_format = 0;
+		    long long_length = 1024;
+		    unsigned long nitems = 0;
+		    unsigned long bytes_after = 0;
+		    unsigned char *prop = 0;
 
-		if (xtermGetWinProp(dpy,
-				    VShellWindow(xw),
-				    my_atom,
-				    0L,
-				    long_length,
-				    requested_type,
-				    &actual_type,
-				    &actual_format,
-				    &nitems,
-				    &bytes_after,
-				    &prop)
-		    && actual_type == requested_type
-		    && actual_format == 8
-		    && prop != 0
-		    && nitems == strlen(value)
-		    && memcmp(value, prop, nitems) == 0) {
-		    changed = False;
+		    if (xtermGetWinProp(dpy,
+					VShellWindow(xw),
+					my_atom,
+					0L,
+					long_length,
+					requested_type,
+					&actual_type,
+					&actual_format,
+					&nitems,
+					&bytes_after,
+					&prop)
+			&& actual_type == requested_type
+			&& actual_format == 8
+			&& prop != 0
+			&& nitems == strlen(value)
+			&& memcmp(value, prop, nitems) == 0) {
+			changed = False;
+		    }
 		}
-	    }
 #endif /* OPT_SAME_NAME */
-	    if (changed && IsSetUtf8Title(xw)) {
-		ReportIcons(("...updating %s\n", propname));
-		ReportIcons(("...value is %s\n", value));
-		XChangeProperty(dpy, VShellWindow(xw), my_atom,
-				XA_UTF8_STRING(dpy), 8,
-				PropModeReplace,
-				(Char *) value,
-				(int) strlen(value));
+		if (changed) {
+		    ReportIcons(("...updating %s\n", propname));
+		    ReportIcons(("...value is %s\n", value));
+		    XChangeProperty(dpy, VShellWindow(xw), my_atom,
+				    XA_UTF8_STRING(dpy), 8,
+				    PropModeReplace,
+				    (Char *) value,
+				    (int) strlen(value));
+		}
 	    } else {
 		ReportIcons(("...deleting %s\n", propname));
 		XDeleteProperty(dpy, VShellWindow(xw), my_atom);
