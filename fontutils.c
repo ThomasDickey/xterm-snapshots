@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.655 2019/09/20 23:23:25 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.656 2019/10/01 08:34:12 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -309,13 +309,18 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
     static FontNameProperties props;
     static char *last_name;
 
-    Atom fontatom = XInternAtom(dpy, "FONT", False);
-    char *name = 0;
+    Atom fontatom;
+    char *name;
     char *str;
+
+    if (fs == NULL)
+	return NULL;
 
     /*
      * first get the full font name
      */
+    name = 0;
+    fontatom = XInternAtom(dpy, "FONT", False);
     if (fontatom != 0) {
 	XFontProp *fp;
 	int i;
@@ -781,6 +786,15 @@ is_fixed_font(XFontStruct *fs)
     return 1;
 }
 
+static int
+differing_widths(XFontStruct *a, XFontStruct *b)
+{
+    int result = 0;
+    if (a != NULL && b != NULL && a->max_bounds.width != b->max_bounds.width)
+	result = 1;
+    return result;
+}
+
 /*
  * Check if the font looks like a double width font (i.e. contains
  * characters of width X and 2X
@@ -789,7 +803,7 @@ is_fixed_font(XFontStruct *fs)
 static int
 is_double_width_font(XFontStruct *fs)
 {
-    return ((2 * fs->min_bounds.width) == fs->max_bounds.width);
+    return (fs != NULL && ((2 * fs->min_bounds.width) == fs->max_bounds.width));
 }
 #else
 #define is_double_width_font(fs) 0
@@ -1532,9 +1546,11 @@ xtermLoadFont(XtermWidget xw,
      * Normal/bold fonts should be the same width.  Also, the min/max
      * values should be the same.
      */
-    if (!is_fixed_font(fnts[fNorm].fs)
-	|| !is_fixed_font(fnts[fBold].fs)
-	|| fnts[fNorm].fs->max_bounds.width != fnts[fBold].fs->max_bounds.width) {
+    if (fnts[fNorm].fs != 0
+	&& fnts[fBold].fs != 0
+	&& (!is_fixed_font(fnts[fNorm].fs)
+	    || !is_fixed_font(fnts[fBold].fs)
+	    || differing_widths(fnts[fNorm].fs, fnts[fBold].fs))) {
 	TRACE(("Proportional font! normal %d/%d, bold %d/%d\n",
 	       fnts[fNorm].fs->min_bounds.width,
 	       fnts[fNorm].fs->max_bounds.width,
@@ -1548,7 +1564,7 @@ xtermLoadFont(XtermWidget xw,
 	    && fnts[fWBold].fs != 0
 	    && (!is_fixed_font(fnts[fWide].fs)
 		|| !is_fixed_font(fnts[fWBold].fs)
-		|| fnts[fWide].fs->max_bounds.width != fnts[fWBold].fs->max_bounds.width)) {
+		|| differing_widths(fnts[fWide].fs, fnts[fWBold].fs))) {
 	    TRACE(("Proportional font! wide %d/%d, wide bold %d/%d\n",
 		   fnts[fWide].fs->min_bounds.width,
 		   fnts[fWide].fs->max_bounds.width,
@@ -3404,7 +3420,9 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     XFontStruct *fs = font->fs;
     XCharStruct *pc = 0;
 
-    if (fs->max_byte1 == 0) {
+    if (fs == NULL) {
+	result = True;
+    } else if (fs->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
 	if (ch < 256)
 #endif
