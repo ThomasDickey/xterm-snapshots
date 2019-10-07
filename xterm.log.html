@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2112 2019/10/01 09:03:35 tom Exp $
+  $XTermId: xterm.log.html,v 1.2116 2019/10/07 00:25:22 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -984,6 +984,21 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>update manual page default for <code>saveLines</code>
+    resource default value (Branden Robinson, Debian #913815).</li>
+
+    <li>add command-line option <code>-report-xres</code> to show
+    the values of the VT100 widget X resources when initialization
+    is complete.</li>
+
+    <li>add a control sequence which, like tcap-query, allows an
+    application to inspect most X resource settings of the VT100
+    widget.</li>
+
+    <li>adjust some optional features to enable them in the imake
+    configuration as they would be by default via the configure
+    script.</li>
+
     <li>add null-pointer checks to improve error recovery when
     bitmap fonts are missing or corrupt (report by Jonne
     Ransijn).</li>

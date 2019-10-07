@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.905 2019/09/30 00:34:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.912 2019/10/06 20:01:39 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4526,10 +4526,10 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    unparseputc(xw, ANSI_CAN);
 	}
 	break;
-#if OPT_TCAP_QUERY
     case '+':
 	cp++;
 	switch (*cp) {
+#if OPT_TCAP_QUERY
 	case 'p':
 	    if (AllowTcapOps(xw, etSetTcap)) {
 		set_termcap(xw, cp + 1);
@@ -4612,9 +4612,63 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		unparseputc1(xw, ANSI_ST);
 	    }
 	    break;
+#endif
+#if OPT_XRES_QUERY
+	case 'Q':
+	    ++cp;
+	    if (AllowXResOps(xw)) {
+		Boolean first = True;
+		while (*cp != '\0') {
+		    const char *parsed = 0;
+		    const char *tmp;
+		    char *name = x_decode_hex(cp, &parsed);
+		    char *value;
+		    char *result;
+		    int code;
+		    if (cp == parsed || name == NULL)
+			break;	/* no data found, error */
+		    TRACE(("query-feature '%s'\n", name));
+		    if ((value = vt100ResourceToString(xw, name)) != 0) {
+			code = 0;
+		    } else {
+			code = 1;
+		    }
+		    if (first) {
+			unparseputc1(xw, ANSI_DCS);
+			unparseputc(xw, code >= 0 ? '1' : '0');
+			unparseputc(xw, '+');
+			unparseputc(xw, 'R');
+			first = False;
+		    }
+
+		    for (tmp = cp; tmp != parsed; ++tmp)
+			unparseputc(xw, *tmp);
+
+		    if (value != 0) {
+			unparseputc1(xw, '=');
+			result = x_encode_hex(value);
+			unparseputs(xw, result);
+		    } else {
+			result = NULL;
+		    }
+
+		    free(name);
+		    free(value);
+		    free(result);
+
+		    cp = parsed;
+		    if (*parsed == ';') {
+			unparseputc(xw, *parsed++);
+			cp = parsed;
+		    }
+		}
+		if (!first)
+		    unparseputc1(xw, ANSI_ST);
+	    }
+	    break;
+#endif
 	}
 	break;
-#endif
 #if OPT_DEC_RECTOPS
     case '1':
 	/* FALLTHRU */

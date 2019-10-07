@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.858 2019/09/25 20:37:17 tom Exp $ */
+/* $XTermId: xterm.h,v 1.860 2019/10/06 20:02:14 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -965,6 +965,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 /* charproc.c */
 extern Bool CheckBufPtrs (TScreen * /* screen */);
 extern Bool set_cursor_gcs (XtermWidget /* xw */);
+extern char * vt100ResourceToString (XtermWidget /* xw */, const char * /* name */);
 extern int VTInit (XtermWidget /* xw */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
