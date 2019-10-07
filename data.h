@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.137 2019/07/19 00:40:42 tom Exp $ */
+/* $XTermId: data.h,v 1.138 2019/10/06 20:16:02 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -219,6 +219,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_REPORT_FONTS
     Boolean reportFonts;	/* show bitmap-font information as loaded */
+#endif
+#if OPT_XRES_QUERY
+    Boolean reportXRes;		/* show vt100 resources after initialization */
 #endif
 #if OPT_REPORT_ICONS
     Boolean reportIcons;	/* show icon information as loaded */

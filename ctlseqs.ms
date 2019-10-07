@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.513 2019/07/11 09:52:42 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.517 2019/10/04 21:23:31 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #348
-.ds RF 2019/07/11
+.ds LF Patch #350
+.ds RF 2019/10/04
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -698,20 +698,20 @@ initially mapped to GL and GR.
 The valid final characters \*(Cc for this control are:
   \*(Cc = \*A \(-> United Kingdom (UK), VT100.
   \*(Cc = \*(cB \(-> United States (USASCII), VT100.
-  \*(Cc = \*4 \(-> Dutch, VT200.
   \*(Cc = \*C or \*5 \(-> Finnish, VT200.
-  \*(Cc = \*R or \*f \(-> French, VT200.
-  \*(Cc = \*Q or \*9 \(-> French Canadian, VT200.
-  \*(Cc = \*K \(-> German, VT200.
-  \*(Cc = \*(Dq\*> \(-> Greek, VT500.
-  \*(Cc = \*%\*= \(-> Hebrew, VT500.
-  \*(Cc = \*Y \(-> Italian, VT200.
-  \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish, VT200.
-  \*(Cc = \*%\*6 \(-> Portuguese, VT300.
-  \*(Cc = \*Z \(-> Spanish, VT200.
   \*(Cc = \*H or \*7 \(-> Swedish, VT200.
-  \*(Cc = \*= \(-> Swiss, VT200.
+  \*(Cc = \*K \(-> German, VT200.
+  \*(Cc = \*Q or \*9 \(-> French Canadian, VT200.
+  \*(Cc = \*R or \*f \(-> French, VT200.
+  \*(Cc = \*Y \(-> Italian, VT200.
+  \*(Cc = \*Z \(-> Spanish, VT200.
+  \*(Cc = \*4 \(-> Dutch, VT200.
+  \*(Cc = \*(Dq\*> \(-> Greek, VT500.
   \*(Cc = \*%\*2 \(-> Turkish, VT500.
+  \*(Cc = \*%\*6 \(-> Portuguese, VT300.
+  \*(Cc = \*%\*= \(-> Hebrew, VT500.
+  \*(Cc = \*= \(-> Swiss, VT200.
+  \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish, VT200.
 .br
 The final character \*A is a special case,
 since the same final character is
@@ -723,16 +723,16 @@ There are a few other 94-character sets:
   \*(Cc = \*> \(-> DEC Technical, VT300.
 .br
 These are documented as NRCS:
+  \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
+  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
+  \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
   \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
   \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
-  \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
-  \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
-  \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
 .br
 The VT520 reference manual lists a few more,
 but no documentation has been found for the mappings:
-  \*(Cc = \*&\*5 \(-> DEC Russian, VT500.
   \*(Cc = \*%\*3 \(-> SCS NRCS, VT500.
+  \*(Cc = \*&\*5 \(-> DEC Russian, VT500.
 .iP
 .IP \\*(Es\\*)\\*(Cc
 Designate G1 Character Set, ISO 2022, VT100.
@@ -894,6 +894,28 @@ The control can be converted from a response from DECCIR or DECTABSR
 by changing the first \*(``u\*('' to a \*(``t\*(''
   \*(Ps = \*1 \(-> DECCIR
   \*(Ps = \*2 \(-> DECTABSR
+.
+.iP
+.IP \\*(Dc\\*+\\*Q\\*(Pt\\*s\\*(ST
+Request resource values (\fI\*(xt\fP).
+The string following the \*(``Q\*('' is a list of names
+encoded in hexadecimal (2 digits per character)
+separated by \*;
+which correspond to \fI\*(xt\fP resource names.
+Only boolean, numeric and string resources are supported by this query.
+.sp
+\fI\*(xt\fP responds with
+.br
+\*(Dc\*1\*+\*R\*(Pt\*s\*(ST
+for valid requests, adding to \*(Pt an \*=,
+and the value of the corresponding resource that \fI\*(xt\fP is using,
+or
+.br
+\*(Dc\*0\*+\*R\*(Pt\*s\*(ST
+for invalid requests.
+.br
+The strings are encoded in hexadecimal (2 digits per character).
+.Ed
 .
 .iP
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
@@ -1987,9 +2009,9 @@ Restore cursor (SCORC, also ANSI.SYS).
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*u
 Set margin-bell volume (DECSMBV), VT520.
+  \*(Ps = \*0, \*5, \*6, \*7, or \*8 \(-> high.
   \*(Ps = \*1 \(-> off.
   \*(Ps = \*2, \*3 or \*4 \(-> low.
-  \*(Ps = \*0, \*5, \*6, \*7, or \*8 \(-> high.
 .
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pp\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pp\\*s\\*$\\*v

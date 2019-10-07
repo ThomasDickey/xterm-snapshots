@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.798 2019/09/20 09:07:49 tom Exp $
+.\" $XTermId: xterm.man,v 1.800 2019/10/07 00:22:29 Branden.Robinson Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -1023,6 +1023,12 @@ Print a report to the standard output showing information about pixmap-icons
 which are loaded.
 This corresponds to the \fBreportIcons\fP resource.
 .TP 8
+.B \-report\-xres
+Print a report to the standard output showing the values
+of boolean, numeric or string X resources for the VT100 widget when
+initialization is complete.
+This corresponds to the \fBreportXRes\fP resource.
+.TP 8
 .B \-rightbar
 Force scrollbar to the right side of VT100 screen.
 .TP 8
@@ -1121,7 +1127,7 @@ should not cause the window to be repositioned.
 This option specifies the number of lines to save that have been scrolled
 off the top of the screen.
 This corresponds to the \fBsaveLines\fP resource.
-The default is \*(``64\*(''.
+The default is \*(``1024\*(''.
 .TP 8
 .B \-sm
 This option, corresponding to the \fBsessionMgt\fR resource,
@@ -1872,6 +1878,12 @@ The default is \*(``false\*(''.
 .B "reportIcons\fP (class\fB ReportIcons\fP)"
 If true, \fI\*n\fP will print to the standard output a summary of
 each pixmap icon as it loads them.
+The default is \*(``false\*(''.
+.TP 8
+.B "reportXRes\fP (class\fB ReportXRes\fP)"
+If true, \fI\*n\fP will print to the standard output a list of the
+boolean, numeric and string X resources for the VT100 widget
+after initialization.
 The default is \*(``false\*(''.
 .TP 8
 .B "sameName\fP (class\fB SameName\fP)"
@@ -2773,7 +2785,7 @@ using the background color.
 If the \fBcolorInnerBorder\fP resource is enabled,
 at startup \fI\*n\fP will compare the \fBborderColor\fP and the
 window's background color.
-If those are different, \fI\*n\fP will use the \fBborderColor\fP 
+If those are different, \fI\*n\fP will use the \fBborderColor\fP
 resource to fill the inner border.
 Otherwise, it will use the window's background color.
 .IP
@@ -2955,7 +2967,7 @@ If the keyboard type is
 \*(``default\*('',
 or
 \*(``vt220\*(''
-and the resource is either \*(``true\*('' or \*(``maybe\*('' 
+and the resource is either \*(``true\*('' or \*(``maybe\*(''
 send the VT220-style \fIRemove\fP escape sequence.
 Otherwise, send DEL (127).
 .bP
@@ -4240,7 +4252,7 @@ The \*(``^\*('' and \*(``$\*('' anchors in a regular expression
 denote the ends of the entire line.
 .bP
 If the regular expression contains backslashes \*(``\\\*('' those
-should be escaped \*(``\\\\\*('' 
+should be escaped \*(``\\\\\*(''
 because the X libraries interpret backslashes in resource strings.
 .RE
 .TP
@@ -4628,7 +4640,7 @@ The default is \*(``false\*(''.
 .B "saveLines\fP (class\fB SaveLines\fP)"
 Specifies the number of lines to save beyond the top of the screen when a
 scrollbar is turned on.
-The default is \*(``64\*(''.
+The default is \*(``1024\*(''.
 .TP 8
 .B "scrollBar\fP (class\fB ScrollBar\fP)"
 Specifies whether or not the scrollbar should be displayed.
@@ -5633,7 +5645,7 @@ Its lengthy explanation begins with the essential points:
 .RS 3
 .PP
 The selection named by the atom CLIPBOARD is used to hold data
-that is being transferred between clients, 
+that is being transferred between clients,
 that is, data that usually is being cut and then pasted
 or copied and then pasted.
 Whenever a client wants to transfer data to the clipboard:
@@ -5662,7 +5674,7 @@ Without using this feature, one can use workarounds such as the
 This is used less often than \fBPRIMARY\fP or \fBCLIPBOARD\fP.
 According to the ICCCM, it is used
 .bP
-As the second argument to commands taking two arguments 
+As the second argument to commands taking two arguments
 (for example, \*(``exchange primary and secondary selections\*('')
 .bP
 As a means of obtaining data when there is a primary selection
@@ -8393,7 +8405,7 @@ but does mention the ICCCM.
 Version 2.0 of the ICCCM does not address UTF-8.
 That is an extension added in XFree86.
 .bP
-Markus Kuhn summarized this in 
+Markus Kuhn summarized this in
 \fIUTF-8 and Unicode FAQ for Unix/Linux\fP (2001),
 in the section \*(``Is X11 ready for Unicode?\*(''
 .IP

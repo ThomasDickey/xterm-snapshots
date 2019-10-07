@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1710 2019/09/24 23:38:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1720 2019/10/07 00:26:56 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -8541,6 +8541,109 @@ set_flags_from_list(char *target,
 	? CURSOR_UNDERLINE \
 	: CURSOR_BLOCK
 
+#if OPT_XRES_QUERY
+static XtResource *
+findVT100Resource(const char *name)
+{
+    Cardinal n;
+    XtResource *result = 0;
+
+    if (!IsEmpty(name)) {
+	XrmQuark quarkName = XrmPermStringToQuark(name);
+	for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	    if ((int) xterm_resources[n].resource_offset >= 0
+		&& !strcmp(xterm_resources[n].resource_name, name)) {
+		result = &xterm_resources[n];
+		break;
+	    } else if (xterm_resources[n].resource_name
+		       == (String) (intptr_t) quarkName) {
+		result = &xterm_resources[n];
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static int
+cmp_resources(const void *a, const void *b)
+{
+    return strcmp((*(const String *) a),
+		  (*(const String *) b));
+}
+
+static void
+reportResources(XtermWidget xw)
+{
+    String *list = TypeMallocN(String, XtNumber(xterm_resources));
+    Cardinal n;
+    int widest = 0;
+    for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	int width;
+	list[n] = (((int) xterm_resources[n].resource_offset < 0)
+		   ? XrmQuarkToString((XrmQuark) (intptr_t)
+				      xterm_resources[n].resource_name)
+		   : xterm_resources[n].resource_name);
+	width = (int) strlen(list[n]);
+	if (widest < width)
+	    widest = width;
+    }
+    qsort(list, XtNumber(xterm_resources), sizeof(String), cmp_resources);
+    for (n = 0; n < XtNumber(xterm_resources); ++n) {
+	char *value = vt100ResourceToString(xw, list[n]);
+	printf("%-*s : %s\n", widest, list[n], value ? value : "(skip)");
+    }
+    free(list);
+}
+
+char *
+vt100ResourceToString(XtermWidget xw, const char *name)
+{
+    XtResource *data;
+    char *result = NULL;
+
+    if ((data = findVT100Resource(name)) != 0) {
+	int fake_offset = (int) data->resource_offset;
+	void *res_addr;
+	int real_offset;
+	String res_type;
+
+	/*
+	 * X Toolkit "compiles" the resource-list into quarks and changes the
+	 * resource-offset at the same time to a negative value.
+	 */
+	if (fake_offset < 0) {
+	    real_offset = -(fake_offset + 1);
+	    res_type = XrmQuarkToString((XrmQuark) (intptr_t) data->resource_type);
+	} else {
+	    real_offset = fake_offset;
+	    res_type = data->resource_type;
+	}
+	res_addr = (void *) ((char *) xw + real_offset);
+
+	if (!strcmp(res_type, XtRString)) {
+	    char *value = *(char **) res_addr;
+	    if (value != NULL) {
+		size_t need = strlen(value);
+		if ((result = malloc(1 + need)) != 0)
+		    strcpy(result, value);
+	    }
+	} else if (!strcmp(res_type, XtRInt)) {
+	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+		sprintf(result, "%d", *(int *) res_addr);
+	} else if (!strcmp(res_type, XtRFloat)) {
+	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+		sprintf(result, "%f", *(float *) res_addr);
+	} else if (!strcmp(res_type, XtRBoolean)) {
+	    if ((result = malloc(6)) != 0)
+		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
+	}
+    }
+    TRACE(("vt100ResourceToString(%s) %s\n", name, NonNull(result)));
+    return result;
+}
+#endif /* OPT_XRES_QUERY */
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -9322,6 +9425,9 @@ VTInitialize(Widget wrequest,
 	    screen->selectMap[i] = (SelectUnit) i;
 	else
 	    break;
+#if OPT_XRES_QUERY
+	init_Sres(screen.onClick[i]);
+#endif
 	TRACE(("on%dClicks %s=%d\n", ck,
 	       NonNull(TScreenOf(request)->onClick[i]),
 	       screen->selectMap[i]));
@@ -9406,10 +9512,15 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_CHARS
     /* setup data for next call */
+    init_Sres(screen.utf8_mode_s);
     request->screen.utf8_mode =
 	extendedBoolean(request->screen.utf8_mode_s, tblUtf8Mode, uLast);
+
+    init_Sres(screen.utf8_fonts_s);
     request->screen.utf8_fonts =
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
+
+    init_Sres(screen.utf8_title_s);
     request->screen.utf8_title =
 	extendedBoolean(request->screen.utf8_title_s, tblUtf8Mode, uLast);
 
@@ -9768,6 +9879,10 @@ VTInitialize(Widget wrequest,
     initLineData(wnew);
 #if OPT_WIDE_CHARS
     freeFontList(&(request->work.fonts.x11.list_n));
+#endif
+#if OPT_XRES_QUERY
+    if (resource.reportXRes)
+	reportResources(wnew);
 #endif
     return;
 }

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.979 2019/09/25 20:37:17 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.984 2019/10/04 23:38:54 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -558,7 +558,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_DEC_RECTOPS
-#define OPT_DEC_RECTOPS 0 /* true if xterm is configured for VT420 rectangles */
+#define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
 #endif
 
 #ifndef OPT_SIXEL_GRAPHICS
@@ -566,7 +566,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_SCREEN_DUMPS
-#define OPT_SCREEN_DUMPS 0 /* true if xterm supports screen dumps */
+#define OPT_SCREEN_DUMPS 1 /* true if xterm supports screen dumps */
 #endif
 
 #ifndef OPT_REGIS_GRAPHICS
@@ -602,7 +602,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_FIFO_LINES
-#define OPT_FIFO_LINES 0 /* optimize save-lines feature using FIFO */
+#define OPT_FIFO_LINES 1 /* optimize save-lines feature using FIFO */
 #endif
 
 #ifndef OPT_FOCUS_EVENT
@@ -638,15 +638,15 @@ typedef enum {
 #endif
 
 #ifndef OPT_DIRECT_COLOR
-#define OPT_DIRECT_COLOR  0 /* true if xterm is configured with direct-colors */
+#define OPT_DIRECT_COLOR  1 /* true if xterm is configured with direct-colors */
 #endif
 
 #ifndef OPT_256_COLORS
-#define OPT_256_COLORS  0 /* true if xterm is configured with 256 colors */
+#define OPT_256_COLORS  1 /* true if xterm is configured with 256 colors */
 #endif
 
 #ifndef OPT_88_COLORS
-#define OPT_88_COLORS	0 /* true if xterm is configured with 88 colors */
+#define OPT_88_COLORS	1 /* true if xterm is configured with 88 colors */
 #endif
 
 #ifndef OPT_HIGHLIGHT_COLOR
@@ -658,7 +658,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_LUIT_PROG
-#define OPT_LUIT_PROG   0 /* true if xterm supports luit */
+#define OPT_LUIT_PROG   1 /* true if xterm supports luit */
 #endif
 
 #ifndef OPT_MAXIMIZE
@@ -678,7 +678,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_PASTE64
-#define OPT_PASTE64	0 /* program control of select/paste via base64 */
+#define OPT_PASTE64	1 /* program control of select/paste via base64 */
 #endif
 
 #ifndef OPT_PC_COLORS
@@ -754,7 +754,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_SELECT_REGEX
-#define OPT_SELECT_REGEX 0 /* true if xterm supports regular-expression selects */
+#define OPT_SELECT_REGEX 1 /* true if xterm supports regular-expression selects */
 #endif
 
 #ifndef OPT_SELECTION_OPS
@@ -778,11 +778,11 @@ typedef enum {
 #endif
 
 #ifndef OPT_TCAP_FKEYS
-#define OPT_TCAP_FKEYS	0 /* true for experimental termcap function-keys */
+#define OPT_TCAP_FKEYS	1 /* true for termcap function-keys */
 #endif
 
 #ifndef OPT_TCAP_QUERY
-#define OPT_TCAP_QUERY	0 /* true for experimental termcap query */
+#define OPT_TCAP_QUERY	1 /* true for termcap query */
 #endif
 
 #ifndef OPT_TEK4014
@@ -810,7 +810,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_WIDE_CHARS
-#define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
+#define OPT_WIDE_CHARS  1 /* true if xterm supports 16-bit characters */
 #endif
 
 #ifndef OPT_WIDER_ICHAR
@@ -819,6 +819,10 @@ typedef enum {
 
 #ifndef OPT_XMC_GLITCH
 #define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
+#endif
+
+#ifndef OPT_XRES_QUERY
+#define OPT_XRES_QUERY	1 /* true for resource query */
 #endif
 
 #ifndef OPT_XTERM_SGR
@@ -3444,6 +3448,8 @@ extern Window VDrawable(TScreen * /* screen */);
 				 !TScreenOf(w)->disallow_tcap_ops[name])
 
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
+
+#define AllowXResOps(w)		True
 
 #define SpecialWindowOps(w,name) (!TScreenOf(w)->disallow_win_ops[name])
 #define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \

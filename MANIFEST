@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-349e
+MANIFEST for xterm, version xterm-349f
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -217,6 +217,7 @@ vttests/query-color.pl          demonstrate OSC 4
 vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
 vttests/query-fonts.pl          script to demo/test font-querying
 vttests/query-status.pl         query DECRQSS status
+vttests/query-xres.pl           test/demo for DCS+Q
 vttests/report-sgr.pl           demonstrate report-sgr
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
