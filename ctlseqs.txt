@@ -591,7 +591,7 @@ CSI Ps ; Ps ; Ps ; Ps ; Ps T
           [func;startx;starty;firstrow;lastrow].  See the section Mouse
           Tracking.
 
-CSI > Ps ; Ps T
+CSI > Pm T
           Reset title mode features to default value, xterm.  Normally,
           "reset" disables the feature.  It is possible to disable the
           ability to reset features by compiling a different default for
@@ -1108,10 +1108,10 @@ CSI Ps n  Device Status Report (DSR).
           key.
 
 CSI > Pm n
-          Disable key modifier options, xterm.  Thise modifiers may be
-          enabled via the CSI > Ps; Ps m sequence.  This control
-          sequence corresponds to a resource value of "-1", which cannot
-          be set with the other sequence.
+          Disable key modifier options, xterm.  These modifiers may be
+          enabled via the CSI > Pm m sequence.  This control sequence
+          corresponds to a resource value of "-1", which cannot be set
+          with the other sequence.
 
           The parameter identifies the resource to be disabled:
 
@@ -1973,7 +1973,7 @@ used by xterm because
 o   the relationship between modifiers and the characters sent by func-
     tion-keys is not readily apparent, and
 
-o   the scheme is not extensible, i.e., it is an ad hoc asssignment lim-
+o   the scheme is not extensible, i.e., it is an ad hoc assignment lim-
     ited to two modifiers (shift and control).
 
 
