@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.554 2019/10/16 20:23:11 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.558 2019/10/17 01:07:58 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -1114,7 +1114,7 @@ Parameters are [func;startx;starty;firstrow;lastrow].
 See the section \fBMouse Tracking\fP.
 .
 .iP
-.IP \\*(Cs\\*>\\*(Ps\\*s\\*;\\*(Ps\\*s\\*T
+.IP \\*(Cs\\*>\\*(Pm\\*s\\*T
 Reset title mode features to default value, \fI\*(xt\fP.
 Normally, \*(``reset\*('' disables the feature.
 It is possible to disable the ability to reset features
@@ -1677,8 +1677,8 @@ can change the form of the string sent from the modified F1 key.
 .iP
 .IP \\*(Cs\\*>\\*(Pm\\*s\\*n
 Disable key modifier options, \fI\*(xt\fP.
-Thise modifiers may be enabled via the
-\*(Cs\*>\*(Ps\*;\*(Ps\*s\*m
+These modifiers may be enabled via the
+\*(Cs\*>\*(Pm\*s\*m
 sequence.
 This control sequence corresponds to a resource value of \*(``\-1\*('',
 which cannot be set with the other sequence.
@@ -2741,7 +2741,7 @@ the relationship between modifiers and the characters sent by function-keys
 is not readily apparent, and
 .bP
 the scheme is not extensible, i.e., it is an \fIad hoc\fP
-asssignment limited to two modifiers (\fIshift\fP and \fIcontrol\fP).
+assignment limited to two modifiers (\fIshift\fP and \fIcontrol\fP).
 .Sh "VT220-Style Function Keys"
 .LP
 However, \fI\*(xt\fP is most useful as a DEC VT102 or VT220 emulator.

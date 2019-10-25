@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: report-sgr.pl,v 1.34 2019/07/21 21:55:49 tom Exp $
+# $XTermId: report-sgr.pl,v 1.35 2019/07/21 21:55:49 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018,2109 by Thomas E. Dickey
+# Copyright 2018,2019 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
