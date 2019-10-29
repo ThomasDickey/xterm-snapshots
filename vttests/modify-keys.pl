@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: modify-keys.pl,v 1.87 2019/10/28 01:26:49 tom Exp $
+# $XTermId: modify-keys.pl,v 1.89 2019/10/29 00:22:23 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -825,10 +825,10 @@ sub begin_report() {
 <head>
   <meta name="generator" content="$0">
 
-  <title>XTERM - Modified "Other" Keys</title>
+  <title>XTERM - Modified "Other" Keys ($xkb_layout-$xkb_model)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="keywords" content="xterm, special keys">
-  <meta name="description" content="This is the xterm change-log, distributed with xterm, with items listed by patch-number and date">
+  <meta name="description" content="This is an example of xterm's modifyOtherKeys feature">
 </head>
 
 <body>
@@ -1039,7 +1039,10 @@ sub do_localectl($) {
     my @data   = &readpipe($cmd);
     &begin_table("Output of $cmd") if ($report);
     for my $n ( 0 .. $#data ) {
-        my $value = &trim( $data[$n] );
+
+        # let command-line parameters override localectl output, for reports
+        $data[$n] =~ s/^(\s+X11 Layout:\s+).*$/$1$opt_l/ if ($opt_l);
+        $data[$n] =~ s/^(\s+X11 Model:\s+).*$/$1$opt_m/  if ($opt_m);
         my @fields = split /:\s*/, $data[$n];
         next unless ( $#fields == 1 );
         if ($report) {
