@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2019)
-               updated for XTerm Patch #350 (2019/10/16)
+               updated for XTerm Patch #350 (2019/11/02)
 
 
 
@@ -1066,22 +1066,25 @@ CSI Pm m  Character Attributes (SGR).
           ing the closest match, xterm asks the X server to directly
           render a given color.
 
-CSI > Pm m
+CSI > Pp ; Pv m
+CSI > Pp m
           Set/reset key modifier options, xterm.  Set or reset resource-
           values used by xterm to decide whether to construct escape
           sequences holding information about the modifiers pressed with
           a given key.
 
-          The first parameter identifies the resource to set/reset.  The
-          second parameter is the value to assign to the resource.
+          The first parameter Pp identifies the resource to set/reset.
+          The second parameter Pv is the value to assign to the
+          resource.
 
           If the second parameter is omitted, the resource is reset to
-          its initial value.
+          its initial value.  Values 3  and 5  are reserved for keypad-
+          keys and string-keys.
 
-            Ps = 0  -> modifyKeyboard.
-            Ps = 1  -> modifyCursorKeys.
-            Ps = 2  -> modifyFunctionKeys.
-            Ps = 4  -> modifyOtherKeys.
+            Pp = 0  -> modifyKeyboard.
+            Pp = 1  -> modifyCursorKeys.
+            Pp = 2  -> modifyFunctionKeys.
+            Pp = 4  -> modifyOtherKeys.
 
           If no parameters are given, all resources are reset to their
           initial values.
@@ -1787,6 +1790,30 @@ o   prefix a key with the ESC  character.
 
 o   shift the key from codes 0-127 to 128-255 by adding 128.
 
+When modifyOtherKeys is set, ordinary keys may be sent as escape
+sequences:
+
+o   When modifyOtherKeys is set to 1, only the alt- and meta-modifiers
+    apply.  For example, alt-Tab sends CSI 2 7 ; 3 ; 9 ~ (the second
+    parameter is "3" for alt, and the third parameter is the ASCII value
+    of tab, "9").
+
+o   When modifyOtherKeys is set to 2, all of the modifiers apply.  For
+    example, shift-Tab sends CSI 2 7 ; 2 ; 9 ~ rather than CSI Z (the
+    second parameter is "2" for shift).
+
+The formatOtherKeys resource tells n  to change the format of the escape
+sequences sent when modifyOtherKeys applies.  When modifyOtherKeys is
+set to 1, for example alt-Tab sends CSI 9 ; 3 u (changing the order of
+parameters).  One drawback to this format is that applications may con-
+fuse it with CSI u  (restore-cursor).
+
+The xterm FAQ section
+
+   How can my program distinguish control-I from tab?
+
+goes into greater detail on this topic.
+
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes altIsNotMeta is set:
@@ -2484,7 +2511,9 @@ CSI ? Pm h
 DCS Pa ; Pb ; Ph q  Ps..Ps ST
           Send SIXEL image, DEC graphics terminals, xterm.  See:
 
-               https://vt100.net/docs/vt3xx-gp/chapter14.html
+             VT330/VT340 Programmer Reference Manual Volume 2:
+             Graphics Programming
+             Chapter 14 Graphics Programming
 
           The sixel data device control string has three positional
           parameters, following the q  with sixel data.
@@ -2514,7 +2543,9 @@ CSI ? Pm h
 DCS Pm p Pr..Pr ST
           Enter or exit ReGIS, VT300, xterm.  See:
 
-               https://vt100.net/docs/vt3xx-gp/chapter1.html
+             VT330/VT340 Programmer Reference Manual Volume 2:
+             Graphics Programming
+             Chapter 1 Introduction to ReGIS
 
           The ReGIS data device control string has one positional param-
           eter with four possible values:
