@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.984 2019/10/04 23:38:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.985 2019/11/02 16:17:42 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -638,7 +638,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_DIRECT_COLOR
-#define OPT_DIRECT_COLOR  1 /* true if xterm is configured with direct-colors */
+#define OPT_DIRECT_COLOR  OPT_ISO_COLORS /* true if xterm is configured with direct-colors */
 #endif
 
 #ifndef OPT_256_COLORS
@@ -1525,7 +1525,9 @@ typedef enum {
 #endif
 
 #if OPT_LUIT_PROG && !OPT_WIDE_CHARS
-#error Luit requires the wide-chars configuration
+/* Luit requires the wide-chars configuration */
+#undef OPT_LUIT_PROG
+#define OPT_LUIT_PROG 0
 #endif
 
 /***====================================================================***/

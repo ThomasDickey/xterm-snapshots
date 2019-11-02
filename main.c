@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.855 2019/10/06 20:22:25 tom Exp $ */
+/* $XTermId: main.c,v 1.856 2019/11/02 23:56:58 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -1297,6 +1297,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_REPORT_FONTS
 { "-report-fonts",         "report fonts as loaded to stdout" },
+#endif
+#if OPT_XRES_QUERY
+{ "-report-xres",          "report X resources for VT100 widget" },
 #endif
 #ifdef SCROLLBAR_RIGHT
 { "-rightbar",             "force scrollbar right (default left)" },
