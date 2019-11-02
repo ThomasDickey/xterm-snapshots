@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.14 2019/06/11 09:18:57 tom Exp $ */
+/* $XTermId: svg.c,v 1.15 2019/11/02 15:04:31 tom Exp $ */
 
 /*
  * Copyright 2017,2019		Thomas E. Dickey
@@ -229,7 +229,7 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 #endif
 		switch (chr) {
 		case 0:
-		    /* This sometimes happens when resizing... ignore. */
+		    fputc(' ', fp);
 		    break;
 		case '&':
 		    fputs("&amp;", fp);

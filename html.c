@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.16 2019/06/11 09:19:29 tom Exp $ */
+/* $XTermId: html.c,v 1.17 2019/11/02 15:03:43 tom Exp $ */
 
 /*
  * Copyright 2018,2019	Thomas E. Dickey
@@ -249,7 +249,7 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 #endif
 	    switch (chr) {
 	    case 0:
-		/* This sometimes happens when resizing... ignore. */
+		fputc(' ', fp);
 		break;
 	    case '&':
 		fputs("&amp;", fp);
