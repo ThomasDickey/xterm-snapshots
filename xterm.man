@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.800 2019/10/07 00:22:29 Branden.Robinson Exp $
+.\" $XTermId: xterm.man,v 1.802 2019/11/02 09:37:54 tom Exp $
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
 .\"
@@ -4115,10 +4115,20 @@ allows modification of other special keys
 .TP 8
 .B "modifyOtherKeys\fP (class\fB ModifyOtherKeys\fP)"
 Like \fBmodifyCursorKeys\fP, tells \fI\*n\fP to construct an
-escape sequence for other keys (such as \*(``2\*('') when modified by
-Control-, Alt- or Meta-modifiers.
-This feature does not apply to function keys and well-defined
-keys such as ESC or the control keys.
+escape sequence for \fIordinary\fP (i.e., \*(``other\*('') keys
+(such as \*(``2\*('') when modified by
+Shift-, Control-, Alt- or Meta-modifiers.
+This feature does not apply to \fIspecial keys\fP,
+i.e., cursor-, keypad-,  function- or control-keys
+which are labeled on your keyboard.
+Those have key symbols which XKB identifies uniquely.
+.IP
+For example, this feature does not apply to \fIspecial\fP
+control-keys
+(e.g., Escape, Tab, Enter, Backspace)
+Other control keys (e.g., Control-I, Control-M, Control-H) may
+send escape sequences when this feature is enabled.
+.IP
 The default is \*(``0\*('':
 .RS
 .TP 5
@@ -4128,10 +4138,26 @@ disables this feature.
 1
 enables this feature for keys except for those with
 well-known behavior, e.g., Tab, Backarrow and some special
-control character cases, e.g., Control-Space to make a NUL.
+control character cases which are built into the X11 library,
+e.g., Control-Space to make a NUL, or
+Control-3 to make an Escape character.
+.IP
+Except for those special cases built into the X11 library,
+the Shift- and Control- modifiers are treated normally.
+The Alt- and Meta- modifiers do not cause \fI\*n\fP to send escape sequences.
+Those modifier keys are interpreted according to other resources,
+e.g., the \fBmetaSendsEscape\fP resource.
 .TP 5
 2
 enables this feature for keys including the exceptions listed.
+\fI\*N\fP ignores the special cases built into the X11 library.
+Any shifted (modified) ordinary key sends an escape sequence.
+The Alt- and Meta- modifiers cause \fI\*n\fP to send escape sequences.
+.RE
+.IP
+The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:
+.RS
+https://invisible\-island.net/xterm/modified\-keys.html
 .RE
 .TP 8
 .B "multiClickTime\fP (class\fB MultiClickTime\fP)"
@@ -8385,7 +8411,7 @@ https://invisible\-island.net/xterm/xterm.faq.html
 https://invisible\-island.net/xterm/xterm.log.html
 .RE
 .PP
-\fIX Toolkit Intrinsics \(en C Language Interface\fP,
+\fIX Toolkit Intrinsics \(en C Language Interface\fP (Xt),
 .br
 Joel McCormack, Paul Asente, Ralph R. Swick (1994),
 .br

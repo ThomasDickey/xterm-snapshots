@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.558 2019/10/17 01:07:58 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.561 2019/11/02 14:26:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2018,2019 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #350
-.ds RF 2019/10/16
+.ds RF 2019/11/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1625,23 +1625,25 @@ rather than choosing the closest match,
 \fI\*(xt\fP asks the X server to directly render a given color.
 .
 .iP
-.IP \\*(Cs\\*>\\*(Pm\\*s\\*m
+.IP \\*(Cs\\*>\\*(Pp\\*s\\*;\*(Pv\\*s\\*m
+.IP \\*(Cs\\*>\\*(Pp\\*s\\*m
 Set/reset key modifier options, \fI\*(xt\fP.
 Set or reset resource-values used by \fI\*(xt\fP to decide whether to
 construct escape sequences holding information about the modifiers
 pressed with a given key.
 .iP
 .IP
-The first parameter identifies the resource to set/reset.
-The second parameter is the value to assign to the resource.
+The first parameter \*(Pp identifies the resource to set/reset.
+The second parameter \*(Pv is the value to assign to the resource.
 .iP
 .IP
 If the second parameter is omitted, the resource is reset to its initial value.
+Values \*3 and \*5 are reserved for keypad-keys and string-keys.
 .iP
-  \*(Ps = \*0 \(-> \fBmodifyKeyboard\fP.
-  \*(Ps = \*1 \(-> \fBmodifyCursorKeys\fP.
-  \*(Ps = \*2 \(-> \fBmodifyFunctionKeys\fP.
-  \*(Ps = \*4 \(-> \fBmodifyOtherKeys\fP.
+  \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
 .iP
 .IP
 If no parameters are given, all resources are reset to their initial values.
@@ -2504,6 +2506,42 @@ prefix a key with the \*(Es character.
 .bP
 shift the key from codes 0-127 to 128-255 by adding 128.
 .LP
+When \fBmodifyOtherKeys\fP is set,
+ordinary keys may be sent as escape sequences:
+.bP
+When \fBmodifyOtherKeys\fP is set to 1,
+only the alt- and meta-modifiers apply.
+For example, \fIalt-Tab\fP sends 
+\*(Cs\*2\*7\*;\*3\*;\*9\*~
+(the second parameter is \*(``3\*('' for \fIalt\fP,
+and the third parameter is the ASCII value of tab, \*(``9\*('').
+.bP
+When \fBmodifyOtherKeys\fP is set to 2,
+all of the modifiers apply.
+For example, \fIshift-Tab\fP sends 
+\*(Cs\*2\*7\*;\*2\*;\*9\*~
+rather than
+\*(Cs\*Z
+(the second parameter is \*(``2\*('' for \fIshift\fP).
+.LP
+The \fBformatOtherKeys\fP resource tells \fI\*n\fP to change the
+format of the escape sequences sent when \fBmodifyOtherKeys\fP applies.
+When \fBmodifyOtherKeys\fP is set to 1,
+for example \fIalt-Tab\fP sends 
+\*(Cs\*9\*;\*3\*u
+(changing the order of parameters).
+One drawback to this format is that applications may confuse it with
+\*(Cs\*u (restore-cursor).
+.LP
+The \fI\*(xt\fP FAQ section
+.br
+.ID 3
+.\" https://invisible-island.net/xterm/xterm.faq.html#xterm_modother
+\fIHow can my program distinguish control-I from tab?\fP
+.DE
+.br
+goes into greater detail on this topic.
+.LP
 The table shows the result for a given character \*(``x\*('' with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
@@ -3315,8 +3353,11 @@ Set Mode, \fI\*(xt\fP.
 .IP \\*(Dc\\*(Pa\\*s\\*;\\*(Pb\\*s\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
 Send SIXEL image, DEC graphics terminals, \fI\*(xt\fP.
 See:
-.ID
-https://vt100.net/docs/vt3xx-gp/chapter14.html
+.ID 3
+\fIVT330/VT340 Programmer Reference Manual Volume 2:\fP
+\fIGraphics Programming\fP
+.\" https://vt100.net/docs/vt3xx-gp/chapter14.html
+\fIChapter 14 Graphics Programming\fP
 .DE
 The sixel data device control string has three positional parameters,
 following the \*q with sixel data.
@@ -3351,8 +3392,11 @@ Set Mode, \fI\*(xt\fP.
 .IP \\*(Dc\\*(Pm\\*s\\*p\\*(Pr..\\*(Pr\fP\\*s\\*(ST
 Enter or exit ReGIS, VT300, \fI\*(xt\fP.
 See:
-.ID
-https://vt100.net/docs/vt3xx-gp/chapter1.html
+.ID 3
+\fIVT330/VT340 Programmer Reference Manual Volume 2:\fP
+\fIGraphics Programming\fP
+.\" https://vt100.net/docs/vt3xx-gp/chapter1.html
+\fIChapter 1 Introduction to ReGIS\fP
 .DE
 The ReGIS data device control string has one positional parameter
 with four possible values:
