@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.363 2019/07/21 19:41:39 tom Exp $
+dnl $XTermId: configure.in,v 1.366 2019/11/02 20:49:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1014,9 +1014,10 @@ CF_ARG_DISABLE(screen-dumps,
 	[enable_screen_dumps=yes])
 AC_MSG_RESULT($enable_screen_dumps)
 if test "$enable_screen_dumps" = yes ; then
-	AC_DEFINE(OPT_SCREEN_DUMPS,1,[Define to 1 to enable XHTML and SVG screen dump support])
 	EXTRASRCS="$EXTRASRCS html.c svg.c"
 	EXTRAOBJS="$EXTRAOBJS html.o svg.o"
+else
+	AC_DEFINE(OPT_SCREEN_DUMPS,0,[Define to 0 to disable XHTML and SVG screen dump support])
 fi
 
 AC_MSG_CHECKING(if you want ReGIS graphics support)
