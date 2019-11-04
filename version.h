@@ -1,4 +1,4 @@
-/* $XTermId: version.h,v 1.480 2019/11/02 15:08:55 tom Exp $ */
+/* $XTermId: version.h,v 1.481 2019/11/04 21:16:46 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -38,8 +38,8 @@
  * version of X to which this version of xterm has been built.  The resulting
  * number in parentheses is my patch number (Thomas E. Dickey).
  */
-#define XTERM_PATCH   350
-#define XTERM_DATE    2019-11-02
+#define XTERM_PATCH   351
+#define XTERM_DATE    2019-11-04
 
 #ifndef __vendorversion__
 #define __vendorversion__ "XTerm"
