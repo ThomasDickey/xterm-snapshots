@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.183 2019/11/02 10:20:29 tom Exp $
+# $XTermId: terminfo,v 1.184 2019/11/04 21:55:11 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -1581,9 +1581,18 @@ xterm-xmc|xterm with magic-cookie glitch,
 	xmc#1,
 	use=xterm-new,
 #
-# This one also is primarily for testing ncurses; while the ISO 6429 defines
-# the REP control, none of the DEC VTxxx terminals (VT52 through VT525) support
-# it.
+# This one was originally for testing ncurses.  While the ISO 6429 defines the
+# REP control, none of the DEC VTxxx terminals (VT52 through VT525) support it.
+#
+# The feature's inclusion in xterm was prompted by changes in ncurses to
+# support testing repeat_char by Alexander Lukyanov, since no readily-available
+# terminal supported this:
+#
+# + Alexander's patch was integrated in ncurses 1996/09/28
+# + xterm patch #32 1996/11/21 was released in XFree86 3.2A 1997/01/26
+#
+# In July 2017, the feature was added to xterm-new in ncurses, making this
+# entry obsolete (but it is kept for reference).
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
 	use=xterm-new,
