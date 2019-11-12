@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2124 2019/11/04 21:57:40 tom Exp $
+  $XTermId: xterm.log.html,v 1.2125 2019/11/12 10:18:40 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -986,6 +986,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>amend the workaround for Xft+buffered blanking by moving
+    the switch to bitmap-fonts to account for differences in font
+    metrics between bitmap- and TrueType-fonts (report by Stefan
+    Assmann).</li>
+
     <li>improve the note on the <code>xterm-rep</code> terminfo
     entry (prompted by discussion with Sven Joachim).</li>
   </ul>

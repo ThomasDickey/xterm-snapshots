@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1720 2019/10/07 00:26:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1721 2019/11/12 10:15:38 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -8018,6 +8018,25 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+    /*
+     * Work around a bug seen when vttest switches from 132 columns back to 80
+     * columns, while double-buffering is active.  If Xft is active during the
+     * resize, the screen will be blank thereafter.  This workaround causes
+     * some extra flickering, but that is preferable to a blank screen.
+     *
+     * Since the bitmap- and TrueType-fonts do not always have identical sizes,
+     * do this switching early, to use the updated font-sizes in the request
+     * for resizing the window.
+     */
+#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
+    if (resource.buffered
+	&& UsingRenderFont(xw)) {
+	ToggleXft();
+	buggyXft = True;
+    }
+#endif
+
     /* check first if the row/column values fit into a Dimension */
     if (cols > 0) {
 	if ((int) (askedWidth = (Dimension) cols) < cols) {
@@ -8093,21 +8112,6 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     }
 #ifndef nothack
     getXtermSizeHints(xw);
-#endif
-
-#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
-    /*
-     * Work around a bug seen when vttest switches from 132 columns back to 80
-     * columns, while double-buffering is active.  If Xft is active during the
-     * resize, the screen will be blank thereafter.  This workaround causes
-     * some extra flickering, but that is preferable to a blank screen.
-     */
-#define ToggleXft() HandleRenderFont((Widget)xw, (XEvent *)0, (String *)0, &ignore)
-    if (resource.buffered
-	&& UsingRenderFont(xw)) {
-	ToggleXft();
-	buggyXft = True;
-    }
 #endif
 
     TRACE(("...requesting resize %dx%d\n", askedHeight, askedWidth));

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.656 2019/10/01 08:34:12 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.658 2019/11/12 10:05:00 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -135,6 +135,27 @@ static void fillInFaceSize(XtermWidget, int);
 
 #if OPT_SHIFT_FONTS
 static int lookupOneFontSize(XtermWidget, int);
+#endif
+
+#if OPT_TRACE
+static void
+set_font_height(TScreen *screen, VTwin *win, int height)
+{
+    SetFontHeight(screen, win, height);
+    TRACE(("SetFontHeight %d\n", win->f_height));
+#undef SetFontHeight
+#define SetFontHeight(screen, win, height) set_font_height(screen, win, height)
+}
+
+static void
+set_font_width(TScreen *screen, VTwin *win, int width)
+{
+    (void) screen;
+    SetFontWidth(screen, win, width);
+    TRACE(("SetFontWidth  %d\n", win->f_width));
+#undef  SetFontWidth
+#define SetFontWidth(screen, win, height) set_font_width(screen, win, height)
+}
 #endif
 
 #if OPT_REPORT_FONTS || OPT_WIDE_CHARS
@@ -3362,7 +3383,7 @@ xtermComputeFontInfo(XtermWidget xw,
 }
 
 /* save this information as a side-effect for double-sized characters */
-void
+static void
 xtermSaveFontInfo(TScreen *screen, XFontStruct *font)
 {
     screen->fnt_wide = (Dimension) (font->max_bounds.width);
