@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.133 2019/09/20 22:47:17 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.134 2019/11/12 10:05:06 tom Exp $ */
 
 /*
  * Copyright 1998-2018,2019 by Thomas E. Dickey
@@ -62,7 +62,6 @@ extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontS
 extern void xtermCopyFontInfo (XTermFonts * /* target */, XTermFonts * /* source */);
 extern void xtermDerivedFont (const char * /* name */);
 extern void xtermFreeFontInfo (XTermFonts * /* target */);
-extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
 extern void xtermUpdateFontGCs (XtermWidget /* xw */, MyGetFont /* myfunc */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
