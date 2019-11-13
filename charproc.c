@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1721 2019/11/12 10:15:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1722 2019/11/13 09:31:44 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5880,7 +5880,9 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		}
 	    }
 #else
-	    if (height != xw->hints.height || width != xw->hints.width) {
+	    if (!xw->work.doing_resize
+		&& (height != xw->hints.height
+		    || width != xw->hints.width)) {
 		/*
 		 * This is a special case: other calls to RequestResize that
 		 * could set the screensize arbitrarily are via escape
@@ -8018,6 +8020,26 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
+    /* check first if the row/column values fit into a Dimension */
+    if (cols > 0) {
+	if ((int) (askedWidth = (Dimension) cols) < cols) {
+	    TRACE(("... cols too large for Dimension\n"));
+	    return;
+	}
+    } else {
+	askedWidth = 0;
+    }
+    if (rows > 0) {
+	if ((int) (askedHeight = (Dimension) rows) < rows) {
+	    TRACE(("... rows too large for Dimension\n"));
+	    return;
+	}
+    } else {
+	askedHeight = 0;
+    }
+
+    xw->work.doing_resize = True;
+
 #if OPT_RENDERFONT && USE_DOUBLE_BUFFER
     /*
      * Work around a bug seen when vttest switches from 132 columns back to 80
@@ -8037,24 +8059,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     }
 #endif
 
-    /* check first if the row/column values fit into a Dimension */
-    if (cols > 0) {
-	if ((int) (askedWidth = (Dimension) cols) < cols) {
-	    TRACE(("... cols too large for Dimension\n"));
-	    return;
-	}
-    } else {
-	askedWidth = 0;
-    }
-    if (rows > 0) {
-	if ((int) (askedHeight = (Dimension) rows) < rows) {
-	    TRACE(("... rows too large for Dimension\n"));
-	    return;
-	}
-    } else {
-	askedHeight = 0;
-    }
-
+    /*
+     * If the requested values will fit into a Dimension, and one or both are
+     * zero, get the current corresponding screen dimension to use as a limit.
+     */
     if (askedHeight == 0
 	|| askedWidth == 0
 	|| xw->misc.limit_resize > 0) {
@@ -8062,6 +8070,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 			 RootWindowOfScreen(XtScreen(xw)), &attrs);
     }
 
+    /*
+     * Using the current font metrics, translate the requested character
+     * rows/columns into pixels.
+     */
     if (text) {
 	unsigned long value;
 
@@ -8071,7 +8083,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    value *= (unsigned long) FontHeight(screen);
 	    value += (unsigned long) (2 * screen->border);
 	    if (!okDimension(value, askedHeight))
-		return;
+		goto give_up;
 	}
 
 	if ((value = (unsigned long) cols) != 0) {
@@ -8081,7 +8093,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    value += (unsigned long) ((2 * screen->border)
 				      + ScrollbarWidth(screen));
 	    if (!okDimension(value, askedWidth))
-		return;
+		goto give_up;
 	}
 
     } else {
@@ -8144,14 +8156,21 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 #endif
 
     XSync(screen->display, False);	/* synchronize */
-    if (xtermAppPending())
+    if (xtermAppPending()) {
 	xevents(xw);
+    }
 
+  give_up:
 #if OPT_RENDERFONT && USE_DOUBLE_BUFFER
     if (buggyXft) {
 	ToggleXft();
+	if (xtermAppPending()) {
+	    xevents(xw);
+	}
     }
 #endif
+
+    xw->work.doing_resize = False;
 
     TRACE(("...RequestResize done\n"));
     return;
