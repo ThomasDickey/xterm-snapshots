@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.985 2019/11/02 16:17:42 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.986 2019/11/13 09:20:32 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3058,6 +3058,7 @@ typedef struct _Work {
     int xim_fs_ascent;		/* ascent of fs */
     TInput inputs[NINPUTWIDGETS];
 #endif
+    Boolean doing_resize;	/* currently in RequestResize */
 #if OPT_MAXIMIZE
 #define MAX_EWMH_MODE 3
 #define MAX_EWMH_DATA (1 + OPT_TEK4014)
