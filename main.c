@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.856 2019/11/02 23:56:58 tom Exp $ */
+/* $XTermId: main.c,v 1.858 2019/11/14 00:16:08 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -323,6 +323,13 @@ ttyslot(void)
 
 #if defined(USE_UTEMPTER)
 #include <utempter.h>
+#if 1
+#define UTEMPTER_ADD(pty,hostname,master_fd) utempter_add_record(master_fd, hostname)
+#define UTEMPTER_DEL()                       utempter_remove_added_record ()
+#else
+#define UTEMPTER_ADD(pty,hostname,master_fd) addToUtmp(pty, hostname, master_fd)
+#define UTEMPTER_DEL()                       removeFromUtmp()
+#endif
 #endif
 
 #if defined(I_FIND) && defined(I_PUSH)
@@ -1716,6 +1723,15 @@ Help(void)
     fflush(stdout);
 }
 
+static void
+NeedParam(XrmOptionDescRec * option_ptr, const char *option_val)
+{
+    if (IsEmpty(option_val)) {
+	xtermWarning("option %s requires a value\n", option_ptr->option);
+	exit(1);
+    }
+}
+
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 /* ARGSUSED */
 static Boolean
@@ -2268,11 +2284,13 @@ main(int argc, char *argv[]ENVP_ARG)
 		Help();
 		quit = True;
 	    } else if (!strcmp(option_ptr->option, "-baudrate")) {
+		NeedParam(option_ptr, option_value);
 		if ((line_speed = lookup_baudrate(option_value)) == 0) {
 		    Help();
 		    quit = True;
 		}
 	    } else if (!strcmp(option_ptr->option, "-class")) {
+		NeedParam(option_ptr, option_value);
 		free(my_class);
 		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
@@ -2280,6 +2298,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 	    } else if (!strcmp(option_ptr->option, "-into")) {
 		char *endPtr;
+		NeedParam(option_ptr, option_value);
 		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
 		if (!FullS2L(option_value, endPtr)) {
 		    Help();
@@ -3996,7 +4015,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	SetUtmpHost(dummy.ut_host, screen);
 	TRACE(("...calling addToUtmp(pty=%s, hostname=%s, master_fd=%d)\n",
 	       ttydev, dummy.ut_host, screen->respond));
-	addToUtmp(ttydev, dummy.ut_host, screen->respond);
+	UTEMPTER_ADD(ttydev, dummy.ut_host, screen->respond);
 	added_utmp_entry = True;
     }
 #endif
@@ -5219,7 +5238,7 @@ Exit(int n)
     DEBUG_MSG("handle:Exit USE_UTEMPTER\n");
     if (!resource.utmpInhibit && added_utmp_entry) {
 	TRACE(("...calling removeFromUtmp\n"));
-	removeFromUtmp();
+	UTEMPTER_DEL();
     }
 #elif defined(HAVE_UTMP)
 #ifdef USE_SYSV_UTMP

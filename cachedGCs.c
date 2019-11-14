@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.78 2019/09/22 21:32:07 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.79 2019/11/13 23:07:08 tom Exp $ */
 
 /*
  * Copyright 2007-2018,2019 by Thomas E. Dickey
@@ -647,9 +647,11 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 			k = j;
 		    }
 		}
-		LINK(k);
-		TRACE2(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
-		result = chgCache(xw, cgsId, me, True);
+		if (k >= 0) {
+		    LINK(k);
+		    TRACE2(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
+		    result = chgCache(xw, cgsId, me, True);
+		}
 	    }
 	    me->next = *(me->data);
 	} else {

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.112 2019/07/19 00:29:55 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.113 2019/11/13 23:24:03 tom Exp $ */
 
 /*
  * Copyright 2014-2018,2019 by Ross Combs
@@ -2372,7 +2372,7 @@ draw_text(RegisGraphicsContext *context, char const *str)
 {
 #ifndef ENABLE_DISTORTIONLESS_ROTATION
     RegisTextControls *old_text_controls = NULL;
-    RegisTextControls scratch_text_controls;
+    static RegisTextControls scratch_text_controls;
 #endif
     double total_rotation;
     size_t ii;

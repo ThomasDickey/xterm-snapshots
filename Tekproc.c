@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.236 2019/07/22 20:01:06 Jonathan.Irwin Exp $ */
+/* $XTermId: Tekproc.c,v 1.237 2019/11/13 22:10:26 tom Exp $ */
 
 /*
  * Copyright 2001-2018,2019 by Thomas E. Dickey
@@ -1700,16 +1700,29 @@ TekRealize(Widget gw,
     XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
 
     {				/* there's gotta be a better way... */
+	static char empty_string[1];
 	static Arg args[] =
 	{
 	    {XtNtitle, (XtArgVal) NULL},
 	    {XtNiconName, (XtArgVal) NULL},
 	};
-	char *icon_name, *title, *tek_icon_name, *tek_title;
+	char *icon_name = NULL;
+	char *title = NULL;
+	char *tek_icon_name = NULL;
+	char *tek_title = NULL;
 
 	args[0].value = (XtArgVal) & icon_name;
 	args[1].value = (XtArgVal) & title;
 	XtGetValues(SHELL_OF(tw), args, 2);
+
+	if (IsEmpty(title)) {
+	    title = empty_string;
+	}
+
+	if (IsEmpty(icon_name)) {
+	    icon_name = empty_string;
+	}
+
 	TRACE(("TekShell title='%s', iconName='%s'\n", title, icon_name));
 	tek_icon_name = XtMalloc((Cardinal) strlen(icon_name) + 7);
 	strcpy(tek_icon_name, icon_name);
