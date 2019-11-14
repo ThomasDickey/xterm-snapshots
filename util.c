@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.844 2019/09/24 23:47:29 tom Exp $ */
+/* $XTermId: util.c,v 1.846 2019/11/13 22:55:08 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -3869,7 +3869,6 @@ drawXtermText(XTermDraw * params,
 	{
 	    /* adding code to substitute simulated line-drawing characters */
 	    int last, first = 0;
-	    Dimension old_wide, old_high = 0;
 	    int curX = x;
 
 	    for (last = 0; last < (int) len; last++) {
@@ -3969,8 +3968,8 @@ drawXtermText(XTermDraw * params,
 			underline_len += (Cardinal) nc;
 		    }
 		    if (missing) {
-			old_wide = screen->fnt_wide;
-			old_high = screen->fnt_high;
+			Dimension old_wide = screen->fnt_wide;
+			Dimension old_high = screen->fnt_high;
 			screen->fnt_wide = (Dimension) FontWidth(screen);
 			screen->fnt_high = (Dimension) FontHeight(screen);
 			xtermDrawBoxChar(&recur, ch,
@@ -4648,13 +4647,13 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
 	if (screen->hilite_color) {
 	    if (screen->hilite_reverse) {
 		if (use_selbg) {
-		    if (use_selfg)
+		    if (use_selfg) {
 			bg_pix = fg_pix;
-		    else
+		    } else {
 			fg_pix = bg_pix;
+			bg_pix = selbg_pix;
+		    }
 		}
-		if (use_selbg)
-		    bg_pix = selbg_pix;
 		if (use_selfg)
 		    fg_pix = selfg_pix;
 	    }
@@ -4682,18 +4681,18 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
 		    } else {
 			fg_pix = bg_pix;
 		    }
-		}
-		if (use_selbg) {
-		    if (reverse2)
+		    if (reverse2) {
 			fg_pix = selbg_pix;
-		    else
+		    } else {
 			bg_pix = selbg_pix;
+		    }
 		}
 		if (use_selfg) {
-		    if (reverse2)
+		    if (reverse2) {
 			bg_pix = selfg_pix;
-		    else
+		    } else {
 			fg_pix = selfg_pix;
+		    }
 		}
 	    }
 	}

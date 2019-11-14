@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1722 2019/11/13 09:31:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1727 2019/11/14 00:58:29 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -7141,7 +7141,7 @@ property_to_string(XtermWidget xw, XTextProperty * text)
 
     if (rc >= 0) {
 	int n, c, pass;
-	size_t need = 0;
+	size_t need;
 
 	for (pass = 0; pass < 2; ++pass) {
 	    for (n = 0, need = 0; n < length; n++) {
@@ -8518,7 +8518,6 @@ set_flags_from_list(char *target,
 		    const FlagList * list)
 {
     Cardinal n;
-    int value = -1;
 
     while (!IsEmpty(source)) {
 	char *next = ParseList(&source);
@@ -8528,8 +8527,7 @@ set_flags_from_list(char *target,
 	    break;
 	if (isdigit(CharOf(*next))) {
 	    char *temp;
-
-	    value = (int) strtol(next, &temp, 0);
+	    int value = (int) strtol(next, &temp, 0);
 	    if (!FullS2L(next, temp)) {
 		xtermWarning("Expected a number: %s\n", next);
 	    } else {
@@ -8545,7 +8543,7 @@ set_flags_from_list(char *target,
 	} else {
 	    for (n = 0; list[n].name != 0; ++n) {
 		if (!x_wildstrcmp(next, list[n].name)) {
-		    value = list[n].code;
+		    int value = list[n].code;
 		    target[value] = 1;
 		    found = True;
 		    TRACE(("...found %s (%d)\n", list[n].name, value));
@@ -8601,6 +8599,10 @@ reportResources(XtermWidget xw)
     String *list = TypeMallocN(String, XtNumber(xterm_resources));
     Cardinal n;
     int widest = 0;
+
+    if (list == NULL)
+	return;
+
     for (n = 0; n < XtNumber(xterm_resources); ++n) {
 	int width;
 	list[n] = (((int) xterm_resources[n].resource_offset < 0)
@@ -8615,6 +8617,7 @@ reportResources(XtermWidget xw)
     for (n = 0; n < XtNumber(xterm_resources); ++n) {
 	char *value = vt100ResourceToString(xw, list[n]);
 	printf("%-*s : %s\n", widest, list[n], value ? value : "(skip)");
+	free(value);
     }
     free(list);
 }
@@ -11601,10 +11604,8 @@ ShowCursor(void)
 			bg_pix = fg_pix;
 		    } else {
 			fg_pix = bg_pix;
+			bg_pix = selbg_pix;
 		    }
-		}
-		if (use_selbg) {
-		    bg_pix = selbg_pix;
 		}
 		if (use_selfg) {
 		    fg_pix = selfg_pix;
@@ -12589,7 +12590,7 @@ DoSetSelectedFont(Widget w,
 	int oldFont = TScreenOf(xw)->menu_font_number;
 	char *save = TScreenOf(xw)->SelectFontName();
 	char *val;
-	char *test = 0;
+	char *test;
 	unsigned len = (unsigned) *length;
 	unsigned tst;
 

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.211 2019/07/19 00:40:41 tom Exp $ */
+/* $XTermId: trace.c,v 1.212 2019/11/13 22:57:33 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -941,30 +941,37 @@ void
 TraceSizeHints(XSizeHints * hints)
 {
     TRACE(("size hints:\n"));
-    if (hints->flags & (USPosition | PPosition))
+    if (hints->flags & (USPosition | PPosition)) {
 	TRACE(("   position   %d,%d%s%s\n", hints->y, hints->x,
 	       (hints->flags & USPosition) ? " user" : "",
 	       (hints->flags & PPosition) ? " prog" : ""));
-    if (hints->flags & (USSize | PSize))
+    }
+    if (hints->flags & (USSize | PSize)) {
 	TRACE(("   size       %d,%d%s%s\n", hints->height, hints->width,
 	       (hints->flags & USSize) ? " user" : "",
 	       (hints->flags & PSize) ? " prog" : ""));
-    if (hints->flags & PMinSize)
+    }
+    if (hints->flags & PMinSize) {
 	TRACE(("   min        %d,%d\n", hints->min_height, hints->min_width));
-    if (hints->flags & PMaxSize)
+    }
+    if (hints->flags & PMaxSize) {
 	TRACE(("   max        %d,%d\n", hints->max_height, hints->max_width));
-    if (hints->flags & PResizeInc)
+    }
+    if (hints->flags & PResizeInc) {
 	TRACE(("   inc        %d,%d\n", hints->height_inc, hints->width_inc));
-    else
+    } else {
 	TRACE(("   inc        NONE!\n"));
-    if (hints->flags & PAspect)
+    }
+    if (hints->flags & PAspect) {
 	TRACE(("   min aspect %d/%d\n", hints->min_aspect.y, hints->min_aspect.y));
-    if (hints->flags & PAspect)
 	TRACE(("   max aspect %d/%d\n", hints->max_aspect.y, hints->max_aspect.y));
-    if (hints->flags & PBaseSize)
+    }
+    if (hints->flags & PBaseSize) {
 	TRACE(("   base       %d,%d\n", hints->base_height, hints->base_width));
-    if (hints->flags & PWinGravity)
+    }
+    if (hints->flags & PWinGravity) {
 	TRACE(("   gravity    %d\n", hints->win_gravity));
+    }
 }
 
 static void

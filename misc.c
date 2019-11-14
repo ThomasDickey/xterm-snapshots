@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.912 2019/10/06 20:01:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.916 2019/11/14 01:11:46 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4624,18 +4624,19 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    char *name = x_decode_hex(cp, &parsed);
 		    char *value;
 		    char *result;
-		    int code;
-		    if (cp == parsed || name == NULL)
+		    if (cp == parsed || name == NULL) {
+			free(name);
 			break;	/* no data found, error */
+		    }
 		    TRACE(("query-feature '%s'\n", name));
 		    if ((value = vt100ResourceToString(xw, name)) != 0) {
-			code = 0;
+			okay = True;	/* valid */
 		    } else {
-			code = 1;
+			okay = False;	/* invalid */
 		    }
 		    if (first) {
 			unparseputc1(xw, ANSI_DCS);
-			unparseputc(xw, code >= 0 ? '1' : '0');
+			unparseputc(xw, okay ? '1' : '0');
 			unparseputc(xw, '+');
 			unparseputc(xw, 'R');
 			first = False;
@@ -5452,7 +5453,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
     if (IsSetUtf8Title(xw) && titleIsUTF8) {
 	char *testc = malloc(strlen(value) + 1);
 	Char *nextc = (Char *) value;
-	Char *lastc = (Char *) testc;
 	Boolean ok8bit = True;
 
 	if (testc != NULL) {
@@ -5460,6 +5460,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	     * Check if the data fits in STRING.  Along the way, replace
 	     * control characters.
 	     */
+	    Char *lastc = (Char *) testc;
 	    while (*nextc != '\0') {
 		unsigned ch;
 		nextc = convertFromUTF8(nextc, &ch);
@@ -5480,6 +5481,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	    } else {
 		TRACE(("ChangeGroup: UTF-8 NOT converted to ISO-8859-1:\n"
 		       "\t%s\n", value));
+		free(testc);
 		nextc = (Char *) value;
 		while (*nextc != '\0') {
 		    unsigned ch;

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.362 2019/07/11 21:00:12 tom Exp $ */
+/* $XTermId: input.c,v 1.363 2019/11/13 23:05:06 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1154,7 +1154,7 @@ Input(XtermWidget xw,
 	    && keyboard->type == keyboardIsVT220
 #endif
 	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != 0)) {
-	    UIntClr(evt_state, ShiftMask);
+	    /* UIntClr(evt_state, ShiftMask); */
 	    while (kd.nbytes-- > 0)
 		unparseputc(xw, CharOf(*string++));
 	}
@@ -1356,7 +1356,8 @@ Input(XtermWidget xw,
 		if ((xw->flags & NATIONAL) != 0) {
 		    unsigned cmp = xtermCharSetIn(xw,
 						  CharOf(kd.strbuf[0]),
-						  (DECNRCM_codes) screen->keyboard_dialect[0]);
+						  (DECNRCM_codes)
+						  screen->keyboard_dialect[0]);
 		    TRACE(("...input NRC %d, %s %d\n",
 			   CharOf(kd.strbuf[0]),
 			   (CharOf(kd.strbuf[0]) == cmp)
@@ -1369,7 +1370,6 @@ Input(XtermWidget xw,
 		} else if (kd.strbuf[0] == '?'
 			   && (evt_state & ControlMask) != 0) {
 		    kd.strbuf[0] = ANSI_DEL;
-		    /* UIntClr(evt_state, ControlMask); */
 		}
 	    }
 	    if (prefix != 0)
