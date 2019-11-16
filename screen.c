@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.586 2019/09/03 19:53:06 tom Exp $ */
+/* $XTermId: screen.c,v 1.588 2019/11/16 11:11:35 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1942,8 +1942,8 @@ ScreenResize(XtermWidget xw,
     const int border = 2 * screen->border;
     int move_down_by = 0;
 
-    TRACE(("ScreenResize %dx%d border %d font %dx%d\n",
-	   height, width, border,
+    TRACE(("ScreenResize %dx%d border 2*%d font %dx%d\n",
+	   height, width, screen->border,
 	   FontHeight(screen), FontWidth(screen)));
 
     assert(width > 0);
@@ -2959,11 +2959,21 @@ set_resize_increments(XtermWidget xw)
     int min_height = (2 * screen->border);
     XSizeHints sizehints;
 
+    TRACE(("set_resize_increments\n"));
     memset(&sizehints, 0, sizeof(XSizeHints));
     sizehints.width_inc = FontWidth(screen);
     sizehints.height_inc = FontHeight(screen);
     sizehints.flags = PResizeInc;
+    TRACE_HINTS(&sizehints);
     XSetWMNormalHints(screen->display, VShellWindow(xw), &sizehints);
+
+    TRACE(("setting values for widget %p:\n", SHELL_OF(xw)));
+    TRACE(("   base width  %d\n", min_width));
+    TRACE(("   base height %d\n", min_width));
+    TRACE(("   min width   %d\n", min_width + FontWidth(screen)));
+    TRACE(("   min height  %d\n", min_width + FontHeight(screen)));
+    TRACE(("   width inc   %d\n", FontWidth(screen)));
+    TRACE(("   height inc  %d\n", FontHeight(screen)));
 
     XtVaSetValues(SHELL_OF(xw),
 		  XtNbaseWidth, min_width,
@@ -2983,10 +2993,12 @@ unset_resize_increments(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     XSizeHints sizehints;
 
+    TRACE(("unset_resize_increments\n"));
     memset(&sizehints, 0, sizeof(XSizeHints));
     sizehints.width_inc = 1;
     sizehints.height_inc = 1;
     sizehints.flags = PResizeInc;
+    TRACE_HINTS(&sizehints);
     XSetWMNormalHints(screen->display, VShellWindow(xw), &sizehints);
 
     XtVaSetValues(SHELL_OF(xw),

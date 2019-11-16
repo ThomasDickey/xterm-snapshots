@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.212 2019/11/13 22:57:33 tom Exp $ */
+/* $XTermId: trace.c,v 1.215 2019/11/16 14:48:19 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -859,7 +859,7 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xexpose.count));
 	break;
     default:
-	TRACE((" FIXME"));
+	TRACE(("FIXME\n"));
 	break;
     }
     TRACE(("\n"));

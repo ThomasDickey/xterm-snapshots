@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1727 2019/11/14 00:58:29 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1729 2019/11/16 14:41:53 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5811,16 +5811,15 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   Boolean *cont GCC_UNUSED)
 {
     XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
+    TRACE_EVENT("HandleStructNotify", event, NULL, 0);
     switch (event->type) {
     case MapNotify:
-	TRACE(("HandleStructNotify(MapNotify) %#lx\n", event->xmap.window));
-	/* repairSizeHints(); */
 	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
-	TRACE(("HandleStructNotify(UnmapNotify) %#lx\n", event->xunmap.window));
 	mapstate = IsUnmapped;
 	break;
     case ConfigureNotify:
@@ -5831,22 +5830,16 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    height = event->xconfigure.height;
 	    width = event->xconfigure.width;
 #endif
-	    TRACE(("HandleStructNotify(ConfigureNotify) %#lx %d,%d %dx%d\n",
-		   event->xconfigure.window,
-		   event->xconfigure.y, event->xconfigure.x,
-		   event->xconfigure.height, event->xconfigure.width));
-
 #if USE_DOUBLE_BUFFER
-	    discardRenderDraw(TScreenOf(xw));
+	    discardRenderDraw(screen);
 #endif /* USE_DOUBLE_BUFFER */
-
 #if OPT_TOOLBAR
 	    /*
 	     * The notification is for the top-level widget, but we care about
 	     * vt100 (ignore the tek4014 window).
 	     */
-	    if (TScreenOf(xw)->Vshow) {
-		VTwin *Vwin = WhichVWin(TScreenOf(xw));
+	    if (screen->Vshow) {
+		VTwin *Vwin = WhichVWin(screen);
 		TbInfo *info = &(Vwin->tb_info);
 		TbInfo save = *info;
 
@@ -5870,10 +5863,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
-				   TScreenOf(xw)->fullVwin.fullwidth,
+				   screen->fullVwin.fullwidth,
 				   (Dimension) (info->menu_height
 						- save.menu_height
-						+ TScreenOf(xw)->fullVwin.fullheight),
+						+ screen->fullVwin.fullheight),
 				   NULL, NULL);
 			repairSizeHints();
 		    }
@@ -5881,6 +5874,9 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    }
 #else
 	    if (!xw->work.doing_resize
+#if OPT_RENDERFONT && USE_DOUBLE_BUFFER
+		&& !(resource.buffered && UsingRenderFont(xw))	/* buggyXft */
+#endif
 		&& (height != xw->hints.height
 		    || width != xw->hints.width)) {
 		/*
@@ -5898,14 +5894,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    }
 #endif /* OPT_TOOLBAR */
 	}
-	break;
-    case ReparentNotify:
-	TRACE(("HandleStructNotify(ReparentNotify) %#lx\n", event->xreparent.window));
-	break;
-    default:
-	TRACE(("HandleStructNotify(event %s) %#lx\n",
-	       visibleEventType(event->type),
-	       event->xany.window));
 	break;
     }
 }
