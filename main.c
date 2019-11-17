@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.858 2019/11/14 00:16:08 tom Exp $ */
+/* $XTermId: main.c,v 1.859 2019/11/17 20:11:09 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -1304,6 +1304,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_REPORT_FONTS
 { "-report-fonts",         "report fonts as loaded to stdout" },
+#endif
+#if OPT_REPORT_ICONS
+{ "-report-icons",	   "report title/icon updates" },
 #endif
 #if OPT_XRES_QUERY
 { "-report-xres",          "report X resources for VT100 widget" },

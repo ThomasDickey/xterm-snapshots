@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1729 2019/11/16 14:41:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1731 2019/11/17 22:38:26 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -5813,6 +5813,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
+    (void) screen;
     TRACE_EVENT("HandleStructNotify", event, NULL, 0);
     switch (event->type) {
     case MapNotify:
@@ -5825,11 +5826,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
     case ConfigureNotify:
 	if (event->xconfigure.window == XtWindow(toplevel)) {
 #if !OPT_TOOLBAR
-	    int height, width;
-
-	    height = event->xconfigure.height;
-	    width = event->xconfigure.width;
+	    int height = event->xconfigure.height;
+	    int width = event->xconfigure.width;
 #endif
+
 #if USE_DOUBLE_BUFFER
 	    discardRenderDraw(screen);
 #endif /* USE_DOUBLE_BUFFER */
@@ -7117,12 +7117,13 @@ property_to_string(XtermWidget xw, XTextProperty * text)
      * The xtermUtf8ToTextList() call is used to convert UTF-8 explicitly to
      * ISO-8859-1.
      */
+    rc = -1;
     if ((text->format != 8)
 	|| IsTitleMode(xw, tmGetUtf8)
 	|| (text->encoding == XA_UTF8_STRING(dpy) &&
 	    !(screen->wide_chars || screen->c1_printable) &&
 	    (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
-	|| (rc = -1) > 0)
+	|| (rc < 0))
 #endif
 	if ((rc = XmbTextPropertyToTextList(dpy, text, &list, &length)) < 0)
 	    rc = XTextPropertyToStringList(text, &list, &length);

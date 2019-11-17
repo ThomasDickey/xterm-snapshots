@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.986 2019/11/13 09:20:32 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.987 2019/11/17 20:07:59 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -730,7 +730,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_REPORT_ICONS
-#define OPT_REPORT_ICONS   1 /* provide "-report-fonts" option */
+#define OPT_REPORT_ICONS   1 /* provide "-report-icons" option */
 #endif
 
 #ifndef OPT_SAME_NAME
