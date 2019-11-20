@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1731 2019/11/17 22:38:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1733 2019/11/20 09:59:48 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -7664,7 +7664,7 @@ unparseseq(XtermWidget xw, ANSI *ap)
 		unparseputc(xw, ap->a_param[i]);
 		break;
 	    default:
-		unparseputn(xw, (UParm) ap->a_param[i]);
+		unparseputn(xw, (unsigned) ap->a_param[i]);
 		break;
 	    }
 	}
@@ -7694,9 +7694,9 @@ unparseseq(XtermWidget xw, ANSI *ap)
 }
 
 void
-unparseputn(XtermWidget xw, UParm n)
+unparseputn(XtermWidget xw, unsigned n)
 {
-    UParm q;
+    unsigned q;
 
     q = n / 10;
     if (q != 0)
@@ -8602,7 +8602,7 @@ reportResources(XtermWidget xw)
 	if (widest < width)
 	    widest = width;
     }
-    qsort(list, XtNumber(xterm_resources), sizeof(String), cmp_resources);
+    qsort(list, (size_t) XtNumber(xterm_resources), sizeof(String), cmp_resources);
     for (n = 0; n < XtNumber(xterm_resources); ++n) {
 	char *value = vt100ResourceToString(xw, list[n]);
 	printf("%-*s : %s\n", widest, list[n], value ? value : "(skip)");
@@ -8644,13 +8644,13 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 		    strcpy(result, value);
 	    }
 	} else if (!strcmp(res_type, XtRInt)) {
-	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != 0)
 		sprintf(result, "%d", *(int *) res_addr);
 	} else if (!strcmp(res_type, XtRFloat)) {
-	    if ((result = malloc(1 + (3 * data->resource_size))) != 0)
+	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != 0)
 		sprintf(result, "%f", *(float *) res_addr);
 	} else if (!strcmp(res_type, XtRBoolean)) {
-	    if ((result = malloc(6)) != 0)
+	    if ((result = malloc((size_t) 6)) != 0)
 		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
 	}
     }

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.916 2019/11/14 01:11:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.918 2019/11/20 09:35:38 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -4567,14 +4567,14 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			/* XK_COLORS is a fake code for the "Co" entry (maximum
 			 * number of colors) */
 			if (code == XK_COLORS) {
-			    unparseputn(xw, (UParm) NUM_ANSI_COLORS);
+			    unparseputn(xw, (unsigned) NUM_ANSI_COLORS);
 			} else
 #if OPT_DIRECT_COLOR
 			if (code == XK_RGB) {
 			    if (TScreenOf(xw)->direct_color && xw->has_rgb) {
 				if (xw->rgb_widths[0] == xw->rgb_widths[1] &&
 				    xw->rgb_widths[1] == xw->rgb_widths[2]) {
-				    unparseputn(xw, (UParm) xw->rgb_widths[0]);
+				    unparseputn(xw, xw->rgb_widths[0]);
 				} else {
 				    char temp[1024];
 				    sprintf(temp, "%d/%d/%d",
@@ -5389,6 +5389,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 
 #else
     (void) xw;
+    (void) icon_hint;
 #endif
 }
 
@@ -5500,7 +5501,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
 	TRACE(("ChangeGroup: assume ISO-8859-1\n"));
 	for (c1 = (Char *) value; *c1 != '\0'; ++c1) {
-	    *c1 = OnlyLatin1(*c1);
+	    *c1 = (Char) OnlyLatin1(*c1);
 	}
     }
 

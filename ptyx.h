@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.987 2019/11/17 20:07:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.988 2019/11/20 09:38:01 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -1497,9 +1497,9 @@ typedef enum {
 #define SetLineDblCS(ld,cs)   (ld)->bufHead = (RowData) ((ld->bufHead & LINEFLAG_MASK) | (cs << LINEFLAG_BITS))
 
 #define LineCharSet(screen, ld) \
-	((CSET_DOUBLE(GetLineDblCS(ld))) \
-		? GetLineDblCS(ld) \
-		: (screen)->cur_chrset)
+	(unsigned) ((CSET_DOUBLE(GetLineDblCS(ld))) \
+		    ? GetLineDblCS(ld) \
+		    : (screen)->cur_chrset)
 #define LineMaxCol(screen, ld) \
 	(CSET_DOUBLE(GetLineDblCS(ld)) \
 	 ? (screen->max_col / 2) \
@@ -1516,8 +1516,8 @@ typedef enum {
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
 #define CSET_SWL                        0
-#define GetLineDblCS(ld)                0
-#define LineCharSet(screen, ld)         0
+#define GetLineDblCS(ld)                0U
+#define LineCharSet(screen, ld)         0U
 #define LineMaxCol(screen, ld)          screen->max_col
 #define LineCursorX(screen, ld, col)    CursorX(screen, col)
 #define LineFontWidth(screen, ld)       FontWidth(screen)
