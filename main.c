@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.859 2019/11/17 20:11:09 tom Exp $ */
+/* $XTermId: main.c,v 1.860 2019/11/20 09:21:54 tom Exp $ */
 
 /*
  * Copyright 2002-2018,2019 by Thomas E. Dickey
@@ -3205,7 +3205,7 @@ typedef struct {
 
 /* the buffer is large enough that we can always have a trailing null */
 #define copy_handshake(dst, src) \
-	strncpy(dst.buffer, src, HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
+	strncpy(dst.buffer, src, (size_t)HANDSHAKE_LEN - 1)[HANDSHAKE_LEN - 1] = '\0'
 
 #if OPT_TRACE
 static void

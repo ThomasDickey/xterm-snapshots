@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.215 2019/11/16 14:48:19 tom Exp $ */
+/* $XTermId: trace.c,v 1.216 2019/11/20 09:28:05 tom Exp $ */
 
 /*
  * Copyright 1997-2018,2019 by Thomas E. Dickey
@@ -396,7 +396,7 @@ const char *
 visibleUChar(unsigned chr)
 {
     IChar buf[1];
-    buf[0] = chr;
+    buf[0] = (IChar) chr;
     return visibleIChars(buf, 1);
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.860 2019/10/06 20:02:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.861 2019/11/20 09:26:52 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -991,7 +991,7 @@ extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
-extern void unparseputn (XtermWidget /* xw */, UParm /* n */);
+extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
 extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.588 2019/11/16 11:11:35 tom Exp $ */
+/* $XTermId: screen.c,v 1.589 2019/11/20 09:27:55 tom Exp $ */
 
 /*
  * Copyright 1999-2018,2019 by Thomas E. Dickey
@@ -2967,7 +2967,7 @@ set_resize_increments(XtermWidget xw)
     TRACE_HINTS(&sizehints);
     XSetWMNormalHints(screen->display, VShellWindow(xw), &sizehints);
 
-    TRACE(("setting values for widget %p:\n", SHELL_OF(xw)));
+    TRACE(("setting values for widget %p:\n", (void *) SHELL_OF(xw)));
     TRACE(("   base width  %d\n", min_width));
     TRACE(("   base height %d\n", min_width));
     TRACE(("   min width   %d\n", min_width + FontWidth(screen)));
