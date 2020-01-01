@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.65 2018/06/28 21:35:01 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.66 2020/01/01 16:28:23 Samuel.Thibault Exp $ */
 
 /*
- * Copyright 2000-2017,2018 by Thomas E. Dickey
+ * Copyright 2000-2018,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -92,8 +92,15 @@
 #undef SYSV			/* pretend to be bsd (sgtty.h) */
 #endif /* macII */
 
-#if defined(__GLIBC__) && !defined(linux)
-#define USE_POSIX_TERMIOS	/* GNU/Hurd, GNU/KFreeBSD and GNU/KNetBSD */
+#ifdef __GNU__
+#define USE_POSIX_TERMIOS
+#define HAVE_POSIX_OPENPT 1
+#define HAVE_PTSNAME 1
+#define HAVE_GRANTPT_PTY_ISATTY 1
+#endif
+
+#if defined(__GLIBC__) && !(defined(linux) || defined(__GNU__))
+#define USE_POSIX_TERMIOS	/* GNU/KFreeBSD and GNU/KNetBSD */
 #endif
 
 #ifdef __MVS__
