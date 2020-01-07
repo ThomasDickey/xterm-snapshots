@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.437 2019/12/31 18:19:23 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.438 2020/01/06 01:07:55 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2018,2019 by Thomas E. Dickey
+dnl Copyright 1997-2019,2020 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1083,12 +1083,13 @@ CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 36 updated: 2019/09/07 13:38:36
+dnl CF_GCC_WARNINGS version: 37 updated: 2020/01/05 20:04:12
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
 dnl
 dnl	-Wconversion (useful in older versions of gcc, but not in gcc 2.7.x)
+dnl	-Winline (usually not worthwhile)
 dnl	-Wredundant-decls (system headers make this too noisy)
 dnl	-Wtraditional (combines too many unrelated messages, only a few useful)
 dnl	-Wwrite-strings (too noisy, but should review occasionally).  This
@@ -1144,7 +1145,7 @@ then
 		fi
 	done
 	CFLAGS="$cf_save_CFLAGS"
-elif test "$GCC" = yes
+elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
 then
 	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
@@ -1166,7 +1167,7 @@ then
 		Wpointer-arith \
 		Wshadow \
 		Wstrict-prototypes \
-		Wundef $cf_gcc_warnings $cf_warn_CONST $1
+		Wundef Wno-inline $cf_gcc_warnings $cf_warn_CONST $1
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
