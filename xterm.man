@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.802 2019/11/02 09:37:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.804 2020/01/07 10:20:18 tom Exp $
 .\"
-.\" Copyright 1996-2018,2019 by Thomas E. Dickey
+.\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -442,7 +442,7 @@ This is equivalent to setting the \fIvt100\fP resource
 .B \-aw
 This option indicates that auto-wraparound should be allowed,
 and is equivalent to setting the \fIvt100\fP resource
-\fBautoWrap\fP to \*(``false\*(''.
+\fBautoWrap\fP to \*(``true\*(''.
 .IP
 Auto-wraparound
 allows the cursor to automatically wrap to the beginning of the next
