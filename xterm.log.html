@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2138 2020/01/08 10:16:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.2139 2020/01/08 23:51:44 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -988,6 +988,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve workaround from <a href="#xterm_287">patch #287</a>
+    for the <code>-iconic</code> option when configured with
+    toolbar by postponing the extra request for minimizing the
+    window to the end of menu-initialization.</li>
+
     <li>modify <code>xevents</code> special-case for mouse-events
     to include button-events so that the meta key by itself can
     generate button-events (report/analysis by Mattias

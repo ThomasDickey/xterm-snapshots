@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.358 2019/09/17 08:11:55 tom Exp $ */
+/* $XTermId: menu.c,v 1.359 2020/01/08 23:42:41 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3305,6 +3305,31 @@ ShowToolbar(Bool enable)
 	resource.toolBar = (Boolean) enable;
 	update_toolbar();
     }
+#if OPT_TOOLBAR
+    /*
+     * Layout for the toolbar confuses the Shell widget.  Remind it that we
+     * would like to be iconified if the corresponding resource was set.
+     */
+    {
+	static Bool first = True;
+	if (first && XtIsRealized(toplevel)) {
+	    Boolean iconic = 0;
+
+	    XtVaGetValues(toplevel,
+			  XtNiconic, &iconic,
+			  (XtPointer) 0);
+
+	    if (iconic) {
+		TRACE(("...please iconify window %#lx\n", XtWindow(toplevel)));
+		XIconifyWindow(XtDisplay(toplevel),
+			       XtWindow(toplevel),
+			       DefaultScreen(XtDisplay(toplevel)));
+		xevents(xw);
+	    }
+	    first = False;
+	}
+    }
+#endif
 }
 
 void

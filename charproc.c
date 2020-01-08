@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1735 2020/01/08 09:39:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1736 2020/01/08 23:41:10 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -10463,26 +10463,6 @@ VTRealize(Widget w,
     int i;
 
     TRACE(("VTRealize {{\n"));
-
-#if OPT_TOOLBAR
-    /*
-     * Layout for the toolbar confuses the Shell widget.  Remind it that we
-     * would like to be iconified if the corresponding resource was set.
-     */
-    if (XtIsRealized(toplevel)) {
-	Boolean iconic = 0;
-
-	XtVaGetValues(toplevel,
-		      XtNiconic, &iconic,
-		      (XtPointer) 0);
-
-	if (iconic) {
-	    XIconifyWindow(XtDisplay(toplevel),
-			   XtWindow(toplevel),
-			   DefaultScreen(XtDisplay(toplevel)));
-	}
-    }
-#endif
 
     TabReset(xw->tabs);
 
