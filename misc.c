@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.918 2019/11/20 09:35:38 tom Exp $ */
+/* $XTermId: misc.c,v 1.919 2020/01/08 10:06:39 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -583,16 +583,18 @@ xevents(XtermWidget xw)
 	    DoSpecialEnterNotify(xw, &event.xcrossing);
 	} else if (OUR_EVENT(event, LeaveNotify)) {
 	    DoSpecialLeaveNotify(xw, &event.xcrossing);
-	} else if ((screen->send_mouse_pos == ANY_EVENT_MOUSE
-#if OPT_DEC_LOCATOR
-		    || screen->send_mouse_pos == DEC_LOCATOR
-#endif /* OPT_DEC_LOCATOR */
-		   )
-		   && event.xany.type == MotionNotify
+	} else if (event.xany.type == MotionNotify
 		   && event.xcrossing.window == XtWindow(xw)) {
-	    SendMousePosition(xw, &event);
-	    xtermShowPointer(xw, True);
-	    continue;
+	    switch (screen->send_mouse_pos) {
+	    case BTN_EVENT_MOUSE:
+	    case ANY_EVENT_MOUSE:
+#if OPT_DEC_LOCATOR
+	    case DEC_LOCATOR:
+#endif /* OPT_DEC_LOCATOR */
+		SendMousePosition(xw, &event);
+		xtermShowPointer(xw, True);
+		continue;
+	    }
 	}
 
 	/*
