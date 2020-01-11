@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1736 2020/01/08 23:41:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1738 2020/01/11 00:28:15 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -7228,18 +7228,13 @@ window_ops(XtermWidget xw)
     switch (code) {
     case ewRestoreWin:		/* Restore (de-iconify) window */
 	if (AllowWindowOps(xw, ewRestoreWin)) {
-	    TRACE(("...de-iconify window\n"));
-	    XMapWindow(screen->display,
-		       VShellWindow(xw));
+	    xtermDeiconify(xw);
 	}
 	break;
 
     case ewMinimizeWin:	/* Minimize (iconify) window */
 	if (AllowWindowOps(xw, ewMinimizeWin)) {
-	    TRACE(("...iconify window\n"));
-	    XIconifyWindow(screen->display,
-			   VShellWindow(xw),
-			   DefaultScreen(screen->display));
+	    xtermIconify(xw);
 	}
 	break;
 
@@ -7318,15 +7313,10 @@ window_ops(XtermWidget xw)
     case ewGetWinState:	/* Report the window's state */
 	if (AllowWindowOps(xw, ewGetWinState)) {
 	    TRACE(("...get window attributes\n"));
-	    xtermGetWinAttrs(screen->display,
-			     VWindow(screen),
-			     &win_attrs);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 1;
-	    reply.a_param[0] = (ParmType) ((win_attrs.map_state == IsViewable)
-					   ? 1
-					   : 2);
+	    reply.a_param[0] = (ParmType) (xtermIsIconified(xw) ? 2 : 1);
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);

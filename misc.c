@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.919 2020/01/08 10:06:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.923 2020/01/11 01:47:52 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1523,6 +1523,104 @@ HandleDabbrevExpand(Widget w,
 }
 #endif /* OPT_DABBREV */
 
+void
+xtermDeiconify(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Window target = VShellWindow(xw);
+    XEvent e;
+    Atom atom_state = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+
+    if (xtermIsIconified(xw)) {
+	TRACE(("...de-iconify window %#lx\n", target));
+	XMapWindow(dpy, target);
+
+	memset(&e, 0, sizeof(e));
+	e.xclient.type = ClientMessage;
+	e.xclient.message_type = atom_state;
+	e.xclient.display = dpy;
+	e.xclient.window = target;
+	e.xclient.format = 32;
+	e.xclient.data.l[0] = 1;
+	e.xclient.data.l[1] = CurrentTime;
+
+	XSendEvent(dpy, DefaultRootWindow(dpy), False,
+		   SubstructureRedirectMask | SubstructureNotifyMask, &e);
+	xevents(xw);
+    }
+}
+
+void
+xtermIconify(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Window target = VShellWindow(xw);
+
+    if (!xtermIsIconified(xw)) {
+	TRACE(("...iconify window %#lx\n", target));
+	XIconifyWindow(screen->display,
+		       target,
+		       DefaultScreen(screen->display));
+	xevents(xw);
+    }
+}
+
+Boolean
+xtermIsIconified(XtermWidget xw)
+{
+    XWindowAttributes win_attrs;
+    TScreen *screen = TScreenOf(xw);
+    Window target = VShellWindow(xw);
+    Display *dpy = screen->display;
+    Boolean result = False;
+
+    if (xtermGetWinAttrs(dpy, target, &win_attrs)) {
+	Atom actual_return_type;
+	int actual_format_return = 0;
+	unsigned long nitems_return = 0;
+	unsigned long bytes_after_return = 0;
+	unsigned char *prop_return = 0;
+	long long_length = 1024;
+	Atom requested_type = XA_ATOM;
+	Atom is_hidden = XInternAtom(dpy, "_NET_WM_STATE_HIDDEN", False);
+	Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+
+	/* this works with non-EWMH */
+	result = (win_attrs.map_state != IsViewable) ? True : False;
+
+	/* this is a convention used by some EWMH applications */
+	if (xtermGetWinProp(dpy,
+			    target,
+			    wm_state,
+			    0L,
+			    long_length,
+			    requested_type,
+			    &actual_return_type,
+			    &actual_format_return,
+			    &nitems_return,
+			    &bytes_after_return,
+			    &prop_return)
+	    && prop_return != 0
+	    && actual_return_type == requested_type
+	    && actual_format_return == 32) {
+	    unsigned long n;
+	    for (n = 0; n < nitems_return; ++n) {
+		unsigned long check = (((unsigned long *)
+					(void *) prop_return)[n]);
+		if (check == is_hidden) {
+		    result = True;
+		    break;
+		}
+	    }
+	}
+    }
+    TRACE(("...window %#lx is%s iconified\n",
+	   target,
+	   result ? "" : " not"));
+    return result;
+}
+
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
@@ -1534,8 +1632,7 @@ HandleDeIconify(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
-	XMapWindow(screen->display, VShellWindow(xw));
+	xtermDeiconify(xw);
     }
 }
 
@@ -1549,10 +1646,7 @@ HandleIconify(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
-	XIconifyWindow(screen->display,
-		       VShellWindow(xw),
-		       DefaultScreen(screen->display));
+	xtermIconify(xw);
     }
 }
 
