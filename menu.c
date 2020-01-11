@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.359 2020/01/08 23:42:41 tom Exp $ */
+/* $XTermId: menu.c,v 1.360 2020/01/10 23:41:23 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3321,10 +3321,7 @@ ShowToolbar(Bool enable)
 
 	    if (iconic) {
 		TRACE(("...please iconify window %#lx\n", XtWindow(toplevel)));
-		XIconifyWindow(XtDisplay(toplevel),
-			       XtWindow(toplevel),
-			       DefaultScreen(XtDisplay(toplevel)));
-		xevents(xw);
+		xtermIconify(xw);
 	    }
 	    first = False;
 	}
