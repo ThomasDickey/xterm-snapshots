@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.367 2019/12/31 18:20:23 tom Exp $
+dnl $XTermId: configure.in,v 1.368 2020/01/11 20:06:47 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2018,2019 by Thomas E. Dickey
+dnl Copyright 1997-2019,2020 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20170501)
+AC_PREREQ(2.52.20200111)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -265,6 +265,7 @@ CF_TTY_GROUP
 
 ###	checks for system services and user specified options
 
+AC_PATH_XTRA
 CF_POSIX_WAIT
 CF_SYSV
 CF_SVR4
