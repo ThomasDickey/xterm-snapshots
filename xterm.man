@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.804 2020/01/07 10:20:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.806 2020/01/13 21:50:00 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -3558,6 +3558,51 @@ and makes line-drawing characters directly as needed.
 If \*(``true\*('', \fI\*n\fP assumes the font does not contain the
 line-drawing characters, and draws them directly.
 The default is \*(``false\*(''.
+.IP
+The VT100 line-drawing character set
+(also known as the \fIDEC Special Character and Line Drawing Set\fP)
+is shown in this table.
+It includes a few \fIspecial\fP characters which are not used for
+drawing lines:
+.TS
+l l l
+_ _ _
+l l l.
+\fICell\fR	\fIUnicode\fR	\fIDescription\fP
+0	U+25AE	black vertical rectangle
+1	U+25C6	black diamond
+2	U+2592	medium shade
+3	U+2409	symbol for horizontal tabulation
+4	U+240C	symbol for form feed
+5	U+240D	symbol for carriage return
+6	U+240A	symbol for line feed
+7	U+00B0	degree sign
+8	U+00B1	plus-minus sign
+9	U+2424	symbol for newline
+10	U+240B	symbol for vertical tabulation
+11	U+2518	box drawings light up and left
+12	U+2510	box drawings light down and left
+13	U+250C	box drawings light down and right
+14	U+2514	box drawings light up and right
+15	U+253C	box drawings light vertical and horizontal
+16	U+23BA	box drawings scan 1
+17	U+23BB	box drawings scan 3
+18	U+2500	box drawings light horizontal
+19	U+23BC	box drawings scan 7
+20	U+23BD	box drawings scan 9
+21	U+251C	box drawings light vertical and right
+22	U+2524	box drawings light vertical and left
+23	U+2534	box drawings light up and horizontal
+24	U+252C	box drawings light down and horizontal
+25	U+2502	box drawings light vertical
+26	U+2264	less-than or equal to
+27	U+2265	greater-than or equal to
+28	U+03C0	greek small letter pi
+29	U+2260	not equal to
+30	U+00A3	pound sign
+31	U+00B7	middle dot
+_
+.TE
 .TP 8
 .B "forcePackedFont\fP (class\fB ForcePackedFont\fP)"
 Specifies whether \fI\*n\fP should use the maximum or minimum glyph
