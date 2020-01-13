@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.24 2019/07/22 22:27:54 tom Exp $
+-- $XTermId: THANKS,v 1.25 2020/01/13 22:05:07 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -98,6 +98,7 @@ Ilya Zakharevich
 Ingo Brückl
 Iwamoto Kouichi
 James Armstrong
+Jan Engelhardt
 Jason Bacon
 Jason Vas Dias
 Jeff Chua
@@ -179,6 +180,7 @@ Peter Berg Larsen
 Phil Sidler
 Pierre Lombard
 Pierre Pronchery
+Quinn Strahl
 Rajesh Mandalemula
 Richard Braakman
 Richard Griswold
@@ -193,6 +195,7 @@ Ross Combs
 Ross Paterson
 Ryan Johnson
 Sam Stephenson
+Samuel Thibault
 Scott Sewall
 Semen A Ustimenko
 Sergei Laskavy
