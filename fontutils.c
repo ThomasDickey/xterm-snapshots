@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.661 2020/01/13 01:34:54 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.664 2020/01/15 02:00:01 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2424,7 +2424,8 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 {
     TScreen *screen = TScreenOf(xw);
     FcChar32 c;
-    FcChar32 limit = (screen->utf8_mode ? 0x110000 : 255);
+    FcChar32 last = xtermXftLastChar(source->font);
+    FcChar32 limit = (screen->utf8_mode ? Min(last, 0x3000) : 255);
     Dimension width = 0;
     int failed = 0;
 
@@ -2467,7 +2468,7 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      */
     if (width == 0) {
 	failed = 1;
-	if (xtermXftLastChar(source->font) >= 256) {
+	if (last >= 256) {
 	    width = target->map.max_width;
 	}
     }
@@ -2917,6 +2918,17 @@ setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 	ascent = font->ascent;
 	descent = font->descent;
 	if (height < ascent + descent) {
+	    if ((ascent + descent) > (height + 1)) {
+		/* this happens less than 10% of the time */
+		--ascent;
+		--descent;
+	    } else if (ascent > descent) {
+		/* this is the usual case */
+		--ascent;
+	    } else {
+		/* this could happen, though rare... */
+		--descent;
+	    }
 	    TRACE(("...increase height from %d to %d\n", height, ascent + descent));
 	    height = ascent + descent;
 	}
