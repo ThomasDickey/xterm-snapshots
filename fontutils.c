@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.664 2020/01/15 02:00:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.665 2020/01/16 00:20:50 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2425,9 +2425,12 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     TScreen *screen = TScreenOf(xw);
     FcChar32 c;
     FcChar32 last = xtermXftLastChar(source->font);
-    FcChar32 limit = (screen->utf8_mode ? Min(last, 0x3000) : 255);
+    FcChar32 limit = 255;
     Dimension width = 0;
     int failed = 0;
+
+    (void) screen;
+    if_OPT_WIDE_CHARS(screen, limit = Min(last, 0x3000));
 
     target->font = source->font;
     target->pattern = source->pattern;

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.442 2020/01/11 23:39:22 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.446 2020/01/16 10:23:46 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4586,7 +4586,7 @@ if test -z "$cf_x_athena_lib" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_CPPFLAGS version: 7 updated: 2020/01/11 17:15:41
+dnl CF_X_ATHENA_CPPFLAGS version: 8 updated: 2020/01/16 05:21:56
 dnl --------------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -4619,15 +4619,15 @@ do
 		AC_MSG_RESULT($cf_result)
 		CF_RESTORE_XTRA_FLAGS([CF_X_ATHENA_CPPFLAGS])
 		if test "$cf_result" = yes ; then
-			cf_x_athena_inc=$cf_path
+			test "$cf_path"  = default && cf_x_athena_inc=default
+			test "$cf_path" != default && cf_x_athena_inc=$cf_path/include
 			break
 		fi
 	fi
 done
 
 if test -z "$cf_x_athena_inc" ; then
-	AC_MSG_WARN(
-[Unable to successfully find Athena header files with test program])
+	AC_MSG_WARN([Unable to find Athena header files])
 elif test "$cf_x_athena_inc" != default ; then
 	CF_APPEND_TEXT(CPPFLAGS,-I$cf_x_athena_inc)
 fi
