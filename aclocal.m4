@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.446 2020/01/16 10:23:46 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.447 2020/01/18 17:30:44 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2456,9 +2456,9 @@ done
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SIG_ATOMIC_T version: 3 updated: 2012/10/04 20:12:20
+dnl CF_SIG_ATOMIC_T version: 4 updated: 2020/01/18 12:30:44
 dnl ---------------
-dnl signal handler, but there are some gcc depedencies in that recommendation.
+dnl signal handler, but there are some gcc dependencies in that recommendation.
 dnl Try anyway.
 AC_DEFUN([CF_SIG_ATOMIC_T],
 [

@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.860 2019/11/20 09:21:54 tom Exp $ */
+/* $XTermId: main.c,v 1.861 2020/01/18 18:38:40 tom Exp $ */
 
 /*
- * Copyright 2002-2018,2019 by Thomas E. Dickey
+ * Copyright 2002-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3158,7 +3158,7 @@ static const char *const vtterm[] =
     "x11term",			/* for people who want special term name */
 #endif
     DFT_TERMTYPE,		/* for people who want special term name */
-    "xterm",			/* the prefered name, should be fastest */
+    "xterm",			/* the preferred name, should be fastest */
     "vt102",
     "vt100",
     "ansi",

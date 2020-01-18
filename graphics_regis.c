@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.113 2019/11/13 23:24:03 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.114 2020/01/18 18:38:40 tom Exp $ */
 
 /*
- * Copyright 2014-2018,2019 by Ross Combs
+ * Copyright 2014-2019,2020 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -882,7 +882,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
 }
 
 /*
- * The plot* functions are based on optimized rasterization primitves written by Zingl Alois.
+ * The plot* functions are based on optimized rasterization primitives written
+ * by Zingl Alois.
  * See http://members.chello.at/easyfilter/bresenham.html
  */
 
@@ -1540,7 +1541,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
     /*
      * FIXME: cache:
      * - the bitmap for the last M characters and target dimensions
-     * - resuse the pixmap object where possible
+     * - reuse the pixmap object where possible
      */
     XftColor bg, fg;
     Pixmap bitmap;
@@ -1974,7 +1975,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      */
     /*
      * FIXME: cache:
-     * - resuse the font where possible
+     * - reuse the font where possible
      */
 #ifdef XRENDERFONT
     XtermWidget xw = context->destination_graphic->xw;
@@ -4679,7 +4680,7 @@ parse_regis_command(RegisParseState *state)
 	 * (M(=)  # macrograph storage (free bytes of total bytes)
 	 * (P)  # absolute output cursor position
 	 * (P(I))  # interactive locator mode (in one-shot or multiple mode)
-	 * (P(I[xmul,ymul]))  # interactive locator mode with arrow key movement multiplers
+	 * (P(I[xmul,ymul]))  # interactive locator mode with arrow key movement multipliers
 	 */
 	TRACE(("found ReGIS command \"%c\" (report status)\n", ch));
 	state->command = 'r';
@@ -4689,7 +4690,7 @@ parse_regis_command(RegisParseState *state)
 	/* Screen
 
 	 * S
-	 * (A[<upper left>][<lower right>])  # adjust screen cordinates
+	 * (A[<upper left>][<lower right>])  # adjust screen coordinates
 	 * (C<setting>  # 0 (cursor output off), 1 (cursor output on)
 	 * (E)  # erase to background color, resets shades, curves, and stacks
 	 * (F)  # print the graphic and erase the screen (DECprint extension)
@@ -5575,14 +5576,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			if (suboption == 'i' || suboption == 'I') {
 			    output = 0;		/* input location report */
 			} else {
-			    TRACE(("DATA_ERROR: unknown ReGIS postion report suboption '%c'\n",
+			    TRACE(("DATA_ERROR: unknown ReGIS position report suboption '%c'\n",
 				   suboption));
 			    break;
 			}
 
 			skip_regis_whitespace(&suboptionarg);
 			if (!fragment_consumed(&optionarg)) {
-			    TRACE(("DATA_ERROR: unexpected content in ReGIS postion report suboptions: \"%s\"\n",
+			    TRACE(("DATA_ERROR: unexpected content in ReGIS position report suboptions: \"%s\"\n",
 				   fragment_to_tempstr(&suboptionarg)));
 			    break;
 			}

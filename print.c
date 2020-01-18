@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.166 2017/12/19 23:47:15 tom Exp $ */
+/* $XTermId: print.c,v 1.167 2020/01/18 18:50:09 tom Exp $ */
 
 /*
- * Copyright 1997-2016,2017 by Thomas E. Dickey
+ * Copyright 1997-2017,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -417,7 +417,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	     * This implementation only knows how to write to a file.  When the
 	     * file is closed the print command executes.  Print command must
 	     * be of the form:
-	     *   print/que=name/delete [/otherflags].
+	     *   print/queue=name/delete [/otherflags].
 	     */
 	    SPS.fp = fopen(VMS_TEMP_PRINT_FILE, "w");
 #else

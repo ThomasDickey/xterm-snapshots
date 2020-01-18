@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.561 2019/11/02 14:26:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.564 2020/01/18 18:51:09 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2018,2019 by Thomas E. Dickey
+.\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #350
-.ds RF 2019/11/02
+.ds LF Patch #353
+.ds RF 2020/01/18
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2019)
+invisible-island.net (2006-2020)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -2081,7 +2081,7 @@ an outside rectangle event is generated and the rectangle is disabled.
 Filter rectangles are always treated as \*(``one-shot\*('' events.
 Any parameters that are omitted default to the current locator position.
 If all parameters are omitted, any locator motion will be reported.
-DECELR always cancels any prevous rectangle definition.
+DECELR always cancels any previous rectangle definition.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*x
