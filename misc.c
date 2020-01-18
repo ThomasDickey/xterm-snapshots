@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.923 2020/01/11 01:47:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.924 2020/01/18 18:29:20 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5779,7 +5779,7 @@ ReverseOldColors(XtermWidget xw)
     char *tmpName;
 
     if (pOld) {
-	/* change text cursor, if necesary */
+	/* change text cursor, if necessary */
 	if (pOld->colors[TEXT_CURSOR] == pOld->colors[TEXT_FG]) {
 	    pOld->colors[TEXT_CURSOR] = pOld->colors[TEXT_BG];
 	    if (pOld->names[TEXT_CURSOR]) {

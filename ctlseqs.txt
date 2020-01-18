@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2019)
-               updated for XTerm Patch #350 (2019/11/02)
+                    invisible-island.net (2006-2020)
+               updated for XTerm Patch #353 (2020/01/18)
 
 
 
@@ -1424,7 +1424,7 @@ CSI Pt ; Pl ; Pb ; Pr ' w
           as "one-shot" events.  Any parameters that are omitted default
           to the current locator position.  If all parameters are omit-
           ted, any locator motion will be reported.  DECELR always can-
-          cels any prevous rectangle definition.
+          cels any previous rectangle definition.
 
 CSI Ps x  Request Terminal Parameters (DECREQTPARM).
           if Ps is a "0" (default) or "1", and xterm is emulating VT100,

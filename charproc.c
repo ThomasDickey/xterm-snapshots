@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1738 2020/01/11 00:28:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1739 2020/01/18 18:32:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1093,7 +1093,7 @@ setExtendedFG(XtermWidget xw)
     /* This implements the IBM PC-style convention of 8-colors, with one
      * bit for bold, thus mapping the 0-7 codes to 8-15.  It won't make
      * much sense for 16-color applications, but we keep it to retain
-     * compatiblity with ANSI-color applications.
+     * compatibility with ANSI-color applications.
      */
 #if OPT_PC_COLORS		/* XXXJTL should be settable at runtime (resource or OSC?) */
     if (TScreenOf(xw)->boldColors
@@ -6042,7 +6042,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		 * mode.  xterm saves/restores/initializes the most commonly
 		 * used settings, but a real VT100 or VT520 may differ.
 		 *
-		 * For instance, DEC's documention goes on to comment that
+		 * For instance, DEC's documentation goes on to comment that
 		 * while the VT52 uses hardware tabs (8 columns), the emulation
 		 * (e.g., a VT420) does not alter those tab settings when
 		 * switching modes.

@@ -1,7 +1,7 @@
-/* $XTermId: graphics_sixel.c,v 1.18 2016/06/05 20:04:01 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.19 2020/01/18 18:38:25 tom Exp $ */
 
 /*
- * Copyright 2014,2016 by Ross Combs
+ * Copyright 2014-2016,2020 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -540,7 +540,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    Pregister = color_params.a_param[0];
 	    if (Pregister >= (int) graphic->valid_registers) {
 		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
-		/* FIXME: supposedly the DEC terminals wrapped register indicies -- verify */
+		/* FIXME: supposedly the DEC terminals wrapped register indices -- verify */
 		while (Pregister >= (int) graphic->valid_registers)
 		    Pregister -= (int) graphic->valid_registers;
 		TRACE(("DATA_WARNING: converted to %d\n", Pregister));

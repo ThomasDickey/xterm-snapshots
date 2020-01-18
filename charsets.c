@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.105 2019/02/11 00:41:13 tom Exp $ */
+/* $XTermId: charsets.c,v 1.107 2020/01/18 18:51:57 tom Exp $ */
 
 /*
- * Copyright 1998-2018,2019 by Thomas E. Dickey
+ * Copyright 1998-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1492,7 +1492,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	count++;
 #if OPT_WIDE_CHARS
 	/*
-	 * This is only partly right - prevent inadvertant remapping of
+	 * This is only partly right - prevent inadvertent remapping of
 	 * the replacement character and other non-8bit codes into bogus
 	 * 8bit codes.
 	 */
