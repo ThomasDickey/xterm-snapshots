@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.665 2020/01/16 00:20:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.669 2020/01/26 20:41:59 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -121,6 +121,32 @@ typedef struct {
     /* charset registry, charset encoding */
     char *end;
 } FontNameProperties;
+
+#if OPT_WIDE_CHARS && (OPT_RENDERFONT || (OPT_TRACE > 1))
+#define MY_UCS(code,high,wide,name) { code, high, wide, #name }
+static const struct {
+    unsigned code, high, wide;
+    const char *name;
+} unicode_boxes[] = {
+
+    MY_UCS(0x2500, 0, 1, box drawings light horizontal),
+	MY_UCS(0x2502, 1, 0, box drawings light vertical),
+	MY_UCS(0x250c, 2, 2, box drawings light down and right),
+	MY_UCS(0x2510, 2, 2, box drawings light down and left),
+	MY_UCS(0x2514, 2, 2, box drawings light up and right),
+	MY_UCS(0x2518, 2, 2, box drawings light up and left),
+	MY_UCS(0x251c, 1, 2, box drawings light vertical and right),
+	MY_UCS(0x2524, 1, 2, box drawings light vertical and left),
+	MY_UCS(0x252c, 2, 1, box drawings light down and horizontal),
+	MY_UCS(0x2534, 2, 1, box drawings light up and horizontal),
+	MY_UCS(0x253c, 1, 1, box drawings light vertical and horizontal),
+    {
+	0, 0, 0, NULL
+    }
+};
+
+#undef MY_UCS
+#endif /* OPT_WIDE_CHARS */
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 static Boolean merge_sublist(char ***, char **);
@@ -2285,7 +2311,7 @@ xtermSetCursorBox(TScreen *screen)
 #if OPT_RENDERFONT
 
 #define CACHE_XFT(dst,src) if (src.font != 0) {\
-	    int err = checkXft(xw, &(dst[fontnum]), &src);\
+	    int err = checkXftWidth(xw, &(dst[fontnum]), &src);\
 	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s%s\n",\
 		#dst,\
 		fontnum,\
@@ -2419,23 +2445,120 @@ isBogusXft(XftFont *font)
 }
 #endif
 
-static int
-checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
+#if OPT_BOX_CHARS
+static void
+setBrokenBoxChars(XtermWidget xw, Bool state)
 {
-    TScreen *screen = TScreenOf(xw);
+    TRACE(("setBrokenBoxChars %s\n", BtoS(state)));
+    term->work.broken_box_chars = (Boolean) state;
+    TScreenOf(xw)->broken_box_chars = (Boolean) state;
+    update_font_boxchars();
+}
+
+#else
+#define setBrokenBoxChars(xw, state)	/* nothing */
+#endif
+
+static Boolean
+checkedXftWidth(Display *dpy,
+		XTermXftFonts *source,
+		Dimension limit,
+		Dimension *width,
+		FcChar32 c)
+{
+    Boolean result = False;
+
+    if (FcCharSetHasChar(source->font->charset, c)) {
+	XGlyphInfo extents;
+
+	result = True;
+	XftTextExtents32(dpy, source->font, &c, 1, &extents);
+	if (extents.width < limit) {
+	    if (*width < extents.width) {
+		*width = extents.width;
+	    }
+	}
+    }
+    return result;
+}
+
+static int
+checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
+{
     FcChar32 c;
     FcChar32 last = xtermXftLastChar(source->font);
-    FcChar32 limit = 255;
+    Dimension limit = (Dimension) source->font->max_advance_width;
+    Dimension expected = limit;
     Dimension width = 0;
+    Dimension width2 = 0;
     int failed = 0;
-
-    (void) screen;
-    if_OPT_WIDE_CHARS(screen, limit = Min(last, 0x3000));
+#if OPT_WIDE_CHARS
+    Cardinal n;
+#endif
 
     target->font = source->font;
     target->pattern = source->pattern;
     target->map.min_width = 0;
-    target->map.max_width = (Dimension) source->font->max_advance_width;
+    target->map.max_width = limit;
+
+#if OPT_WIDE_CHARS
+    /*
+     * Check if the line-drawing characters are all provided in the font.
+     * If so, take that into account for the cell-widths.
+     */
+    for (n = 0; n < XtNumber(unicode_boxes) - 1; ++n) {
+	if (!checkedXftWidth(XtDisplay(xw),
+			     source,
+			     limit,
+			     &width2, unicode_boxes[n].code)) {
+	    width2 = 0;
+	    TRACE(("font omits U+%04X line-drawing symbol\n",
+		   unicode_boxes[n].code));
+	    break;
+	}
+    }
+#else
+    (void) width2;
+#endif
+
+    /*
+     * M/W usually are close to the maximum cell-size.  Fixed-pitch fonts can
+     * have single-width and double-width characters.  Allow 20% error to cover
+     * fontconfig approximations. Proportional fonts are not so tidy.
+     */
+    if (checkedXftWidth(XtDisplay(xw), source, limit, &width, 'M') &&
+	checkedXftWidth(XtDisplay(xw), source, limit, &width, 'W')) {
+	Dimension check = (Dimension) (limit + 1) / 2;
+#define FC_ERR(n) (1.2 * (n))
+	TRACE(("...checking if (%d >= %.1f) or (%d < %.1f)\n",
+	       check, FC_ERR(width),
+	       width, FC_ERR(check)));
+	if (check >= FC_ERR(width) || (width < FC_ERR(check))) {
+	    expected = check;
+	    TRACE(("...max-advance width appears to be double-width cells\n"));
+	}
+    }
+
+    if (width2 > 0) {
+	Dimension check = (Dimension) (limit + 1) / 2;
+	TRACE(("font provides VT100-style line-drawing\n"));
+	/*
+	 * The "VT100 line-drawing" characters happen to be all "ambiguous
+	 * width" in Unicode's scheme.  That means that they could be twice as
+	 * wide as the Latin-1 characters.
+	 */
+	if (width2 > FC_ERR(check)) {
+	    TRACE(("line-drawing characters appear to be double-width (ignore)\n"));
+	    setBrokenBoxChars(xw, True);
+	} else if (width2 > width) {
+	    width = width2;
+	}
+    } else {
+	TRACE(("font does NOT provide VT100-style line-drawing\n"));
+	setBrokenBoxChars(xw, True);
+    }
+
+    TRACE(("single-width cells %d\n", expected));
 
     /*
      * For each printable code, ask what its width is.  Given the maximum width
@@ -2443,37 +2566,28 @@ checkXft(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      *
      * Ignore control characters - their extent information is misleading.
      */
-    for (c = 32; c < limit; ++c) {
-	if (c >= 127 && c <= 159)
-	    continue;
-	if (FcCharSetHasChar(source->font->charset, c)) {
-	    XGlyphInfo extents;
+    if (width < expected) {
+	for (c = 32; c < last; ++c) {
+	    if (c >= 127 && c <= 159)
+		continue;
 
-	    XftTextExtents32(XtDisplay(xw), source->font, &c, 1, &extents);
-	    if (width >= extents.width)
-		continue;
-	    if (extents.width >= (3 * target->map.max_width)) {
-		width = 0;	/* metrics are bogus - give up */
-		break;
-	    }
-	    if (extents.width > target->map.max_width)
-		continue;
-	    width = extents.width;
-	    if (width >= target->map.max_width) {
-		width = target->map.max_width;
+	    if (checkedXftWidth(XtDisplay(xw),
+				source,
+				limit,
+				&width, c) &&
+		(width >= expected)) {
 		break;
 	    }
 	}
     }
+
     /*
      * Sometimes someone uses a symbol font which has no useful ASCII or
      * Latin-1 characters.  Allow that, in case they did it intentionally.
      */
     if (width == 0) {
 	failed = 1;
-	if (last >= 256) {
-	    width = target->map.max_width;
-	}
+	width = expected;
     }
     target->map.min_width = width;
     target->map.mixed = (target->map.max_width >= (target->map.min_width + 1));
@@ -2656,32 +2770,6 @@ dimSquareRoot(double value)
 }
 #endif
 
-#if OPT_WIDE_CHARS
-#define MY_UCS(code,high,wide,name) { code, high, wide, #name }
-static const struct {
-    unsigned code, high, wide;
-    const char *name;
-} unicode_boxes[] = {
-
-    MY_UCS(0x2500, 0, 1, box drawings light horizontal),
-	MY_UCS(0x2502, 1, 0, box drawings light vertical),
-	MY_UCS(0x250c, 2, 2, box drawings light down and right),
-	MY_UCS(0x2510, 2, 2, box drawings light down and left),
-	MY_UCS(0x2514, 2, 2, box drawings light up and right),
-	MY_UCS(0x2518, 2, 2, box drawings light up and left),
-	MY_UCS(0x251c, 1, 2, box drawings light vertical and right),
-	MY_UCS(0x2524, 1, 2, box drawings light vertical and left),
-	MY_UCS(0x252c, 2, 1, box drawings light down and horizontal),
-	MY_UCS(0x2534, 2, 1, box drawings light up and horizontal),
-	MY_UCS(0x253c, 1, 1, box drawings light vertical and horizontal),
-    {
-	0, 0, 0, NULL
-    }
-};
-
-#undef MY_UCS
-#endif /* OPT_WIDE_CHARS */
-
 #ifdef DEBUG_XFT
 static void
 trace_xft_glyph(TScreen *screen, XftFont *font, FT_Face face, int code, const char *name)
@@ -2711,20 +2799,7 @@ trace_xft_line_drawing(TScreen *screen, XftFont *font, FT_Face face)
 #else
 #define trace_xft_line_drawing(screen, font, face)	/* nothing */
 #endif
-#endif
-
-#if OPT_BOX_CHARS
-static void
-setBrokenBoxChars(XtermWidget xw, Bool state)
-{
-    term->work.broken_box_chars = (Boolean) state;
-    TScreenOf(xw)->broken_box_chars = (Boolean) state;
-    update_font_boxchars();
-}
-
-#else
-#define setBrokenBoxChars(xw, state)	/* nothing */
-#endif
+#endif /* DEBUG_XFT */
 
 /*
  * Check if the line-drawing characters do not fill the bounding box.  If so,
