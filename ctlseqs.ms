@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.564 2020/01/18 18:51:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.565 2020/01/26 22:05:26 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #353
-.ds RF 2020/01/18
+.ds RF 2020/01/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3135,17 +3135,23 @@ Those buttons are represented by the same event codes
 as buttons 1 and 2 respectively,
 except that 64 is added to the event code.
 Release events for the wheel buttons are not reported.
+.LP
 By default,
-the wheel mouse events are translated to \fIscroll-back\fP
-and \fIscroll-forw\fP actions.
+the wheel mouse events (buttons 4 and 5)
+are translated to \fIscroll-back\fP
+and \fIscroll-forw\fP actions, respectively.
 Those actions normally scroll the whole window,
 as if the scrollbar was used.
+.LP
 However if \fIAlternate Scroll\fP mode is set,
 then cursor up/down controls are sent when the terminal is displaying
 the \fIAlternate Screen Buffer\fP.
 The initial state of \fIAlternate Scroll\fP mode is set
 using the \fBalternateScroll\fP resource.
 .Ss Other buttons
+.LP
+Some wheel mice can send additional button events,
+e.g., by tilting the scroll wheel left and right.
 .LP
 Additional buttons are encoded like the wheel mice,
 .bP
@@ -3155,9 +3161,12 @@ by adding 128 (for buttons 8 through 11).
 .LP
 Past button 11, the encoding is ambiguous because the same code
 may correspond to different button/modifier combinations.
+.LP
 It is not possible to use these buttons (6-11) in \fI\*(xt\fP's
 \fBtranslations\fP resource because their names are not in the X Toolkit's
 symbol table.
+However, applications can check for the reports, e.g.,
+button 7 (left) and button 6 (right) with a Logitech mouse.
 .Ss Highlight tracking
 .LP
 Mouse highlight tracking notifies a program of a button press, receives a
@@ -3323,7 +3332,7 @@ However, \*(Cs\*M can be mistaken for DL (delete lines),
 while the highlight tracking \*(Cs\*T can be mistaken for SD (scroll down),
 and the Window manipulation controls.
 For these reasons, the 1015 control is not recommended;
-it is not an improvement over 1005.
+it is not an improvement over 1006.
 .
 .Sh "Sixel Graphics"
 .LP

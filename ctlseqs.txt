@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #353 (2020/01/18)
+               updated for XTerm Patch #353 (2020/01/26)
 
 
 
@@ -2307,15 +2307,22 @@ Wheel mice
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
 added to the event code.  Release events for the wheel buttons are not
-reported.  By default, the wheel mouse events are translated to scroll-
-back and scroll-forw actions.  Those actions normally scroll the whole
-window, as if the scrollbar was used.  However if Alternate Scroll mode
-is set, then cursor up/down controls are sent when the terminal is dis-
-playing the Alternate Screen Buffer.  The initial state of Alternate
-Scroll mode is set using the alternateScroll resource.
+reported.
+
+By default, the wheel mouse events (buttons 4 and 5) are translated to
+scroll-back and scroll-forw actions, respectively.  Those actions nor-
+mally scroll the whole window, as if the scrollbar was used.
+
+However if Alternate Scroll mode is set, then cursor up/down controls
+are sent when the terminal is displaying the Alternate Screen Buffer.
+The initial state of Alternate Scroll mode is set using the alternate-
+Scroll resource.
 
 
 Other buttons
+
+Some wheel mice can send additional button events, e.g., by tilting the
+scroll wheel left and right.
 
 Additional buttons are encoded like the wheel mice,
 
@@ -2324,9 +2331,12 @@ o   by adding 64 (for buttons 6 and 7), or
 o   by adding 128 (for buttons 8 through 11).
 
 Past button 11, the encoding is ambiguous because the same code may cor-
-respond to different button/modifier combinations.  It is not possible
-to use these buttons (6-11) in xterm's translations resource because
-their names are not in the X Toolkit's symbol table.
+respond to different button/modifier combinations.
+
+It is not possible to use these buttons (6-11) in xterm's translations
+resource because their names are not in the X Toolkit's symbol table.
+However, applications can check for the reports, e.g., button 7 (left)
+and button 6 (right) with a Logitech mouse.
 
 
 Highlight tracking
@@ -2484,7 +2494,7 @@ URXVT (1015)
           the highlight tracking CSI T  can be mistaken for SD (scroll
           down), and the Window manipulation controls.  For these rea-
           sons, the 1015 control is not recommended; it is not an
-          improvement over 1005.
+          improvement over 1006.
 
 
 Sixel Graphics
