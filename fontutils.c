@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.669 2020/01/26 20:41:59 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.670 2020/01/28 01:06:12 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2473,10 +2473,8 @@ checkedXftWidth(Display *dpy,
 
 	result = True;
 	XftTextExtents32(dpy, source->font, &c, 1, &extents);
-	if (extents.width < limit) {
-	    if (*width < extents.width) {
-		*width = extents.width;
-	    }
+	if (*width < extents.width && extents.width <= limit) {
+	    *width = extents.width;
 	}
     }
     return result;
@@ -2488,7 +2486,6 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     FcChar32 c;
     FcChar32 last = xtermXftLastChar(source->font);
     Dimension limit = (Dimension) source->font->max_advance_width;
-    Dimension expected = limit;
     Dimension width = 0;
     Dimension width2 = 0;
     int failed = 0;
@@ -2521,24 +2518,6 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
     (void) width2;
 #endif
 
-    /*
-     * M/W usually are close to the maximum cell-size.  Fixed-pitch fonts can
-     * have single-width and double-width characters.  Allow 20% error to cover
-     * fontconfig approximations. Proportional fonts are not so tidy.
-     */
-    if (checkedXftWidth(XtDisplay(xw), source, limit, &width, 'M') &&
-	checkedXftWidth(XtDisplay(xw), source, limit, &width, 'W')) {
-	Dimension check = (Dimension) (limit + 1) / 2;
-#define FC_ERR(n) (1.2 * (n))
-	TRACE(("...checking if (%d >= %.1f) or (%d < %.1f)\n",
-	       check, FC_ERR(width),
-	       width, FC_ERR(check)));
-	if (check >= FC_ERR(width) || (width < FC_ERR(check))) {
-	    expected = check;
-	    TRACE(("...max-advance width appears to be double-width cells\n"));
-	}
-    }
-
     if (width2 > 0) {
 	Dimension check = (Dimension) (limit + 1) / 2;
 	TRACE(("font provides VT100-style line-drawing\n"));
@@ -2547,6 +2526,7 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 	 * width" in Unicode's scheme.  That means that they could be twice as
 	 * wide as the Latin-1 characters.
 	 */
+#define FC_ERR(n) (1.2 * (n))
 	if (width2 > FC_ERR(check)) {
 	    TRACE(("line-drawing characters appear to be double-width (ignore)\n"));
 	    setBrokenBoxChars(xw, True);
@@ -2558,26 +2538,20 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
 	setBrokenBoxChars(xw, True);
     }
 
-    TRACE(("single-width cells %d\n", expected));
-
     /*
      * For each printable code, ask what its width is.  Given the maximum width
      * for those, we have a reasonable estimate of the single-column width.
      *
      * Ignore control characters - their extent information is misleading.
      */
-    if (width < expected) {
-	for (c = 32; c < last; ++c) {
-	    if (c >= 127 && c <= 159)
-		continue;
-
-	    if (checkedXftWidth(XtDisplay(xw),
-				source,
-				limit,
-				&width, c) &&
-		(width >= expected)) {
-		break;
-	    }
+    for (c = 32; c < 255; ++c) {
+	if (CharWidth(c) <= 0)
+	    continue;
+	if (FcCharSetHasChar(source->font->charset, c)) {
+	    (void) checkedXftWidth(XtDisplay(xw),
+				   source,
+				   target->map.max_width,
+				   &width, c);
 	}
     }
 
@@ -2587,7 +2561,9 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      */
     if (width == 0) {
 	failed = 1;
-	width = expected;
+	if (last >= 256) {
+	    width = target->map.max_width;
+	}
     }
     target->map.min_width = width;
     target->map.mixed = (target->map.max_width >= (target->map.min_width + 1));
