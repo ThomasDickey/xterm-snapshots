@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: modify-keys.pl,v 1.89 2019/10/29 00:22:23 tom Exp $
+# $XTermId: modify-keys.pl,v 1.90 2020/01/18 18:38:44 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -988,7 +988,7 @@ sub print_data() {
                         # different modifier combinations can produce the same
                         # keysym.  Since it appears that the slots that the
                         # user would expect are filled in first, just ignoring
-                        # the duplicate works well enought.
+                        # the duplicate works well enough.
                         if ( not $linkUsed{$value} ) {
                             $props .= " name=\"$value\"";
                             $linkUsed{$value} = 1;
