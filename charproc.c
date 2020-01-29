@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1739 2020/01/18 18:32:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1740 2020/01/29 19:19:42 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5821,6 +5821,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
     case UnmapNotify:
 	mapstate = IsUnmapped;
 	break;
+    case MappingNotify:
+	XRefreshKeyboardMapping(&(event->xmapping));
+	VTInitModifiers(xw);
+	break;
     case ConfigureNotify:
 	if (event->xconfigure.window == XtWindow(toplevel)) {
 #if !OPT_TOOLBAR
@@ -9801,7 +9805,7 @@ VTInitialize(Widget wrequest,
     wnew->VT100_TB_INFO(menu_bar) = request->VT100_TB_INFO(menu_bar);
     init_Ires(VT100_TB_INFO(menu_height));
 #endif
-    XtAddEventHandler(my_parent, StructureNotifyMask, False,
+    XtAddEventHandler(my_parent, MappingNotify | StructureNotifyMask, False,
 		      HandleStructNotify, (Opaque) 0);
 #endif /* HANDLE_STRUCT_NOTIFY */
 

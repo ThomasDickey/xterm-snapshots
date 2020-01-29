@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.90 2019/11/18 10:23:19 tom Exp $ */
+/* $XTermId: trace.h,v 1.91 2020/01/29 18:48:24 tom Exp $ */
 
 /*
- * Copyright 1997-2018,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -69,6 +69,7 @@ extern	const char * visibleIChars(const IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleUChar(unsigned);
 extern	const char * visibleDblChrset(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
+extern	const char * visibleMappingMode (int);
 extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleNotifyMode (int /* code */);
 extern	const char * visibleScsCode(DECNRCM_codes /* chrset */);

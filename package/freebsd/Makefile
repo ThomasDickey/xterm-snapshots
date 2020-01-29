@@ -1,4 +1,4 @@
-# $XTermId: Makefile,v 1.73 2020/01/18 15:53:11 tom Exp $
+# $XTermId: Makefile,v 1.74 2020/01/18 18:35:26 tom Exp $
 # $FreeBSD: head/x11/xterm/Makefile 492827 2019-02-13 06:43:36Z ehaupt $
 
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
@@ -43,7 +43,7 @@ OPTIONS_RADIO_3D=	XAW3D XAW3DXFT NEXTAW
 
 DABBREV_DESC=	Enable support for dabbrev-expand
 DECTERM_DESC=	Enable DECterm Locator support
-LUIT_DESC=	Use LUIT for locale convertion from/to UTF-8
+LUIT_DESC=	Use LUIT for locale conversion from/to UTF-8
 SIXEL_DESC=	Enable Sixel graphics support
 REGIS_DESC=	Enable ReGIS graphics support
 WCHAR_DESC=	Enable wide-character support

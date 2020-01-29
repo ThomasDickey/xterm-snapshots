@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.670 2020/01/28 01:06:12 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.671 2020/01/29 19:54:47 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2462,7 +2462,7 @@ setBrokenBoxChars(XtermWidget xw, Bool state)
 static Boolean
 checkedXftWidth(Display *dpy,
 		XTermXftFonts *source,
-		Dimension limit,
+		unsigned limit,
 		Dimension *width,
 		FcChar32 c)
 {
