@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.216 2019/11/20 09:28:05 tom Exp $ */
+/* $XTermId: trace.c,v 1.217 2020/01/29 19:04:07 tom Exp $ */
 
 /*
- * Copyright 1997-2018,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -443,6 +443,18 @@ visibleEventType(int type)
 }
 
 const char *
+visibleMappingMode(int code)
+{
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(MappingModifier);
+	CASETYPE(MappingKeyboard);
+	CASETYPE(MappingPointer);
+    }
+    return result;
+}
+
+const char *
 visibleNotifyMode(int code)
 {
     const char *result = "?";
@@ -840,6 +852,19 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xconfigure.border_width,
 	       ev->xconfigure.above));
 	break;
+    case CreateNotify:
+	TRACE((" at %d,%d size %dx%d bd %d",
+	       ev->xcreatewindow.y,
+	       ev->xcreatewindow.x,
+	       ev->xcreatewindow.height,
+	       ev->xcreatewindow.width,
+	       ev->xcreatewindow.border_width));
+	break;
+    case ResizeRequest:
+	TRACE((" size %dx%d",
+	       ev->xresizerequest.height,
+	       ev->xresizerequest.width));
+	break;
     case PropertyNotify:
 	TRACE((" %s %s",
 	       TraceAtomName(XtDisplay(toplevel), ev->xproperty.atom),
@@ -858,8 +883,33 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       ev->xexpose.width,
 	       ev->xexpose.count));
 	break;
+    case MappingNotify:
+	TRACE((" %s first_keycode %d count %d",
+	       visibleMappingMode(ev->xmapping.request),
+	       ev->xmapping.first_keycode,
+	       ev->xmapping.count));
+	break;
+    case VisibilityNotify:
+	TRACE((" state %d",
+	       ev->xvisibility.state));
+	break;
+    case KeymapNotify:
+	{
+	    Cardinal j;
+	    for (j = 0; j < XtNumber(ev->xkeymap.key_vector); ++j) {
+		if (ev->xkeymap.key_vector[j] != 0) {
+		    Cardinal k;
+		    for (k = 0; k < 8; ++k) {
+			if (ev->xkeymap.key_vector[j] & (1 << k)) {
+			    TRACE((" key%u", (j * 8) + k));
+			}
+		    }
+		}
+	    }
+	}
+	break;
     default:
-	TRACE(("FIXME\n"));
+	TRACE((":FIXME"));
 	break;
     }
     TRACE(("\n"));

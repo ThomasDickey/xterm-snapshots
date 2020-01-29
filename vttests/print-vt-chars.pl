@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
-# $Id: print-vt-chars.pl,v 1.21 2018/08/31 15:47:30 tom Exp $
+# $Id: print-vt-chars.pl,v 1.22 2020/01/18 18:38:48 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018 by Thomas E. Dickey
+# Copyright 2018,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -308,7 +308,7 @@ EOF
 &init_charset( "DEC_Technical",      0, '>',  3, 9, 0 );
 &init_charset( "French_Canadian2",   0, '9',  3, 9, 1 );
 &init_charset( "Norwegian_Danish",   0, '`',  3, 9, 1 );
-&init_charset( "Portugese",          0, '%6', 3, 9, 1 );
+&init_charset( "Portuguese",         0, '%6', 3, 9, 1 );
 &init_charset( "ISO_Greek_Supp",     1, 'F',  5, 9, 0 );
 &init_charset( "ISO_Hebrew_Supp",    1, 'H',  5, 9, 0 );
 &init_charset( "ISO_Latin_5_Supp",   1, 'M',  5, 9, 0 );
