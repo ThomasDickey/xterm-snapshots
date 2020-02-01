@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2151 2020/01/29 19:34:06 tom Exp $
+  $XTermId: xterm.log.html,v 1.2152 2020/02/01 14:06:24 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -990,10 +990,16 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>amend change in <a href="#xterm_352">patch #352</a> for
+    button-events to fix a case where some followup events were not
+    processed soon enough (report/patch by Jimmy Aguilar
+    Mena).</li>
+
     <li>handle <em>MappingNotify</em> X event, to improve recovery
     when switching keyboard configurations using
     <code>xkbcomp</code> (prompted by discussion with Frank Mosch,
-    Debian #661295).</li>
+    Debian #661295). There is more work needed here, possibly in
+    the X libraries.</li>
 
     <li>improve discussion of mouse-mode in <code>ctlseqs.ms</code>
     (suggested by Igor van den Hoven).</li>

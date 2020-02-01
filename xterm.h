@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.863 2020/01/11 00:32:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.864 2020/02/01 14:22:29 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1071,6 +1071,8 @@ extern void StringInput (XtermWidget /* xw */, const Char * /* string */, size_t
 
 #if OPT_NUM_LOCK
 extern void VTInitModifiers(XtermWidget /* xw */);
+#else
+#define VTInitModifiers(xw) /* nothing */
 #endif
 
 /* linedata.c */
