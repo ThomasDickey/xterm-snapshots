@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.924 2020/01/18 18:29:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.926 2020/02/01 13:19:03 Jimmy.Aguilar.Mena Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -586,7 +586,6 @@ xevents(XtermWidget xw)
 	} else if (event.xany.type == MotionNotify
 		   && event.xcrossing.window == XtWindow(xw)) {
 	    switch (screen->send_mouse_pos) {
-	    case BTN_EVENT_MOUSE:
 	    case ANY_EVENT_MOUSE:
 #if OPT_DEC_LOCATOR
 	    case DEC_LOCATOR:
@@ -594,6 +593,9 @@ xevents(XtermWidget xw)
 		SendMousePosition(xw, &event);
 		xtermShowPointer(xw, True);
 		continue;
+	    case BTN_EVENT_MOUSE:
+		SendMousePosition(xw, &event);
+		xtermShowPointer(xw, True);
 	    }
 	}
 
@@ -635,6 +637,10 @@ xevents(XtermWidget xw)
 	     (event.xany.type != ButtonPress) &&
 	     (event.xany.type != ButtonRelease))) {
 
+	    if (event.xany.type == MappingNotify) {
+		XRefreshKeyboardMapping(&(event.xmapping));
+		VTInitModifiers(xw);
+	    }
 	    XtDispatchEvent(&event);
 	}
     } while (xtermAppPending() & XtIMXEvent);
