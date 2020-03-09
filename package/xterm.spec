@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.126 2020/02/29 00:23:02 tom Exp $
+# $XTermId: xterm.spec,v 1.128 2020/03/09 00:11:07 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -66,8 +66,7 @@ for the program and its resource class, to avoid conflict with other packages.
 
 %prep
 
-%global desktop_vendor  dickey
-%global target_appdata %{desktop_vendor}-%{fullname}.appdata.xml
+%global target_appdata %{fullname}.appdata.xml
 
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
 %define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
@@ -171,7 +170,7 @@ make install-bin install-man install-app install-icon \
 
 %if "%{desktop_utils}"
 make install-desktop \
-        DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
+        DESKTOP_FLAGS="--dir $RPM_BUILD_ROOT%{_datadir}/applications"
 
 test -n "%{my_suffix}" && \
 ( cd $RPM_BUILD_ROOT%{_datadir}/applications
@@ -185,7 +184,7 @@ mkdir -p $RPM_BUILD_ROOT%{_datadir}/appdata && \
 install -m 644 xterm.appdata.xml $RPM_BUILD_ROOT%{_datadir}/appdata/%{target_appdata} && \
 ( cd $RPM_BUILD_ROOT%{_datadir}/appdata
   sed -i \
-      -e 's/>xterm\.desktop</>%{desktop_vendor}-%{fullname}.desktop</' \
+      -e 's/>xterm\.desktop</>%{fullname}.desktop</' \
       -e 's/>XTerm</>%{my_class}</' \
       %{target_appdata}
 )
@@ -234,8 +233,8 @@ exit 0
 
 %if "%{desktop_utils}"
 %config(missingok) %{_datadir}/appdata/%{target_appdata}
-%config(missingok) %{_datadir}/applications/%{desktop_vendor}-%{fullname}.desktop
-%config(missingok) %{_datadir}/applications/%{desktop_vendor}-u%{fullname}.desktop
+%config(missingok) %{_datadir}/applications/%{fullname}.desktop
+%config(missingok) %{_datadir}/applications/u%{fullname}.desktop
 %endif
 
 %if "%{icon_theme}"
@@ -247,6 +246,9 @@ exit 0
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Sun Mar 08 2020 Thomas E. Dickey
+- remove "--vendor" option from desktop-file-install
 
 * Sun Nov 17 2019 Thomas E. Dickey
 - install appdata.xml file
