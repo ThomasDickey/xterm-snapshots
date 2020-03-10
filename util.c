@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.846 2019/11/13 22:55:08 tom Exp $ */
+/* $XTermId: util.c,v 1.848 2020/03/10 09:15:36 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4843,7 +4843,7 @@ ClearCurBackground(XtermWidget xw,
 
 	xtermClear2(xw,
 		    CursorX2(screen, left, fw),
-		    CursorY(screen, top),
+		    CursorY2(screen, top),
 		    (width * fw),
 		    (height * (unsigned) FontHeight(screen)));
 

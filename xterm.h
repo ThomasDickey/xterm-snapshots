@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.864 2020/02/01 14:22:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.865 2020/03/10 08:38:14 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1641,7 +1641,7 @@ extern void discardRenderDraw(TScreen * /* screen */);
 	XClearArea (TScreenOf(xw)->display, \
 		    VDrawable(TScreenOf(xw)), \
 		    CursorX2(TScreenOf(xw), left, fw), \
-		    CursorY(TScreenOf(xw), top), \
+		    CursorY2(TScreenOf(xw), top), \
 		    ((width) * (unsigned) fw), \
 		    ((height) * (unsigned) FontHeight(TScreenOf(xw))), \
 		    False)
