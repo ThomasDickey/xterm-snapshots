@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.671 2020/01/29 19:54:47 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.672 2020/03/15 21:23:44 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2544,7 +2544,7 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *target, XTermXftFonts *source)
      *
      * Ignore control characters - their extent information is misleading.
      */
-    for (c = 32; c < 255; ++c) {
+    for (c = 32; c < 256; ++c) {
 	if (CharWidth(c) <= 0)
 	    continue;
 	if (FcCharSetHasChar(source->font->charset, c)) {
@@ -3982,6 +3982,10 @@ markXftOpened(XtermWidget xw, XTermXftFonts *which, Cardinal n, unsigned wc)
     }
 }
 
+/*
+ * Check if the given character has a glyph known to Xft.  If it is missing,
+ * try first to replace the font with a fallback that provides the glyph.
+ */
 XftFont *
 findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 {
@@ -4138,8 +4142,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 
 /*
  * Check if the given character has a glyph known to Xft.  If it is missing,
- * try first to replace the font with a fallback that provides the glyph.
- * If it is unable to provide a font containing the glyph, return true.
+ * return true.
  *
  * see xc/lib/Xft/xftglyphs.c
  */
