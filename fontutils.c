@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.672 2020/03/15 21:23:44 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.676 2020/04/10 00:43:21 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2861,14 +2861,25 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
 		if (broken)
 		    break;
 	    }
+	    /*
+	     * The factor of two accounts for line-drawing that goes through
+	     * the middle of a cell, possibly leaving half of the cell unused.
+	     * A horizontal line has to extend the full width of the cell.
+	     */
 	    switch (unicode_boxes[n].high) {
 	    case 1:
 		if ((unsigned) g->bitmap.rows < (unsigned) FontHeight(screen)) {
+		    TRACE(("...bitmap is shorter than full-cell (%u vs %u)\n",
+			   (unsigned) g->bitmap.rows,
+			   (unsigned) FontHeight(screen)));
 		    broken = True;
 		}
 		break;
 	    case 2:
 		if ((unsigned) (g->bitmap.rows * 2) < (unsigned) FontHeight(screen)) {
+		    TRACE(("...bitmap is too short for half-cell (%u vs %u)\n",
+			   (unsigned) (g->bitmap.rows * 2),
+			   (unsigned) FontHeight(screen)));
 		    broken = True;
 		}
 		break;
@@ -2876,11 +2887,17 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
 	    switch (unicode_boxes[n].wide) {
 	    case 1:
 		if ((unsigned) g->bitmap.width < (unsigned) FontWidth(screen)) {
+		    TRACE(("...bitmap is narrower than full-cell (%u vs %u)\n",
+			   (unsigned) g->bitmap.width,
+			   (unsigned) FontWidth(screen)));
 		    broken = True;
 		}
 		break;
 	    case 2:
 		if ((unsigned) (g->bitmap.width * 2) < (unsigned) FontWidth(screen)) {
+		    TRACE(("...bitmap is too narrow for half-cell (%u vs %u)\n",
+			   (unsigned) (g->bitmap.width * 2),
+			   (unsigned) FontWidth(screen)));
 		    broken = True;
 		}
 		break;
@@ -2972,19 +2989,27 @@ setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 	ascent = font->ascent;
 	descent = font->descent;
 	if (height < ascent + descent) {
+	    TRACE(("...height is less than ascent + descent (%u vs %u)\n",
+		   height, ascent + descent));
 	    if ((ascent + descent) > (height + 1)) {
 		/* this happens less than 10% of the time */
 		--ascent;
 		--descent;
+		TRACE(("...decrement both ascent and descent before retry\n"));
 	    } else if (ascent > descent) {
 		/* this is the usual case */
 		--ascent;
+		TRACE(("...decrement ascent before retry\n"));
 	    } else {
 		/* this could happen, though rare... */
 		--descent;
+		TRACE(("...decrement descent before retry\n"));
 	    }
-	    TRACE(("...increase height from %d to %d\n", height, ascent + descent));
 	    height = ascent + descent;
+	    font->ascent = ascent;
+	    font->descent = descent;
+	    TRACE(("...updated height %d vs %d (ascent %d, descent %d)\n",
+		   height, ascent + descent, ascent, descent));
 	}
 	if (is_double_width_font_xft(screen->display, font)) {
 	    TRACE(("...reduce width from %d to %d\n", width, width >> 1));
@@ -3559,8 +3584,9 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 /*
  * ...since we'll scale the values anyway.
  */
-#define SCALED_X(n) ((int)(n) * (((int) font_width) - 1)) / (BOX_WIDE-1)
-#define SCALED_Y(n) ((int)(n) * (((int) font_height) - 1)) / (BOX_HIGH-1)
+#define Scale_XY(n,d,f) ((int)(n) * ((int)(f))) / (d)
+#define SCALED_X(n) Scale_XY(n, BOX_WIDE, font_width)
+#define SCALED_Y(n) Scale_XY(n, BOX_HIGH, font_height)
 #define SCALE_X(n) n = SCALED_X(n)
 #define SCALE_Y(n) n = SCALED_Y(n)
 
@@ -4763,7 +4789,7 @@ SetVTFont(XtermWidget xw,
 	    if (myfonts.field != 0) { \
 		if (screen->menu_font_names[which][name] == 0 \
 		 || strcmp(screen->menu_font_names[which][name], myfonts.field)) { \
-		    TRACE(("updating menu_font_names[%d][" #name "] to %s\n", \
+		    TRACE(("updating menu_font_names[%d][" #name "] to \"%s\"\n", \
 			   which, myfonts.field)); \
 		    FREE_STRING(screen->menu_font_names[which][name]); \
 		    screen->menu_font_names[which][name] = x_strdup(myfonts.field); \
