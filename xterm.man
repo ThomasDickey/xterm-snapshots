@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.806 2020/01/13 21:50:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.807 2020/04/14 00:17:39 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -3609,6 +3609,14 @@ Specifies whether \fI\*n\fP should use the maximum or minimum glyph
 width when displaying using a bitmap font.
 Use the maximum width to help with proportional fonts.
 The default is \*(``true\*('', denoting the minimum width.
+.TP 8
+.B "forceXftHeight\fP (class\fB ForceXftHeight\fP)"
+Specifies whether \fI\*n\fP should use the given font metrics for
+TrueType fonts, or amend the ascent/descent to total no more than
+the given font-height.
+This optional feature is used to work around inconsistencies in
+FreeType's rounding computation.
+The default is \*(``false\*('', denoting the given metrics.
 .TP 8
 .B "foreground\fP (class\fB Foreground\fP)"
 Specifies the color to use for displaying text in the window.

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1740 2020/01/29 19:19:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1741 2020/04/14 00:03:00 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -811,6 +811,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_RENDERFONT
+    Bres(XtNforceXftHeight, XtCForceXftHeight, screen.force_xft_height, False),
 #define RES_FACESIZE(n) Dres(XtNfaceSize #n, XtCFaceSize #n, misc.face_size[n], "0.0")
     RES_FACESIZE(1),
     RES_FACESIZE(2),
@@ -9224,6 +9225,7 @@ VTInitialize(Widget wrequest,
      * that should override the "font" resource.
      */
 #if OPT_RENDERFONT
+    init_Bres(screen.force_xft_height);
     for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
 	init_Dres2(misc.face_size, i);
     }

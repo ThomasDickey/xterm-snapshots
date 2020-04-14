@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.865 2020/03/10 08:38:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.866 2020/04/14 00:01:41 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -515,6 +515,7 @@ extern char **environ;
 #define XtNfontWarnings		"fontWarnings"
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNforcePackedFont	"forcePackedFont"
+#define XtNforceXftHeight	"forceXftHeight"
 #define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNfullscreen		"fullscreen"
@@ -716,6 +717,7 @@ extern char **environ;
 #define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCForcePackedFont	"ForcePackedFont"
+#define XtCForceXftHeight	"ForceXftHeight"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCFullscreen		"Fullscreen"
