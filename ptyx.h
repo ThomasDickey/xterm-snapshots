@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.988 2019/11/20 09:38:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.989 2020/04/14 00:13:34 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2753,6 +2753,7 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
+	Boolean		force_xft_height;
 	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];

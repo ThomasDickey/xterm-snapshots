@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.676 2020/04/10 00:43:21 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.681 2020/04/14 00:12:58 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2379,7 +2379,7 @@ xtermXftLastChar(XftFont *xft)
 }
 #endif /* OPT_REPORT_FONTS */
 
-#if OPT_TRACE > 1
+#if OPT_TRACE
 static void
 dumpXft(XtermWidget xw, XTermXftFonts *data)
 {
@@ -2390,25 +2390,48 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     FcChar32 c;
     FcChar32 first = xtermXftFirstChar(xft);
     FcChar32 last = xtermXftLastChar(xft);
+    FcChar32 dump = last;
     unsigned count = 0;
-    unsigned outside = 0;
+    unsigned too_high = 0;
+    unsigned too_wide = 0;
+    Boolean skip = False;
 
     TRACE(("dumpXft {{\n"));
-    TRACE(("   data range %#6x..%#6x\n", first, last));
+    TRACE(("\tdata range U+%04X..U+%04X\n", first, last));
+    TRACE(("\tcode\tcells\tdimensions\n"));
+#if OPT_TRACE < 2
+    dump = 255;
+#endif
     for (c = first; c <= last; ++c) {
 	if (FcCharSetHasChar(xft->charset, c)) {
 	    int width = CharWidth(c);
 	    XGlyphInfo extents;
+	    Boolean big_x = (extents.width > win->f_width);
+	    Boolean big_y = (extents.height > win->f_height);
+	    Char buffer[80];
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
-	    TRACE(("%#6x  %2d  %.1f\n", c, width,
-		   ((double) extents.width) / win->f_width));
-	    if (extents.width > win->f_width)
-		++outside;
+	    if (c <= dump) {
+		*convertToUTF8(buffer, c) = '\0';
+		TRACE(("%s%s\tU+%04X\t%d\t%.1f x %.1f\t%s\n",
+		       (big_y ? "y" : ""),
+		       (big_x ? "x" : ""),
+		       c, width,
+		       ((double) extents.height) / win->f_height,
+		       ((double) extents.width) / win->f_width,
+		       buffer));
+	    } else if (!skip) {
+		skip = True;
+		TRACE(("\t...skipping\n"));
+	    }
+	    if (big_y)
+		++too_high;
+	    if (big_x)
+		++too_wide;
 	    ++count;
 	}
     }
-    TRACE(("}} %u total, %u outside\n", count, outside));
+    TRACE(("}} %u total, %u too-high, %u too-wide\n", count, too_high, too_wide));
 }
 #define DUMP_XFT(xw, data) dumpXft(xw, data)
 #else
@@ -2913,7 +2936,7 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
 #endif
 
     if (broken) {
-	TRACE(("Xft line-drawing would leave gaps\n"));
+	TRACE(("Xft line-drawing would not work\n"));
 	setBrokenBoxChars(xw, True);
     }
 }
@@ -2988,7 +3011,7 @@ setRenderFontsize(XtermWidget xw, VTwin *win, XftFont *font, const char *tag)
 	height = font->height;
 	ascent = font->ascent;
 	descent = font->descent;
-	if (height < ascent + descent) {
+	if (screen->force_xft_height && height < ascent + descent) {
 	    TRACE(("...height is less than ascent + descent (%u vs %u)\n",
 		   height, ascent + descent));
 	    if ((ascent + descent) > (height + 1)) {
