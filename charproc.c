@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1741 2020/04/14 00:03:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1742 2020/04/14 20:46:33 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -115,10 +115,6 @@
 
 #if USE_DOUBLE_BUFFER
 #include <X11/extensions/Xdbe.h>
-#endif
-
-#if OPT_INPUT_METHOD
-#include <X11/Xlocale.h>
 #endif
 
 #include <stdio.h>

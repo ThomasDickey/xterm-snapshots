@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.866 2020/04/14 00:01:41 tom Exp $ */
+/* $XTermId: xterm.h,v 1.867 2020/04/14 22:17:18 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -268,6 +268,8 @@ extern void free();
 #if defined(DECL_ERRNO) && !defined(errno)
 extern int errno;
 #endif
+
+#include <X11/Xlocale.h>
 
 /*
  * FIXME:  Toggling logging from xterm hangs under Linux 2.0.29 with libc5 if
@@ -1505,20 +1507,21 @@ extern void TabClear (Tabs /* tabs */, int /* col */);
 extern void TabReset (Tabs /* tabs */);
 extern void TabSet (Tabs /* tabs */, int /* col */);
 extern void TabZonk (Tabs /* tabs */);
-extern Bool TabIsSet(Tabs /* tabs */, int /* col */);
+extern Bool TabIsSet (Tabs /* tabs */, int /* col */);
 
 /* util.c */
-extern Boolean isDefaultBackground(const char * /* name */);
-extern Boolean isDefaultForeground(const char * /* name */);
-extern CgsEnum whichXtermCgs(XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
+extern Boolean isDefaultBackground (const char * /* name */);
+extern Boolean isDefaultForeground (const char * /* name */);
+extern CgsEnum whichXtermCgs (XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);  
-extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
-extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern Pixel getXtermBackground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern Pixel getXtermForeground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern char * xtermSetLocale (int /* category */, String /* after */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
 extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
-extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
+extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
@@ -1549,6 +1552,7 @@ extern void xtermClear2 (XtermWidget /* xw */, int /* x */, int /* y */, unsigne
 extern void xtermColIndex (XtermWidget /* xw */, Bool /* toLeft */);
 extern void xtermColScroll (XtermWidget /* xw */, int /* amount */, Bool /* toLeft */, int /* at_col */);
 extern void xtermRepaint (XtermWidget /* xw */);
+extern void xtermResetLocale (int /* category */, char * /* before */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermScrollLR (XtermWidget /* xw */, int /* amount */, Bool /* toLeft */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);

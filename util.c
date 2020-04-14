@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.848 2020/03/10 09:15:36 tom Exp $ */
+/* $XTermId: util.c,v 1.849 2020/04/14 22:17:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5435,3 +5435,22 @@ discardRenderDraw(TScreen *screen)
 }
 #endif
 #endif /* OPT_RENDERFONT */
+
+char *
+xtermSetLocale(int category, String after)
+{
+    char *before = x_strdup(setlocale(category, 0));
+
+    (void) setlocale(category, after);
+    TRACE(("before setlocale :%s\n", NonNull(before)));
+    TRACE(("updated locale   :%s\n", NonNull(setlocale(category, 0))));
+    return before;
+}
+
+void
+xtermResetLocale(int category, char *before)
+{
+    (void) setlocale(category, before);
+    free(before);
+    TRACE(("restored locale  :%s\n", NonNull(setlocale(category, 0))));
+}

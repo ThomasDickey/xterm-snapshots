@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.861 2020/01/18 18:38:40 tom Exp $ */
+/* $XTermId: main.c,v 1.862 2020/04/14 20:46:37 tom Exp $ */
 
 /*
  * Copyright 2002-2019,2020 by Thomas E. Dickey
@@ -94,7 +94,6 @@
 #include <graphics.h>
 
 #include <X11/cursorfont.h>
-#include <X11/Xlocale.h>
 
 #if OPT_TOOLBAR
 
