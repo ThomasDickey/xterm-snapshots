@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.926 2020/02/01 13:19:03 Jimmy.Aguilar.Mena Exp $ */
+/* $XTermId: misc.c,v 1.927 2020/04/14 20:46:52 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -68,7 +68,6 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
-#include <X11/Xlocale.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>

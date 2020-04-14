@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.360 2020/01/10 23:41:23 tom Exp $ */
+/* $XTermId: menu.c,v 1.361 2020/04/14 22:13:11 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -58,8 +58,6 @@
 #include <menu.h>
 #include <fontutils.h>
 #include <xstrings.h>
-
-#include <locale.h>
 
 #include <X11/Xmu/CharSet.h>
 
@@ -508,26 +506,6 @@ static MenuList vt_shell[NUM_POPUP_MENUS];
 static MenuList tek_shell[NUM_POPUP_MENUS];
 #endif
 
-static String
-setMenuLocale(Bool before, String substitute)
-{
-    String result = setlocale(LC_CTYPE, 0);
-
-    if (before) {
-	result = x_strdup(result);
-    }
-    (void) setlocale(LC_CTYPE, substitute);
-    TRACE(("setMenuLocale %s:%s\n",
-	   (before
-	    ? "before"
-	    : "after"),
-	   NonNull(result)));
-    if (!before) {
-	free((void *) substitute);
-    }
-    return result;
-}
-
 /*
  * Returns a pointer to the MenuList entry that matches the popup menu.
  */
@@ -687,7 +665,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     struct _MenuEntry *entries = data->entry_list;
     Cardinal nentries = data->entry_len;
 #if !OPT_TOOLBAR
-    String saveLocale;
+    char *saveLocale;
 #endif
 
     if (screen->menu_item_bitmap == None) {
@@ -708,7 +686,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 				  (char *) check_bits, check_width, check_height);
     }
 #if !OPT_TOOLBAR
-    saveLocale = setMenuLocale(True, resource.menuLocale);
+    saveLocale = xtermSetLocale(LC_CTYPE, resource.menuLocale);
     list->w = XtCreatePopupShell(data->internal_name,
 				 simpleMenuWidgetClass,
 				 toplevel,
@@ -745,7 +723,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 #endif
     }
 #if !OPT_TOOLBAR
-    (void) setMenuLocale(False, saveLocale);
+    xtermResetLocale(LC_CTYPE, saveLocale);
 #endif
 
     /* do not realize at this point */
@@ -3042,7 +3020,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
     char *external_name = 0;
     Dimension button_height;
     Dimension button_border;
-    String saveLocale = setMenuLocale(True, resource.menuLocale);
+    char *saveLocale = xtermSetLocale(LC_CTYPE, resource.menuLocale);
 
     shell[n].w = XtVaCreatePopupShell(menu_names[n].internal_name,
 				      simpleMenuWidgetClass,
@@ -3075,7 +3053,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 		  XtNborderWidth, &button_border,
 		  (XtPointer) 0);
 
-    (void) setMenuLocale(False, saveLocale);
+    xtermResetLocale(LC_CTYPE, saveLocale);
     return (Dimension) (button_height + (button_border * 2));
 }
 #endif /* OPT_TOOLBAR */

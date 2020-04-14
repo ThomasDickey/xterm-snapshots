@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2164 2020/04/14 00:34:44 tom Exp $
+  $XTermId: xterm.log.html,v 1.2165 2020/04/14 22:50:07 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -992,6 +992,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>temporarily set numeric locale category to "C" when
+    formatting SVG or XHTML screendumps, to make the radix
+    separator used in RGB values consistent (adapted from patch by
+    George Kouryachy).</li>
+
     <li>add resource <code>forceXftHeight</code> to control whether
     workaround from Debian #880407 is used.</li>
 
