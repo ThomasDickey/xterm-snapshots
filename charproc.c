@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1742 2020/04/14 20:46:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1743 2020/04/15 00:51:45 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -201,11 +201,10 @@ static PARAMS parms;
 
 #define nparam parms.count
 
-#define InitParams()  parms.count = parms.is_sub[0] = parms.has_subparams = 0
+#define InitParams()  init_params()
 #define GetParam(n)   parms.params[(n)]
 #define SetParam(n,v) parms.params[(n)] = v
 #define ParamPair(n)  nparam - (n), parms.params + (n)
-#define ParamsDone()  InitParams()
 
 static jmp_buf vtjmpbuf;
 
@@ -1612,6 +1611,18 @@ check_bitmasks(void)
 }
 #endif
 
+static int
+init_params(void)
+{
+    while (parms.count-- > 0) {
+	parms.is_sub[parms.count] = 0;
+	parms.params[parms.count] = 0;
+    }
+    parms.count = 0;
+    parms.has_subparams = 0;
+    return 0;
+}
+
 #if OPT_TRACE > 0
 static void
 dump_params(void)
@@ -2169,7 +2180,7 @@ repaintWhenPaletteChanged(XtermWidget xw, struct ParseState *sp)
 #define ParseSOS(screen) 0
 #endif
 
-#define ResetState(sp) ParamsDone(), (sp)->parsestate = (sp)->groundtable
+#define ResetState(sp) InitParams(), (sp)->parsestate = (sp)->groundtable
 
 static void
 illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
@@ -2583,7 +2594,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case CASE_DEC_STATE:
 		/* use this branch when we do not yet have the final character */
 		TRACE(("...unexpected subparam usage\n"));
-		ParamsDone();
+		InitParams();
 		sp->nextstate = CASE_CSI_IGNORE;
 		break;
 
@@ -2657,7 +2668,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_VT52_CUP:
 	    TRACE(("CASE_VT52_CUP - VT52 cursor addressing\n"));
 	    sp->vt52_cup = True;
-	    InitParams();
 	    ResetState(sp);
 	    break;
 
