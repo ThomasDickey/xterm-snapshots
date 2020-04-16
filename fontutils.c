@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.681 2020/04/14 00:12:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.682 2020/04/15 21:51:28 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -1004,6 +1004,23 @@ cannotFont(XtermWidget xw, const char *who, const char *tag, const char *name)
 		 is_derived_font_name(name) ? "derived " : "",
 		 name);
 }
+
+#if OPT_RENDERFONT
+static void
+noUsableXft(XtermWidget xw, const char *name)
+{
+    switch (xw->misc.fontWarnings) {
+    case fwNever:
+	return;
+    case fwResource:
+	/* these combinations of wide/bold/italic are all "derived" */
+	return;
+    case fwAlways:
+	break;
+    }
+    xtermWarning("did not find a usable %s TrueType font\n", name);
+}
+#endif
 
 /*
  * Open the given font and verify that it is non-empty.  Return a null on
@@ -3295,7 +3312,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 		CACHE_XFT(screen->renderFontBold, bold);
 		if (norm.font != 0 && !bold.font) {
-		    xtermWarning("did not find a usable bold TrueType font\n");
+		    noUsableXft(xw, "bold");
 		    XftPatternDestroy(bold.pattern);
 		    bold.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(bold.pattern,
@@ -3308,7 +3325,7 @@ xtermComputeFontInfo(XtermWidget xw,
 #if HAVE_ITALICS
 		CACHE_XFT(screen->renderFontItal, ital);
 		if (norm.font != 0 && !ital.font) {
-		    xtermWarning("did not find a usable italic TrueType font\n");
+		    noUsableXft(xw, "italic");
 		    XftPatternDestroy(ital.pattern);
 		    ital.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(ital.pattern,
@@ -3320,7 +3337,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		}
 		CACHE_XFT(screen->renderFontBtal, btal);
 		if (norm.font != 0 && !btal.font) {
-		    xtermWarning("did not find a usable bold italic TrueType font\n");
+		    noUsableXft(xw, "bold italic");
 		    XftPatternDestroy(btal.pattern);
 		    btal.pattern = XftPatternDuplicate(pat);
 		    XftPatternBuild(btal.pattern,
@@ -3389,7 +3406,7 @@ xtermComputeFontInfo(XtermWidget xw,
 			}
 			CACHE_XFT(screen->renderWideBtal, wbtal);
 			if (!wbtal.font) {
-			    xtermWarning("did not find a usable wide bold italic TrueType font\n");
+			    noUsableXft(xw, "wide bold");
 			    XftPatternDestroy(wbtal.pattern);
 			    wbtal.pattern = XftPatternDuplicate(pat);
 			    XftPatternBuild(wbtal.pattern,
@@ -3406,7 +3423,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 		    CACHE_XFT(screen->renderWideBold, wbold);
 		    if (wnorm.font != 0 && !wbold.font) {
-			xtermWarning("did not find a usable wide-bold TrueType font\n");
+			noUsableXft(xw, "wide-bold");
 			XftPatternDestroy(wbold.pattern);
 			wbold.pattern = XftPatternDuplicate(pat);
 			XftPatternBuild(bold.pattern,
@@ -3419,7 +3436,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 		    CACHE_XFT(screen->renderWideItal, wital);
 		    if (wnorm.font != 0 && !wital.font) {
-			xtermWarning("did not find a usable wide-italic TrueType font\n");
+			noUsableXft(xw, "wide-italic");
 			XftPatternDestroy(wital.pattern);
 			wital.pattern = XftPatternDuplicate(pat);
 			XftPatternBuild(wital.pattern,
