@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.246 2019/06/10 09:48:06 tom Exp $
+## $XTermId: Makefile.in,v 1.248 2020/04/15 23:01:21 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2018,2019 by Thomas E. Dickey
+# Copyright 1997-2019,2020 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -129,7 +129,7 @@ AUTO_SOURCE	= \
            HDRS = VTparse.h data.h error.h fontutils.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
-  TEST_PROGRAMS = test_wcwidth$x
+  TEST_PROGRAMS = test_charclass$x test_wcwidth$x
 
 all :	$(PROGRAMS)
 ################################################################################
@@ -230,6 +230,10 @@ builtin_icons.h :
 	@sed -e 's/static char \* /static const char * /' $(srcdir)/icons/mini.xterm_48x48.xpm >>$@
 	@echo "#endif" >>$@
 	@echo "made $@"
+
+################################################################################
+test_charclass$x : charclass.c
+	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER charclass.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 test_wcwidth$x : wcwidth.c
@@ -525,8 +529,16 @@ uninstall-full ::
 @desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) $(DESKTOP_FLAGS) $$n; \
 @desktop_utils@		done'
 ################################################################################
-check :
-	@ echo "There are no batch tests available (use vttest)"
+check : $(TEST_PROGRAMS)
+	@ echo "See demos in vttests/* (use vttest for system-level testing)"
+	@ $(SHELL) -c 'echo "** excuting test_charclass"; \
+		./test_charclass'
+	@ $(SHELL) -c 'echo "** excuting test_wcwidth"; \
+		for range in 32-126 160-0xff00 0x10000-0x11000; \
+		do echo ".. range $$range"; \
+		./test_wcwidth -s $$range; \
+		./test_wcwidth -s $$range -w; \
+	done'
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
