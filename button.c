@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.575 2019/06/30 22:34:03 tom Exp $ */
+/* $XTermId: button.c,v 1.577 2020/04/18 00:25:51 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4915,7 +4915,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	     * for buttons 4 and 5, coded here as 3 and 4 respectively.
 	     *
 	     * The X10/X11 xterm protocol maps the release for buttons 1..3 to
-	     * a -1, which will * be later mapped into a "0" (some button was
+	     * a -1, which will be later mapped into a "0" (some button was
 	     * released),
 	     *
 	     * The SGR (extended) xterm mouse protocol keeps the button number
@@ -4925,15 +4925,21 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	     * revised -TD
 	     */
 	    screen->mouse_button &= ~ButtonBit(button);
-	    if (button < 3 || button >= 8) {
-		switch (screen->extend_coords) {
-		case SET_SGR_EXT_MODE_MOUSE:
-		    final = 'm';
-		    break;
-		default:
+	    switch (screen->extend_coords) {
+	    case SET_SGR_EXT_MODE_MOUSE:
+		final = 'm';
+		break;
+	    default:
+		/*
+		 * In the default translations, wheel mouse button-press events
+		 * are ignored (buttons 4,5 and possibly 6,7).  Use the X10/X11
+		 * mouse protocol to handle the corresponding button-release
+		 * events.
+		 */
+		if (button < 3 || button >= 8) {
 		    button = -1;
-		    break;
 		}
+		break;
 	    }
 	    count = EMIT_BUTTON(button);
 	    break;
@@ -4974,6 +4980,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	}
 
 	/* Transmit key sequence to process running under xterm */
+	TRACE(("EditorButton -> %s\n", visibleChars(line, count)));
 	v_write(pty, line, count);
     }
     return;

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.217 2020/01/29 19:04:07 tom Exp $ */
+/* $XTermId: trace.c,v 1.218 2020/04/17 23:11:44 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -907,6 +907,13 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 		}
 	    }
 	}
+	break;
+    case NoExpose:
+	TRACE((" send_event:%d display %p major:%d minor:%d\n",
+	       ev->xnoexpose.send_event,
+	       ev->xnoexpose.display,
+	       ev->xnoexpose.major_code,
+	       ev->xnoexpose.minor_code));
 	break;
     default:
 	TRACE((":FIXME"));

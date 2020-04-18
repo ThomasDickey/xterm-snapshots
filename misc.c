@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.927 2020/04/14 20:46:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.928 2020/04/18 00:08:43 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -485,6 +485,41 @@ mergeConfigureEvents(XEvent *target)
 }
 
 /*
+ * Work around a bug in the X mouse code, which delivers duplicate events.
+ */
+static XtInputMask
+mergeButtonEvents(XEvent *target)
+{
+    XEvent next_event;
+    XButtonEvent *p;
+
+    XtAppNextEvent(app_con, target);
+    p = (XButtonEvent *) target;
+
+    if (XtAppPending(app_con)
+	&& XtAppPeekEvent(app_con, &next_event)
+	&& !memcmp(target, &next_event, sizeof(XButtonEvent))) {
+	Boolean merge_this = False;
+	XButtonEvent *q = (XButtonEvent *) (&next_event);
+
+	XtAppNextEvent(app_con, &next_event);
+	TRACE_EVENT("pending", &next_event, (String *) 0, 0);
+
+	if (p->window == q->window) {
+	    TRACE(("pending ButtonEvent...merged\n"));
+	    merge_this = True;
+	}
+	if (!merge_this) {
+	    TRACE(("pending ButtonEvent...skipped\n"));
+	    XtDispatchEvent(target);
+	}
+	*target = next_event;
+    }
+    XtDispatchEvent(target);
+    return XtAppPending(app_con);
+}
+
+/*
  * Filter redundant Expose- and ConfigureNotify-events.  This is limited to
  * adjacent events because there could be other event-loop processing.  Absent
  * that limitation, it might be possible to scan ahead to find when the screen
@@ -507,6 +542,9 @@ xtermAppPending(void)
 	    result = mergeExposeEvents(&this_event);
 	} else if (this_event.type == ConfigureNotify) {
 	    result = mergeConfigureEvents(&this_event);
+	} else if (this_event.type == ButtonPress ||
+		   this_event.type == ButtonRelease) {
+	    result = mergeButtonEvents(&this_event);
 	} else {
 	    break;
 	}
