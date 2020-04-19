@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1743 2020/04/15 00:51:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1744 2020/04/19 16:42:25 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3060,19 +3060,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
 #if OPT_REGIS_GRAPHICS
-		    if (screen->terminal_id == 240 ||
-			screen->terminal_id == 241 ||
-			screen->terminal_id == 330 ||
-			screen->terminal_id == 340) {
+		    if (optRegisGraphics(screen)) {
 			reply.a_param[count++] = 3;	/* ReGIS graphics */
 		    }
 #endif
 #if OPT_SIXEL_GRAPHICS
-		    if (screen->terminal_id == 240 ||
-			screen->terminal_id == 241 ||
-			screen->terminal_id == 330 ||
-			screen->terminal_id == 340 ||
-			screen->terminal_id == 382) {
+		    if (optSixelGraphics(screen)) {
 			reply.a_param[count++] = 4;	/* sixel graphics */
 		    }
 #endif
@@ -3119,6 +3112,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 1;	/* VT220 */
 			break;
 		    case 240:
+		    case 241:
 			/* http://www.decuslib.com/DECUS/vax87a/gendyn/vt200_kind.lis */
 			reply.a_param[count++] = 2;	/* VT240 */
 			break;
@@ -3131,6 +3125,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    case 340:
 			reply.a_param[count++] = 19;	/* VT340 */
+			break;
+		    case 382:
+			reply.a_param[count++] = 32;	/* VT382 */
 			break;
 		    case 420:
 			reply.a_param[count++] = 41;	/* VT420 */
@@ -6269,11 +6266,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
-	    if (screen->terminal_id == 240 ||	/* FIXME: VT24x did not scroll sixel graphics */
-		screen->terminal_id == 241 ||
-		screen->terminal_id == 330 ||
-		screen->terminal_id == 340 ||
-		screen->terminal_id == 382) {
+	    if (optSixelGraphics(screen)) {	/* FIXME: VT24x did not scroll sixel graphics */
 		(*func) (&xw->keyboard.flags, MODE_DECSDM);
 		TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
 		       BtoS(xw->keyboard.flags & MODE_DECSDM),
@@ -6462,11 +6455,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif
 #if OPT_SIXEL_GRAPHICS
 	case srm_SIXEL_SCROLLS_RIGHT:	/* sixel scrolling moves cursor to right */
-	    if (screen->terminal_id == 240 ||	/* FIXME: VT24x did not scroll sixel graphics */
-		screen->terminal_id == 241 ||
-		screen->terminal_id == 330 ||
-		screen->terminal_id == 340 ||
-		screen->terminal_id == 382) {
+	    if (optSixelGraphics(screen)) {	/* FIXME: VT24x did not scroll sixel graphics */
 		set_bool_mode(screen->sixel_scrolls_right);
 		TRACE(("DECSET/DECRST SIXEL_SCROLLS_RIGHT to %s (resource default is %s)\n",
 		       BtoS(screen->sixel_scrolls_right),
@@ -9008,11 +8997,37 @@ VTInitialize(Widget wrequest,
 	if (!isalpha(CharOf(*s)))
 	    break;
     }
-    screen->terminal_id = atoi(s);
-    if (screen->terminal_id < MIN_DECID)
-	screen->terminal_id = MIN_DECID;
-    if (screen->terminal_id > MAX_DECID)
-	screen->terminal_id = MAX_DECID;
+    switch (screen->terminal_id = atoi(s)) {
+    case 52:
+    case 101:
+    case 102:
+    case 220:
+    case 320:
+    case 420:
+    case 510:
+    case 520:
+    case 525:
+#if OPT_GRAPHICS
+    case 125:
+	break;
+#endif
+    default:
+#if OPT_REGIS_GRAPHICS
+	if (optRegisGraphics(screen))
+	    break;
+#endif
+#if OPT_SIXEL_GRAPHICS
+	if (optSixelGraphics(screen))
+	    break;
+#endif
+	if (screen->terminal_id < MIN_DECID)
+	    screen->terminal_id = MIN_DECID;
+	else if (screen->terminal_id > MAX_DECID)
+	    screen->terminal_id = MAX_DECID;
+	else
+	    screen->terminal_id = atoi(DFT_DECID);
+	break;
+    }
     TRACE(("term_id '%s' -> terminal_id %d\n",
 	   screen->term_id,
 	   screen->terminal_id));
@@ -9673,9 +9688,7 @@ VTInitialize(Widget wrequest,
 	    native_h = 460;
 	    break;
 	case 240:
-	    native_w = 800;
-	    native_h = 460;
-	    break;
+	    /* FALLTHRU */
 	case 241:
 	    native_w = 800;
 	    native_h = 460;

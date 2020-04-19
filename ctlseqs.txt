@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #353 (2020/01/26)
+               updated for XTerm Patch #354 (2020/04/19)
 
 
 
@@ -627,6 +627,7 @@ CSI Ps c  Send Device Attributes (Primary DA).
             -> CSI ? 1 ; 2 c  ("VT100 with Advanced Video Option")
             -> CSI ? 1 ; 0 c  ("VT101 with No Options")
             -> CSI ? 6 c  ("VT102")
+            -> CSI ? 1 2 ; Psc  ("VT125")
             -> CSI ? 6 2 ; Psc  ("VT220")
             -> CSI ? 6 3 ; Psc  ("VT320")
             -> CSI ? 6 4 ; Psc  ("VT420")
@@ -674,10 +675,11 @@ CSI > Ps c
           where Pp denotes the terminal type
             Pp = 0  -> "VT100".
             Pp = 1  -> "VT220".
-            Pp = 2  -> "VT240".
+            Pp = 2  -> "VT240" or "VT241".
             Pp = 1 8  -> "VT330".
             Pp = 1 9  -> "VT340".
             Pp = 2 4  -> "VT320".
+            Pp = 3 2  -> "VT382".
             Pp = 4 1  -> "VT420".
             Pp = 6 1  -> "VT510".
             Pp = 6 4  -> "VT520".
