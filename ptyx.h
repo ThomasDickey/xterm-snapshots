@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.989 2020/04/14 00:13:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.990 2020/04/19 15:18:30 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -397,7 +397,7 @@ typedef struct {
 #define MAX_DECID 525			/* ...through VT525 */
 
 #ifndef DFT_DECID
-#define DFT_DECID "vt420"		/* default VT420 */
+#define DFT_DECID "420"			/* default VT420 */
 #endif
 
 #ifndef DFT_KBD_DIALECT
@@ -2201,6 +2201,27 @@ typedef enum {
 	, BLINK_BAR
 	, STEADY_BAR
 } XtCursorStyle;
+
+#if OPT_REGIS_GRAPHICS
+#define optRegisGraphics(screen) \
+	((screen)->terminal_id == 240 || \
+	 (screen)->terminal_id == 241 || \
+	 (screen)->terminal_id == 330 || \
+	 (screen)->terminal_id == 340)
+#else
+#define optRegisGraphics(screen) False
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+#define optSixelGraphics(screen) \
+	((screen)->terminal_id == 240 || \
+	 (screen)->terminal_id == 241 || \
+	 (screen)->terminal_id == 330 || \
+	 (screen)->terminal_id == 340 || \
+	 (screen)->terminal_id == 382)
+#else
+#define optSixelGraphics(screen) False
+#endif
 
 typedef struct {
 /* These parameters apply to both windows */

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.565 2020/01/26 22:05:26 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.566 2020/04/19 17:08:07 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #353
-.ds RF 2020/01/26
+.ds LF Patch #354
+.ds RF 2020/04/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1162,6 +1162,7 @@ The response depends on the \fBdecTerminalID\fP resource setting.
   \(->\ \*(Cs\*?\*1\*;\*2\*c (\*(``VT100 with Advanced Video Option\*('')
   \(->\ \*(Cs\*?\*1\*;\*0\*c (\*(``VT101 with No Options\*('')
   \(->\ \*(Cs\*?\*6\*c (\*(``VT102\*('')
+  \(->\ \*(Cs\*?\*1\*2\*;\*(Ps\*c (\*(``VT125\*('')
   \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (\*(``VT220\*('')
   \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (\*(``VT320\*('')
   \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*c (\*(``VT420\*('')
@@ -1209,10 +1210,11 @@ It should apply only to VT220 and up, but \fI\*(xt\fP extends this to VT100.
 where \*(Pp denotes the terminal type
   \*(Pp = \*0 \(-> \*(``VT100\*(''.
   \*(Pp = \*1 \(-> \*(``VT220\*(''.
-  \*(Pp = \*2 \(-> \*(``VT240\*(''.
+  \*(Pp = \*2 \(-> \*(``VT240\*('' or \*(``VT241\*(''.
   \*(Pp = \*1\*8 \(-> \*(``VT330\*(''.
   \*(Pp = \*1\*9 \(-> \*(``VT340\*(''.
   \*(Pp = \*2\*4 \(-> \*(``VT320\*(''.
+  \*(Pp = \*3\*2 \(-> \*(``VT382\*(''.
   \*(Pp = \*4\*1 \(-> \*(``VT420\*(''.
   \*(Pp = \*6\*1 \(-> \*(``VT510\*(''.
   \*(Pp = \*6\*4 \(-> \*(``VT520\*(''.

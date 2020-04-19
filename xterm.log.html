@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2169 2020/04/18 00:24:43 tom Exp $
+  $XTermId: xterm.log.html,v 1.2172 2020/04/19 17:12:04 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -992,6 +992,25 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve DA/DA2 response by ensuring that the
+    <code>decTerminalID</code> maps to one of the known
+    identifiers, as well as providing DA2 response for VT241 and
+    VT382.</li>
+
+    <li>terminfo improvements:
+
+      <ul>
+        <li>add (my) comments from ncurses which explain the keypad
+        layouts.</li>
+
+        <li>add <code>vt52+keypad</code> from ncurses</li>
+
+        <li>use improved <code>xm</code> example for
+        <code>xterm+x11mouse</code>, <code>xterm+sm+1006</code>
+        from ncurses 6.2 terminfo.src</li>
+      </ul>
+    </li>
+
     <li>two fixes for left/right wheel mouse event reporting
     (Debian #954730):
 

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.928 2020/04/18 00:08:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.929 2020/04/19 16:41:30 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4841,10 +4841,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    case 'p':
 #if OPT_REGIS_GRAPHICS
 		if (screen->terminal_id == 125 ||
-		    screen->terminal_id == 240 ||
-		    screen->terminal_id == 241 ||
-		    screen->terminal_id == 330 ||
-		    screen->terminal_id == 340) {
+		    optRegisGraphics(screen)) {
 		    parse_regis(xw, &params, cp);
 		}
 #else
@@ -4854,11 +4851,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    case 'q':
 #if OPT_SIXEL_GRAPHICS
 		if (screen->terminal_id == 125 ||
-		    screen->terminal_id == 240 ||
-		    screen->terminal_id == 241 ||
-		    screen->terminal_id == 330 ||
-		    screen->terminal_id == 340 ||
-		    screen->terminal_id == 382) {
+		    optSixelGraphics(screen)) {
 		    (void) parse_sixel(xw, &params, cp);
 		}
 #else
