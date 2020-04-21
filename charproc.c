@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1744 2020/04/19 16:42:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1745 2020/04/21 20:18:49 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -8833,6 +8833,7 @@ VTInitialize(Widget wrequest,
     };
 #endif /* OPT_COLOR_RES2 */
     TScreen *screen = TScreenOf(wnew);
+    char *saveLocale = xtermSetLocale(LC_NUMERIC, "C");
 
 #if OPT_TRACE
     check_bitmasks();
@@ -9912,6 +9913,7 @@ VTInitialize(Widget wrequest,
     if (resource.reportXRes)
 	reportResources(wnew);
 #endif
+    xtermResetLocale(LC_NUMERIC, saveLocale);
     return;
 }
 
