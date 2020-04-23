@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.566 2020/04/19 17:08:07 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.568 2020/04/23 19:31:58 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #354
-.ds RF 2020/04/19
+.ds RF 2020/04/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1840,6 +1840,10 @@ Push video attributes onto stack (XTPUSHSGR), \fI\*(xt\fP.
 This is an alias for \*(Cs\*#\*{,
 used to work around language limitations of C#.
 .
+.iP
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*q
+\*(Ps = \*0 \(-> Report \fI\*(xt\fP name and version.
+The response is a DSR sequence identifying the version: \*(Dc\*>\*|text \*(ST
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*q
 Load LEDs (DECLL), VT100.

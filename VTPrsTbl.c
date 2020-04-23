@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.96 2019/05/07 08:38:00 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.98 2020/04/23 19:35:40 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4133,7 +4133,7 @@ CASE_SET_MOD_FKEYS0,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
 CASE_HIDE_POINTER,
-CASE_GROUND_STATE,
+CASE_REPORT_VERSION,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	t		u		v		w	*/
@@ -4293,7 +4293,7 @@ CASE_SET_MOD_FKEYS0,
 CASE_GROUND_STATE,
 /*      eth             ntilde          ograve          oacute          */
 CASE_HIDE_POINTER,
-CASE_GROUND_STATE,
+CASE_REPORT_VERSION,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      ocircumflex     otilde          odiaeresis      division        */
