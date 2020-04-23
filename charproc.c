@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1745 2020/04/21 20:18:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1746 2020/04/23 19:26:37 Nicholas.Marriott Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4287,6 +4287,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_HTS:
 	    TRACE(("CASE_HTS - horizontal tab set\n"));
 	    TabSet(xw->tabs, screen->cur_col);
+	    ResetState(sp);
+	    break;
+
+	case CASE_REPORT_VERSION:
+	    TRACE(("CASE_REPORT_VERSION - report terminal version\n"));
+	    if (GetParam(0) <= 0) {
+		unparseputc1(xw, ANSI_DCS);
+		unparseputc(xw, '>');
+		unparseputc(xw, '|');
+		unparseputs(xw, xtermVersion());
+		unparseputc1(xw, ANSI_ST);
+		unparse_end(xw);
+	    }
 	    ResetState(sp);
 	    break;
 
