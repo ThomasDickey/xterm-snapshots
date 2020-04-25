@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.849 2020/04/14 22:17:06 tom Exp $ */
+/* $XTermId: util.c,v 1.850 2020/04/25 11:13:31 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3642,6 +3642,8 @@ fakeDoubleChars(XTermDraw * params,
 	TRACE(("%s %s: missing %d %04X\n", __FILE__, tag, missing, ch)); \
 	missing = 1
 
+#define MaxImageString 255
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -4421,11 +4423,24 @@ drawXtermText(XTermDraw * params,
 			  VDrawable(screen), gc,
 			  x, y + ascent_adjust,
 			  buffer, dst);
-	} else {
+	} else if (dst <= MaxImageString) {
 	    XDrawImageString16(screen->display,
 			       VDrawable(screen), gc,
 			       x, y + ascent_adjust,
 			       buffer, dst);
+	} else {
+	    int b_pos;
+	    int b_max = MaxImageString;
+	    for (b_pos = 0; b_pos < dst; b_pos += b_max) {
+		if (b_pos + b_max > dst)
+		    b_max = (dst - b_pos);
+		XDrawImageString16(screen->display,
+				   VDrawable(screen), gc,
+				   x + (b_pos * FontWidth(screen)),
+				   y + ascent_adjust,
+				   buffer + b_pos,
+				   b_max);
+	    }
 	}
 #if OPT_WIDE_ATTRS
 	if (need_clipping) {
@@ -4474,9 +4489,22 @@ drawXtermText(XTermDraw * params,
 	if (recur.draw_flags & NOBACKGROUND) {
 	    XDrawString(screen->display, VDrawable(screen), gc,
 			x, y, buffer, length);
-	} else {
+	} else if (length <= MaxImageString) {
 	    XDrawImageString(screen->display, VDrawable(screen), gc,
 			     x, y, buffer, length);
+	} else {
+	    int b_pos;
+	    int b_max = MaxImageString;
+	    for (b_pos = 0; b_pos < length; b_pos += b_max) {
+		if (b_pos + b_max > length)
+		    b_max = (length - b_pos);
+		XDrawImageString(screen->display,
+				 VDrawable(screen), gc,
+				 x + (b_pos * FontWidth(screen)),
+				 y,
+				 buffer + b_pos,
+				 b_max);
+	    }
 	}
 
 #if OPT_WIDE_ATTRS
