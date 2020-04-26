@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.682 2020/04/15 21:51:28 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.683 2020/04/26 19:57:00 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2423,11 +2423,14 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 	if (FcCharSetHasChar(xft->charset, c)) {
 	    int width = CharWidth(c);
 	    XGlyphInfo extents;
-	    Boolean big_x = (extents.width > win->f_width);
-	    Boolean big_y = (extents.height > win->f_height);
+	    Boolean big_x;
+	    Boolean big_y;
 	    Char buffer[80];
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
+	    big_x = (extents.width > win->f_width);
+	    big_y = (extents.height > win->f_height);
+
 	    if (c <= dump) {
 		*convertToUTF8(buffer, c) = '\0';
 		TRACE(("%s%s\tU+%04X\t%d\t%.1f x %.1f\t%s\n",
