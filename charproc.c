@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1746 2020/04/23 19:26:37 Nicholas.Marriott Exp $ */
+/* $XTermId: charproc.c,v 1.1747 2020/04/27 22:35:45 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -9013,6 +9013,7 @@ VTInitialize(Widget wrequest,
     }
     switch (screen->terminal_id = atoi(s)) {
     case 52:
+    case 100:
     case 101:
     case 102:
     case 220:
