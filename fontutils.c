@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.683 2020/04/26 19:57:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.684 2020/04/27 22:19:24 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2397,6 +2397,17 @@ xtermXftLastChar(XftFont *xft)
 #endif /* OPT_REPORT_FONTS */
 
 #if OPT_TRACE
+
+#if !OPT_WIDE_CHARS
+static Char *
+convertToUTF8(Char *buffer, int c)
+{
+    buffer[0] = (Char) c;
+    buffer[1] = 0;
+    return buffer;
+}
+#endif
+
 static void
 dumpXft(XtermWidget xw, XTermXftFonts *data)
 {

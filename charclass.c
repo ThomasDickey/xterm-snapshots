@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.39 2020/04/16 23:51:42 tom Exp $ */
+/* $XTermId: charclass.c,v 1.40 2020/04/27 21:43:08 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2020 by Thomas E. Dickey
@@ -318,9 +318,10 @@ usage(void)
 }
 
 static int
-expected_class(int ch)
+expected_class(int wch)
 {
-    int result = ch;
+    int result = wch;
+    wint_t ch = (wint_t) wch;
     if (ch == '\0' || ch == '\t') {
 	result = BLANK;
     } else if (iswcntrl(ch)) {
@@ -399,10 +400,10 @@ report_resource(int first, int last)
     }
 }
 
-static long
+static int
 decode_one(const char *source, char **target)
 {
-    long result = -1;
+    int result = -1;
     long check;
     int radix = 0;
     if ((source[0] == 'u' || source[0] == 'U') && source[1] == '+') {
@@ -411,12 +412,12 @@ decode_one(const char *source, char **target)
     }
     check = strtol(source, target, radix);
     if (*target != NULL && *target != source)
-	result = check;
+	result = (int) check;
     return result;
 }
 
 static int
-decode_range(const char *source, long *lo, long *hi)
+decode_range(const char *source, int *lo, int *hi)
 {
     int result = 0;
     char *after1;
@@ -434,13 +435,13 @@ decode_range(const char *source, long *lo, long *hi)
 static void
 do_range(const char *source)
 {
-    long lo, hi;
+    int lo, hi;
     if (decode_range(source, &lo, &hi)) {
 	if (opt_all) {
 	    while (lo <= hi) {
 		int other_rc = CharacterClass(lo);
 		if (!opt_quiet)
-		    printf("U+%04lX\t%s\n", lo, class_name(other_rc));
+		    printf("U+%04X\t%s\n", lo, class_name(other_rc));
 		++lo;
 	    }
 	} else if (opt_check) {
@@ -448,13 +449,13 @@ do_range(const char *source)
 		int expect = expected_class(lo);
 		int actual = CharacterClass(lo);
 		if (actual != expect)
-		    printf("U+%04lX\t%s ->%s\n", lo,
+		    printf("U+%04X\t%s ->%s\n", lo,
 			   class_name(expect),
 			   class_name(actual));
 		++lo;
 	    }
 	} else {
-	    printf("\"charClass\" resource for [%ld..%ld]:\n", lo, hi);
+	    printf("\"charClass\" resource for [%d..%d]:\n", lo, hi);
 	    report_resource(lo, hi + 1);
 	}
     }
