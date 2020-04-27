@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.248 2020/04/15 23:01:21 tom Exp $
+## $XTermId: Makefile.in,v 1.249 2020/04/27 19:05:16 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -232,12 +232,12 @@ builtin_icons.h :
 	@echo "made $@"
 
 ################################################################################
-test_charclass$x : charclass.c
-	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER charclass.c $(LDFLAGS) $(LIBS)
+test_charclass$x : $(srcdir)/charclass.c
+	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/charclass.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
-test_wcwidth$x : wcwidth.c
-	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER wcwidth.c $(LDFLAGS) $(LIBS)
+test_wcwidth$x : $(srcdir)/wcwidth.c
+	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/wcwidth.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
