@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.568 2020/04/23 19:31:58 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.570 2020/04/30 21:43:45 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #354
-.ds RF 2020/04/23
+.ds RF 2020/04/30
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1069,7 +1069,7 @@ If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
   \*(Pa = \*3 \(-> set to value in \*(Pv.
   \*(Pa = \*4 \(-> read the maximum allowed value.
 .sP
-  \*(Pv can be omitted except when setting (\*(Pa == \*3).
+  \*(Pv is ignored by \fI\*(xt\fP except when setting (\*(Pa == \*3).
   \*(Pv = \fIn\fP \(<- A single integer is used for color registers.
   \*(Pv = \fIwidth\fP\*s\*;\fIheight\fP \(<- Two integers for graphics geometry.
 .sP
@@ -1748,9 +1748,9 @@ The response is
   \*(Ps = \*6\*2 \(-> Report macro space (DECMSR).
 The response is
 \*(Cs\*(Pn\*s\**\*s\*{.
-  \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR).
+  \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR), VT420 and up.
 The response is
-\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST.
+\*(Dc\*(Pt\*s\*!\*~x\*sx\*sx\*sx\*s\*(ST.
 .br
     \*(Pt is the request id (from an optional parameter to the request).
     The x's are hexadecimal digits 0-9 and A-F.
