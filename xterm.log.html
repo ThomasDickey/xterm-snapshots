@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2180 2020/04/27 22:39:29 tom Exp $
+  $XTermId: xterm.log.html,v 1.2182 2020/04/30 08:06:54 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -994,6 +994,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix typos in documentation (reports by Stephen Hurd, Stefan
+    Assmann).</li>
+
     <li>add mapping for <code>decTerminalID</code> for
     &ldquo;100&rdquo; overlooked in <a href="#xterm_354">patch
     #354</a>.</li>
@@ -1071,10 +1074,10 @@
 
     <li>apply updated ascent/descent in workaround from Debian
     #880407 to fix a 1-pixel gap in built-in vertical lines
-    (report/testcase by Stefan Assman).</li>
+    (report/testcase by Stefan Assmann).</li>
 
     <li>improve round-off of scaling for built-in line-drawing
-    (prompted by discussion with Stefan Assman).</li>
+    (prompted by discussion with Stefan Assmann).</li>
 
     <li>adjust fonts in svg-icon files to accommodate reduced
     functionality of new pango (report/analysis by YOKOTA
@@ -1227,7 +1230,7 @@
     struct-notify event handler to prevent recursion in the
     Xft+buffered workaround in some cases when doing manual
     resizing rather than resizing via escape sequences (reports by
-    Stefan Assman, Mike Thornburg).</li>
+    Stefan Assmann, Mike Thornburg).</li>
 
     <li>amend the workaround for Xft+buffered blanking by moving
     the switch to bitmap-fonts to account for differences in font

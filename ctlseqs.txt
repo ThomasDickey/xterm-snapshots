@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #354 (2020/04/23)
+               updated for XTerm Patch #354 (2020/04/30)
 
 
 
@@ -555,7 +555,7 @@ CSI ? Pi ; Pa ; Pv S
             Pa = 3  -> set to value in Pv.
             Pa = 4  -> read the maximum allowed value.
 
-            Pv can be omitted except when setting (Pa == 3 ).
+            Pv is ignored by xterm except when setting (Pa == 3 ).
             Pv = n <- A single integer is used for color registers.
             Pv = width ; height <- Two integers for graphics geometry.
 
@@ -1161,8 +1161,8 @@ CSI ? Ps n
           tify, if not.
             Ps = 6 2  -> Report macro space (DECMSR).  The response is
           CSI Pn *  { .
-            Ps = 6 3  -> Report memory checksum (DECCKSR).  The response
-          is DCS Pt ! x x x x ST .
+            Ps = 6 3  -> Report memory checksum (DECCKSR), VT420 and up.
+          The response is DCS Pt ! ~ x x x x ST .
               Pt is the request id (from an optional parameter to the
           request).
               The x's are hexadecimal digits 0-9 and A-F.
