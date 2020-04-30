@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.577 2020/04/18 00:25:51 tom Exp $ */
+/* $XTermId: button.c,v 1.579 2020/04/30 23:16:03 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4830,6 +4830,13 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     unsigned count = 0;
     Boolean changed = True;
 
+    /*
+     * Avoid making multiple replies due to multiple actions per event.
+     */
+    if (screen->last_mouse == event->serial)
+	return;
+    screen->last_mouse = event->serial;
+
     /* If button event, get button # adjusted for DEC compatibility */
     button = (int) (event->button - 1);
     if (button >= 3)
@@ -4925,21 +4932,15 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	     * revised -TD
 	     */
 	    screen->mouse_button &= ~ButtonBit(button);
-	    switch (screen->extend_coords) {
-	    case SET_SGR_EXT_MODE_MOUSE:
-		final = 'm';
-		break;
-	    default:
-		/*
-		 * In the default translations, wheel mouse button-press events
-		 * are ignored (buttons 4,5 and possibly 6,7).  Use the X10/X11
-		 * mouse protocol to handle the corresponding button-release
-		 * events.
-		 */
-		if (button < 3 || button >= 8) {
+	    if (button < 3 || button >= 8) {
+		switch (screen->extend_coords) {
+		case SET_SGR_EXT_MODE_MOUSE:
+		    final = 'm';
+		    break;
+		default:
 		    button = -1;
+		    break;
 		}
-		break;
 	    }
 	    count = EMIT_BUTTON(button);
 	    break;
