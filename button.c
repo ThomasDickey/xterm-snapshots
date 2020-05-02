@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.579 2020/04/30 23:16:03 tom Exp $ */
+/* $XTermId: button.c,v 1.580 2020/05/02 16:49:20 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4830,13 +4830,6 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     unsigned count = 0;
     Boolean changed = True;
 
-    /*
-     * Avoid making multiple replies due to multiple actions per event.
-     */
-    if (screen->last_mouse == event->serial)
-	return;
-    screen->last_mouse = event->serial;
-
     /* If button event, get button # adjusted for DEC compatibility */
     button = (int) (event->button - 1);
     if (button >= 3)
@@ -4919,11 +4912,12 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	case ButtonRelease:
 	    /*
 	     * The (vertical) wheel mouse interface generates release-events
-	     * for buttons 4 and 5, coded here as 3 and 4 respectively.
+	     * for buttons 4 and 5.
 	     *
 	     * The X10/X11 xterm protocol maps the release for buttons 1..3 to
 	     * a -1, which will be later mapped into a "0" (some button was
-	     * released),
+	     * released),  At this point, buttons 1..3 are encoded 0..2 (the
+	     * code 3 is unused).
 	     *
 	     * The SGR (extended) xterm mouse protocol keeps the button number
 	     * and uses a "m" to indicate button release.
@@ -4932,7 +4926,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	     * revised -TD
 	     */
 	    screen->mouse_button &= ~ButtonBit(button);
-	    if (button < 3 || button >= 8) {
+	    if (button < 3 || button > 5) {
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
 		    final = 'm';
