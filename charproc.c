@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1747 2020/04/27 22:35:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1748 2020/05/02 16:26:20 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -12563,7 +12563,13 @@ HandleIgnore(Widget w,
 	   (void *) w, visibleEventType(event->type)));
     if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
-	(void) SendMousePosition(xw, event);
+	switch (event->type) {
+	case ButtonPress:
+	case ButtonRelease:
+	default:
+	    (void) SendMousePosition(xw, event);
+	    break;
+	}
     }
 }
 

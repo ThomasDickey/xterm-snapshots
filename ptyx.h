@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.991 2020/04/30 23:15:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.992 2020/05/02 16:11:37 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2318,7 +2318,6 @@ typedef struct {
 	int		border;		/* inner border			*/
 	int		scrollBarBorder; /* scrollBar border		*/
 	long		event_mask;
-	unsigned long	last_mouse;	/* serial of last mouse-event	*/
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
 	int		extend_coords;	/* support large terminals	*/
