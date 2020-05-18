@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1748 2020/05/02 16:26:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1749 2020/05/18 22:52:58 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3031,6 +3031,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		if (screen->terminal_id < 200) {
 		    switch (screen->terminal_id) {
+		    case 132:
+			reply.a_param[count++] = 4;	/* VT132 */
+#if OPT_REGIS_GRAPHICS
+			reply.a_param[count++] = 6;	/* no STP, AVO, GPO (ReGIS) */
+#else
+			reply.a_param[count++] = 2;	/* no STP, AVO, no GPO (ReGIS) */
+#endif
+			break;
+		    case 131:
+			reply.a_param[count++] = 7;	/* VT131 */
+			break;
 		    case 125:
 			reply.a_param[count++] = 12;	/* VT125 */
 #if OPT_REGIS_GRAPHICS
@@ -9016,16 +9027,16 @@ VTInitialize(Widget wrequest,
     case 100:
     case 101:
     case 102:
+    case 125:			/* maybe graphics */
+    case 131:
+    case 132:			/* maybe graphics */
     case 220:
     case 320:
     case 420:
     case 510:
     case 520:
     case 525:
-#if OPT_GRAPHICS
-    case 125:
 	break;
-#endif
     default:
 #if OPT_REGIS_GRAPHICS
 	if (optRegisGraphics(screen))

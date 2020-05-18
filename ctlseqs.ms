@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.570 2020/04/30 21:43:45 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.572 2020/05/18 22:50:56 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #354
-.ds RF 2020/04/30
+.ds LF Patch #357
+.ds RF 2020/05/18
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1161,7 +1161,9 @@ Send Device Attributes (Primary DA).
 The response depends on the \fBdecTerminalID\fP resource setting.
   \(->\ \*(Cs\*?\*1\*;\*2\*c (\*(``VT100 with Advanced Video Option\*('')
   \(->\ \*(Cs\*?\*1\*;\*0\*c (\*(``VT101 with No Options\*('')
+  \(->\ \*(Cs\*?\*4\*;\*6\*c (\*(``VT132 with Advanced Video and Graphics\*('')
   \(->\ \*(Cs\*?\*6\*c (\*(``VT102\*('')
+  \(->\ \*(Cs\*?\*7\*c (\*(``VT131\*('')
   \(->\ \*(Cs\*?\*1\*2\*;\*(Ps\*c (\*(``VT125\*('')
   \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (\*(``VT220\*('')
   \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (\*(``VT320\*('')
@@ -1287,7 +1289,8 @@ This is normally disabled by a compile-time option.
   \*(Ps = \*4\*7 \(-> Use \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM), VT320.
-  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.  This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
+  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
+This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
   \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
@@ -1296,15 +1299,19 @@ This may be disabled by the \fBtiteInhibit\fP resource.
 See the section \fBMouse Tracking\fP.
 This is the X11 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBButton-event tracking\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBAny-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBButton-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBAny-event tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Send \fBFocusIn/FocusOut\fP events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*7 \(-> Enable \fIAlternate Scroll Mode\fP, \fI\*(xt\fP.
 This corresponds to the \fBalternateScroll\fP resource.
-  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).  This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
-  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).  This sets the \fBscrollKey\fP resource to \*(``true\*(''.
+  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
+This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
+  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
+This sets the \fBscrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
@@ -1411,7 +1418,8 @@ VT220.
 This is normally disabled by a compile-time option.
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer, \fI\*(xt\fP.
   \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM), VT320.
-  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.  This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
+  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.
+This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
   \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
@@ -1428,8 +1436,10 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*7 \(-> Disable \fIAlternate Scroll Mode\fP, \fI\*(xt\fP.
 This corresponds to the \fBalternateScroll\fP resource.
-  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).  This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
-  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).  This sets the \fBscrollKey\fP resource to \*(``false\*(''.
+  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
+This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
+  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
+This sets the \fBscrollKey\fP resource to \*(``false\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This disables the \fBeightBitInput\fP resource.
@@ -2539,14 +2549,17 @@ for example \fIalt-Tab\fP sends
 One drawback to this format is that applications may confuse it with
 \*(Cs\*u (restore-cursor).
 .LP
-The \fI\*(xt\fP FAQ section
+The \fI\*(xt\fP FAQ sections
 .br
 .ID 3
 .\" https://invisible-island.net/xterm/xterm.faq.html#xterm_modother
 \fIHow can my program distinguish control-I from tab?\fP
+.ID 3
+.\" https://invisible-island.net/xterm/modified-keys.html
+\fIXTerm - \*(``Other\*('' Modified Keys\fP
 .DE
 .br
-goes into greater detail on this topic.
+go into greater detail on this topic.
 .LP
 The table shows the result for a given character \*(``x\*('' with modifiers
 according to the default translations with the resources set on or off.
