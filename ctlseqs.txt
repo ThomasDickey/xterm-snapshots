@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #354 (2020/04/30)
+               updated for XTerm Patch #357 (2020/05/18)
 
 
 
@@ -626,7 +626,9 @@ CSI Ps c  Send Device Attributes (Primary DA).
           response depends on the decTerminalID resource setting.
             -> CSI ? 1 ; 2 c  ("VT100 with Advanced Video Option")
             -> CSI ? 1 ; 0 c  ("VT101 with No Options")
+            -> CSI ? 4 ; 6 c  ("VT132 with Advanced Video and Graphics")
             -> CSI ? 6 c  ("VT102")
+            -> CSI ? 7 c  ("VT131")
             -> CSI ? 1 2 ; Psc  ("VT125")
             -> CSI ? 6 2 ; Psc  ("VT220")
             -> CSI ? 6 3 ; Psc  ("VT320")
@@ -1814,11 +1816,13 @@ set to 1, for example alt-Tab sends CSI 9 ; 3 u (changing the order of
 parameters).  One drawback to this format is that applications may con-
 fuse it with CSI u  (restore-cursor).
 
-The xterm FAQ section
+The xterm FAQ sections
 
    How can my program distinguish control-I from tab?
 
-goes into greater detail on this topic.
+   XTerm - "Other" Modified Keys
+
+go into greater detail on this topic.
 
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
