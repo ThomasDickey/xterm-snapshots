@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.101 2019/09/12 00:24:07 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.102 2020/06/02 23:51:56 tom Exp $ */
 
 /*
- * Copyright 1997-2018,2019 by Thomas E. Dickey
+ * Copyright 1997-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -105,11 +105,12 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
  * we'll be using it for the top (true) or bottom (false) of the line.
  */
 void
-xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
+xterm_DECDHL(XtermWidget xw, Bool top)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, (unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
 #else
+    (void) xw;
     (void) top;
 #endif
 }
@@ -118,10 +119,12 @@ xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
  * Set the line to single-width characters (the normal state).
  */
 void
-xterm_DECSWL(XtermWidget xw GCC_UNUSED)
+xterm_DECSWL(XtermWidget xw)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_SWL);
+#else
+    (void) xw;
 #endif
 }
 
@@ -129,10 +132,12 @@ xterm_DECSWL(XtermWidget xw GCC_UNUSED)
  * Set the line to double-width characters
  */
 void
-xterm_DECDWL(XtermWidget xw GCC_UNUSED)
+xterm_DECDWL(XtermWidget xw)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_DWL);
+#else
+    (void) xw;
 #endif
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1749 2020/05/18 22:52:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1750 2020/06/02 23:56:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -7123,7 +7123,7 @@ property_to_string(XtermWidget xw, XTextProperty * text)
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
     char *result = 0;
-    char **list;
+    char **list = NULL;
     int length = 0;
     int rc;
 
@@ -7882,7 +7882,7 @@ CheckBufPtrs(TScreen *screen)
  * Swap buffer line pointers between alternate and regular screens.
  */
 void
-SwitchBufPtrs(TScreen *screen, int toBuf GCC_UNUSED)
+SwitchBufPtrs(TScreen *screen, int toBuf)
 {
     if (CheckBufPtrs(screen)) {
 #if OPT_SAVE_LINES
@@ -7890,6 +7890,7 @@ SwitchBufPtrs(TScreen *screen, int toBuf GCC_UNUSED)
 #else
 	size_t len = ScrnPointers(screen, (size_t) MaxRows(screen));
 
+	(void) toBuf;
 	memcpy(screen->save_ptr, screen->visbuf, len);
 	memcpy(screen->visbuf, screen->editBuf_index[1], len);
 	memcpy(screen->editBuf_index[1], screen->save_ptr, len);
@@ -8660,7 +8661,7 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 		sprintf(result, "%d", *(int *) res_addr);
 	} else if (!strcmp(res_type, XtRFloat)) {
 	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != 0)
-		sprintf(result, "%f", *(float *) res_addr);
+		sprintf(result, "%f", (double) (*(float *) res_addr));
 	} else if (!strcmp(res_type, XtRBoolean)) {
 	    if ((result = malloc((size_t) 6)) != 0)
 		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
@@ -9005,9 +9006,9 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.scrollkey);
 
     init_Dres(screen.scale_height);
-    if (screen->scale_height < 0.9)
+    if (screen->scale_height < (float) 0.9)
 	screen->scale_height = (float) 0.9;
-    if (screen->scale_height > 1.5)
+    if (screen->scale_height > (float) 1.5)
 	screen->scale_height = (float) 1.5;
 
     init_Bres(misc.autoWrap);
@@ -11377,7 +11378,7 @@ reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
 #endif
 	}
     }
-    return result;
+    return (int) result;
 }
 #endif
 
@@ -12088,7 +12089,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 #endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
 
 void
-RestartBlinking(XtermWidget xw GCC_UNUSED)
+RestartBlinking(XtermWidget xw)
 {
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
     TScreen *screen = TScreenOf(xw);
@@ -12120,6 +12121,8 @@ RestartBlinking(XtermWidget xw GCC_UNUSED)
 	if (resume)
 	    StartBlinking(xw);
     }
+#else
+    (void) xw;
 #endif
 }
 

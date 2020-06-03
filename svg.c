@@ -1,4 +1,4 @@
-/* $XTermId: svg.c,v 1.16 2020/04/14 22:23:56 tom Exp $ */
+/* $XTermId: svg.c,v 1.17 2020/06/02 23:24:31 tom Exp $ */
 
 /*
  * Copyright 2017-2019,2020	Thomas E. Dickey
@@ -278,7 +278,7 @@ dumpSvgLine(XtermWidget xw, int row, FILE *fp)
 }
 
 static void
-dumpSvgFooter(XtermWidget xw GCC_UNUSED, FILE *fp)
+dumpSvgFooter(XtermWidget xw, FILE *fp)
 {
     fputs(" </g>\n</svg>\n", fp);
     xevents(xw);

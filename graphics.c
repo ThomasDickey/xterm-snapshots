@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.79 2019/06/29 17:29:09 tom Exp $ */
+/* $XTermId: graphics.c,v 1.80 2020/06/02 23:49:29 tom Exp $ */
 
 /*
- * Copyright 2013-2018,2019 by Ross Combs
+ * Copyright 2013-2019,2020 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -754,7 +754,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     TScreen const *screen = TScreenOf(xw);
     int bufferid = screen->whichBuf;
     int terminal_id = screen->terminal_id;
-    Graphic *graphic;
+    Graphic *graphic = NULL;
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {

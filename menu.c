@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.361 2020/04/14 22:13:11 tom Exp $ */
+/* $XTermId: menu.c,v 1.362 2020/06/02 23:44:02 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -149,14 +149,14 @@ static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
 static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
-static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
+static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 #if OPT_SCREEN_DUMPS
 static void do_dump_html       PROTO_XT_CALLBACK_ARGS;
 static void do_dump_svg        PROTO_XT_CALLBACK_ARGS;
 #endif
-static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
+static void do_hardreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_keepClipboard   PROTO_XT_CALLBACK_ARGS;
@@ -166,7 +166,7 @@ static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
-static void do_quit            PROTO_XT_CALLBACK_ARGS;
+static void do_quit            PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
 static void do_reversevideo    PROTO_XT_CALLBACK_ARGS;
 static void do_reversewrap     PROTO_XT_CALLBACK_ARGS;
@@ -175,7 +175,7 @@ static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
-static void do_softreset       PROTO_XT_CALLBACK_ARGS;
+static void do_softreset       PROTO_XT_CALLBACK_ARGS GCC_NORETURN;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
@@ -510,7 +510,7 @@ static MenuList tek_shell[NUM_POPUP_MENUS];
  * Returns a pointer to the MenuList entry that matches the popup menu.
  */
 static MenuList *
-select_menu(Widget w GCC_UNUSED, MenuIndex num)
+select_menu(Widget w, MenuIndex num)
 {
 #if OPT_TEK4014 && OPT_TOOLBAR
     while (w != 0) {
@@ -519,6 +519,8 @@ select_menu(Widget w GCC_UNUSED, MenuIndex num)
 	}
 	w = XtParent(w);
     }
+#else
+    (void) w;
 #endif
     return &vt_shell[num];
 }
@@ -2159,8 +2161,8 @@ HandleWriteError(Widget w,
 void
 HandlePrintScreen(Widget w GCC_UNUSED,
 		  XEvent *event GCC_UNUSED,
-		  String *params GCC_UNUSED,
-		  Cardinal *param_count GCC_UNUSED)
+		  String *params,
+		  Cardinal *param_count)
 {
     xtermPrintScreen(term, True, getPrinterFlags(term, params, param_count));
 }
@@ -2291,8 +2293,8 @@ do_fullscreen(Widget gw GCC_UNUSED,
 void
 HandleFullscreen(Widget w,
 		 XEvent *event GCC_UNUSED,
-		 String *params GCC_UNUSED,
-		 Cardinal *param_count GCC_UNUSED)
+		 String *params,
+		 Cardinal *param_count)
 {
     XtermWidget xw = term;
 
@@ -3310,8 +3312,8 @@ ShowToolbar(Bool enable)
 void
 HandleToolbar(Widget w,
 	      XEvent *event GCC_UNUSED,
-	      String *params GCC_UNUSED,
-	      Cardinal *param_count GCC_UNUSED)
+	      String *params,
+	      Cardinal *param_count)
 {
     XtermWidget xw = term;
 

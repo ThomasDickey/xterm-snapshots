@@ -1,4 +1,4 @@
-/* $XTermId: html.c,v 1.18 2020/04/14 22:20:55 tom Exp $ */
+/* $XTermId: html.c,v 1.19 2020/06/02 23:24:26 tom Exp $ */
 
 /*
  * Copyright 2018-2019,2020	Thomas E. Dickey
@@ -276,7 +276,7 @@ dumpHtmlLine(XtermWidget xw, int row, FILE *fp)
 }
 
 static void
-dumpHtmlFooter(XtermWidget xw GCC_UNUSED, FILE *fp)
+dumpHtmlFooter(XtermWidget xw, FILE *fp)
 {
     fputs("</pre>\n", fp);
     fputs("  </div>\n", fp);

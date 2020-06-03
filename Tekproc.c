@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.237 2019/11/13 22:10:26 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.239 2020/06/02 23:12:04 tom Exp $ */
 
 /*
- * Copyright 2001-2018,2019 by Thomas E. Dickey
+ * Copyright 2001-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -420,8 +420,7 @@ TekPtyData(void)
 	if ((Tpushb = TypeMallocN(Char, 10)) == NULL
 	    || (Tline = TypeMallocN(XSegment, MAX_VTX)) == NULL) {
 	    xtermWarning("Not enough core for Tek mode\n");
-	    if (Tpushb)
-		free(Tpushb);
+	    free(Tpushb);
 	    Tfailed = True;
 	}
     }
@@ -1414,8 +1413,8 @@ static _Xconst char *dashes[TEKNUMLINES] =
 static void
 TekInitialize(Widget wrequest,
 	      Widget new_arg,
-	      ArgList args GCC_UNUSED,
-	      Cardinal *num_args GCC_UNUSED)
+	      ArgList args,
+	      Cardinal *num_args)
 {
     XtermWidget xw = term;
     TScreen *vtscr = TScreenOf(xw);
