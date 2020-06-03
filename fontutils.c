@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.684 2020/04/27 22:19:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.685 2020/06/02 23:55:58 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -54,7 +54,7 @@
 #define NoFontWarning(data) (data)->warn = fwAlways
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
-#define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
+#define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((double)((screen)->scale_height * (float) (src)))
 
 /* from X11/Xlibint.h - not all vendors install this file */
 #define CI_NONEXISTCHAR(cs) (((cs)->width == 0) && \
@@ -578,7 +578,7 @@ open_italic_font(XtermWidget xw, int n, FontNameProperties *fp, XTermFonts * dat
 #if OPT_REPORT_FONTS
 		if (resource.reportFonts) {
 		    printf("opened italic version of %s:\n\t%s\n",
-			   whichFontEnum(n),
+			   whichFontEnum((VTFontEnum) n),
 			   name);
 		}
 #endif
@@ -2250,8 +2250,8 @@ xtermLoadDefaultFonts(XtermWidget xw)
 void
 HandleLoadVTFonts(Widget w,
 		  XEvent *event GCC_UNUSED,
-		  String *params GCC_UNUSED,
-		  Cardinal *param_count GCC_UNUSED)
+		  String *params,
+		  Cardinal *param_count)
 {
     XtermWidget xw;
 
@@ -3145,7 +3145,7 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
  * Get the faceName/faceNameDoublesize resource setting.
  */
 String
-getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
+getFaceName(XtermWidget xw, Bool wideName)
 {
 #if OPT_RENDERWIDE
     String result = (wideName
@@ -3153,6 +3153,7 @@ getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 		     : CurrentXftFont(xw));
 #else
     String result = CurrentXftFont(xw);
+    (void) wideName;
 #endif
     return x_nonempty(result);
 }
@@ -3233,7 +3234,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	    TRACE(("Using FontConfig %d\n", FC_VERSION));
 
 	    fillInFaceSize(xw, fontnum);
-	    face_size = xw->misc.face_size[fontnum];
+	    face_size = (double) xw->misc.face_size[fontnum];
 
 	    /*
 	     * By observation (there is no documentation), XftPatternBuild is
@@ -4435,7 +4436,7 @@ defaultFaceSize(void)
     float value;
 
     if (sscanf(DEFFACESIZE, "%f", &value) == 1)
-	result = value;
+	result = (double) value;
     else
 	result = 14.0;
     return result;
@@ -4445,7 +4446,7 @@ static void
 fillInFaceSize(XtermWidget xw, int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
-    double face_size = xw->misc.face_size[fontnum];
+    double face_size = (double) xw->misc.face_size[fontnum];
 
     if (face_size <= 0.0) {
 #if OPT_SHIFT_FONTS
@@ -4471,13 +4472,13 @@ fillInFaceSize(XtermWidget xw, int fontnum)
 		den = 1;
 	    ratio = dimSquareRoot((double) num / (double) den);
 
-	    face_size = (ratio * xw->misc.face_size[0]);
+	    face_size = (ratio * (double) xw->misc.face_size[0]);
 	    TRACE(("scaled[%d] using %3ld/%ld = %.2f -> %f\n",
 		   fontnum, num, den, ratio, face_size));
 	} else
 #endif
 	{
-#define LikeBitmap(s) (((s) / 78.0) * xw->misc.face_size[fontMenu_default])
+#define LikeBitmap(s) (((s) / 78.0) * (double) xw->misc.face_size[fontMenu_default])
 	    switch (fontnum) {
 	    case fontMenu_font1:
 		face_size = LikeBitmap(2.0);
@@ -4525,7 +4526,7 @@ useFaceSizes(XtermWidget xw)
 	int n;
 
 	for (n = 0; n < NMENU_RENDERFONTS; ++n) {
-	    if (xw->misc.face_size[n] <= 0.0) {
+	    if (xw->misc.face_size[n] <= (float) 0.0) {
 		nonzero = False;
 		break;
 	    }
@@ -4640,7 +4641,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 
 /* ARGSUSED */
 void
-HandleLargerFont(Widget w GCC_UNUSED,
+HandleLargerFont(Widget w,
 		 XEvent *event GCC_UNUSED,
 		 String *params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
@@ -4665,7 +4666,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 
 /* ARGSUSED */
 void
-HandleSmallerFont(Widget w GCC_UNUSED,
+HandleSmallerFont(Widget w,
 		  XEvent *event GCC_UNUSED,
 		  String *params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
@@ -4735,7 +4736,7 @@ xtermGetFont(const char *param)
 
 /* ARGSUSED */
 void
-HandleSetFont(Widget w GCC_UNUSED,
+HandleSetFont(Widget w,
 	      XEvent *event GCC_UNUSED,
 	      String *params,
 	      Cardinal *param_count)
@@ -5331,7 +5332,7 @@ getDoubleXftFont(XTermDraw * params, unsigned chrset, unsigned attr_flags)
 
     if (chrset != CSET_SWL
 	&& (top_pattern = XftNameParse(face_name)) != 0) {
-	double face_size = xw->misc.face_size[fontnum];
+	double face_size = (double) xw->misc.face_size[fontnum];
 	XftPattern *sub_pattern = XftPatternDuplicate(top_pattern);
 
 	switch (chrset) {

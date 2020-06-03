@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.850 2020/04/25 11:13:31 tom Exp $ */
+/* $XTermId: util.c,v 1.851 2020/06/02 23:45:03 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2262,7 +2262,7 @@ HandleExposure(XtermWidget xw, XEvent *event)
 }
 
 static void
-set_background(XtermWidget xw, int color GCC_UNUSED)
+set_background(XtermWidget xw, int color)
 {
     TScreen *screen = TScreenOf(xw);
     Pixel c = getXtermBG(xw, xw->flags, color);
@@ -3023,7 +3023,7 @@ getNormXftFont(XTermDraw * params,
  */
 static int
 xtermXftDrawString(XTermDraw * params,
-		   unsigned attr_flags GCC_UNUSED,
+		   unsigned attr_flags,
 		   XftColor *color,
 		   XftFont *font,
 		   int x,
@@ -3035,6 +3035,7 @@ xtermXftDrawString(XTermDraw * params,
     TScreen *screen = TScreenOf(params->xw);
     int ncells = 0;
 
+    (void) attr_flags;
     if (len != 0) {
 #if OPT_RENDERWIDE
 	XftCharSpec *sbuf;
@@ -3450,7 +3451,7 @@ drawClippedXftString(XTermDraw * params,
 #endif
 	if (screen->use_clipping || halfHigh) {
 	    XRectangle clip;
-	    double adds = (screen->scale_height - 1.0) * fontHigh;
+	    double adds = ((double) screen->scale_height - 1.0) * fontHigh;
 	    int height = dimRound(adds + fontHigh);
 	    int descnt = dimRound(adds / 2.0) + FontDescent(screen);
 	    int clip_x = (x);
@@ -4238,7 +4239,7 @@ drawXtermText(XTermDraw * params,
 	   DrawFlags(),
 	   recur.this_chrset, len,
 	   visibleIChars(text, len)));
-    if (screen->scale_height != 1.0) {
+    if (screen->scale_height != (float) 1.0) {
 	xtermFillCells(&recur, gc, x, y, (Cardinal) len);
     }
     y += FontAscent(screen);

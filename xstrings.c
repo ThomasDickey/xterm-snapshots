@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.73 2019/10/06 23:09:43 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.75 2020/06/02 23:57:57 tom Exp $ */
 
 /*
- * Copyright 2000-2018,2019 by Thomas E. Dickey
+ * Copyright 2000-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -388,8 +388,7 @@ void
 x_freeargs(char **argv)
 {
     if (argv != 0) {
-	if (*argv != 0)
-	    free(*argv);
+	free(*argv);
 	free(argv);
     }
 }
@@ -415,7 +414,8 @@ x_strncasecmp(const char *s1, const char *s2, unsigned n)
 	    return 1;
 	if (c1 == 0)
 	    break;
-	s1++, s2++;
+	s1++;
+	s2++;
     }
 
     return 0;

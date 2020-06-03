@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.867 2020/04/14 22:17:18 tom Exp $ */
+/* $XTermId: xterm.h,v 1.868 2020/06/02 23:45:35 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1185,7 +1185,7 @@ extern void end_vt_mode (void);
 extern void free_string(String value);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
-extern void ice_error (IceConn /* iceConn */);
+extern void ice_error (IceConn /* iceConn */) GCC_NORETURN;
 extern void init_colored_cursor (Display * /* dpy */);
 extern void reset_decudk (XtermWidget /* xw */);
 extern void set_tek_visibility (Bool /* on */);

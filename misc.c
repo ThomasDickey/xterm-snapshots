@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.929 2020/04/19 16:41:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.930 2020/06/02 23:20:10 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1755,7 +1755,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 {
     TScreen *screen = TScreenOf(xw);
     XWindowAttributes wm_attrs, vshell_attrs;
-    unsigned root_width, root_height;
+    unsigned root_width = 0, root_height = 0;
     Boolean success = False;
 
     TRACE(("RequestMaximize %d:%s\n",
@@ -3503,7 +3503,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 }
 
 static Bool
-UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
+UpdateOldColors(XtermWidget xw, ScrnColors * pNew)
 {
     int i;
 

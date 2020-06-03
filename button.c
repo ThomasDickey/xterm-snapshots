@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.580 2020/05/02 16:49:20 tom Exp $ */
+/* $XTermId: button.c,v 1.582 2020/06/02 23:58:38 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -514,7 +514,7 @@ GetLocatorPosition(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     Window root, child;
     int rx, ry, x, y;
-    unsigned int mask;
+    unsigned int mask = 0;
     int row = 0, col = 0;
     Bool oor = False;
     Bool ret = False;
@@ -869,10 +869,13 @@ rowOnCurrentLine(TScreen *screen,
     if (line != screen->cur_row) {
 	int l1, l2;
 
-	if (line < screen->cur_row)
-	    l1 = line, l2 = screen->cur_row;
-	else
-	    l2 = line, l1 = screen->cur_row;
+	if (line < screen->cur_row) {
+	    l1 = line;
+	    l2 = screen->cur_row;
+	} else {
+	    l2 = line;
+	    l1 = screen->cur_row;
+	}
 	l1--;
 	while (++l1 < l2) {
 	    LineData *ld = GET_LINEDATA(screen, l1);
@@ -999,8 +1002,8 @@ DiredButton(Widget w,
 void
 ReadLineButton(Widget w,
 	       XEvent *event,	/* must be XButtonEvent */
-	       String *params GCC_UNUSED,	/* selections */
-	       Cardinal *num_params GCC_UNUSED)
+	       String *params,	/* selections */
+	       Cardinal *num_params)
 {
     XtermWidget xw;
 
@@ -2928,7 +2931,7 @@ ScrollSelection(TScreen *screen, int amount, Bool always)
 
 /*ARGSUSED*/
 void
-ResizeSelection(TScreen *screen GCC_UNUSED, int rows, int cols)
+ResizeSelection(TScreen *screen, int rows, int cols)
 {
     rows--;			/* decr to get 0-max */
     cols--;
@@ -4012,11 +4015,9 @@ ClearSelectionBuffer(TScreen *screen, String selection)
 {
     int which = TargetToSelection(screen, selection);
     SelectedCells *scp = &(screen->selected_cells[okSelectionCode(which)]);
-    if (scp->data_buffer) {
-	free(scp->data_buffer);
-	scp->data_buffer = 0;
-	scp->data_limit = 0;
-    }
+    free(scp->data_buffer);
+    scp->data_buffer = 0;
+    scp->data_limit = 0;
     scp->data_length = 0;
     screen->base64_count = 0;
 }

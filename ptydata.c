@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.121 2019/09/18 23:28:41 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.123 2020/06/03 01:07:40 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -348,8 +348,9 @@ fakePtyData(PtyData *result, Char *next, Char *last)
  * e.g., a continuation-read.
  */
 void
-trimPtyData(XtermWidget xw GCC_UNUSED, PtyData *data)
+trimPtyData(XtermWidget xw, PtyData *data)
 {
+    (void) xw;
     FlushLog(xw);
 
     if (data->next != data->buffer) {

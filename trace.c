@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.218 2020/04/17 23:11:44 tom Exp $ */
+/* $XTermId: trace.c,v 1.219 2020/06/02 00:55:23 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -911,7 +911,7 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
     case NoExpose:
 	TRACE((" send_event:%d display %p major:%d minor:%d\n",
 	       ev->xnoexpose.send_event,
-	       ev->xnoexpose.display,
+	       (void *) ev->xnoexpose.display,
 	       ev->xnoexpose.major_code,
 	       ev->xnoexpose.minor_code));
 	break;

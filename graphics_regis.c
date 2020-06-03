@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.114 2020/01/18 18:38:40 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.115 2020/06/02 23:29:12 tom Exp $ */
 
 /*
  * Copyright 2014-2019,2020 by Ross Combs
@@ -944,7 +944,7 @@ plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
 	y0 = sy + y1;
 	cur = -cur;		/* swap P0 P2 */
     }
-    if (cur != 0) {		/* no straight line */
+    if (cur != 0.0) {		/* no straight line */
 	long xy;
 	double dx, dy, err;
 
@@ -1061,7 +1061,7 @@ plotCubicBezierSeg(int x0, int y0,
     assert((y1 - y0) * (y2 - y3) < EP &&
 	   ((y3 - y0) * (y1 - y2) < EP || yb * yb < ya * yc + EP));
 
-    if (xa == 0 && ya == 0) {	/* quadratic Bezier */
+    if (xa == 0.0 && ya == 0.0) {	/* quadratic Bezier */
 	sx = ifloor((3 * x1 - x0 + 1) / 2);
 	sy = ifloor((3 * y1 - y0 + 1) / 2);	/* new midpoint */
 	plotQuadBezierSeg(x0, y0, sx, sy, x3, y3);
@@ -7457,6 +7457,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	     * end of the fill command.
 	     */
 	    iterations++;
+	    memset(&curr_tv, 0, sizeof(curr_tv));
 	    if (context->force_refresh) {
 		X_GETTIMEOFDAY(&curr_tv);
 		need_refresh = 1;
