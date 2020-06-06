@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.188 2020/04/18 16:42:06 tom Exp $
+# $XTermId: terminfo,v 1.189 2020/06/06 21:15:44 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -1840,7 +1840,7 @@ xterm-16color|xterm with 16 colors,
 		%e%ga%d
 		%;
 		m,
-	use=xterm+256color,
+	use=xterm+256color2,
 	use=xterm+osc104,
 	use=xterm-new,
 
@@ -1863,7 +1863,7 @@ xterm+osc104|reset color palette,
 # in a signed short.  Most people will not notice problems with only 32767
 # pairs.  With ncurses 6.1, numbers are stored in a signed integer (at least
 # 32-bits), and the inconsistency regarding pairs is eliminated.
-xterm+256color|xterm 256-color feature,
+xterm+256color|original xterm 256-color feature,
 	ccc,
 	colors#0x100,
 	pairs#0x10000,
@@ -1894,8 +1894,32 @@ xterm+256color|xterm 256-color feature,
 		m,
 	setb@,
 	setf@,
-xterm-256color|xterm with 256 colors,
+xterm+256color2|xterm 256-color feature,
+	setab=\E[
+		%?
+			%p1%{8}%<
+			%t4%p1%d
+		%e
+			%p1%{16}%<
+			%t10%p1%{8}%-%d
+		%e48\:5\:
+			%p1%d
+		%;
+		m,
+	setaf=\E[
+		%?
+			%p1%{8}%<
+			%t3%p1%d
+		%e
+			%p1%{16}%<
+			%t9%p1%{8}%-%d
+		%e38\:5\:
+			%p1%d
+		%;
+		m,
 	use=xterm+256color,
+xterm-256color|xterm with 256 colors,
+	use=xterm+256color2,
 	use=xterm+osc104,
 	use=xterm-new,
 xterm-88color|xterm with 88 colors,
@@ -1919,6 +1943,7 @@ xterm+direct|xterm with direct-color indexing,
 	RGB,
 	colors#0x1000000,
 	pairs#0x10000,
+	CO#8,
 	initc@,
 	op=\E[39;49m,
 	setab=\E[

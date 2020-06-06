@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.572 2020/05/18 22:50:56 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.573 2020/06/06 21:00:02 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #357
-.ds RF 2020/05/18
+.ds RF 2020/06/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1592,30 +1592,41 @@ All parameters are decimal integers.
 .bP
 RGB values range from zero (0) to 255.
 .bP
-ISO-8613-6 has been interpreted in more than one way;
-\fI\*(xt\fP allows the semicolons separating the subparameters
-in this control to be replaced by colons
+The 88- and 256-color support uses \fIsubparameters\fP described in ISO-8613-6
+for \fIindexed\fP color.
+ISO-8613-6 also mentions \fIdirect color\fP, using a similar scheme.
+\fI\*(xt\fP supports that, too.
+.bP
+\fI\*(xt\fP allows either colons (standard) or semicolons (legacy)
+to separate the subparameters
 (but after the first colon, colons must be used).
 .RE
+.sP
+The indexed- and direct-color features are summarized in the FAQ,
+which explains why semicolon is accepted as a subparameter delimiter:
+.ID 2
+.\" https://invisible-island.net/xterm/xterm.faq.html#color_by_number
+\fICan I set a color by its number?\fP
+.DE
 .sP
 These ISO-8613-6 controls (marked in ECMA-48 5th edition as
 \*(``reserved for future standardization\*('')
 are supported by \fI\*(xt\fP:
-  \*(Pm = \*3\*8\*;\*2\*;\*(Pi\*s\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set foreground
+  \*(Pm = \*3\*8\*:\*2\*:\*(Pi\*s\*:\*(Pr\*s\*:\*(Pg\*s\*:\*(Pb \(-> Set foreground
 color using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
 for the given RGB \*(Pr/\*(Pg/\*(Pb.
 The color space identifier \*(Pi is ignored.
-  \*(Pm = \*3\*8\*;\*5\*;\*(Ps \(-> Set foreground color to \*(Ps,
+  \*(Pm = \*3\*8\*:\*5\*:\*(Ps \(-> Set foreground color to \*(Ps,
 using indexed color.
-  \*(Pm = \*4\*8\*;\*2\*;\*(Pi\*s\*;\*(Pr\*s\*;\*(Pg\*s\*;\*(Pb \(-> Set background
+  \*(Pm = \*4\*8\*:\*2\*:\*(Pi\*s\*:\*(Pr\*s\*:\*(Pg\*s\*:\*(Pb \(-> Set background
 color using RGB values.
 If \fI\*(xt\fP is not compiled with direct-color support,
 it uses the closest match in its palette
 for the given RGB \*(Pr/\*(Pg/\*(Pb.
 The color space identifier \*(Pi is ignored.
-  \*(Pm = \*4\*8\*;\*5\*;\*(Ps \(-> Set background color to \*(Ps,
+  \*(Pm = \*4\*8\*:\*5\*:\*(Ps \(-> Set background color to \*(Ps,
 using indexed color.
 .sP
 This variation on ISO-8613-6 is supported for compatibility with KDE konsole:
