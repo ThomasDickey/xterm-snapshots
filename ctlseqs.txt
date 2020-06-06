@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #357 (2020/05/18)
+               updated for XTerm Patch #357 (2020/06/06)
 
 
 
@@ -1034,24 +1034,34 @@ CSI Pm m  Character Attributes (SGR).
           is compiled, the following apply:
           o   All parameters are decimal integers.
           o   RGB values range from zero (0) to 255.
-          o   ISO-8613-6 has been interpreted in more than one way;
-              xterm allows the semicolons separating the subparameters
-              in this control to be replaced by colons (but after the
+          o   The 88- and 256-color support uses subparameters described
+              in ISO-8613-6 for indexed color.  ISO-8613-6 also mentions
+              direct color, using a similar scheme.  xterm supports
+              that, too.
+          o   xterm allows either colons (standard) or semicolons
+              (legacy) to separate the subparameters (but after the
               first colon, colons must be used).
+
+          The indexed- and direct-color features are summarized in the
+          FAQ, which explains why semicolon is accepted as a subparame-
+          ter delimiter:
+
+            Can I set a color by its number?
+
 
           These ISO-8613-6 controls (marked in ECMA-48 5th edition as
           "reserved for future standardization") are supported by xterm:
-            Pm = 3 8 ; 2 ; Pi ; Pr ; Pg ; Pb -> Set foreground color
+            Pm = 3 8 : 2 : Pi : Pr : Pg : Pb -> Set foreground color
           using RGB values.  If xterm is not compiled with direct-color
           support, it uses the closest match in its palette for the
           given RGB Pr/Pg/Pb.  The color space identifier Pi is ignored.
-            Pm = 3 8 ; 5 ; Ps -> Set foreground color to Ps, using
+            Pm = 3 8 : 5 : Ps -> Set foreground color to Ps, using
           indexed color.
-            Pm = 4 8 ; 2 ; Pi ; Pr ; Pg ; Pb -> Set background color
+            Pm = 4 8 : 2 : Pi : Pr : Pg : Pb -> Set background color
           using RGB values.  If xterm is not compiled with direct-color
           support, it uses the closest match in its palette for the
           given RGB Pr/Pg/Pb.  The color space identifier Pi is ignored.
-            Pm = 4 8 ; 5 ; Ps -> Set background color to Ps, using
+            Pm = 4 8 : 5 : Ps -> Set background color to Ps, using
           indexed color.
 
           This variation on ISO-8613-6 is supported for compatibility
