@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1750 2020/06/02 23:56:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1755 2020/06/08 20:16:41 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2943,7 +2943,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_ECH:
 	    TRACE(("CASE_ECH - erase char\n"));
 	    /* ECH */
-	    ClearRight(xw, one_if_default(0));
+	    do_erase_char(xw, one_if_default(0), OFF_PROTECT);
 	    ResetState(sp);
 	    break;
 
@@ -3234,7 +3234,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    default:
 			TRACE(("...unexpected subparameter in SGR\n"));
 			item += skip;	/* ignore this */
-			op = 9999;	/* will never use this, anyway */
+			op = NPARAM;	/* will never use this, anyway */
 			break;
 		    }
 		}
@@ -3475,6 +3475,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			clrDirectBG(xw->flags);
 			setExtendedBG(xw);
 		    });
+		    break;
+		default:
+		    skip += NPARAM;
 		    break;
 		}
 	    }
@@ -4489,7 +4492,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECERA - Erase rectangular area\n"));
 		xtermParseRect(xw, ParamPair(0), &myRect);
-		ScrnFillRectangle(xw, &myRect, ' ', 0, True);
+		ScrnFillRectangle(xw, &myRect, ' ', xw->flags, True);
 	    }
 	    ResetState(sp);
 	    break;
@@ -4499,7 +4502,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		value = zero_if_default(0);
 
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-		if (nparam > 0 && IsLatin1(value)) {
+		if (nparam > 0 && CharWidth(value) > 0) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}
@@ -4770,9 +4773,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_REP:
 	    TRACE(("CASE_REP\n"));
-	    if (sp->lastchar >= 0 &&
-		sp->lastchar < 256 &&
-		sp->groundtable[E2A(sp->lastchar)] == CASE_PRINT) {
+	    if (CharWidth(sp->lastchar) > 0) {
 		IChar repeated[2];
 		count = one_if_default(0);
 		repeated[0] = (IChar) sp->lastchar;

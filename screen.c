@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.589 2019/11/20 09:27:55 tom Exp $ */
+/* $XTermId: screen.c,v 1.590 2020/06/07 19:42:38 tom Exp $ */
 
 /*
- * Copyright 1999-2018,2019 by Thomas E. Dickey
+ * Copyright 1999-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2440,9 +2440,11 @@ ScrnFillRectangle(XtermWidget xw,
 		  unsigned flags,
 		  Bool keepColors)
 {
+    IChar actual = (IChar) value;
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
+    TRACE(("filling rectangle with '%s' flags %#x\n",
+	   visibleIChars(&actual, 1), flags));
     if (validRect(xw, target)) {
 	LineData *ld;
 	int top = (target->top - 1);
@@ -2501,7 +2503,7 @@ ScrnFillRectangle(XtermWidget xw,
 	    }
 
 	    for (col = left; col <= right; ++col)
-		ld->charData[col] = (CharData) value;
+		ld->charData[col] = actual;
 
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;

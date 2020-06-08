@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2194 2020/06/06 21:17:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.2199 2020/06/08 20:16:41 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -998,6 +998,25 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify <code>SGR</code> parameter handling to stop if an
+    unrecognized parameter is encountered, to guard against
+    malformed or nonstandard sequences (report by Bram
+    Moolenaar).</li>
+
+    <li>modify <code>DECERA</code> color for consistency with other
+    erasures/clearing (report by Thomas Wolff).</li>
+
+    <li><code>ECH</code> should not be masked by
+    <code>DECSCA</code> (report by Thomas Wolff).</li>
+
+    <li>extend <code>DECFRA</code> and <code>REP</code> to accept
+    any &ldquo;graphic&rdquo; character rather than just Latin1,
+    etc. (report by Thomas Wolff).</li>
+
+    <li>add <code>-C</code> option to 256colors2.pl and
+    88colors2.pl, to demonstrate mixed semicolon/colon separators
+    which are implied by ECMA-48.</li>
+
     <li>update sample terminfo to reflect the documentation
     improvements.</li>
 

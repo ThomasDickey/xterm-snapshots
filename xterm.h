@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.868 2020/06/02 23:45:35 tom Exp $ */
+/* $XTermId: xterm.h,v 1.869 2020/06/08 00:19:12 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1538,6 +1538,7 @@ extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * 
 extern void decode_wcwidth (XtermWidget  /* xw */);
 extern void do_cd_xtra_scroll (XtermWidget /* xw */);
 extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mode */);
+extern void do_erase_char (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_erase_line (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_ti_xtra_scroll (XtermWidget /* xw */);
 extern void getXtermSizeHints (XtermWidget /* xw */);
