@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.851 2020/06/02 23:45:03 tom Exp $ */
+/* $XTermId: util.c,v 1.852 2020/06/08 00:18:36 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1889,6 +1889,21 @@ ClearScreen(XtermWidget xw)
  * erase, temporarily reset the protected_mode flag so that the erase will
  * ignore the protected flags.
  */
+void
+do_erase_char(XtermWidget xw, int param, int mode)
+{
+    TScreen *screen = TScreenOf(xw);
+    int saved_mode = screen->protected_mode;
+
+    if (saved_mode == DEC_PROTECT
+	&& saved_mode != mode) {
+	screen->protected_mode = OFF_PROTECT;
+    }
+
+    ClearRight(xw, param);
+    screen->protected_mode = saved_mode;
+}
+
 void
 do_erase_line(XtermWidget xw, int param, int mode)
 {
