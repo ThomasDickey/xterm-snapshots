@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #357 (2020/06/06)
+               updated for XTerm Patch #357 (2020/06/11)
 
 
 
@@ -1529,9 +1529,9 @@ CSI Pm # {
             Ps = 7  -> Inverse.
             Ps = 8  -> Invisible.
             Ps = 9  -> Crossed-out characters.
-            Ps = 1 0  -> Foreground color.
-            Ps = 1 1  -> Background color.
             Ps = 2 1  -> Doubly-underlined.
+            Ps = 3 0  -> Foreground color.
+            Ps = 3 1  -> Background color.
 
           If no parameters are given, all of the video attributes are
           saved.  The stack is limited to 10 levels.

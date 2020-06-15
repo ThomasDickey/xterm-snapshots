@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.930 2020/06/02 23:20:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.936 2020/06/15 00:57:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3939,6 +3939,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    xw->work.palette_changed = False;
 	    xtermRepaint(xw);
 	    break;
+	default:
+	    xtermNeedSwap(xw, 1);
+	    break;
 	}
     }
 
@@ -7229,5 +7232,77 @@ xtermPopSGR(XtermWidget xw)
 	       traceIFlags(xw->flags)));
 #endif
     }
+}
+
+/*
+ * By default, a "push" increments the stack after copying to the current
+ * slot.  But a specific target allows one to copy into a specific slot.
+ */
+void
+xtermPushColors(XtermWidget xw, int value)
+{
+#if OPT_ISO_COLORS
+    SavedColors *s = &(xw->saved_colors);
+    int pushed = s->used;
+    int actual = (value > 0) ? value : pushed;
+
+    TRACE(("xtermPushColors %d:%d\n", actual, pushed));
+    if (actual < MAX_SAVED_SGR) {
+	TScreen *screen = TScreenOf(xw);
+	ColorRes *palette;
+
+	if ((palette = s->palettes[actual]) == 0) {
+	    s->palettes[actual] = TypeCallocN(ColorRes, MAXCOLORS);
+	}
+	if ((palette = s->palettes[actual]) != 0) {
+	    size_t length = MAXCOLORS * sizeof(ColorRes);
+
+	    memcpy(palette, screen->Acolors, length);
+	    if (value == 0)
+		s->used++;
+	}
+    }
+#else
+    (void) xw;
+    (void) value;
+#endif
+}
+
+void
+xtermPopColors(XtermWidget xw, int value)
+{
+#if OPT_ISO_COLORS
+    SavedColors *s = &(xw->saved_colors);
+    int popped = (s->used - 1);
+    int actual = (value > 0) ? value : popped;
+
+    TRACE(("xtermPopColors %d:%d\n", actual, popped));
+    if (actual < MAX_SAVED_SGR && actual >= 0) {
+	TScreen *screen = TScreenOf(xw);
+	ColorRes *palette;
+
+	if ((palette = s->palettes[actual]) == 0) {
+	    s->palettes[actual] = TypeCallocN(ColorRes, MAXCOLORS);
+	}
+	if ((palette = s->palettes[actual]) != 0) {
+	    size_t length = MAXCOLORS * sizeof(ColorRes);
+	    Boolean changed = memcmp(screen->Acolors, palette, length) != 0;
+
+	    memcpy(screen->Acolors, palette, length);
+	    if (value == 0)
+		s->used = popped;
+	    if (changed)
+		xtermRepaint(xw);
+	}
+    }
+#else
+    (void) xw;
+    (void) value;
+#endif
+}
+
+void
+xtermReportColors(XtermWidget xw)
+{
 }
 #endif /* OPT_XTERM_SGR */
