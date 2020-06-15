@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.869 2020/06/08 00:19:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.871 2020/06/12 00:12:34 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1285,8 +1285,11 @@ extern Bool xtermEnvUTF8(void);
 
 #if OPT_XTERM_SGR
 extern void xtermPushSGR (XtermWidget /* xw */, int /* value */);
-extern void xtermReportSGR (XtermWidget /* xw */, XTermRect * /* value */);
 extern void xtermPopSGR (XtermWidget /* xw */);
+extern void xtermReportSGR (XtermWidget /* xw */, XTermRect * /* value */);
+extern void xtermPushColors (XtermWidget /* xw */, int /* value */);
+extern void xtermPopColors (XtermWidget /* xw */, int /* value */);
+extern void xtermReportColors (XtermWidget /* xw */);
 #endif
 
 #ifdef ALLOWLOGGING

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.573 2020/06/06 21:00:02 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.574 2020/06/11 22:21:31 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #357
-.ds RF 2020/06/06
+.ds RF 2020/06/11
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2211,9 +2211,9 @@ except for colors (which do not have a unique SGR code):
   \*(Ps = \*7 \(-> Inverse.
   \*(Ps = \*8 \(-> Invisible.
   \*(Ps = \*9 \(-> Crossed-out characters.
-  \*(Ps = \*1\*0 \(-> Foreground color.
-  \*(Ps = \*1\*1 \(-> Background color.
   \*(Ps = \*2\*1 \(-> Doubly-underlined.
+  \*(Ps = \*3\*0 \(-> Foreground color.
+  \*(Ps = \*3\*1 \(-> Background color.
 .iP
 .IP
 If no parameters are given, all of the video attributes are saved.

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1755 2020/06/08 20:16:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1760 2020/06/15 00:57:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2147,6 +2147,11 @@ repaintWhenPaletteChanged(XtermWidget xw, struct ParseState *sp)
     case CASE_ESC:
 	ignore = ((sp->parsestate == ansi_table) ||
 		  (sp->parsestate == sos_table));
+#if USE_DOUBLE_BUFFER
+	if (resource.buffered && TScreenOf(xw)->needSwap) {
+	    ignore = False;
+	}
+#endif
 	break;
     case CASE_OSC:
 	ignore = ((sp->parsestate == ansi_table) ||
@@ -2171,6 +2176,7 @@ repaintWhenPaletteChanged(XtermWidget xw, struct ParseState *sp)
 	TRACE(("repaintWhenPaletteChanged\n"));
 	xw->work.palette_changed = False;
 	xtermRepaint(xw);
+	xtermFlushDbe(xw);
     }
 }
 
@@ -4716,6 +4722,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    } else if (nparam > 0) {
 		for (count = 0; count < nparam; ++count) {
 		    item = zero_if_default(count);
+		    /* deprecated - for compatibility */
+#if OPT_ISO_COLORS
+		    if (item == psFG_COLOR_obs) {
+			item = psFG_COLOR;
+		    } else if (item == psBG_COLOR_obs) {
+			item = psBG_COLOR;
+		    }
+#endif
 		    if (item > 0 && item < MAX_PUSH_SGR) {
 			value |= (1 << (item - 1));
 		    }
@@ -4735,6 +4749,24 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_XTERM_POP_SGR:
 	    TRACE(("CASE_XTERM_POP_SGR\n"));
 	    xtermPopSGR(xw);
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_PUSH_COLORS:
+	    TRACE(("CASE_XTERM_PUSH_COLORS\n"));
+	    xtermPushColors(xw, zero_if_default(0));
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_POP_COLORS:
+	    TRACE(("CASE_XTERM_POP_COLORS\n"));
+	    xtermPopColors(xw, zero_if_default(0));
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_REPORT_COLORS:
+	    TRACE(("CASE_XTERM_REPORT_COLORS\n"));
+	    xtermReportColors(xw);
 	    ResetState(sp);
 	    break;
 #endif

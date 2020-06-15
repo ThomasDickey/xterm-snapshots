@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.992 2020/05/02 16:11:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.997 2020/06/12 00:58:54 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1275,12 +1275,18 @@ typedef enum {
 #if OPT_WIDE_ATTRS
     , psATR_STRIKEOUT = 9
 #endif
+    /* SGR 10-19 correspond to primary/alternate fonts, currently unused */
 #if OPT_ISO_COLORS
-    , psFG_COLOR = 10
-    , psBG_COLOR = 11
+    , psFG_COLOR_obs = 10
+    , psBG_COLOR_obs = 11
 #endif
 #if OPT_WIDE_ATTRS
     , psATR_DBL_UNDER = 21
+#endif
+    /* SGR 22-29 mostly are used to reset SGR 1-9 */
+#if OPT_ISO_COLORS
+    , psFG_COLOR = 30	/* stack maps many colors to one state */
+    , psBG_COLOR = 31
 #endif
     , MAX_PUSH_SGR
 } PushSGR;
@@ -3165,6 +3171,10 @@ typedef	struct {
 #endif
     } stack[MAX_SAVED_SGR];
 } SavedSGR;
+typedef struct {
+    int		used;
+    ColorRes	*palettes[MAX_SAVED_SGR];
+} SavedColors;
 #endif
 
 typedef struct _XtermWidgetRec {
@@ -3196,6 +3206,7 @@ typedef struct _XtermWidgetRec {
     Work	work;		/* workspace (no resources)	*/
 #if OPT_XTERM_SGR
     SavedSGR	saved_sgr;
+    SavedColors	saved_colors;
 #endif
 } XtermWidgetRec, *XtermWidget;
 
