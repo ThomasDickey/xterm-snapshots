@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1760 2020/06/15 00:57:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1761 2020/06/22 19:19:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4973,8 +4973,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_SM_TITLE:
-	    TRACE(("CASE_SM_TITLE\n"));
+	case CASE_XTERM_SM_TITLE:
+	    TRACE(("CASE_XTERM_SM_TITLE\n"));
 	    if (nparam >= 1) {
 		int n;
 		for (n = 0; n < nparam; ++n) {
@@ -4988,8 +4988,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_RM_TITLE:
-	    TRACE(("CASE_RM_TITLE\n"));
+	case CASE_XTERM_RM_TITLE:
+	    TRACE(("CASE_XTERM_RM_TITLE\n"));
 	    if (nparam >= 1) {
 		int n;
 		for (n = 0; n < nparam; ++n) {
