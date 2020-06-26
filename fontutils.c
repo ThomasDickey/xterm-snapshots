@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.685 2020/06/02 23:55:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.686 2020/06/25 00:24:20 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2418,7 +2418,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     FcChar32 c;
     FcChar32 first = xtermXftFirstChar(xft);
     FcChar32 last = xtermXftLastChar(xft);
-    FcChar32 dump = last;
+    FcChar32 dump;
     unsigned count = 0;
     unsigned too_high = 0;
     unsigned too_wide = 0;
@@ -2429,6 +2429,8 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
     TRACE(("\tcode\tcells\tdimensions\n"));
 #if OPT_TRACE < 2
     dump = 255;
+#else
+    dump = last;
 #endif
     for (c = first; c <= last; ++c) {
 	if (FcCharSetHasChar(xft->charset, c)) {
@@ -2436,13 +2438,14 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
 	    XGlyphInfo extents;
 	    Boolean big_x;
 	    Boolean big_y;
-	    Char buffer[80];
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
 	    big_x = (extents.width > win->f_width);
 	    big_y = (extents.height > win->f_height);
 
 	    if (c <= dump) {
+		Char buffer[80];
+
 		*convertToUTF8(buffer, c) = '\0';
 		TRACE(("%s%s\tU+%04X\t%d\t%.1f x %.1f\t%s\n",
 		       (big_y ? "y" : ""),

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.997 2020/06/12 00:58:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.998 2020/06/23 22:44:01 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -111,8 +111,6 @@
 #define TypeXtMallocN(type,n)	(type *)(void *)XtMalloc((Cardinal)(sizeof(type) * (size_t) (n)))
 #define TypeXtMalloc(type)	TypeXtMallocN(type, 1)
 
-/* use these to allocate partly-structured data */
-#define TextAlloc(n)		(char *)malloc(sizeof(char) * (size_t) ((n) + 1))
 #define CastMalloc(type)	(type *)malloc(sizeof(type))
 
 #define BumpBuffer(type, buffer, size, want) \

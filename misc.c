@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.936 2020/06/15 00:57:50 tom Exp $ */
+/* $XTermId: misc.c,v 1.937 2020/06/23 22:46:15 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4220,7 +4220,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = TextAlloc(strlen(cp) + 2);
+	char *str = malloc(strlen(cp) + 3);
 	unsigned key = 0;
 	int len = 0;
 
@@ -6273,7 +6273,7 @@ xtermSetenv(const char *var, const char *value)
 	    environ = environ;
 	}
 
-	environ[found] = TextAlloc(1 + len + strlen(value));
+	environ[found] = malloc(2 + len + strlen(value));
 	if (environ[found] == 0) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
@@ -6644,9 +6644,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
 			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = TextAlloc(strlen(mesg)
-						    + 1
-						    + strlen(opt_array[j].desc));
+				char *s = malloc(strlen(mesg)
+						 + strlen(opt_array[j].desc)
+						 + 2);
 				if (s != 0) {
 				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
 				    opt_array[j].desc = s;
