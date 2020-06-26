@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.686 2020/06/25 00:24:20 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.687 2020/06/26 23:27:42 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -4257,6 +4257,8 @@ unsigned
 ucs2dec(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
+
+    (void) screen;
     if ((ch > 127)
 	&& (ch != UCS_REPL)) {
 #if OPT_VT52_MODE
@@ -4314,6 +4316,8 @@ unsigned
 dec2ucs(TScreen *screen, unsigned ch)
 {
     unsigned result = ch;
+
+    (void) screen;
     if (xtermIsDecGraphic(ch)) {
 #if OPT_VT52_MODE
 	if (screen != 0 && !(screen->vtXX_level)) {
