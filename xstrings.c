@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.75 2020/06/02 23:57:57 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.77 2020/06/23 22:45:04 tom Exp $ */
 
 /*
  * Copyright 2000-2019,2020 by Thomas E. Dickey
@@ -430,7 +430,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = TextAlloc(4 + strlen(s));
+	char *t = malloc(strlen(s) + 5);
 	if (t != 0) {
 	    strcpy(t, s);
 	}
@@ -465,7 +465,9 @@ x_strtrim(const char *source)
 {
     char *result;
 
-    if (source != 0 && *source != '\0') {
+    if (IsEmpty(source)) {
+	result = x_strdup("");
+    } else {
 	char *t = x_strdup(source);
 	if (t != 0) {
 	    char *s = t;
@@ -483,8 +485,6 @@ x_strtrim(const char *source)
 	    }
 	}
 	result = t;
-    } else {
-	result = x_strdup("");
     }
     return result;
 }
@@ -497,7 +497,9 @@ x_strrtrim(const char *source)
 {
     char *result;
 
-    if (source != 0 && *source != '\0') {
+    if (IsEmpty(source)) {
+	result = x_strdup("");
+    } else {
 	char *t = x_strdup(source);
 	if (t != 0) {
 	    if (*t != '\0') {
@@ -508,8 +510,6 @@ x_strrtrim(const char *source)
 	    }
 	}
 	result = t;
-    } else {
-	result = x_strdup("");
     }
     return result;
 }

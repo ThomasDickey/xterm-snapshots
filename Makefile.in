@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.249 2020/04/27 19:05:16 tom Exp $
+## $XTermId: Makefile.in,v 1.250 2020/06/23 22:55:14 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -129,7 +129,7 @@ AUTO_SOURCE	= \
            HDRS = VTparse.h data.h error.h fontutils.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
-  TEST_PROGRAMS = test_charclass$x test_wcwidth$x
+  TEST_PROGRAMS = test_charclass$x test_ptydata$x test_wcwidth$x
 
 all :	$(PROGRAMS)
 ################################################################################
@@ -234,6 +234,10 @@ builtin_icons.h :
 ################################################################################
 test_charclass$x : $(srcdir)/charclass.c
 	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/charclass.c $(LDFLAGS) $(LIBS)
+
+################################################################################
+test_ptydata$x : $(srcdir)/ptydata.c
+	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/ptydata.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 test_wcwidth$x : $(srcdir)/wcwidth.c

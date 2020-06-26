@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.863 2020/06/02 23:53:50 tom Exp $ */
+/* $XTermId: main.c,v 1.864 2020/06/23 22:42:56 tom Exp $ */
 
 /*
  * Copyright 2002-2019,2020 by Thomas E. Dickey
@@ -5039,7 +5039,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = TextAlloc(strlen(shname) + 1)) != 0) {
+	    if ((shname_minus = malloc(strlen(shname) + 2)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {

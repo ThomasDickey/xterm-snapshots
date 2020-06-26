@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.582 2020/06/02 23:58:38 tom Exp $ */
+/* $XTermId: button.c,v 1.583 2020/06/25 00:12:29 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5215,7 +5215,6 @@ static char **
 tokenizeFormat(String format)
 {
     char **result = 0;
-    int argc;
 
     format = x_skip_blanks(format);
     if (*format != '\0') {
@@ -5229,8 +5228,8 @@ tokenizeFormat(String format)
 	    int squoted = 0;
 	    int dquoted = 0;
 	    int n;
+	    int argc = 0;
 
-	    argc = 0;
 	    for (n = 0; format[n] != '\0'; ++n) {
 		if (escaped) {
 		    blob[used++] = format[n];
@@ -5283,9 +5282,10 @@ tokenizeFormat(String format)
     }
 #if OPT_TRACE
     if (result) {
+	int n;
 	TRACE(("tokenizeFormat %s\n", format));
-	for (argc = 0; result[argc]; ++argc) {
-	    TRACE(("argv[%d] = %s\n", argc, result[argc]));
+	for (n = 0; result[n]; ++n) {
+	    TRACE(("argv[%d] = %s\n", n, result[n]));
 	}
     }
 #endif

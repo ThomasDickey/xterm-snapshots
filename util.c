@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.852 2020/06/08 00:18:36 tom Exp $ */
+/* $XTermId: util.c,v 1.853 2020/06/23 22:44:28 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1015,7 +1015,7 @@ showZIconBeep(XtermWidget xw, char *name)
 
     if (resource.zIconBeep && TScreenOf(xw)->zIconBeep_flagged) {
 	char *format = resource.zIconFormat;
-	char *newname = TextAlloc(strlen(name) + strlen(format) + 1);
+	char *newname = malloc(strlen(name) + strlen(format) + 2);
 	if (!newname) {
 	    xtermWarning("malloc failed in showZIconBeep\n");
 	} else {
@@ -1053,7 +1053,7 @@ resetZIconBeep(XtermWidget xw)
 	char *icon_name = getIconName();
 	screen->zIconBeep_flagged = False;
 	if (icon_name != NULL) {
-	    char *buf = TextAlloc(strlen(icon_name));
+	    char *buf = malloc(strlen(icon_name) + 1);
 	    if (buf == NULL) {
 		screen->zIconBeep_flagged = True;
 	    } else {
