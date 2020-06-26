@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1761 2020/06/22 19:19:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1763 2020/06/26 23:26:28 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5721,7 +5721,7 @@ dotext(XtermWidget xw,
 		    last_chomp = CharWidth(buf[n]);
 		    if (last_chomp <= 0) {
 			IChar ch = buf[n];
-			Bool eat_it = (ch > 127);
+			Bool eat_it = !screen->utf8_mode && (ch > 127);
 			if (ch == 0xad) {
 			    /*
 			     * Only display soft-hyphen if it happens to be at
@@ -8880,7 +8880,7 @@ VTInitialize(Widget wrequest,
     Bool color_ok;
 #endif
 
-#if OPT_COLOR_RES2
+#if OPT_ISO_COLORS && OPT_COLOR_RES2
     static XtResource fake_resources[] =
     {
 #if OPT_256_COLORS
