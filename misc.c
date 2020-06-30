@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.937 2020/06/23 22:46:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.940 2020/06/30 00:50:44 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -7234,6 +7234,27 @@ xtermPopSGR(XtermWidget xw)
     }
 }
 
+#if OPT_ISO_COLORS
+
+static void
+allocColorSlot(XtermWidget xw, int slot)
+{
+    SavedColors *s = &(xw->saved_colors);
+    if (slot < MAX_SAVED_SGR) {
+	ColorSlot *palette;
+	if ((palette = s->palettes[slot]) == 0) {
+	    s->palettes[slot] = (ColorSlot *) calloc(1,
+						     sizeof(ColorSlot)
+						     + sizeof(ColorRes)
+						     * MAXCOLORS);
+	}
+    }
+}
+#endif /* OPT_ISO_COLORS */
+
+#define DiffColorSlot(d,s,n) memcmp((d), (s), (n) * sizeof(ColorRes))
+#define CopyColorSlot(d,s,n) memcpy((d), (s), (n) * sizeof(ColorRes))
+
 /*
  * By default, a "push" increments the stack after copying to the current
  * slot.  But a specific target allows one to copy into a specific slot.
@@ -7249,15 +7270,13 @@ xtermPushColors(XtermWidget xw, int value)
     TRACE(("xtermPushColors %d:%d\n", actual, pushed));
     if (actual < MAX_SAVED_SGR) {
 	TScreen *screen = TScreenOf(xw);
-	ColorRes *palette;
+	ColorSlot *palette;
 
-	if ((palette = s->palettes[actual]) == 0) {
-	    s->palettes[actual] = TypeCallocN(ColorRes, MAXCOLORS);
-	}
+	allocColorSlot(xw, actual);
 	if ((palette = s->palettes[actual]) != 0) {
-	    size_t length = MAXCOLORS * sizeof(ColorRes);
 
-	    memcpy(palette, screen->Acolors, length);
+	    GetColors(xw, &(palette->base));
+	    CopyColorSlot(&(palette->ansi[0]), screen->Acolors, MAXCOLORS);
 	    if (value == 0)
 		s->used++;
 	}
@@ -7279,16 +7298,17 @@ xtermPopColors(XtermWidget xw, int value)
     TRACE(("xtermPopColors %d:%d\n", actual, popped));
     if (actual < MAX_SAVED_SGR && actual >= 0) {
 	TScreen *screen = TScreenOf(xw);
-	ColorRes *palette;
+	ColorSlot *palette;
 
-	if ((palette = s->palettes[actual]) == 0) {
-	    s->palettes[actual] = TypeCallocN(ColorRes, MAXCOLORS);
-	}
+	allocColorSlot(xw, actual);
 	if ((palette = s->palettes[actual]) != 0) {
-	    size_t length = MAXCOLORS * sizeof(ColorRes);
-	    Boolean changed = memcmp(screen->Acolors, palette, length) != 0;
+	    Boolean changed = DiffColorSlot(screen->Acolors,
+					    palette,
+					    MAXCOLORS);
 
-	    memcpy(screen->Acolors, palette, length);
+	    ChangeColors(xw, &(palette->base));
+	    UpdateOldColors(xw, &(palette->base));
+	    CopyColorSlot(screen->Acolors, &(palette->ansi[0]), MAXCOLORS);
 	    if (value == 0)
 		s->used = popped;
 	    if (changed)

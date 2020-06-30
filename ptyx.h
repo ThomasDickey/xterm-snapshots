@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.998 2020/06/23 22:44:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.999 2020/06/30 00:27:28 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3169,11 +3169,17 @@ typedef	struct {
 #endif
     } stack[MAX_SAVED_SGR];
 } SavedSGR;
+
+typedef struct {
+    ScrnColors base;
+    ColorRes ansi[1];
+} ColorSlot;
+
 typedef struct {
     int		used;
-    ColorRes	*palettes[MAX_SAVED_SGR];
+    ColorSlot	*palettes[MAX_SAVED_SGR];
 } SavedColors;
-#endif
+#endif /* OPT_XTERM_SGR */
 
 typedef struct _XtermWidgetRec {
     CorePart	core;
