@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1763 2020/06/26 23:26:28 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1766 2020/06/30 22:27:02 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -134,6 +134,10 @@
 #include <charclass.h>
 #include <xstrings.h>
 #include <graphics.h>
+
+#ifdef NO_LEAKS
+#include <xtermcap.h>
+#endif
 
 typedef int (*BitFunc) (unsigned * /* p */ ,
 			unsigned /* mask */ );
@@ -4754,13 +4758,25 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_XTERM_PUSH_COLORS:
 	    TRACE(("CASE_XTERM_PUSH_COLORS\n"));
-	    xtermPushColors(xw, zero_if_default(0));
+	    if (nparam == 0) {
+		xtermPushColors(xw, DEFAULT);
+	    } else {
+		for (count = 0; count < nparam; ++count) {
+		    xtermPushColors(xw, GetParam(count));
+		}
+	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_XTERM_POP_COLORS:
 	    TRACE(("CASE_XTERM_POP_COLORS\n"));
-	    xtermPopColors(xw, zero_if_default(0));
+	    if (nparam == 0) {
+		xtermPopColors(xw, DEFAULT);
+	    } else {
+		for (count = 0; count < nparam; ++count) {
+		    xtermPopColors(xw, GetParam(count));
+		}
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -10068,6 +10084,9 @@ VTDestroy(Widget w GCC_UNUSED)
     for (n = 0; n < MAXCOLORS; n++) {
 	TRACE_FREE_LEAK(screen->Acolors[n].resource);
     }
+    for (n = 0; n < MAX_SAVED_SGR; n++) {
+	TRACE_FREE_LEAK(xw->saved_colors.palettes[n]);
+    }
 #endif
 #if OPT_COLOR_RES
     for (n = 0; n < NCOLORS; n++) {
@@ -10131,6 +10150,7 @@ VTDestroy(Widget w GCC_UNUSED)
     xtermCloseFonts(xw, screen->ifnts);
 #endif
     noleaks_cachedCgs(xw);
+    free_termcap(xw);
 
     TRACE_FREE_LEAK(screen->selection_targets_8bit);
 #if OPT_SELECT_REGEX
@@ -10255,6 +10275,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(screen->selected_cells[n].data_buffer);
     }
 
+    if (defaultTranslations != xtermClassRec.core_class.tm_table) {
+	TRACE_FREE_LEAK(defaultTranslations);
+    }
     TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
@@ -12985,6 +13008,7 @@ VTInitTranslations(void)
     TRACE(("result:\n%s\n", result));
 
     defaultTranslations = result;
+    free((void *) xtermClassRec.core_class.tm_table);
     xtermClassRec.core_class.tm_table = result;
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.144 2020/06/26 00:28:50 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.145 2020/07/01 21:16:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -815,7 +815,7 @@ do_range(const char *source)
 		int j, k;
 		for (j = 0; j < MAX_BYTES; ++j) {
 		    unsigned long bits = ((unsigned long) c_in >> (8 * j));
-		    if ((buffer[j] = bits) == 0) {
+		    if ((buffer[j] = (Char) bits) == 0) {
 			skip = (bits != 0);
 			break;
 		    }

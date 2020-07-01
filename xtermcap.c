@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.54 2020/06/02 23:11:46 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.55 2020/06/30 20:20:01 tom Exp $ */
 
 /*
  * Copyright 2007-2018,2020 by Thomas E. Dickey
@@ -50,8 +50,10 @@
 
 #if USE_TERMINFO
 #define TcapInit(buffer, name) (setupterm(name, fileno(stdout), &ignored) == OK)
+#define TcapFree()             (del_curterm(cur_term))
 #else
 #define TcapInit(buffer, name) (tgetent(buffer, name) == 1)
+#define TcapFree()		/*nothing */
 #endif
 
 #define NO_STRING (char *)(-1)
@@ -647,4 +649,5 @@ free_termcap(XtermWidget xw)
 	screen->tcap_fkeys = 0;
     }
 #endif
+    TcapFree();
 }

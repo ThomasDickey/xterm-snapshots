@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.586 2020/06/23 20:21:20 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.588 2020/07/01 20:41:13 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #357
-.ds RF 2020/06/23
+.ds RF 2020/07/01
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1048,6 +1048,29 @@ Delete \*(Ps Line(s) (default = 1) (DL).
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*P
 Delete \*(Ps Character(s) (default = 1) (DCH).
+.
+.iP
+.IP \\*(Cs\\*#\\*P
+.IP \\*(Cs\\*(Pm\\*s\\*#\\*P
+Push current dynamic- and ANSI-palette colors onto stack
+(XTPUSHCOLORS), \fI\*(xt\fP.
+Parameters (integers in the range 1 through 10, since the default 0 will push)
+may be used to store the palette into the stack without pushing.
+.
+.iP
+.IP \\*(Cs\\*#\\*Q
+.IP \\*(Cs\\*(Pm\\*s\\*#\\*Q
+Pop stack to set dynamic- and ANSI-palette colors
+(XTPOPCOLORS), \fI\*(xt\fP.
+Parameters (integers in the range 1 through 10, since the default 0 will pop)
+may be used to restore the palette from the stack without popping.
+.
+.iP
+.IP \\*(Cs\\*#\\*R
+Report the current entry on the palette stack, and the number of
+palettes stored on the stack, using the same form as XTPOPCOLOR
+(default = 0)
+(XTREPORTCOLORS), \fI\*(xt\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*S
@@ -2378,8 +2401,8 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*0 \(-> Change VT100 text foreground color to \*(Pt.
   \*(Ps = \*1\*1 \(-> Change VT100 text background color to \*(Pt.
   \*(Ps = \*1\*2 \(-> Change text cursor color to \*(Pt.
-  \*(Ps = \*1\*3 \(-> Change mouse foreground color to \*(Pt.
-  \*(Ps = \*1\*4 \(-> Change mouse background color to \*(Pt.
+  \*(Ps = \*1\*3 \(-> Change pointer foreground color to \*(Pt.
+  \*(Ps = \*1\*4 \(-> Change pointer background color to \*(Pt.
   \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt.
   \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt.
   \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt.
@@ -2474,8 +2497,8 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.
   \*(Ps = \*1\*1\*1 \(-> Reset VT100 text background color.
   \*(Ps = \*1\*1\*2 \(-> Reset text cursor color.
-  \*(Ps = \*1\*1\*3 \(-> Reset mouse foreground color.
-  \*(Ps = \*1\*1\*4 \(-> Reset mouse background color.
+  \*(Ps = \*1\*1\*3 \(-> Reset pointer foreground color.
+  \*(Ps = \*1\*1\*4 \(-> Reset pointer background color.
   \*(Ps = \*1\*1\*5 \(-> Reset Tektronix foreground color.
   \*(Ps = \*1\*1\*6 \(-> Reset Tektronix background color.
   \*(Ps = \*1\*1\*7 \(-> Reset highlight color.

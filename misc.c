@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.940 2020/06/30 00:50:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.948 2020/07/01 21:33:56 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -6699,7 +6699,7 @@ xtermEnvEncoding(void)
 #ifdef HAVE_LANGINFO_CODESET
 	result = nl_langinfo(CODESET);
 #else
-	char *locale = xtermEnvLocale();
+	const char *locale = xtermEnvLocale();
 	if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
 	    result = x_strdup("ASCII");
 	} else {
@@ -7235,24 +7235,60 @@ xtermPopSGR(XtermWidget xw)
 }
 
 #if OPT_ISO_COLORS
-
-static void
+static ColorSlot *
 allocColorSlot(XtermWidget xw, int slot)
 {
     SavedColors *s = &(xw->saved_colors);
-    if (slot < MAX_SAVED_SGR) {
+    ColorSlot *result = NULL;
+
+    if (slot >= 0 && slot < MAX_SAVED_SGR) {
 	ColorSlot *palette;
 	if ((palette = s->palettes[slot]) == 0) {
 	    s->palettes[slot] = (ColorSlot *) calloc(1,
 						     sizeof(ColorSlot)
-						     + sizeof(ColorRes)
-						     * MAXCOLORS);
+						     + (sizeof(ColorRes)
+							* MAXCOLORS));
 	}
+	result = s->palettes[slot];
+    }
+    return result;
+}
+
+static void
+popOldColors(XtermWidget xw, ScrnColors * source)
+{
+    Boolean changed = False;
+    ScrnColors *target = xw->work.oldColors;
+
+    if (source->which != target->which) {
+	changed = True;
+    } else {
+	int n;
+	for (n = 0; n < NCOLORS; ++n) {
+	    if (COLOR_DEFINED(source, n)) {
+		if (COLOR_DEFINED(target, n)) {
+		    if (source->colors[n] != target->colors[n]) {
+			changed = True;
+			break;
+		    }
+		} else {
+		    changed = True;
+		    break;
+		}
+	    } else if (COLOR_DEFINED(target, n)) {
+		changed = True;
+		break;
+	    }
+	}
+    }
+    if (changed) {
+	ChangeColors(xw, source);
+	UpdateOldColors(xw, source);
     }
 }
 #endif /* OPT_ISO_COLORS */
 
-#define DiffColorSlot(d,s,n) memcmp((d), (s), (n) * sizeof(ColorRes))
+#define DiffColorSlot(d,s,n) (memcmp((d), (s), (n) * sizeof(ColorRes)) ? True : False)
 #define CopyColorSlot(d,s,n) memcpy((d), (s), (n) * sizeof(ColorRes))
 
 /*
@@ -7265,20 +7301,23 @@ xtermPushColors(XtermWidget xw, int value)
 #if OPT_ISO_COLORS
     SavedColors *s = &(xw->saved_colors);
     int pushed = s->used;
-    int actual = (value > 0) ? value : pushed;
+    int actual = (value <= 0) ? pushed : (value - 1);
 
     TRACE(("xtermPushColors %d:%d\n", actual, pushed));
-    if (actual < MAX_SAVED_SGR) {
+    if (actual < MAX_SAVED_SGR && actual >= 0) {
 	TScreen *screen = TScreenOf(xw);
 	ColorSlot *palette;
 
-	allocColorSlot(xw, actual);
-	if ((palette = s->palettes[actual]) != 0) {
-
+	if ((palette = allocColorSlot(xw, actual)) != NULL) {
 	    GetColors(xw, &(palette->base));
 	    CopyColorSlot(&(palette->ansi[0]), screen->Acolors, MAXCOLORS);
-	    if (value == 0)
+	    if (value < 0) {
 		s->used++;
+		if (s->last < s->used)
+		    s->last = s->used;
+	    } else {
+		s->used = value;
+	    }
 	}
     }
 #else
@@ -7293,24 +7332,22 @@ xtermPopColors(XtermWidget xw, int value)
 #if OPT_ISO_COLORS
     SavedColors *s = &(xw->saved_colors);
     int popped = (s->used - 1);
-    int actual = (value > 0) ? value : popped;
+    int actual = (value <= 0) ? popped : (value - 1);
 
     TRACE(("xtermPopColors %d:%d\n", actual, popped));
     if (actual < MAX_SAVED_SGR && actual >= 0) {
 	TScreen *screen = TScreenOf(xw);
 	ColorSlot *palette;
 
-	allocColorSlot(xw, actual);
-	if ((palette = s->palettes[actual]) != 0) {
+	if ((palette = s->palettes[actual]) != NULL) {
 	    Boolean changed = DiffColorSlot(screen->Acolors,
-					    palette,
+					    palette->ansi,
 					    MAXCOLORS);
 
-	    ChangeColors(xw, &(palette->base));
-	    UpdateOldColors(xw, &(palette->base));
+	    GetOldColors(xw);
+	    popOldColors(xw, &(palette->base));
 	    CopyColorSlot(screen->Acolors, &(palette->ansi[0]), MAXCOLORS);
-	    if (value == 0)
-		s->used = popped;
+	    s->used = actual;
 	    if (changed)
 		xtermRepaint(xw);
 	}
@@ -7324,5 +7361,17 @@ xtermPopColors(XtermWidget xw, int value)
 void
 xtermReportColors(XtermWidget xw)
 {
+    ANSI reply;
+    SavedColors *s = &(xw->saved_colors);
+
+    memset(&reply, 0, sizeof(reply));
+    reply.a_type = ANSI_CSI;
+    reply.a_pintro = '?';
+    reply.a_param[reply.a_nparam++] = (ParmType) s->used;
+    reply.a_param[reply.a_nparam++] = (ParmType) s->last;
+    reply.a_nparam = reply.a_nparam;
+    reply.a_inters = '#';
+    reply.a_final = 'Q';
+    unparseseq(xw, &reply);
 }
 #endif /* OPT_XTERM_SGR */

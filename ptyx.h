@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.999 2020/06/30 00:27:28 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1000 2020/06/30 22:32:27 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3176,7 +3176,8 @@ typedef struct {
 } ColorSlot;
 
 typedef struct {
-    int		used;
+    int		used;		/* currently saved or restored	*/
+    int		last;		/* maximum number of saved palettes */
     ColorSlot	*palettes[MAX_SAVED_SGR];
 } SavedColors;
 #endif /* OPT_XTERM_SGR */

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #357 (2020/06/23)
+               updated for XTerm Patch #357 (2020/07/01)
 
 
 
@@ -537,6 +537,24 @@ CSI Ps L  Insert Ps Line(s) (default = 1) (IL).
 CSI Ps M  Delete Ps Line(s) (default = 1) (DL).
 
 CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
+
+CSI # P
+CSI Pm # P
+          Push current dynamic- and ANSI-palette colors onto stack
+          (XTPUSHCOLORS), xterm.  Parameters (integers in the range 1
+          through 10, since the default 0 will push) may be used to
+          store the palette into the stack without pushing.
+
+CSI # Q
+CSI Pm # Q
+          Pop stack to set dynamic- and ANSI-palette colors (XTPOPCOL-
+          ORS), xterm.  Parameters (integers in the range 1 through 10,
+          since the default 0 will pop) may be used to restore the pal-
+          ette from the stack without popping.
+
+CSI # R   Report the current entry on the palette stack, and the number
+          of palettes stored on the stack, using the same form as XTPOP-
+          COLOR (default = 0) (XTREPORTCOLORS), xterm.
 
 CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
 
@@ -1680,8 +1698,8 @@ OSC Ps ; Pt ST
             Ps = 1 0  -> Change VT100 text foreground color to Pt.
             Ps = 1 1  -> Change VT100 text background color to Pt.
             Ps = 1 2  -> Change text cursor color to Pt.
-            Ps = 1 3  -> Change mouse foreground color to Pt.
-            Ps = 1 4  -> Change mouse background color to Pt.
+            Ps = 1 3  -> Change pointer foreground color to Pt.
+            Ps = 1 4  -> Change pointer background color to Pt.
             Ps = 1 5  -> Change Tektronix foreground color to Pt.
             Ps = 1 6  -> Change Tektronix background color to Pt.
             Ps = 1 7  -> Change highlight background color to Pt.
@@ -1765,8 +1783,8 @@ OSC Ps ; Pt ST
             Ps = 1 1 0  -> Reset VT100 text foreground color.
             Ps = 1 1 1  -> Reset VT100 text background color.
             Ps = 1 1 2  -> Reset text cursor color.
-            Ps = 1 1 3  -> Reset mouse foreground color.
-            Ps = 1 1 4  -> Reset mouse background color.
+            Ps = 1 1 3  -> Reset pointer foreground color.
+            Ps = 1 1 4  -> Reset pointer background color.
             Ps = 1 1 5  -> Reset Tektronix foreground color.
             Ps = 1 1 6  -> Reset Tektronix background color.
             Ps = 1 1 7  -> Reset highlight color.
