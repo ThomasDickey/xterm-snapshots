@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.807 2020/04/14 00:17:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.808 2020/07/02 20:02:23 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -2935,6 +2935,20 @@ If \*(``false\*('', triple clicking to select a line selects only from the
 current word forward.
 If \*(``true\*('', the entire line is selected.
 The default is \*(``true\*(''.
+.TP 8
+.B "decGraphicsID\fP (class\fB DecGraphicsID\fP)"
+Allows a way to combine the graphics feature from certain DEC terminals
+(125, 240, 241, 330, 340 or 382) with other emulation levels which did
+not provide the graphics feature.
+As in \fBdecTerminalID\fP,
+leading non-digit characters are ignored,
+e.g., \*(``vt340\*('' and \*(``340\*('' are the same.
+.IP
+If the resource value is nonzero,
+\fI\*n\fP uses that emulation level when initializing the drawing region
+and decoding control sequences to draw graphics.
+.IP
+The default is \*(``0\*(''.
 .TP 8
 .B "decTerminalID\fP (class\fB DecTerminalID\fP)"
 Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine

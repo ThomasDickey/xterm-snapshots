@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.80 2020/06/02 23:49:29 tom Exp $ */
+/* $XTermId: graphics.c,v 1.81 2020/07/02 19:36:33 tom Exp $ */
 
 /*
  * Copyright 2013-2019,2020 by Ross Combs
@@ -523,9 +523,9 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 }
 
 static void
-init_color_registers(ColorRegister *color_registers, int terminal_id)
+init_color_registers(ColorRegister *color_registers, int graphics_id)
 {
-    TRACE(("setting initial colors for terminal %d\n", terminal_id));
+    TRACE(("setting initial colors for terminal %d\n", graphics_id));
     {
 	unsigned i;
 
@@ -580,7 +580,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
      * dxterm:
      *  ?
      */
-    switch (terminal_id) {
+    switch (graphics_id) {
     case 125:
     case 241:
 	set_color_register(color_registers, 0, 0, 0, 0);
@@ -663,7 +663,7 @@ get_color_register_count(TScreen const *screen)
      * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
      * dxterm      ?
      */
-    switch (screen->terminal_id) {
+    switch (screen->graphics_id) {
     case 125:
 	return 4U;
     case 240:
@@ -685,7 +685,7 @@ get_color_register_count(TScreen const *screen)
 static void
 init_graphic(Graphic *graphic,
 	     unsigned type,
-	     int terminal_id,
+	     int graphics_id,
 	     int charrow,
 	     int charcol,
 	     unsigned num_color_registers,
@@ -735,7 +735,7 @@ init_graphic(Graphic *graphic,
     graphic->private_colors = private_colors;
     if (graphic->private_colors) {
 	TRACE(("using private color registers\n"));
-	init_color_registers(graphic->private_color_registers, terminal_id);
+	init_color_registers(graphic->private_color_registers, graphics_id);
 	graphic->color_registers = graphic->private_color_registers;
     } else {
 	TRACE(("using shared color registers\n"));
@@ -753,7 +753,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 {
     TScreen const *screen = TScreenOf(xw);
     int bufferid = screen->whichBuf;
-    int terminal_id = screen->terminal_id;
+    int graphics_id = GraphicsId(screen);
     Graphic *graphic = NULL;
     unsigned ii;
 
@@ -789,7 +789,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->id = next_graphic_id++;
 	init_graphic(graphic,
 		     type,
-		     terminal_id,
+		     graphics_id,
 		     charrow,
 		     charcol,
 		     num_color_registers,
@@ -1789,7 +1789,7 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    init_color_registers(getSharedRegisters(), screen->terminal_id);
+    init_color_registers(getSharedRegisters(), GraphicsId(screen));
 
     if (used_graphics) {
 	unsigned ii;
