@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.871 2020/06/12 00:12:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.872 2020/07/02 00:30:01 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -486,6 +486,7 @@ extern char **environ;
 #define XtNcursorUnderLine	"cursorUnderLine"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
+#define XtNdecGraphicsID	"decGraphicsID"
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
@@ -688,6 +689,7 @@ extern char **environ;
 #define XtCCursorUnderLine	"CursorUnderLine"
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
+#define XtCDecGraphicsID	"DecGraphicsID"
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"

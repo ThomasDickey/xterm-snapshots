@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.948 2020/07/01 21:33:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.949 2020/07/02 19:43:55 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4837,13 +4837,13 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 	/* FALLTHRU */
     default:
-	if (screen->terminal_id == 125 ||
+	if (GraphicsId(screen) == 125 ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
 	    case 'p':
 #if OPT_REGIS_GRAPHICS
-		if (screen->terminal_id == 125 ||
+		if (GraphicsId(screen) == 125 ||
 		    optRegisGraphics(screen)) {
 		    parse_regis(xw, &params, cp);
 		}
@@ -4853,7 +4853,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		break;
 	    case 'q':
 #if OPT_SIXEL_GRAPHICS
-		if (screen->terminal_id == 125 ||
+		if (GraphicsId(screen) == 125 ||
 		    optSixelGraphics(screen)) {
 		    (void) parse_sixel(xw, &params, cp);
 		}

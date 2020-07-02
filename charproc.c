@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1766 2020/06/30 22:27:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1768 2020/07/02 19:33:54 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -730,6 +730,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_GRAPHICS
+    Sres(XtNdecGraphicsID, XtCDecGraphicsID, screen.graph_id, DFT_DECID),
     Sres(XtNmaxGraphicSize, XtCMaxGraphicSize, screen.graphics_max_size,
 	 "1000x1000"),
 #endif
@@ -8721,6 +8722,29 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 }
 #endif /* OPT_XRES_QUERY */
 
+static int
+decodeTerminalID(const char *value)
+{
+    const char *s;
+    for (s = value; *s; s++) {
+	if (!isalpha(CharOf(*s)))
+	    break;
+    }
+    return atoi(value);
+}
+
+static int
+limitedTerminalID(int terminal_id)
+{
+    if (terminal_id < MIN_DECID)
+	terminal_id = MIN_DECID;
+    else if (terminal_id > MAX_DECID)
+	terminal_id = MAX_DECID;
+    else
+	terminal_id = atoi(DFT_DECID);
+    return terminal_id;
+}
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -8890,7 +8914,6 @@ VTInitialize(Widget wrequest,
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
     int i;
-    const char *s;
 
 #if OPT_ISO_COLORS
     Bool color_ok;
@@ -9068,11 +9091,8 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.T_geometry);
 
     init_Sres(screen.term_id);
-    for (s = TScreenOf(request)->term_id; *s; s++) {
-	if (!isalpha(CharOf(*s)))
-	    break;
-    }
-    switch (screen->terminal_id = atoi(s)) {
+    screen->terminal_id = decodeTerminalID(TScreenOf(request)->term_id);
+    switch (screen->terminal_id) {
     case 52:
     case 100:
     case 101:
@@ -9096,12 +9116,7 @@ VTInitialize(Widget wrequest,
 	if (optSixelGraphics(screen))
 	    break;
 #endif
-	if (screen->terminal_id < MIN_DECID)
-	    screen->terminal_id = MIN_DECID;
-	else if (screen->terminal_id > MAX_DECID)
-	    screen->terminal_id = MAX_DECID;
-	else
-	    screen->terminal_id = atoi(DFT_DECID);
+	screen->terminal_id = limitedTerminalID(screen->terminal_id);
 	break;
     }
     TRACE(("term_id '%s' -> terminal_id %d\n",
@@ -9745,6 +9760,24 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_GRAPHICS
+    init_Sres(screen.graph_id);
+    screen->graphics_id = decodeTerminalID(TScreenOf(request)->graph_id);
+    switch (screen->graphics_id) {
+    case 125:
+    case 240:
+    case 241:
+    case 330:
+    case 340:
+    case 382:
+	break;
+    default:
+	screen->graphics_id = 0;
+	break;
+    }
+    TRACE(("graph_id '%s' -> graphics_id %d\n",
+	   screen->graph_id,
+	   screen->graphics_id));
+
     init_Ires(screen.numcolorregisters);
     TRACE(("initialized NUM_COLOR_REGISTERS to resource default: %d\n",
 	   screen->numcolorregisters));
@@ -9758,7 +9791,7 @@ VTInitialize(Widget wrequest,
     {
 	int native_w, native_h;
 
-	switch (screen->terminal_id) {
+	switch (GraphicsId(screen)) {
 	case 125:
 	    native_w = 768;
 	    native_h = 460;
@@ -9794,8 +9827,8 @@ VTInitialize(Widget wrequest,
 	screen->graphics_regis_def_high = 1000;
 	screen->graphics_regis_def_wide = 1000;
 	if (!x_strcasecmp(screen->graphics_regis_screensize, "auto")) {
-	    TRACE(("setting default ReGIS screensize based on terminal_id %d\n",
-		   screen->terminal_id));
+	    TRACE(("setting default ReGIS screensize based on graphics_id %d\n",
+		   GraphicsId(screen)));
 	    screen->graphics_regis_def_high = (Dimension) native_w;
 	    screen->graphics_regis_def_wide = (Dimension) native_h;
 	} else {
@@ -9831,8 +9864,8 @@ VTInitialize(Widget wrequest,
 	screen->graphics_max_high = 1000;
 	screen->graphics_max_wide = 1000;
 	if (!x_strcasecmp(screen->graphics_max_size, "auto")) {
-	    TRACE(("setting max graphics screensize based on terminal_id %d\n",
-		   screen->terminal_id));
+	    TRACE(("setting max graphics screensize based on graphics_id %d\n",
+		   GraphicsId(screen)));
 	    screen->graphics_max_high = (Dimension) native_w;
 	    screen->graphics_max_wide = (Dimension) native_h;
 	} else {
@@ -10123,7 +10156,6 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
     TRACE_FREE_LEAK(xw->misc.T_geometry);
     TRACE_FREE_LEAK(xw->misc.geo_metry);
-    TRACE_FREE_LEAK(xw->screen.term_id);
 #if OPT_INPUT_METHOD
     cleanupInputMethod(xw);
     TRACE_FREE_LEAK(xw->misc.f_x);

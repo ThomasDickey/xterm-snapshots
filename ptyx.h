@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1000 2020/06/30 22:32:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1002 2020/07/02 19:31:26 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2206,23 +2206,28 @@ typedef enum {
 	, STEADY_BAR
 } XtCursorStyle;
 
+#define GraphicsId(screen) (\
+	(screen)->graphics_id \
+	 ? (screen)->graphics_id \
+	 : (screen)->terminal_id)
+
 #if OPT_REGIS_GRAPHICS
 #define optRegisGraphics(screen) \
-	((screen)->terminal_id == 240 || \
-	 (screen)->terminal_id == 241 || \
-	 (screen)->terminal_id == 330 || \
-	 (screen)->terminal_id == 340)
+	(GraphicsId(screen) == 240 || \
+	 GraphicsId(screen) == 241 || \
+	 GraphicsId(screen) == 330 || \
+	 GraphicsId(screen) == 340)
 #else
 #define optRegisGraphics(screen) False
 #endif
 
 #if OPT_SIXEL_GRAPHICS
 #define optSixelGraphics(screen) \
-	((screen)->terminal_id == 240 || \
-	 (screen)->terminal_id == 241 || \
-	 (screen)->terminal_id == 330 || \
-	 (screen)->terminal_id == 340 || \
-	 (screen)->terminal_id == 382)
+	(GraphicsId(screen) == 240 || \
+	 GraphicsId(screen) == 241 || \
+	 GraphicsId(screen) == 330 || \
+	 GraphicsId(screen) == 340 || \
+	 GraphicsId(screen) == 382)
 #else
 #define optSixelGraphics(screen) False
 #endif
@@ -2627,6 +2632,8 @@ typedef struct {
 #endif
 
 #if OPT_GRAPHICS
+	String		graph_id;		/* resource for graphics_id */
+	int		graphics_id;		/* based on terminal_id   */
 	String		graphics_max_size;	/* given a size in pixels */
 	Dimension	graphics_max_wide;	/* ...corresponding width */
 	Dimension	graphics_max_high;	/* ...and height          */
