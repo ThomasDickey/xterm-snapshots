@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.588 2020/07/01 20:41:13 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.592 2020/07/03 21:14:21 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #357
-.ds RF 2020/07/01
+.ds RF 2020/07/03
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2331,12 +2331,32 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .iP
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 Set Text Parameters.
+Some control sequences return information:
+.RS
+.bP
 For colors and font,
 if \*(Pt is a \*(``?\*('',
 the control sequence elicits a response which consists
 of the control sequence which would set the corresponding value.
+.bP
 The \fIdtterm\fP control sequences allow you to determine the icon name
 and window title.
+.RE
+.sP
+\*(XT accepts either \*(Be or \*(ST for terminating \*(Os sequences,
+and when returning information, uses the same terminator used in a query.
+While the latter is preferred,
+the former is supported for legacy applications:
+.RS
+.bP
+Although documented in the changes for X.V10R4 (December 1986),
+\*(Be as a string terminator dates from X11R4 (December 1989).
+.bP
+Since XFree86-3.1.2Ee (August 1996), \*(xt has accepted \*(ST
+(the documented string terminator in ECMA-48).
+.RE
+.sP
+\*(Ps specifies the type of operation to perform:
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt.
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt.
@@ -3928,8 +3948,8 @@ Starting in July 1996,
 and further extended the group of window controls.
 .IP
 There were two sets of controls
-(\*(Cs\*(Ps[\*s\*;\*(Pm\*s\*;\*(Pm]\*t,
-and \*(Os\*(Ps\fItext\fP\*(ST) implemented
+(\*(Cs\*(Ps\*s\fI[\fP\*s\*;\*(Pm\*s\*;\*(Pm\*s\fI]\fP\*s\*t,
+and \*(Os\*(Ps\*s\fItext\fP\*s\*(ST) implemented
 by \fIshelltool\fP, documented in appendix E of both
 \fIPHIGS Programming Manual\fP (1992), and the unpublished
 \fIX Window System User's Guide (OPEN LOOK Edition)\fP (1995).

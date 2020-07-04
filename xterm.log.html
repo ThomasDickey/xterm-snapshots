@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2207 2020/07/02 20:06:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.2210 2020/07/03 21:16:04 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -998,6 +998,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>several minor optimizations for the ReGIS and SIXEL
+    features, improving performance by 10%.</li>
+
     <li>add resource <code>decGraphicsID</code> to allow displaying
     graphics when the emulation level would ordinarily disallow
     this (prompted by discussion with Thomas Wolff).</li>
@@ -1234,7 +1237,7 @@
   <ul>
     <li>adjust fontsize data to handle a minor inconsistency from
     recent Xft versions (Debian #880407, adapted from patch by
-    Vincent Lefevre).</li>
+    Vincent Lef&egrave;vre).</li>
 
     <li>add a table to the manual page description of
     <code>forceBoxChars</code> to alert the reader to the special
@@ -4424,7 +4427,8 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
     <li>revert of <a href="#xterm_282">patch #282</a> change was
     incomplete (report by Jim Reisert).</li>
 
-    <li>fix typo in manpage (report by Vincent Lefevre).</li>
+    <li>fix typo in manpage (report by Vincent
+    Lef&egrave;vre).</li>
   </ul>
 
   <h1><a name="xterm_289" id="xterm_289">Patch #289 -
@@ -5453,7 +5457,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>append a timestamp to filename used in
     <code>printFileOnXError</code> feature, and restrict its
-    permissions (request by Vincent Lefevre).</li>
+    permissions (request by Vincent Lef&egrave;vre).</li>
 
     <li>add a check when cancelling cursor-blinking, in case the
     cursor is blinked off. Fix so that the cursor is repainted
@@ -5775,7 +5779,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
   <ul>
     <li>fix a regression in fontname logic from <a href=
     "#xterm_263">patch #263</a> changes (Debian #600707, reported
-    by Vincent Lefevre).</li>
+    by Vincent Lef&egrave;vre).</li>
 
     <li>revert modification of any-event/any-button protocol from
     <a href="#xterm_263">patch #263</a> changes. It interferes with
@@ -7209,7 +7213,7 @@ Go-Mono-Italic.ttf: "Go Mono" "Italic"
 
     <li>correct index expression used to set line-wrapping flag,
     making selection from scrollback work consistently (Debian
-    #430121, report by Vincent Lefevre).</li>
+    #430121, report by Vincent Lef&egrave;vre).</li>
 
     <li>amend changes to handshake in <a href="#xterm_226">patch
     #226</a> to accommodate Solaris, which relies on the extra
@@ -10073,8 +10077,8 @@ Klanderman).
     <li>modify logic for <code>metaSendsEscape</code> to allow it
     to work in a setup where the Meta-key is not recognized as a
     modifier by the key-translations logic (discussion of
-    eightBitInput with H.J.Lu). Note however that Vincent Lefevre
-    reported this in January).</li>
+    eightBitInput with H.J.Lu). Note however that Vincent
+    Lef&egrave;vre reported this in January).</li>
 
     <li>use null pointer values consistently, rather than literal
     "0", for ending variable-length argument lists, e.g., for
@@ -10208,7 +10212,7 @@ Klanderman).
   <ul>
     <li>correct a bug in selection: double clicking on a word which
     was partly scrolled off the screen may select that text (report
-    by Vincent Lefevre &lt;vincent@vinc17.org&gt;).</li>
+    by Vincent Lef&egrave;vre &lt;vincent@vinc17.org&gt;).</li>
 
     <li>implement <code>veryBoldColors</code> resource to control
     whether the corresponding video attribute such as
