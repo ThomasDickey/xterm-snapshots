@@ -1,7 +1,8 @@
-/* $XTermId: graphics_regis.c,v 1.116 2020/07/02 19:37:12 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.120 2020/07/03 17:35:06 tom Exp $ */
 
 /*
  * Copyright 2014-2019,2020 by Ross Combs
+ * Copyright 2014-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -47,30 +48,6 @@
 /* get rid of shadowing warnings (we will not draw Bessel functions) */
 #define y1 my_y1
 #define y0 my_y0
-
-#define IS_HEX_DIGIT(CH) ( \
-  (CH) == '0' || \
-  (CH) == '1' || \
-  (CH) == '2' || \
-  (CH) == '3' || \
-  (CH) == '4' || \
-  (CH) == '5' || \
-  (CH) == '6' || \
-  (CH) == '7' || \
-  (CH) == '8' || \
-  (CH) == '9' || \
-  (CH) == 'a' || \
-  (CH) == 'b' || \
-  (CH) == 'c' || \
-  (CH) == 'd' || \
-  (CH) == 'e' || \
-  (CH) == 'f' || \
-  (CH) == 'A' || \
-  (CH) == 'B' || \
-  (CH) == 'C' || \
-  (CH) == 'D' || \
-  (CH) == 'E' || \
-  (CH) == 'F' )
 
 #define SCALE_FIXED_POINT 16U
 
@@ -162,7 +139,7 @@ typedef struct RegisAlphabet {
     char           fontname[REGIS_FONTNAME_LEN];
     int            use_font;
     int            loaded[MAX_GLYPHS];
-    unsigned char *bytes;
+    Char          *bytes;
 } RegisAlphabet;
 
 typedef struct RegisDataFragment {
@@ -292,13 +269,13 @@ static RegisParseState persistent_state;
 #define DRAW_ALL(C, COL) \
     draw_solid_rectangle((C)->destination_graphic, 0, 0, (C)->width, (C)->height, (COL))
 
-static unsigned get_shade_character_pixel(unsigned char const *pixels,
+static unsigned get_shade_character_pixel(Char const *pixels,
 					  unsigned w, unsigned h,
 					  unsigned smaxf, unsigned scale,
 					  int slant_dx, int px, int py);
 static void get_bitmap_of_character(RegisGraphicsContext const *context,
 				    int ch, unsigned maxw, unsigned maxh,
-				    unsigned char *pixels,
+				    Char *pixels,
 				    unsigned *w, unsigned *h,
 				    unsigned max_pixels);
 
@@ -310,7 +287,7 @@ init_regis_load_state(RegisParseState *state)
     state->load_h = 10U;
     state->load_alphabet = 1U;	/* FIXME: is this the correct default */
     state->load_name[0] = '\0';
-    state->load_glyph = (unsigned) (unsigned char) '\0';
+    state->load_glyph = (unsigned) (Char) '\0';
     state->load_row = 0U;
 }
 
@@ -448,7 +425,7 @@ shade_pattern_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 }
 
 static void
-shade_char_to_pixel(RegisGraphicsContext *context, unsigned char const *pixels,
+shade_char_to_pixel(RegisGraphicsContext *context, Char const *pixels,
 		    unsigned w, unsigned h, unsigned dim, int ref, int x, int y)
 {
     unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
@@ -513,7 +490,7 @@ shade_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 	unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
 	unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
 	char ch = context->temporary_write_controls.shading_character;
-	unsigned char pixels[MAX_GLYPH_PIXELS];
+	Char pixels[MAX_GLYPH_PIXELS];
 	unsigned w, h;
 
 	get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
@@ -580,7 +557,7 @@ draw_filled_polygon(RegisGraphicsContext *context)
     unsigned p;
     int old_x, old_y;
     int inside;
-    unsigned char pixels[MAX_GLYPH_PIXELS];
+    Char pixels[MAX_GLYPH_PIXELS];
     unsigned w = 1, h = 1;
 
     if (context->temporary_write_controls.shading_character != '\0') {
@@ -1514,7 +1491,7 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
 
 #ifdef DEBUG_SPECIFIC_CHAR_METRICS
 static void
-dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
+dump_bitmap_pixels(Char const *pixels, unsigned w, unsigned h)
 {
     unsigned yy, xx;
 
@@ -1535,7 +1512,7 @@ dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
 #if OPT_RENDERFONT && defined(HAVE_TYPE_FCCHAR32)
 static int
 copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
-			  unsigned char *pixels, unsigned w, unsigned h,
+			  Char *pixels, unsigned w, unsigned h,
 			  unsigned xmin, unsigned ymin)
 {
     /*
@@ -1593,9 +1570,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
-	    pixels[yy * w + xx] = (unsigned char) XGetPixel(image,
-							    (int) xx,
-							    (int) yy);
+	    pixels[yy * w + xx] = (XGetPixel(image, (int) xx, (int) yy) != 0);
 	}
     }
 
@@ -1611,7 +1586,8 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 {
     unsigned workw, workh;
     FcChar32 ch;
-    unsigned char *pixels;
+    Char *pixels;
+    Char *pixelp;
     unsigned yy, xx;
     unsigned char_count, pixel_count;
     unsigned real_minx, real_maxx, real_miny, real_maxy;
@@ -1667,16 +1643,17 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	char_maxx = 0U;
 	char_miny = workh - 1U;
 	char_maxy = 0U;
+	pixelp = pixels;
 	for (yy = 0U; yy < workh; yy++) {
 	    for (xx = 0U; xx < workw; xx++) {
-		if (pixels[yy * workw + xx]) {
+		if (*pixelp++) {
 		    if (xx < char_minx)
 			char_minx = xx;
-		    if (xx > char_maxx)
+		    else if (xx > char_maxx)
 			char_maxx = xx;
 		    if (yy < char_miny)
 			char_miny = yy;
-		    if (yy > char_maxy)
+		    else if (yy > char_maxy)
 			char_maxy = yy;
 		    pixel_count++;
 		}
@@ -1966,7 +1943,7 @@ find_best_xft_font_size(XtermWidget xw,
 static int
 get_xft_bitmap_of_character(RegisGraphicsContext const *context,
 			    char const *fontname, int ch,
-			    unsigned maxw, unsigned maxh, unsigned char *pixels,
+			    unsigned maxw, unsigned maxh, Char *pixels,
 			    unsigned max_pixels, unsigned *w, unsigned *h)
 {
     /*
@@ -2065,9 +2042,9 @@ static int
 get_user_bitmap_of_character(RegisGraphicsContext const *context,
 			     int ch,
 			     unsigned alphabet_index,
-			     unsigned char *pixels)
+			     Char *pixels)
 {
-    const unsigned char *glyph;
+    const Char *glyph;
     unsigned w, h;
     unsigned xx, yy;
     unsigned byte, bit;
@@ -2075,7 +2052,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     assert(context);
     assert(pixels);
 
-    if (!context->alphabets[alphabet_index].loaded[(unsigned char) ch]) {
+    if (!context->alphabets[alphabet_index].loaded[(Char) ch]) {
 	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
 	       context->current_text_controls->alphabet_num, alphabet_index,
 	       ch));
@@ -2087,7 +2064,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     w = context->alphabets[alphabet_index].pixw;
     h = context->alphabets[alphabet_index].pixh;
     glyph = &context->alphabets[alphabet_index]
-	.bytes[(unsigned char) ch * GLYPH_WIDTH_BYTES(w) * h];
+	.bytes[(Char) ch * GLYPH_WIDTH_BYTES(w) * h];
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
@@ -2136,7 +2113,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
  */
 static void
 get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
-			unsigned maxw, unsigned maxh, unsigned char *pixels,
+			unsigned maxw, unsigned maxh, Char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
     unsigned bestmatch;
@@ -2224,7 +2201,7 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 #define SIGNED_UNSIGNED_MOD(VAL, BASE) ( (((VAL) % (int) (BASE)) + (int) (BASE)) % (int) (BASE) )
 
 static unsigned
-get_shade_character_pixel(unsigned char const *pixels, unsigned w, unsigned h,
+get_shade_character_pixel(Char const *pixels, unsigned w, unsigned h,
 			  unsigned smaxf, unsigned scale, int slant_dx,
 			  int px, int py)
 {
@@ -2263,7 +2240,7 @@ draw_character(RegisGraphicsContext *context, int ch,
     int ox, oy;
     unsigned pad_left, pad_right;
     unsigned pad_top, pad_bottom;
-    unsigned char pixels[MAX_GLYPH_PIXELS];
+    Char pixels[MAX_GLYPH_PIXELS];
     unsigned value;
 
     get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
@@ -3215,16 +3192,7 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     /* FIXME: handle exponential notation and rounding */
     /* FIXME: check for junk after the number */
     ch = peek_fragment(input);
-    if (ch != '0' &&
-	ch != '1' &&
-	ch != '2' &&
-	ch != '3' &&
-	ch != '4' &&
-	ch != '5' &&
-	ch != '6' &&
-	ch != '7' &&
-	ch != '8' &&
-	ch != '9' &&
+    if (!isdigit(CharOf(ch)) &&
 	ch != '+' &&
 	ch != '-') {
 	return 0;
@@ -7039,7 +7007,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	case 'l':
 	    /* FIXME: confirm that extra characters are ignored */
 	    TRACE(("found character to load: \"%s\"\n", state->temp));
-	    state->load_glyph = (unsigned) (unsigned char) state->temp[0];
+	    state->load_glyph = (unsigned) (Char) state->temp[0];
 	    state->load_row = 0U;
 	    break;
 	case 't':
@@ -7064,7 +7032,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	for (digit = 0U; digit < (state->load_w + 3U) >> 2U; digit++) {
 	    char ch = peek_fragment(input);
 
-	    if (!IS_HEX_DIGIT(ch)) {
+	    if (!isxdigit(CharOf(ch))) {
 		if (ch != ',' && ch != ';' &&
 		    ch != ' ' && ch != '\r' &&
 		    ch != '\n') {
@@ -7118,13 +7086,13 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		* context->alphabets[state->load_index].pixh;
 	    if (context->alphabets[state->load_index].bytes == NULL) {
 		if (!(context->alphabets[state->load_index].bytes =
-		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(unsigned char)))) {
+		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(Char)))) {
 		    TRACE(("ERROR: unable to allocate %u bytes for glyph storage\n",
 			   MAX_GLYPHS * glyph_size));
 		    return 0;
 		}
 	    } {
-		unsigned char *glyph;
+		Char *glyph;
 		unsigned bytew;
 		unsigned byte;
 		unsigned unused_bits;
@@ -7140,7 +7108,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		for (byte = 0U; byte < bytew; byte++) {
 		    glyph[state->load_row * bytew + byte] =
-			(unsigned char) (((val << unused_bits) >>
+			(Char) (((val << unused_bits) >>
 					  ((bytew - (byte + 1U)) << 3U))
 					 & 255U);
 #ifdef DEBUG_LOAD
@@ -7274,7 +7242,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     }
     /* Load statements contain hex values which may look like commands. */
     ch = peek_fragment(&state->input);
-    if (state->command != 'l' || !IS_HEX_DIGIT(ch)) {
+    if (state->command != 'l' || !isxdigit(CharOf(ch))) {
 #ifdef DEBUG_PARSING
 	TRACE(("checking for top level command...\n"));
 #endif

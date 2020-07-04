@@ -1,7 +1,8 @@
-/* $XTermId: graphics_sixel.c,v 1.19 2020/01/18 18:38:25 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.25 2020/07/04 01:07:27 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2020 by Ross Combs
+ * Copyright 2014-2016,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -122,7 +123,9 @@ typedef struct {
 static void
 init_sixel_background(Graphic *graphic, SixelContext const *context)
 {
-    const int mw = graphic->max_width;
+    RegisterNum *source;
+    RegisterNum *target;
+    size_t length;
     int r, c;
 
     TRACE(("initializing sixel background to size=%dx%d bgcolor=%hu\n",
@@ -133,10 +136,15 @@ init_sixel_background(Graphic *graphic, SixelContext const *context)
     if (context->background == COLOR_HOLE)
 	return;
 
-    for (r = 0; r < graphic->actual_height; r++) {
-	for (c = 0; c < graphic->actual_width; c++) {
-	    graphic->pixels[r * mw + c] = context->background;
-	}
+    source = graphic->pixels;
+    for (c = 0; c < graphic->actual_width; c++) {
+	source[c] = context->background;
+    }
+    target = source;
+    length = (size_t) graphic->actual_width * sizeof(*target);
+    for (r = 1; r < graphic->actual_height; r++) {
+	target += graphic->max_width;
+	memcpy(target, source, length);
     }
     graphic->color_registers_used[context->background] = 1;
 }
@@ -451,7 +459,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		init_sixel_background(graphic, &context);
 		graphic->valid = 1;
 	    }
-	    set_sixel(graphic, &context, sixel);
+	    if (sixel)
+		set_sixel(graphic, &context, sixel);
 	    context.col++;
 	} else if (ch == '$') {	/* DECGCR */
 	    /* ignore DECCRNLM in sixel mode */
@@ -496,19 +505,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    start = ++string;
 	    for (;;) {
 		ch = CharOf(*string);
-		if (ch != '0' &&
-		    ch != '1' &&
-		    ch != '2' &&
-		    ch != '3' &&
-		    ch != '4' &&
-		    ch != '5' &&
-		    ch != '6' &&
-		    ch != '7' &&
-		    ch != '8' &&
-		    ch != '9' &&
-		    ch != ' ' &&
-		    ch != '\r' &&
-		    ch != '\n')
+		if (!(isdigit(ch) || isspace(ch)))
 		    break;
 		string++;
 	    }
@@ -528,9 +525,13 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		init_sixel_background(graphic, &context);
 		graphic->valid = 1;
 	    }
-	    for (i = 0; i < Pcount; i++) {
-		set_sixel(graphic, &context, sixel);
-		context.col++;
+	    if (sixel) {
+		for (i = 0; i < Pcount; i++) {
+		    set_sixel(graphic, &context, sixel);
+		    context.col++;
+		}
+	    } else {
+		context.col += Pcount;
 	    }
 	} else if (ch == '#') {	/* DECGCI */
 	    ANSI color_params;

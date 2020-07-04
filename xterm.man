@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.808 2020/07/02 20:02:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.809 2020/07/03 23:05:42 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -4007,12 +4007,12 @@ this resource controls the maximum size of a graph which can be displayed.
 The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
 .IP
 If the resource is \*(``auto\*('' then \fI\*n\fR will use the
-\fBdecTerminalID\fP resource:
+\fBdecGraphicsID\fP resource (or \fBdecTerminalID\fP if that is not set):
 .TS
 l l
 _ _
 r r.
-\fBResult\fR	\fBdecTerminalID\fR
+\fBResult\fR	\fBdecGraphicsID\fR
 768x400	125
 800x460	240
 800x460	241
@@ -4595,12 +4595,15 @@ The application using ReGIS may use the \*(``A\*('' option of
 the \*(``S\*('' command to adjust the coordinate space or change the
 addressable portion of the screen.
 .IP
-The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
-.IP
 \fI\*N\fR accepts a special resource value \*(``auto\*('',
-which tells \fI\*n\fR to use the \fBdecTerminalID\fP resource to
+which tells \fI\*n\fR to use the
+\fBdecGraphicsID\fP and
+\fBdecTerminalID\fP
+resources to
 set the default size based on the hardware terminal's limits.
 Those limits are the same as for the \fBmaxGraphicSize\fP resource.
+.IP
+The default is \*(``auto\*(''.
 .TP 8
 .B "renderFont\fP (class\fB RenderFont\fP)"
 If \fI\*n\fR is built with the Xft library,

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1002 2020/07/02 19:31:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1003 2020/07/04 01:06:46 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2206,10 +2206,14 @@ typedef enum {
 	, STEADY_BAR
 } XtCursorStyle;
 
+#if OPT_GRAPHICS
 #define GraphicsId(screen) (\
 	(screen)->graphics_id \
 	 ? (screen)->graphics_id \
 	 : (screen)->terminal_id)
+#else
+#define GraphicsId(screen) (screen)->terminal_id
+#endif
 
 #if OPT_REGIS_GRAPHICS
 #define optRegisGraphics(screen) \
