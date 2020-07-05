@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.949 2020/07/02 19:43:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.950 2020/07/05 19:30:28 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -7369,7 +7369,6 @@ xtermReportColors(XtermWidget xw)
     reply.a_pintro = '?';
     reply.a_param[reply.a_nparam++] = (ParmType) s->used;
     reply.a_param[reply.a_nparam++] = (ParmType) s->last;
-    reply.a_nparam = reply.a_nparam;
     reply.a_inters = '#';
     reply.a_final = 'Q';
     unparseseq(xw, &reply);
