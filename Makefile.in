@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.250 2020/06/23 22:55:14 tom Exp $
+## $XTermId: Makefile.in,v 1.251 2020/07/06 19:49:45 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -233,15 +233,15 @@ builtin_icons.h :
 
 ################################################################################
 test_charclass$x : $(srcdir)/charclass.c
-	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/charclass.c $(LDFLAGS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/charclass.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 test_ptydata$x : $(srcdir)/ptydata.c
-	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/ptydata.c $(LDFLAGS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/ptydata.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 test_wcwidth$x : $(srcdir)/wcwidth.c
-	$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/wcwidth.c $(LDFLAGS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -DTEST_DRIVER $(srcdir)/wcwidth.c $(LDFLAGS) $(LIBS)
 
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
