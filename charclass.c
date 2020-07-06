@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.40 2020/04/27 21:43:08 tom Exp $ */
+/* $XTermId: charclass.c,v 1.41 2020/07/06 20:00:12 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2020 by Thomas E. Dickey
@@ -62,6 +62,7 @@
 
 #include <ctype.h>
 #include <wchar.h>
+#include <wctype.h>
 
 #if OPT_TRACE
 #define Trace if (opt_v) printf
