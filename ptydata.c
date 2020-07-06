@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.145 2020/07/01 21:16:50 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.146 2020/07/06 07:56:56 H.Merijn.Brand Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -595,11 +595,13 @@ noleaks_ptydata(void)
 
 #include "data.c"
 
+#ifdef ALLOWLOGGING
 void
 FlushLog(XtermWidget xw)
 {
     (void) xw;
 }
+#endif
 
 void
 v_write(int f, const Char *data, unsigned len)
