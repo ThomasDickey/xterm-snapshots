@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1768 2020/07/02 19:33:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1770 2020/07/12 15:47:18 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -8726,11 +8726,20 @@ static int
 decodeTerminalID(const char *value)
 {
     const char *s;
+    char *t;
+    long result;
+
     for (s = value; *s; s++) {
 	if (!isalpha(CharOf(*s)))
 	    break;
     }
-    return atoi(value);
+    result = strtol(s, &t, 10);
+    if (t == s || *t != '\0' || result <= 0L || result > 1000L) {
+	xtermWarning("unexpected value for terminalID: \"%s\"\n", value);
+	result = atoi(DFT_DECID);
+    }
+    TRACE(("decodeTerminalID \"%s\" ->%d\n", value, (int) result));
+    return (int) result;
 }
 
 static int

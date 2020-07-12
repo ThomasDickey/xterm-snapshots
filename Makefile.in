@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.251 2020/07/06 19:49:45 tom Exp $
+## $XTermId: Makefile.in,v 1.252 2020/07/12 16:00:49 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -535,9 +535,9 @@ uninstall-full ::
 ################################################################################
 check : $(TEST_PROGRAMS)
 	@ echo "See demos in vttests/* (use vttest for system-level testing)"
-	@ $(SHELL) -c 'echo "** excuting test_charclass"; \
+	@ $(SHELL) -c 'echo "** executing test_charclass"; \
 		./test_charclass'
-	@ $(SHELL) -c 'echo "** excuting test_wcwidth"; \
+	@ $(SHELL) -c 'echo "** executing test_wcwidth"; \
 		for range in 32-126 160-0xff00 0x10000-0x11000; \
 		do echo ".. range $$range"; \
 		./test_wcwidth -s $$range; \
