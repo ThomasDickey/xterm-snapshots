@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.132 2020/07/06 00:35:21 tom Exp $
+# $XTermId: xterm.spec,v 1.134 2020/07/25 18:19:28 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 358
+Version: 359
 Release: 1
 License: X11
 Group: User Interface/X
@@ -123,7 +123,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
         --enable-mini-luit \
         --enable-regis-graphics \
         --enable-sco-fkeys \
-        --enable-sixel-graphics \
         --enable-toolbar \
         --enable-xmc-glitch \
         --with-app-defaults=%{_xresdir} \
@@ -246,6 +245,9 @@ exit 0
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Sat Jul 25 2020 Thomas E. Dickey
+- sixels are enabled by default
 
 * Sun Mar 08 2020 Thomas E. Dickey
 - remove "--vendor" option from desktop-file-install
