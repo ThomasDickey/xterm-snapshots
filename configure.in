@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.368 2020/01/11 20:06:47 tom Exp $
+dnl $XTermId: configure.in,v 1.369 2020/07/25 17:52:31 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1036,10 +1036,10 @@ if test "$enable_regis_graphics" = yes ; then
 fi
 
 AC_MSG_CHECKING(if you want sixel graphics support)
-CF_ARG_ENABLE(sixel-graphics,
-	[  --enable-sixel-graphics enable sixel graphics support],
-	[enable_sixel_graphics=yes],
-	[enable_sixel_graphics=no])
+CF_ARG_DISABLE(sixel-graphics,
+	[  --disable-sixel-graphics disable sixel graphics support],
+	[enable_sixel_graphics=no],
+	[enable_sixel_graphics=yes])
 AC_MSG_RESULT($enable_sixel_graphics)
 if test "$enable_sixel_graphics" = yes ; then
 	AC_DEFINE(OPT_SIXEL_GRAPHICS,1,[Define to 1 to enable sixel graphics support])

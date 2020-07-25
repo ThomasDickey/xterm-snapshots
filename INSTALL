@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.183 2019/07/19 00:46:40 tom Exp $
+-- $XTermId: INSTALL,v 1.184 2020/07/25 17:58:05 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2018,2019 by Thomas E. Dickey
+-- Copyright 1997-2019,2020 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -325,6 +325,10 @@ The options (in alphabetic order):
 	Do not install xterm using setuid/setgid permissions.  Drop setuid
 	permissions on startup.
 
+  --disable-sixel-graphics disable support for sixel-graphics
+
+  	Do not compile-in code to support sixel-graphics
+
   --disable-sun-fkeys
 
   	Do not compile-in code to support Sun-style function keys.
@@ -526,10 +530,6 @@ The options (in alphabetic order):
   --enable-regis-graphics enable support for ReGIS graphics
 
   	Compile-in code to support experimental ReGIS graphics
-
-  --enable-sixel-graphics enable support for sixel-graphics
-
-  	Compile-in code to support experimental sixel-graphics
 
   --enable-toolbar        enable pulldown menus on toolbar
 

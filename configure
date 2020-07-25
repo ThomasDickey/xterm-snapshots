@@ -803,7 +803,7 @@ Optional Features:
   --enable-dec-locator    enable DECterm Locator support
   --disable-screen-dumps  disable XHTML and SVG screen dumps
   --enable-regis-graphics enable ReGIS graphics support
-  --enable-sixel-graphics enable sixel graphics support
+  --disable-sixel-graphics disable sixel graphics support
   --disable-rectangles    disable VT420 rectangle support
   --disable-ziconbeep     disable -ziconbeep option
 Testing/development Options:
@@ -21915,15 +21915,15 @@ echo $ECHO_N "checking if you want sixel graphics support... $ECHO_C" >&6
 # Check whether --enable-sixel-graphics or --disable-sixel-graphics was given.
 if test "${enable_sixel_graphics+set}" = set; then
   enableval="$enable_sixel_graphics"
-  test "$enableval" != yes && enableval=no
-	if test "$enableval" != "no" ; then
-    enable_sixel_graphics=yes
+  test "$enableval" != no && enableval=yes
+	if test "$enableval" != "yes" ; then
+    enable_sixel_graphics=no
 	else
-		enable_sixel_graphics=no
+		enable_sixel_graphics=yes
 	fi
 else
-  enableval=no
-	enable_sixel_graphics=no
+  enableval=yes
+	enable_sixel_graphics=yes
 
 fi;
 echo "$as_me:21929: result: $enable_sixel_graphics" >&5
