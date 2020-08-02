@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.950 2020/07/05 19:30:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.951 2020/08/02 21:08:40 Michael.Gulick Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3306,7 +3306,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 			screen->selection_time =
 			    XtLastTimestampProcessed(TScreenOf(xw)->display);
 
-			for (j = 0, buf = old; j < n; ++j) {
+			for (j = 0; j < n; ++j) {
+			    buf = old;
 			    ClearSelectionBuffer(screen, select_args[j]);
 			    while (*buf != '\0') {
 				AppendToSelectionBuffer(screen,
