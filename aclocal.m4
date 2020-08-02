@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.460 2020/06/03 00:19:38 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.461 2020/07/11 23:09:29 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2169,7 +2169,7 @@ esac
 AC_SUBST(LINT_OPTS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 13 updated: 2020/03/10 18:53:47
+dnl CF_REGEX version: 14 updated: 2020/07/11 19:09:29
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -2181,7 +2181,7 @@ cf_regex_func=no
 cf_regex_libs="regex re"
 case $host_os in
 (mingw*)
-	cf_regex_libs="gnurx $cf_regex_libs"
+	cf_regex_libs="systre gnurx $cf_regex_libs"
 	;;
 esac
 

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.252 2020/07/12 16:00:49 tom Exp $
+## $XTermId: Makefile.in,v 1.253 2020/08/02 19:12:41 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -530,7 +530,7 @@ uninstall-full ::
 @desktop_utils@install-full ::
 @desktop_utils@	ACTUAL_XTERM=$(actual_xterm) \
 @desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
-@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) $(DESKTOP_FLAGS) $$n; \
+@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(ICON_NAME) DESTDIR="$(DESTDIR)" $(DESKTOP_FLAGS) $$n; \
 @desktop_utils@		done'
 ################################################################################
 check : $(TEST_PROGRAMS)
