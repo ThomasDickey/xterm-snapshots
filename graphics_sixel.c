@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.25 2020/07/04 01:07:27 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.26 2020/08/03 23:53:32 tom Exp $ */
 
 /*
  * Copyright 2014-2016,2020 by Ross Combs
@@ -500,7 +500,6 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    int Pcount;
 	    const char *start;
 	    int sixel;
-	    int i;
 
 	    start = ++string;
 	    for (;;) {
@@ -526,6 +525,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		graphic->valid = 1;
 	    }
 	    if (sixel) {
+		int i;
 		for (i = 0; i < Pcount; i++) {
 		    set_sixel(graphic, &context, sixel);
 		    context.col++;

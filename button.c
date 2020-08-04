@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.583 2020/06/25 00:12:29 tom Exp $ */
+/* $XTermId: button.c,v 1.585 2020/08/04 08:10:25 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -209,6 +209,7 @@ MouseLimit(TScreen *screen)
 	break;
     case SET_SGR_EXT_MODE_MOUSE:
     case SET_URXVT_EXT_MODE_MOUSE:
+    case SET_PIXEL_POSITION_MOUSE:
 	mouse_limit = -1;
 	break;
     }
@@ -250,8 +251,8 @@ EmitMousePosition(TScreen *screen, Char line[], unsigned count, int value)
 	}
 	break;
     case SET_SGR_EXT_MODE_MOUSE:
-	/* FALLTHRU */
     case SET_URXVT_EXT_MODE_MOUSE:
+    case SET_PIXEL_POSITION_MOUSE:
 	count += (unsigned) sprintf((char *) line + count, "%d", value + 1);
 	break;
     }
@@ -264,6 +265,7 @@ EmitMousePositionSeparator(TScreen *screen, Char line[], unsigned count)
     switch (screen->extend_coords) {
     case SET_SGR_EXT_MODE_MOUSE:
     case SET_URXVT_EXT_MODE_MOUSE:
+    case SET_PIXEL_POSITION_MOUSE:
 	line[count++] = ';';
 	break;
     }
@@ -2652,6 +2654,7 @@ EndExtend(XtermWidget xw,
 		    line[count++] = 't';
 		    break;
 		case SET_SGR_EXT_MODE_MOUSE:
+		case SET_PIXEL_POSITION_MOUSE:
 		    line[count++] = '<';
 		    break;
 		}
@@ -2663,6 +2666,7 @@ EndExtend(XtermWidget xw,
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
 		case SET_URXVT_EXT_MODE_MOUSE:
+		case SET_PIXEL_POSITION_MOUSE:
 		    line[count++] = 't';
 		    break;
 		}
@@ -2675,6 +2679,7 @@ EndExtend(XtermWidget xw,
 		    line[count++] = 'T';
 		    break;
 		case SET_SGR_EXT_MODE_MOUSE:
+		case SET_PIXEL_POSITION_MOUSE:
 		    line[count++] = '<';
 		    break;
 		}
@@ -2694,6 +2699,7 @@ EndExtend(XtermWidget xw,
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
 		case SET_URXVT_EXT_MODE_MOUSE:
+		case SET_PIXEL_POSITION_MOUSE:
 		    line[count++] = 'T';
 		    break;
 		}
@@ -4783,6 +4789,7 @@ EmitButtonCode(XtermWidget xw,
 	line[count++] = CharOf(value);
 	break;
     case SET_SGR_EXT_MODE_MOUSE:
+    case SET_PIXEL_POSITION_MOUSE:
 	value -= 32;		/* encoding starts at zero */
 	/* FALLTHRU */
     case SET_URXVT_EXT_MODE_MOUSE:
@@ -4841,7 +4848,8 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	if (button > 3)
 	    return;
     } else if (screen->extend_coords == SET_SGR_EXT_MODE_MOUSE
-	       || screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE) {
+	       || screen->extend_coords == SET_URXVT_EXT_MODE_MOUSE
+	       || screen->extend_coords == SET_PIXEL_POSITION_MOUSE) {
 	if (button > 15) {
 	    return;
 	}
@@ -4851,27 +4859,32 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	}
     }
 
-    /* Compute character position of mouse pointer */
-    row = (event->y - screen->border) / FontHeight(screen);
-    col = (event->x - OriginX(screen)) / FontWidth(screen);
+    if (screen->extend_coords == SET_PIXEL_POSITION_MOUSE) {
+	row = event->y;
+	col = event->x;
+    } else {
+	/* Compute character position of mouse pointer */
+	row = (event->y - screen->border) / FontHeight(screen);
+	col = (event->x - OriginX(screen)) / FontWidth(screen);
 
-    /* Limit to screen dimensions */
-    if (row < 0)
-	row = 0;
-    else if (row > screen->max_row)
-	row = screen->max_row;
+	/* Limit to screen dimensions */
+	if (row < 0)
+	    row = 0;
+	else if (row > screen->max_row)
+	    row = screen->max_row;
 
-    if (col < 0)
-	col = 0;
-    else if (col > screen->max_col)
-	col = screen->max_col;
+	if (col < 0)
+	    col = 0;
+	else if (col > screen->max_col)
+	    col = screen->max_col;
 
-    if (mouse_limit > 0) {
-	/* Limit to representable mouse dimensions */
-	if (row > mouse_limit)
-	    row = mouse_limit;
-	if (col > mouse_limit)
-	    col = mouse_limit;
+	if (mouse_limit > 0) {
+	    /* Limit to representable mouse dimensions */
+	    if (row > mouse_limit)
+		row = mouse_limit;
+	    if (col > mouse_limit)
+		col = mouse_limit;
+	}
     }
 
     /* Build key sequence starting with \E[M */
@@ -4896,6 +4909,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	line[count++] = final;
 	break;
     case SET_SGR_EXT_MODE_MOUSE:
+    case SET_PIXEL_POSITION_MOUSE:
 	line[count++] = '<';
 	break;
     }
@@ -4930,6 +4944,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	    if (button < 3 || button > 5) {
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
+		case SET_PIXEL_POSITION_MOUSE:
 		    final = 'm';
 		    break;
 		default:
@@ -4971,6 +4986,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	switch (screen->extend_coords) {
 	case SET_SGR_EXT_MODE_MOUSE:
 	case SET_URXVT_EXT_MODE_MOUSE:
+	case SET_PIXEL_POSITION_MOUSE:
 	    line[count++] = final;
 	    break;
 	}

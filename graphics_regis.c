@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.120 2020/07/03 17:35:06 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.121 2020/08/04 00:46:08 tom Exp $ */
 
 /*
  * Copyright 2014-2019,2020 by Ross Combs
@@ -552,7 +552,7 @@ sort_points(void const *l, void const *r)
 }
 
 static void
-draw_filled_polygon(RegisGraphicsContext *context)
+draw_shaded_polygon(RegisGraphicsContext *context)
 {
     unsigned p;
     int old_x, old_y;
@@ -560,16 +560,14 @@ draw_filled_polygon(RegisGraphicsContext *context)
     Char pixels[MAX_GLYPH_PIXELS];
     unsigned w = 1, h = 1;
 
-    if (context->temporary_write_controls.shading_character != '\0') {
-	char ch = context->temporary_write_controls.shading_character;
-	unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
-	unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
+    char ch = context->temporary_write_controls.shading_character;
+    unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
+    unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
 
-	get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
-				MAX_GLYPH_PIXELS);
-	if (w < 1U || h < 1U) {
-	    return;
-	}
+    get_bitmap_of_character(context, ch, xmaxf, ymaxf, pixels, &w, &h,
+			    MAX_GLYPH_PIXELS);
+    if (w < 1U || h < 1U) {
+	return;
     }
 
     qsort(context->fill_points, (size_t) context->fill_point_count,
@@ -604,26 +602,76 @@ draw_filled_polygon(RegisGraphicsContext *context)
 		 * Just draw the vertical line when there is not a matching
 		 * edge on the right side.
 		 */
-		if (context->temporary_write_controls.shading_character != '\0') {
-		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X,
-					old_x, old_x, old_y);
-		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
-					   old_x, old_x, old_y);
-		}
+		shade_char_to_pixel(context, pixels, w, h,
+				    WRITE_SHADING_REF_X,
+				    old_x, old_x, old_y);
 	    }
 	    inside = 1;
 	} else {
 	    if (inside) {
-		if (context->temporary_write_controls.shading_character != '\0') {
-		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X,
-					old_x, new_x, new_y);
-		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
-					   old_x, new_x, new_y);
-		}
+		shade_char_to_pixel(context, pixels, w, h,
+				    WRITE_SHADING_REF_X,
+				    old_x, new_x, new_y);
+	    }
+	    if (new_x > old_x + 1) {
+		inside = !inside;
+	    }
+	}
+
+	old_x = new_x;
+	old_y = new_y;
+    }
+
+    context->destination_graphic->dirty = 1;
+}
+
+static void
+draw_filled_polygon(RegisGraphicsContext *context)
+{
+    unsigned p;
+    int old_x, old_y;
+    int inside;
+
+    qsort(context->fill_points, (size_t) context->fill_point_count,
+	  sizeof(context->fill_points[0]), sort_points);
+
+    old_x = DUMMY_STACK_X;
+    old_y = DUMMY_STACK_Y;
+    inside = 0;
+    for (p = 0U; p < context->fill_point_count; p++) {
+	int new_x = context->fill_points[p].x;
+	int new_y = context->fill_points[p].y;
+#if 0
+	printf("got %d,%d (%d,%d) inside=%d\n", new_x, new_y, old_x, old_y, inside);
+#endif
+
+	/*
+	 * FIXME: This is using pixels to represent lines which loses
+	 * information about exact slope and how many lines are present which
+	 * causes misbehavior with some inputs (especially complex polygons).
+	 * It also takes more room than remembering vertices, but I'd rather
+	 * not have to implement line segments for arcs.  Maybe store a count
+	 * at each vertex instead (doesn't fix the slope problem).
+	 */
+	/*
+	 * FIXME: Change this to only draw inside of polygons, and round
+	 * points in a uniform direction to avoid overlapping drawing.  As an
+	 * option we could continue to support drawing the outline.
+	 */
+	if (new_y != old_y) {
+	    if (inside) {
+		/*
+		 * Just draw the vertical line when there is not a matching
+		 * edge on the right side.
+		 */
+		shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+				       old_x, old_x, old_y);
+	    }
+	    inside = 1;
+	} else {
+	    if (inside) {
+		shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+				       old_x, new_x, new_y);
 	    }
 	    if (new_x > old_x + 1) {
 		inside = !inside;
@@ -1635,8 +1683,9 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	if (!FcCharSetHasChar(font->charset, ch))
 	    continue;
 
-	copy_bitmap_from_xft_font(display, font, ch, pixels,
-				  workw, workh, 0U, 0U);
+	if (!copy_bitmap_from_xft_font(display, font, ch, pixels,
+				       workw, workh, 0U, 0U))
+	    continue;
 
 	pixel_count = 0U;
 	char_minx = workh - 1U;
@@ -3195,6 +3244,7 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     if (!isdigit(CharOf(ch)) &&
 	ch != '+' &&
 	ch != '-') {
+	*out = 0;
 	return 0;
     }
 
@@ -7109,8 +7159,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		for (byte = 0U; byte < bytew; byte++) {
 		    glyph[state->load_row * bytew + byte] =
 			(Char) (((val << unused_bits) >>
-					  ((bytew - (byte + 1U)) << 3U))
-					 & 255U);
+				 ((bytew - (byte + 1U)) << 3U))
+				& 255U);
 #ifdef DEBUG_LOAD
 		    TRACE(("bytew=%u val=%lx byte=%u output=%x\n",
 			   bytew, val,
@@ -7277,7 +7327,11 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	    context->fill_point_count = 0U;
 	    while (!fragment_consumed(&state->input))
 		parse_regis_toplevel(state, context);
-	    draw_filled_polygon(context);
+	    if (context->temporary_write_controls.shading_character != '\0') {
+		draw_shaded_polygon(context);
+	    } else {
+		draw_filled_polygon(context);
+	    }
 	    context->fill_point_count = 0U;
 	    context->fill_mode = 0;
 	    state->command = 'f';
