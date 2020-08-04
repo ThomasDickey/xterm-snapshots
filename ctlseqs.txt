@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #357 (2020/07/03)
+               updated for XTerm Patch #357 (2020/08/03)
 
 
 
@@ -791,6 +791,7 @@ CSI ? Pm h
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).  This
           sets the scrollKey resource to "true".
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
+            Ps = 1 0 1 6  -> Enable SGR Mouse PixelMode, xterm.
             Ps = 1 0 3 4  -> Interpret "meta" key, xterm.  This sets the
           eighth bit of keyboard input (and enables the eightBitInput
           resource).
@@ -914,6 +915,7 @@ CSI ? Pm l
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
           This sets the scrollKey resource to "false".
             Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
+            Ps = 1 0 1 6  -> Disable SGR Mouse Pixel-Mode, xterm.
             Ps = 1 0 3 4  -> Don't interpret "meta" key, xterm.  This
           disables the eightBitInput resource.
             Ps = 1 0 3 5  -> Disable special modifiers for Alt and Num-
@@ -2305,11 +2307,12 @@ as follows:
 
      #define SET_FOCUS_EVENT_MOUSE       1004
 
+     #define SET_ALTERNATE_SCROLL        1007
+
      #define SET_EXT_MODE_MOUSE          1005
      #define SET_SGR_EXT_MODE_MOUSE      1006
      #define SET_URXVT_EXT_MODE_MOUSE    1015
-
-     #define SET_ALTERNATE_SCROLL        1007
+     #define SET_PIXEL_POSITION_MOUSE    1016
 
 The motion reporting modes are strictly xterm extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
@@ -2552,6 +2555,10 @@ URXVT (1015)
           down), and the Window manipulation controls.  For these rea-
           sons, the 1015 control is not recommended; it is not an
           improvement over 1006.
+
+SGR-Pixels (1016)
+          Use the same mouse response format as the 1006 control, but
+          report position in pixels rather than character cells.
 
 
 Sixel Graphics
@@ -3004,12 +3011,12 @@ o   The control sequences for saving/restoring the cursor and for sav-
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC pair was added in 1995 by XFree86  (and  docu-
+    while  the  SCOSC/SCORC pair was added in 1995 by XFree86 (and docu-
     mented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3019,7 +3026,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

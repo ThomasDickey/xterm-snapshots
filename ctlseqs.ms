@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.592 2020/07/03 21:14:21 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.593 2020/08/03 23:44:47 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #357
-.ds RF 2020/07/03
+.ds RF 2020/08/03
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1336,6 +1336,7 @@ This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
 This sets the \fBscrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
+  \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
 (and enables the \fBeightBitInput\fP resource).
@@ -1464,6 +1465,7 @@ This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
 This sets the \fBscrollKey\fP resource to \*(``false\*(''.
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
+  \*(Ps = \*1\*0\*1\*6 \(-> Disable SGR Mouse Pixel-Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This disables the \fBeightBitInput\fP resource.
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for
@@ -3146,11 +3148,12 @@ are defined in \fIxcharmouse.h\fP as follows:
 .sP
 #define SET_FOCUS_EVENT_MOUSE       1004
 .sP
+#define SET_ALTERNATE_SCROLL        1007
+.sP
 #define SET_EXT_MODE_MOUSE          1005
 #define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
-.sP
-#define SET_ALTERNATE_SCROLL        1007
+#define SET_PIXEL_POSITION_MOUSE    1016
 .ft 1
 .DE
 .br
@@ -3406,6 +3409,9 @@ while the highlight tracking \*(Cs\*T can be mistaken for SD (scroll down),
 and the Window manipulation controls.
 For these reasons, the 1015 control is not recommended;
 it is not an improvement over 1006.
+.IP "SGR-Pixels (1016)"
+Use the same mouse response format as the 1006 control,
+but report position in \fIpixels\fP rather than character \fIcells\fP.
 .
 .Sh "Sixel Graphics"
 .LP

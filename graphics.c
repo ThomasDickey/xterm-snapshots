@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.87 2020/07/03 17:35:06 tom Exp $ */
+/* $XTermId: graphics.c,v 1.88 2020/08/03 23:58:03 tom Exp $ */
 
 /*
  * Copyright 2013-2019,2020 by Ross Combs
@@ -1321,7 +1321,7 @@ refresh_graphics(XtermWidget xw,
     unsigned ii, jj;
     unsigned active_count;
     unsigned holes, non_holes;
-    int xx, yy, nn;
+    int xx, yy;
     ColorRegister *buffer;
 
     active_count = 0;
@@ -1597,6 +1597,7 @@ refresh_graphics(XtermWidget xw,
 	XImage *image;
 	char *imgdata;
 	unsigned image_w, image_h;
+	int nn;
 
 	memset(&xgcv, 0, sizeof(xgcv));
 	xgcv.graphics_exposures = False;

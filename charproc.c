@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1770 2020/07/12 15:47:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1771 2020/08/03 23:19:41 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -6384,6 +6384,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
 	case srm_URXVT_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case srm_PIXEL_POSITION_MOUSE:
 	    /*
 	     * Rather than choose an arbitrary precedence among the coordinate
 	     * modes, they are mutually exclusive.  For consistency, a reset is
@@ -6692,6 +6694,8 @@ savemodes(XtermWidget xw)
 	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
 	case srm_URXVT_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case srm_PIXEL_POSITION_MOUSE:
 	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case srm_ALTERNATE_SCROLL:
@@ -7026,6 +7030,8 @@ restoremodes(XtermWidget xw)
 	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
 	case srm_URXVT_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case srm_PIXEL_POSITION_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case srm_ALLOW_ALTBUF:
