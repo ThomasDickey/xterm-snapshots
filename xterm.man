@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.809 2020/07/03 23:05:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.810 2020/08/04 23:06:43 Ben.Wong Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -3168,7 +3168,7 @@ from \fIdtterm\fP the operation number).
 The default value is
 .NS
 20,21,SetXprop,SetSelection
-(i.e.\& no operations are allowed).
+(i.e., all except a few \*(``dangerous\*('' operations are allowed).
 .NE
 .IP
 The names are listed below.
