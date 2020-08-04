@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2224 2020/08/03 23:33:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2225 2020/08/04 23:33:05 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -1002,6 +1002,14 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>correct manpage description for default value of
+    <code>disallowWindowOps</code> from changes in <a href=
+    "#xterm_331">xterm #331</a> (patch by Ben Wong).</li>
+
+    <li>correct a loop starting-point in
+    <code>refresh_graphics</code> from optimization in <a href=
+    "#xterm_358">patch #358</a> changes (report by Ben Wong).</li>
+
     <li>add a new mouse mode 1016, which uses the same format as
     mode 1006, but sends the mouse's position in pixels (suggested
     by Igor van den Hoven).</li>

@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.88 2020/08/03 23:58:03 tom Exp $ */
+/* $XTermId: graphics.c,v 1.89 2020/08/04 21:28:45 tom Exp $ */
 
 /*
  * Copyright 2013-2019,2020 by Ross Combs
@@ -1490,7 +1490,7 @@ refresh_graphics(XtermWidget xw,
 	int y_max = draw_y_max - refresh_y;
 	int x_min = draw_x_min - refresh_x;
 	int x_max = draw_x_max - refresh_x;
-	const ColorRegister *base = buffer + y_min;
+	const ColorRegister *base = buffer + (y_min * refresh_w);
 
 	for (yy = y_min; yy <= y_max; yy++) {
 	    const ColorRegister *scan = base + x_min;
