@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.89 2020/08/04 21:28:45 tom Exp $ */
+/* $XTermId: graphics.c,v 1.90 2020/08/06 19:57:58 tom Exp $ */
 
 /*
  * Copyright 2013-2019,2020 by Ross Combs
@@ -704,7 +704,7 @@ init_graphic(Graphic *graphic,
 					    graphic->max_height);
     unsigned i;
 
-    TRACE(("initializing graphic object\n"));
+    TRACE(("init_graphic at %d,%d\n", charrow, charcol));
 
     graphic->hidden = 0;
     graphic->dirty = 1;

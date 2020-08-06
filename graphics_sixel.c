@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.26 2020/08/03 23:53:32 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.28 2020/08/06 20:32:33 Ben.Wong Exp $ */
 
 /*
  * Copyright 2014-2016,2020 by Ross Combs
@@ -256,9 +256,12 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
 	    new_col = 0;
 	}
 
-	TRACE(("setting text position after %dx%d graphic starting on row=%d col=%d: cursor new_row=%d new_col=%d\n",
+	TRACE(("setting text position after %dx%d\t%.1f start (%d %d): cursor (%d,%d)\n",
 	       graphic->actual_width * graphic->pixw,
 	       graphic->actual_height * graphic->pixh,
+	       ((double) graphic->charrow
+		+ ((double) (graphic->actual_height * graphic->pixh)
+		   / (double) FontHeight(screen))),
 	       graphic->charrow,
 	       graphic->charcol,
 	       new_row, new_col));
@@ -471,7 +474,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    TRACE(("sixel NL\n"));
 	    scroll_lines = 0;
 	    while (graphic->charrow - scroll_lines +
-		   (((context.row + 6) * graphic->pixh
+		   (((context.row + Min(6, graphic->actual_height - context.row))
+		     * graphic->pixh
 		     + FontHeight(screen) - 1)
 		    / FontHeight(screen)) > screen->bot_marg) {
 		scroll_lines++;
