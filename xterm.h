@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.872 2020/07/02 00:30:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.873 2020/08/10 09:04:29 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -622,6 +622,7 @@ extern char **environ;
 #define XtNutf8Latin1		"utf8Latin1"
 #define XtNutf8SelectTypes	"utf8SelectTypes"
 #define XtNutf8Title		"utf8Title"
+#define XtNutf8Weblike		"utf8Weblike"
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
 #define XtNvisualBellDelay	"visualBellDelay"
@@ -815,6 +816,7 @@ extern char **environ;
 #define XtCUtf8Latin1		"Utf8Latin1"
 #define XtCUtf8SelectTypes	"Utf8SelectTypes"
 #define XtCUtf8Title		"Utf8Title"
+#define XtCUtf8Weblike		"Utf8Weblike"
 #define XtCVT100Graphics	"VT100Graphics"
 #define XtCVeryBoldColors	"VeryBoldColors"
 #define XtCVisualBell		"VisualBell"

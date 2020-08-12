@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.810 2020/08/04 23:06:43 Ben.Wong Exp $
+.\" $XTermId: xterm.man,v 1.811 2020/08/10 13:50:37 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -4223,6 +4223,7 @@ The Alt- and Meta- modifiers cause \fI\*n\fP to send escape sequences.
 .RE
 .IP
 The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:
+.sp
 .RS
 https://invisible\-island.net/xterm/modified\-keys.html
 .RE
@@ -5076,6 +5077,18 @@ according to the effective value of the \fButf8\fP resource.
 .RE
 .IP
 The default is \*(``default\*(''.
+.TP 8
+.B "utf8Weblike\fP (class\fB Utf8Weblike\fP)"
+Provide an alternate error-handling scheme for ill-formed UTF-8 as recommended
+in a W3C document.
+The Unicode standard does not require this for conformance.
+Some additional information can be found here:
+.sp
+.RS
+https://invisible\-island.net/xterm/bad-utf8/
+.RE
+.IP
+The default is \*(``false\*(''.
 .TP 8
 .B "veryBoldColors\fP (class\fB VeryBoldColors\fP)"
 Specifies whether to combine video attributes with colors specified by
