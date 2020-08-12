@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1004 2020/08/03 23:18:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1005 2020/08/10 09:06:56 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2310,6 +2310,7 @@ typedef struct {
 	int		utf8_title;	/* use UTF-8 EWHM props: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
 	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
+	Boolean		utf8_weblike;	/* use UTF-8 with browser bias	*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/
 	int		utf_count;	/* state of utf_char		*/

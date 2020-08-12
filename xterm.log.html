@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2226 2020/08/06 20:49:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.2227 2020/08/10 14:01:00 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -1002,6 +1002,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add <code>utf8Weblike</code> resource, to provide an
+    alternate scheme for handling ill-formed UTF-8 sequences
+    (adapted from patch by Dan Gohman).</li>
+
     <li>improve computation for the number of lines needed to
     scroll-up a SIXEL graphic (report/patch by Ben Wong).</li>
 

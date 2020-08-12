@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1771 2020/08/03 23:19:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1772 2020/08/10 09:07:11 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -772,6 +772,7 @@ static XtResource xterm_resources[] =
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
+    Bres(XtNutf8Weblike, XtCUtf8Weblike, screen.utf8_weblike, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
@@ -9670,6 +9671,7 @@ VTInitialize(Widget wrequest,
     VTInitialize_locale(request);
     init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
+    init_Bres(screen.utf8_weblike);
 
 #if OPT_LUIT_PROG
     init_Bres(misc.callfilter);

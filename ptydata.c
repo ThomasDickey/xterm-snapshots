@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.146 2020/07/06 07:56:56 H.Merijn.Brand Exp $ */
+/* $XTermId: ptydata.c,v 1.148 2020/08/12 22:16:36 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -107,6 +107,22 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		data->utf_data = (IChar) (screen->c1_printable ? c : UCS_REPL);
 		data->utf_size = (i + 1);
 		break;
+	    } else if (screen->utf8_weblike
+		       && (utf_count == 3
+			   && utf_char == 0x04
+			   && c >= 0x90)) {
+		/* The encoding would form a code point beyond U+10FFFF. */
+		data->utf_size = i;
+		data->utf_data = UCS_REPL;
+		break;
+	    } else if (screen->utf8_weblike
+		       && (utf_count == 2
+			   && utf_char == 0x0d
+			   && c >= 0xa0)) {
+		/* The encoding would form a surrogate code point. */
+		data->utf_size = i;
+		data->utf_data = UCS_REPL;
+		break;
 	    } else {
 		/* Check for overlong UTF-8 sequences for which a shorter
 		 * encoding would exist and replace them with UCS_REPL.
@@ -119,7 +135,14 @@ decodeUtf8(TScreen *screen, PtyData *data)
 		 *   11111100 100000xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
 		 */
 		if (!utf_char && !((c & 0x7f) >> (7 - utf_count))) {
-		    utf_char = UCS_REPL;
+		    if (screen->utf8_weblike) {
+			/* overlong sequence continued */
+			data->utf_data = UCS_REPL;
+			data->utf_size = i;
+			break;
+		    } else {
+			utf_char = UCS_REPL;
+		    }
 		}
 		utf_char <<= 6;
 		utf_char |= (c & 0x3f);
@@ -146,32 +169,57 @@ decodeUtf8(TScreen *screen, PtyData *data)
 	} else {
 	    /* We received a sequence start byte */
 	    if (utf_count > 0) {
-		data->utf_data = UCS_REPL;	/* prev. sequence incomplete */
+		/* previous sequence is incomplete */
+		data->utf_data = UCS_REPL;
 		data->utf_size = i;
 		break;
 	    }
-	    if (c < 0xe0) {
-		utf_count = 1;
-		utf_char = (c & 0x1f);
-		if (!(c & 0x1e)) {
-		    utf_char = UCS_REPL;	/* overlong sequence */
+	    if (screen->utf8_weblike) {
+		if (c < 0xe0) {
+		    if (!(c & 0x1e)) {
+			/* overlong sequence start */
+			data->utf_data = UCS_REPL;
+			data->utf_size = (i + 1);
+			break;
+		    }
+		    utf_count = 1;
+		    utf_char = (c & 0x1f);
+		} else if (c < 0xf0) {
+		    utf_count = 2;
+		    utf_char = (c & 0x0f);
+		} else if (c < 0xf5) {
+		    utf_count = 3;
+		    utf_char = (c & 0x07);
+		} else {
+		    data->utf_data = UCS_REPL;
+		    data->utf_size = (i + 1);
+		    break;
 		}
-	    } else if (c < 0xf0) {
-		utf_count = 2;
-		utf_char = (c & 0x0f);
-	    } else if (c < 0xf8) {
-		utf_count = 3;
-		utf_char = (c & 0x07);
-	    } else if (c < 0xfc) {
-		utf_count = 4;
-		utf_char = (c & 0x03);
-	    } else if (c < 0xfe) {
-		utf_count = 5;
-		utf_char = (c & 0x01);
 	    } else {
-		data->utf_data = UCS_REPL;
-		data->utf_size = (i + 1);
-		break;
+		if (c < 0xe0) {
+		    utf_count = 1;
+		    utf_char = (c & 0x1f);
+		    if (!(c & 0x1e)) {
+			/* overlong sequence */
+			utf_char = UCS_REPL;
+		    }
+		} else if (c < 0xf0) {
+		    utf_count = 2;
+		    utf_char = (c & 0x0f);
+		} else if (c < 0xf8) {
+		    utf_count = 3;
+		    utf_char = (c & 0x07);
+		} else if (c < 0xfc) {
+		    utf_count = 4;
+		    utf_char = (c & 0x03);
+		} else if (c < 0xfe) {
+		    utf_count = 5;
+		    utf_char = (c & 0x01);
+		} else {
+		    data->utf_data = UCS_REPL;
+		    data->utf_size = (i + 1);
+		    break;
+		}
 	    }
 	}
     }
