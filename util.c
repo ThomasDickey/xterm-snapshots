@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.853 2020/06/23 22:44:28 tom Exp $ */
+/* $XTermId: util.c,v 1.856 2020/08/17 22:25:21 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1120,6 +1120,19 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 	&& ScrnIsRowInSelection(screen, INX2ROW(screen, screen->cur_row))) {
 	ScrnDisownSelection(xw);
     }
+#if OPT_ISO_COLORS
+    /* if colorBDMode is set, and enabled */
+    if (screen->colorBDMode &&
+	screen->boldColors &&
+	!hasDirectFG(attr_flags) &&
+    /* and bold foreground color on bold background color */
+	GetCellColorFG(fg_bg) > COLOR_7 &&
+	GetCellColorFG(fg_bg) < MIN_ANSI_COLORS &&
+    /* and both colors are the same */
+	GetCellColorFG(fg_bg) == GetCellColorBG(fg_bg))
+	/* clear BOLD flag, else it will be colorBD on bold background color */
+	UIntClr(attr_flags, BOLD);
+#endif
 
     /* if we are in insert-mode, reserve space for the new cells */
     if (attr_flags & INSERT) {
@@ -1152,8 +1165,8 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 
 	TRACE(("WriteText calling drawXtermText (%d) (%d,%d)\n",
 	       LineCharSet(screen, ld),
-	       screen->cur_col,
-	       screen->cur_row));
+	       screen->cur_row,
+	       screen->cur_col));
 
 	test = attr_flags;
 #if OPT_ISO_COLORS
