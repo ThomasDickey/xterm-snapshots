@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.16 2020/08/02 19:47:55 tom Exp $
+# $XTermId: df-install.in,v 1.17 2020/08/18 20:44:00 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -65,6 +65,12 @@ export CDPATH
 while test $# != 0
 do
 	case .$1 in #(vi
+	.DESTDIR=*) #(vi
+		if test "$1" != "DESTDIR="
+		then
+			DESTDIR=`echo "$1" | sed -e 's,^DESTDIR=,,'`
+		fi
+		;;
 	*.desktop) #(vi
 		if test $# = 1
 		then
@@ -73,11 +79,9 @@ do
 			OPTS="$OPTS $1"
 		fi
 		;;
-	.DESTDIR=*) #(vi
-		if test "$1" != "DESTDIR="
-		then
-			DESTDIR=`echo "$1" | sed -e 's,^DESTDIR=,,'`
-		fi
+	.--dir=*) #(vi
+		OPTS="$OPTS $1"
+		DESTDIR=
 		;;
 	*)
 		OPTS="$OPTS $1"
