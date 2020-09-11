@@ -894,7 +894,7 @@ This corresponds to the \fBlocaleFilter\fR resource.
 .TP 8
 .B \-leftbar
 Force scrollbar to the left side of VT100 screen.
-This is the default, unless you have set the rightScrollBar resource.
+This is the default, unless you have set the \fBrightScrollBar\fR resource.
 .TP 8
 .BI \-lf " filename"
 Specify the log filename.
