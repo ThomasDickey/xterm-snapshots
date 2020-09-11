@@ -929,6 +929,10 @@ because \fI\*n\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
 whereas \fI\*n\ \-e\fP does not.
 .TP 8
+.B +ls
+This option indicates that the shell that is started should not be a login
+shell (i.e., it will be a normal \*(``subshell\*('').
+.TP 8
 .B \-maximized
 This option indicates that \fI\*n\fP should ask the window manager to
 maximize its layout on startup.
@@ -940,10 +944,6 @@ it is possible to do both with certain window managers.
 .B +maximized
 This option indicates that \fI\*n\fP should ask the window manager to
 not maximize its layout on startup.
-.TP 8
-.B +ls
-This option indicates that the shell that is started should not be a login
-shell (i.e., it will be a normal \*(``subshell\*('').
 .TP 8
 .B \-mb
 This option indicates that \fI\*n\fP should ring a margin bell when
