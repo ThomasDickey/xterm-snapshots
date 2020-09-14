@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.811 2020/08/10 13:50:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.814 2020/09/14 00:10:28 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -848,7 +848,7 @@ Unix98 pseudo-terminals made the BSD scheme unnecessary.
 Unless overridden by the \fB\-lf\fP option or the \fBlogFile\fP resource:
 .RS
 .bP
-If the filename is \*(``-\*('', then logging is sent to the standard output.
+If the filename is \*(``\-\*('', then logging is sent to the standard output.
 .bP
 Otherwise a filename is generated, and
 the log file is written to the directory from which \fI\*n\fP is invoked.
@@ -899,7 +899,7 @@ This is the default, unless you have set the rightScrollBar resource.
 .BI \-lf " filename"
 Specify the log filename.
 This sets the \fBlogFile\fP resource.
-If set to \*(``-\*('',
+If set to \*(``\-\*('',
 \fI\*n\fP writes its log to the standard output.
 See the \fB\-l\fP option.
 .TP 8
@@ -1233,7 +1233,7 @@ this option is ignored.
 We recommend using
 the \fB\-lc\fR option or the \*(``\fBlocale:\ true\fR\*('' resource
 in UTF-8 locales when your operating system supports locale,
-or \fB\-en\ UTF-8\fP option or the \*(``\fBlocale:\ UTF-8\fR\*('' resource
+or \fB\-en\ UTF\-8\fP option or the \*(``\fBlocale:\ UTF\-8\fR\*('' resource
 when your operating system does not support locale.
 .TP 8
 .B +u8
@@ -1671,17 +1671,17 @@ mini.\*n_16x16,
 mini.\*n_32x32,
 mini.\*n_48x48
 .bP
-filled-\*n_16x16,
-filled-\*n_32x32,
-filled-\*n_48x48
+filled\-\*n_16x16,
+filled\-\*n_32x32,
+filled\-\*n_48x48
 .bP
 \*n_16x16,
 \*n_32x32,
 \*n_48x48
 .bP
-\*n-color_16x16,
-\*n-color_32x32,
-\*n-color_48x48
+\*n\-color_16x16,
+\*n\-color_32x32,
+\*n\-color_48x48
 .RE
 .IP
 In either case, \fI\*n\fP allows for adding a \*(``_48x48\*('' to specify the
@@ -1795,37 +1795,37 @@ assigns a key-binding to the \fBfullscreen()\fP action.
 .TP
 keypress
 assigns keypresses by default to the
-\fBinsert-seven-bit()\fP and
-\fBinsert-eight-bit()\fP actions.
+\fBinsert\-seven\-bit()\fP and
+\fBinsert\-eight\-bit()\fP actions.
 .TP
 paging
 assigns key bindings to the
-\fBscroll-back()\fP and
-\fBscroll-forw()\fP actions.
+\fBscroll\-back()\fP and
+\fBscroll\-forw()\fP actions.
 .TP
 popup-menu
 assigns mouse-buttons with the \fIcontrol\fP modifier to the popup-menus.
 .TP
 reset
 assigns mouse-button 2
-with the \fImeta\fP modifier to the \fBclear-saved-lines\fP action.
+with the \fImeta\fP modifier to the \fBclear\-saved\-lines\fP action.
 .TP
-scroll-lock
-assigns a key-binding to the \fBscroll-lock()\fP action.
+scroll\-lock
+assigns a key\-binding to the \fBscroll\-lock()\fP action.
 .TP
 select
 assigns mouse- and keypress-combinations
 to actions which manipulate the selection.
 .TP
-shift-fonts
+shift\-fonts
 assigns key-bindings to
-\fBlarger-vt-font()\fP and
-\fBsmaller-vt-font()\fP actions.
+\fBlarger\-vt\-font()\fP and
+\fBsmaller\-vt\-font()\fP actions.
 .TP
-wheel-mouse
+wheel\-mouse
 assigns buttons 4 and 5 with different modifiers to the
-\fBscroll-back()\fP and
-\fBscroll-forw()\fP actions.
+\fBscroll\-back()\fP and
+\fBscroll\-forw()\fP actions.
 .RE
 .TP 8
 .B ptyHandshake\fP (class\fB PtyHandshake\fP)
@@ -2298,7 +2298,7 @@ The default is \*(``__alt_sends_esc__\*(''.
 .TP 8
 .B "alternateScroll\fP (class\fB ScrollCond\fP)"
 If \*(``true\*('',
-the \fBscroll-back\fP and \fBscroll-forw\fP actions
+the \fBscroll\-back\fP and \fBscroll\-forw\fP actions
 send cursor\-up and \-down keys
 when \fI\*n\fP is displaying the alternate screen.
 The default is \*(``false\*(''.
@@ -2621,7 +2621,7 @@ do not mask cell value to 7 bits.
 .IP
 With the default value (0),
 \fI\*n\fP matches the behavior of DEC's terminals.
-To use all extensions, set all bits, \*(``-1\*('' for example.
+To use all extensions, set all bits, \*(``\-1\*('' for example.
 .TP 8
 .B "cjkWidth\fP (class\fB CjkWidth\fP)"
 Specifies whether \fI\*n\fP should follow
@@ -3452,8 +3452,8 @@ font resources to obtain a TrueType pointsize.
 If all of the \fBfaceSize\fP resources are set, then \fI\*n\fP
 will use this information to determine the next smaller/larger
 TrueType font for the
-\fBlarger-vt-font()\fP and
-\fBsmaller-vt-font()\fP actions.
+\fBlarger\-vt\-font()\fP and
+\fBsmaller\-vt\-font()\fP actions.
 If any are not set, \fI\*n\fP will use only the areas of the bitmap fonts.
 .TP 8
 .B "faceSize1\fP (class\fB FaceSize1\fP)"
@@ -3808,7 +3808,7 @@ The default is \*(``nil2\*(''.
 .TP 8
 .B "initialFont\fP (class\fB InitialFont\fP)"
 Specifies which of the VT100 fonts to use initially.
-Values are the same as for the \fBset-vt-font\fP action.
+Values are the same as for the \fBset\-vt\-font\fP action.
 The default is \*(``d\*('', i.e., \*(``default\*(''.
 .TP 8
 .B "inputMethod\fP (class\fB InputMethod\fP)"
@@ -3916,7 +3916,7 @@ For other encodings, \fI\*n\fR assumes that UTF-8 encoding is required.
 or UTF-8 mode according to \fButf8\fR resource or \fB\-u8\fP option.
 .RE
 .IP
-Any other value, e.g., \*(``UTF-8\*('' or \*(``ISO8859-2\*('',
+Any other value, e.g., \*(``UTF\-8\*('' or \*(``ISO8859\-2\*('',
 is assumed to be an encoding name;
 \fIluit\fR will be invoked to support the encoding.
 The actual list of supported encodings depends on \fIluit\fR.
@@ -3928,7 +3928,7 @@ Your configuration may not include this font,
 or locale-support by \fI\*n\fP may not be needed.
 .IP
 At startup, \fI\*n\fP uses a mechanism equivalent to
-the \fBload-vt-fonts(utf8Fonts,\ Utf8Fonts)\fP action
+the \fBload\-vt\-fonts(utf8Fonts,\ Utf8Fonts)\fP action
 to load font name subresources of the VT100 widget.
 That is,
 resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*('' will be loaded,
@@ -3944,7 +3944,7 @@ For instance, you could have this in your resource file:
 .IP
 When started with a UTF-8 locale, \fI\*n\fP would use 9x15, but
 allow you to switch to the 12x24 font
-using the menu entry \*(``\fBUTF-8 Fonts\fP\*(''.
+using the menu entry \*(``\fBUTF\-8 Fonts\fP\*(''.
 .IP
 The resource files distributed with \fI\*n\fP use ISO-10646-1 fonts,
 but do not rely on them unless you are using the locale mechanism.
@@ -4300,7 +4300,7 @@ but appear to have been invented for \fI\*n\fP in X11R4.
 Specify selection behavior in response to multiple mouse clicks.
 A single mouse click is always interpreted as described in
 the \fBSelection Functions\fP section (see \fBPOINTER USAGE\fP).
-Multiple mouse clicks (using the button which activates the \fBselect-start\fP
+Multiple mouse clicks (using the button which activates the \fBselect\-start\fP
 action) are interpreted according to the resource values of
 \fBon2Clicks\fP, etc.
 The resource value can be one of these:
@@ -4434,13 +4434,13 @@ but your printer may not handle these.
 The default is \*(``1\*(''.
 .TP 8
 .B "printFileImmediate\fP (class \fBPrintFileImmediate\fP)"
-When the \fBprint-immediate\fP action is invoked,
+When the \fBprint\-immediate\fP action is invoked,
 \fI\*n\fP prints the screen contents directly to a file.
 Set this resource to the prefix of the filename
 (a timestamp will be appended to the actual name).
 .IP
 The default is an empty string, i.e., \*(``\*('',
-However, when the \fBprint-immediate\fP action is invoked,
+However, when the \fBprint\-immediate\fP action is invoked,
 if the string is empty, then \*(``__default_class__\*('' is used.
 .TP 8
 .B "printFileOnXError\fP (class \fBPrintFileOnXError\fP)"
@@ -4452,7 +4452,7 @@ To enable the feature, set this resource to the prefix of the filename
 .IP
 The default is an empty string, i.e., \*(``\*('',
 which disables this feature.
-However, when the \fBprint-on-error\fP action is invoked,
+However, when the \fBprint\-on\-error\fP action is invoked,
 if the string is empty, then \*(``XTermError\*('' is used.
 .IP
 These error codes are handled:
@@ -4461,7 +4461,7 @@ ERROR_XIOERROR and
 ERROR_ICEERROR.
 .TP 8
 .B "printModeImmediate\fP (class \fBPrintModeImmediate\fP)"
-When the \fBprint-immediate\fP action is invoked,
+When the \fBprint\-immediate\fP action is invoked,
 \fI\*n\fP prints the screen contents directly to a file.
 You can use the \fBprintModeImmediate\fP resource to tell it to
 use escape sequences to reconstruct the video attributes and colors.
@@ -4478,7 +4478,7 @@ The default is \*(``0\*(''.
 .TP 8
 .B "printOptsImmediate\fP (class \fBPrintOptsImmediate\fP)"
 Specify the range of text which is printed to a file when
-the \fBprint-immediate\fP action is invoked.
+the \fBprint\-immediate\fP action is invoked.
 .RS
 .bP
 If zero (0), then this selects the current (visible screen) plus the
@@ -4510,7 +4510,7 @@ plus saved lines, with no special case for the alternated screen.
 .TP 8
 .B "printOptsOnXError\fP (class \fBPrintOptsOnXError\fP)"
 Specify the range of text which is printed to a file when
-the \fBprint-on-error\fP action is invoked.
+the \fBprint\-on\-error\fP action is invoked.
 The resource value is interpreted the same as in \fBprintOptsImmediate\fP.
 .IP
 The default is \*(``9\*('', which selects the current visible screen
@@ -4759,8 +4759,8 @@ The default is
 \*(``false\*(''.
 .TP 8
 .B "scrollLines\fP (class\fB ScrollLines\fP)"
-Specifies the number of lines that the \fBscroll-back\fP and
-\fBscroll-forw\fP actions should use as a default.
+Specifies the number of lines that the \fBscroll\-back\fP and
+\fBscroll\-forw\fP actions should use as a default.
 The default value is 1.
 .TP 8
 .B "scrollTtyOutput\fP (class\fB ScrollCond\fP)"
@@ -4771,15 +4771,15 @@ The default is \*(``true\*(''.
 .B "selectToClipboard\fP (class\fB SelectToClipboard\fP)"
 Tells \fI\*n\fP whether to use the \fBPRIMARY\fP or \fBCLIPBOARD\fP for
 \fBSELECT\fP tokens in the selection mechanism.
-The \fBset-select\fP action can change this at runtime,
+The \fBset\-select\fP action can change this at runtime,
 allowing the user to work with programs that handle only one of these
 mechanisms.
 The default is \*(``false\*('', which tells it to use \fBPRIMARY\fP.
 .TP 8
 .B "shiftFonts\fP (class\fB ShiftFonts\fP)"
 Specifies whether to enable the actions
-\fBlarger-vt-font()\fP and
-\fBsmaller-vt-font()\fP, which are normally bound to
+\fBlarger\-vt\-font()\fP and
+\fBsmaller\-vt\-font()\fP, which are normally bound to
 the shifted KP_Add and KP_Subtract.
 The default is \*(``true\*(''.
 .TP 8
@@ -4954,7 +4954,7 @@ The default is \*(``true\*(''.
 This specifies whether \fI\*n\fP will run in UTF-8 mode.
 If you set this resource, \fI\*n\fP also sets the \fBwideChars\fP resource
 as a side-effect.
-The resource can be set via the menu entry \*(``UTF-8 Encoding\*(''.
+The resource can be set via the menu entry \*(``UTF\-8 Encoding\*(''.
 The default is \*(``default\*(''.
 .IP
 \fI\*N\fP accepts either a keyword (ignoring case)
@@ -4992,7 +4992,7 @@ See the discussion of the \fBlocale\fP resource.
 This specifies whether \fI\*n\fP will use UTF-8 fonts specified via
 resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*(''
 or normal (ISO-8859-1) fonts via patterns such as \*(``\fB*vt100.font\fP\*(''.
-The resource can be set via the menu entry \*(``\fBUTF-8 Fonts\fP\*(''.
+The resource can be set via the menu entry \*(``\fBUTF\-8 Fonts\fP\*(''.
 The default is \*(``default\*(''.
 .IP
 \fI\*N\fP accepts either a keyword (ignoring case)
@@ -5085,7 +5085,7 @@ The Unicode standard does not require this for conformance.
 Some additional information can be found here:
 .sp
 .RS
-https://invisible\-island.net/xterm/bad-utf8/
+https://invisible\-island.net/xterm/bad\-utf8/
 .RE
 .IP
 The default is \*(``false\*(''.
@@ -5202,7 +5202,7 @@ Specifies the height of the Tektronix window in pixels.
 .TP 8
 .B "initialFont\fP (class\fB InitialFont\fP)"
 Specifies which of the four Tektronix fonts to use initially.
-Values are the same as for the \fBset-tek-text\fP action.
+Values are the same as for the \fBset\-tek\-text\fP action.
 The default is \*(``large\*(''.
 .TP 8
 .B "width\fP (class\fB Width\fP)"
@@ -5224,13 +5224,13 @@ The \fBMain Options\fP menu (widget name \fImainMenu\fP)
 has the following entries:
 .TP 8
 .B "toolbar\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-toolbar(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-toolbar(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "securekbd\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBsecure()\fP action.
 .TP 8
 .B "allowsends\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-send-events(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBallow\-send\-events(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "redraw\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBredraw()\fP action.
@@ -5238,76 +5238,76 @@ This entry invokes the \fBredraw()\fP action.
 .B "logging\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBlogging(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "print-immediate\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBprint-immediate()\fP action.
+.B "print\-immediate\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBprint\-immediate()\fP action.
 .TP 8
-.B "print-on-error\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBprint-on-error()\fP action.
+.B "print\-on\-error\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBprint\-on\-error()\fP action.
 .TP 8
 .B "print\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBprint()\fP action.
 .TP 8
-.B "print-redir\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBprint-redir()\fP action.
+.B "print\-redir\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBprint\-redir()\fP action.
 .TP 8
-.B "dump-html\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBdump-html()\fP action.
+.B "dump\-html\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBdump\-html()\fP action.
 .TP 8
-.B "dump-svg\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBdump-svg()\fP action.
+.B "dump\-svg\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBdump\-svg()\fP action.
 .TP 8
-.B "8-bit-control\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-8-bit-control(\fP\fItoggle\fP\fB)\fP action.
+.B "8\-bit\-control\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-8\-bit\-control(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "backarrow\ key\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-backarrow(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-backarrow(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "num-lock\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-num-lock(\fP\fItoggle\fP\fB)\fP action.
+.B "num\-lock\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-num\-lock(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "alt-esc\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBalt-sends-escape(\fP\fItoggle\fP\fB)\fP action.
+.B "alt\-esc\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBalt\-sends\-escape(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "meta-esc\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBmeta-sends-escape(\fP\fItoggle\fP\fB)\fP action.
+.B "meta\-esc\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBmeta\-sends\-escape(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "delete-is-del\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBdelete-is-del(\fP\fItoggle\fP\fB)\fP action.
+.B "delete\-is\-del\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBdelete\-is\-del(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "oldFunctionKeys\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-old-function-keys(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-old\-function\-keys(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "hpFunctionKeys\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-hp-function-keys(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-hp\-function\-keys(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "scoFunctionKeys\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-sco-function-keys(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-sco\-function\-keys(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "sunFunctionKeys\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-sun-function-keys(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-sun\-function\-keys(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "sunKeyboard\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBsunKeyboard(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "suspend\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fItstp\fP\fB)\fP action
+This entry invokes the \fBsend\-signal(\fP\fItstp\fP\fB)\fP action
 on systems that support job control.
 .TP 8
 .B "continue\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fIcont\fP\fB)\fP action
+This entry invokes the \fBsend\-signal(\fP\fIcont\fP\fB)\fP action
 on systems that support job control.
 .TP 8
 .B "interrupt\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fIint\fP\fB)\fP action.
+This entry invokes the \fBsend\-signal(\fP\fIint\fP\fB)\fP action.
 .TP 8
 .B "hangup\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fIhup\fP\fB)\fP action.
+This entry invokes the \fBsend\-signal(\fP\fIhup\fP\fB)\fP action.
 .TP 8
 .B "terminate\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fIterm\fP\fB)\fP action.
+This entry invokes the \fBsend\-signal(\fP\fIterm\fP\fB)\fP action.
 .TP 8
 .B "kill\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsend-signal(\fP\fIkill\fP\fB)\fP action.
+This entry invokes the \fBsend\-signal(\fP\fIkill\fP\fB)\fP action.
 .TP 8
 .B "quit\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBquit()\fP action.
@@ -5317,62 +5317,62 @@ The \fBVT Options\fP menu (widget name \fIvtMenu\fP)
 has the following entries:
 .TP 8
 .B "scrollbar\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-scrollbar(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-scrollbar(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "jumpscroll\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-jumpscroll(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-jumpscroll(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "reversevideo\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-reverse-video(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-reverse\-video(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "autowrap\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-autowrap(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-autowrap(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "reversewrap\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-reversewrap(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-reversewrap(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "autolinefeed\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-autolinefeed(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-autolinefeed(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "appcursor\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-appcursor(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-appcursor(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "appkeypad\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-appkeypad(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-appkeypad(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "scrollkey\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-scroll-on-key(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-scroll\-on\-key(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "scrollttyoutput\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-scroll-on-tty-output(\fP\fItoggle\fP\fB)\fP
+This entry invokes the \fBset\-scroll\-on\-tty\-output(\fP\fItoggle\fP\fB)\fP
 action.
 .TP 8
 .B "allow132\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-allow132(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-allow132(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "cursesemul\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-cursesemul(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-cursesemul(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "keepSelection\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-keep-selection(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-keep\-selection(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "selectToClipboard\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-keep-clipboard(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-keep\-clipboard(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "visualbell\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-visual-bell(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-visual\-bell(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "bellIsUrgent\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-bellIsUrgent(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-bellIsUrgent(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "poponbell\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-pop-on-bell(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-pop\-on\-bell(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "cursorblink\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-cursorblink(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-cursorblink(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "titeInhibit\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-titeInhibit(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-titeInhibit(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "activeicon\fP (class\fB SmeBSB\fP)"
 This entry toggles active icons on and off if this feature was
@@ -5382,149 +5382,149 @@ was started with the command line option +ai or the \fBactiveIcon\fP
 resource is set to \*(``true\*(''.
 .TP 8
 .B "softreset\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBsoft-reset()\fP action.
+This entry invokes the \fBsoft\-reset()\fP action.
 .TP 8
 .B "hardreset\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBhard-reset()\fP action.
+This entry invokes the \fBhard\-reset()\fP action.
 .TP 8
 .B "clearsavedlines\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBclear-saved-lines()\fP action.
+This entry invokes the \fBclear\-saved\-lines()\fP action.
 .TP 8
 .B "tekshow\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-visibility(\fP\fItek,toggle\fP\fB)\fP action.
+This entry invokes the \fBset\-visibility(\fP\fItek,toggle\fP\fB)\fP action.
 .TP 8
 .B "tekmode\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-terminal-type(\fP\fItek\fP\fB)\fP action.
+This entry invokes the \fBset\-terminal\-type(\fP\fItek\fP\fB)\fP action.
 .TP 8
 .B "vthide\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-visibility(\fP\fIvt,off\fP\fB)\fP action.
+This entry invokes the \fBset\-visibility(\fP\fIvt,off\fP\fB)\fP action.
 .TP 8
 .B "altscreen\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-altscreen(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-altscreen(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "sixelScrolling\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-sixel-scrolling(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-sixel\-scrolling(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
 .B "privateColorRegisters\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-private-colors(\fP\fItoggle\fP\fB)\fP action.
+This entry invokes the \fBset\-private\-colors(\fP\fItoggle\fP\fB)\fP action.
 .
 .PP
 The \fBVT Fonts\fP menu (widget name \fIfontMenu\fP)
 has the following entries:
 .TP 8
 .B "fontdefault\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fId\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fId\fP\fB)\fP action,
 setting the font using the \fBfont\fP (default) resource,
 e.g., \*(``Default\*('' in the menu.
 .TP 8
 .B "font1\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI1\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI1\fP\fB)\fP action,
 setting the font using the \fBfont1\fP resource,
 e.g., \*(``Unreadable\*('' in the menu.
 .TP 8
 .B "font2\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI2\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI2\fP\fB)\fP action,
 setting the font using the \fBfont2\fP resource,
 e.g., \*(``Tiny\*('' in the menu.
 .TP 8
 .B "font3\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI3\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI3\fP\fB)\fP action,
 setting the font using the \fBfont3\fP resource,
 e.g., \*(``Small\*('' in the menu.
 .TP 8
 .B "font4\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI4\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI4\fP\fB)\fP action,
 letting the font using the \fBfont4\fP resource,
 e.g., \*(``Medium\*('' in the menu.
 .TP 8
 .B "font5\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI5\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI5\fP\fB)\fP action,
 letting the font using the \fBfont5\fP resource,
 e.g., \*(``Large\*('' in the menu.
 .TP 8
 .B "font6\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fI6\fP\fB)\fP action,
+This entry invokes the \fBset\-vt\-font(\fP\fI6\fP\fB)\fP action,
 letting the font using the \fBfont6\fP resource,
 e.g., \*(``Huge\*('' in the menu.
 .TP 8
 .B "fontescape\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fIe\fP\fB)\fP action.
+This entry invokes the \fBset\-vt\-font(\fP\fIe\fP\fB)\fP action.
 .TP 8
 .B "fontsel\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-vt-font(\fP\fIs\fP\fB)\fP action.
+This entry invokes the \fBset\-vt\-font(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "allow-bold-fonts\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-bold-fonts(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-bold\-fonts\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-bold\-fonts(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "font-linedrawing\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-font-linedrawing(\fP\fIs\fP\fB)\fP action.
+.B "font\-linedrawing\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-font\-linedrawing(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "font-packed\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-font-packed(\fP\fIs\fP\fB)\fP action.
+.B "font\-packed\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-font\-packed(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "font-doublesize\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-font-doublesize(\fP\fIs\fP\fB)\fP action.
+.B "font\-doublesize\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-font\-doublesize(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "render-font\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-render-font(\fP\fIs\fP\fB)\fP action.
+.B "render\-font\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-render\-font(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "utf8-fonts\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-utf8-fonts(\fP\fIs\fP\fB)\fP action.
+.B "utf8\-fonts\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-utf8\-fonts(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "utf8-mode\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-utf8-mode(\fP\fIs\fP\fB)\fP action.
+.B "utf8\-mode\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-utf8\-mode(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "utf8-title\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-utf8-title(\fP\fIs\fP\fB)\fP action.
+.B "utf8\-title\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-utf8\-title(\fP\fIs\fP\fB)\fP action.
 .TP 8
-.B "allow-color-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-color-ops(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-color\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-color\-ops(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "allow-font-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-fonts-ops(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-font\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-fonts\-ops(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "allow-tcap-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-tcap-ops(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-tcap\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-tcap\-ops(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "allow-title-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-title-ops(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-title\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-title\-ops(\fP\fItoggle\fP\fB)\fP action.
 .TP 8
-.B "allow-window-ops\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBallow-window-ops(\fP\fItoggle\fP\fB)\fP action.
+.B "allow\-window\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-window\-ops(\fP\fItoggle\fP\fB)\fP action.
 .
 .PP
 The \fBTek Options\fP menu (widget name \fItekMenu\fP)
 has the following entries:
 .TP 8
 .B "tektextlarge\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-tek-text(\fP\fIlarge\fP\fB)\fP action.
+This entry invokes the \fBset\-tek\-text(\fP\fIlarge\fP\fB)\fP action.
 .TP 8
 .B "tektext2\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-tek-text(\fP\fI2\fP\fB)\fP action.
+This entry invokes the \fBset\-tek\-text(\fP\fI2\fP\fB)\fP action.
 .TP 8
 .B "tektext3\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-tek-text(\fP\fI3\fP\fB)\fP action.
+This entry invokes the \fBset\-tek\-text(\fP\fI3\fP\fB)\fP action.
 .TP 8
 .B "tektextsmall\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-tek-text(\fP\fIsmall\fP\fB)\fP action.
+This entry invokes the \fBset\-tek\-text(\fP\fIsmall\fP\fB)\fP action.
 .TP 8
 .B "tekpage\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBtek-page()\fP action.
+This entry invokes the \fBtek\-page()\fP action.
 .TP 8
 .B "tekreset\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBtek-reset()\fP action.
+This entry invokes the \fBtek\-reset()\fP action.
 .TP 8
 .B "tekcopy\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBtek-copy()\fP action.
+This entry invokes the \fBtek\-copy()\fP action.
 .TP 8
 .B "vtshow\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-visibility(\fP\fIvt,toggle\fP\fB)\fP action.
+This entry invokes the \fBset\-visibility(\fP\fIvt,toggle\fP\fB)\fP action.
 .TP 8
 .B "vtmode\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-terminal-type(\fP\fIvt\fP\fB)\fP action.
+This entry invokes the \fBset\-terminal\-type(\fP\fIvt\fP\fB)\fP action.
 .TP 8
 .B "tekhide\fP (class\fB SmeBSB\fP)"
-This entry invokes the \fBset-visibility(\fP\fItek,toggle\fP\fB)\fP action.
+This entry invokes the \fBset\-visibility(\fP\fItek,toggle\fP\fB)\fP action.
 .\"
 .SS Scrollbar Resources
 .PP
@@ -5863,7 +5863,7 @@ whereas applications can change the mouse prototol
 .PP
 However, the mouse protocol is interpreted within the \fIactions\fP
 that are usually associated with the pointer buttons.
-\fI\*N\fP ignores the mouse protocol in the \fBinsert-selection\fP action
+\fI\*N\fP ignores the mouse protocol in the \fBinsert\-selection\fP action
 if the shift-key is pressed at the same time.
 It also modifies a few other actions if the shift-key is pressed,
 e.g., suppressing the response with the pointer position,
@@ -5929,8 +5929,8 @@ Commands for capturing output:
 Captures text sent to the screen in a log file,
 as in the \fB\-l\fP logging option.
 .TP
-.B Print-All Immediately\fP (resource \fBprint-immediate\fP)
-Invokes the \fBprint-immediate\fP action,
+.B Print-All Immediately\fP (resource \fBprint\-immediate\fP)
+Invokes the \fBprint\-immediate\fP action,
 sending the text of the current window directly to a file,
 as specified by the
 \fBprintFileImmediate\fP,
@@ -5938,8 +5938,8 @@ as specified by the
 \fBprintOptsImmediate\fP
 resources.
 .TP
-.B Print-All on Error\fP (resource \fBprint-on-error\fP)
-Invokes the \fBprint-on-error\fP action,
+.B Print-All on Error\fP (resource \fBprint\-on\-error\fP)
+Invokes the \fBprint\-on\-error\fP action,
 which toggles a flag telling \fI\*n\fP that if it exits with an X error,
 to send the text of the current window directly to a file,
 as specified by the
@@ -5952,16 +5952,16 @@ resources.
 Sends the text of the current window to the program given in the
 \fBprinterCommand\fP resource.
 .TP
-.B Redirect to Printer\fP (resource \fBprint-redir\fP)
+.B Redirect to Printer\fP (resource \fBprint\-redir\fP)
 This sets the \fBprinterControlMode\fR to 0 or 2.
 You can use this to turn the printer on as if an application had sent
 the appropriate control sequence.
 It is also useful for switching the printer
 off if an application turns it on without resetting the print control mode.
 .TP
-.B XHTML Screen Dump\fP (resource \fBdump-html\fP)
+.B XHTML Screen Dump\fP (resource \fBdump\-html\fP)
 Available only when compiled with screen dump support.
-Invokes the \fBdump-html\fP action.
+Invokes the \fBdump\-html\fP action.
 This creates an XHTML file matching the contents of the current screen,
 including the border, internal border, colors and most attributes: bold, italic,
 underline, faint, strikeout, reverse; blink is rendered as white-on-red;
@@ -6019,7 +6019,7 @@ when the screen dump was performed
 (the file is created in the directory
 \fI\*n\fP is started in, or the home directory for a login \fI\*n\fP).
 .IP
-The \fBdump-html\fP action can also be triggered using the Media Copy
+The \fBdump\-html\fP action can also be triggered using the Media Copy
 control sequence CSI 1 0 i, for example from a shell script with
 .NS
 printf \*(AQ\\033[10i\*(AQ
@@ -6027,9 +6027,9 @@ printf \*(AQ\\033[10i\*(AQ
 .sp
 Only the UTF-8 encoding is supported.
 .TP
-.B SVG Screen Dump\fP (resource \fBdump-svg\fP)
+.B SVG Screen Dump\fP (resource \fBdump\-svg\fP)
 Available only when compiled with screen dump support.
-Invokes the \fBdump-svg\fP action.
+Invokes the \fBdump\-svg\fP action.
 This creates a Scalable Vector Graphics (SVG) file matching
 the contents of the current screen, including the border,
 internal border, colors and most attributes: bold, italic,
@@ -6057,7 +6057,7 @@ when the screen dump was performed
 (the file is created in the directory
 \fI\*n\fP is started in, or the home directory for a login \fI\*n\fP).
 .IP
-The \fBdump-svg\fP action can also be triggered using the Media Copy
+The \fBdump\-svg\fP action can also be triggered using the Media Copy
 control sequence CSI 1 1 i, for example from a shell script with
 .NS
 printf \*(AQ\\033[11i\*(AQ
@@ -6069,7 +6069,7 @@ Only the UTF-8 encoding is supported.
 Modes for setting keyboard style:
 .RS
 .TP
-.B 8-Bit Controls\fP (resource \fB8-bit-control\fP)
+.B 8-Bit Controls\fP (resource \fB8\-bit\-control\fP)
 Enabled for VT220 emulation, this controls whether \fI\*n\fP will send
 8-bit control sequences rather than using 7-bit (ASCII) controls,
 e.g., sending a byte in the range 128\(en159 rather than the escape character
@@ -6084,16 +6084,16 @@ either a backspace (8)
 or delete (127) character.
 This corresponds to the \fBbackarrowKey\fP resource.
 .TP
-.B Alt/NumLock Modifiers\fP (resource \fBnum-lock\fP)
+.B Alt/NumLock Modifiers\fP (resource \fBnum\-lock\fP)
 Controls the treatment of Alt- and NumLock-key modifiers.
 This corresponds to the \fBnumLock\fP resource.
 .TP
-.B Meta Sends Escape\fP (resource \fBmeta-esc\fP)
+.B Meta Sends Escape\fP (resource \fBmeta\-esc\fP)
 Controls whether \fIMeta\fP keys are converted into a two-character
 sequence with the character itself preceded by ESC.
 This corresponds to the \fBmetaSendsEscape\fP resource.
 .TP
-.B Delete is DEL\fP (resource \fBdelete-is-del\fP)
+.B Delete is DEL\fP (resource \fBdelete\-is\-del\fP)
 Controls whether the Delete key on the editing keypad should send DEL (127)
 or the VT220-style Remove escape sequence.
 This corresponds to the \fBdeleteIsDEL\fP resource.
@@ -6137,7 +6137,7 @@ function is especially useful if the user has accidentally typed CTRL-Z,
 suspending the process.
 .TP
 .B Quit\fP (resource \fBquit\fP)
-Stop processing X events except to support the \fB-hold\fP option,
+Stop processing X events except to support the \fB\-hold\fP option,
 and then send a SIGHUP signal to
 the process group of the process running under \fI\*n\fP (usually the shell).
 .RE
@@ -6447,23 +6447,23 @@ the current selection as a font name (if the \fBPRIMARY\fP selection is owned).
 The second section allows you to modify the way it is displayed:
 .RS
 .TP
-.B Bold Fonts\fP (resource \fBallow-bold-fonts\fP)
+.B Bold Fonts\fP (resource \fBallow\-bold\-fonts\fP)
 This is normally checked (enabled).
 When unchecked, \fI\*n\fP will not use bold fonts.
 The setting corresponds to the \fBallowBoldFonts\fP resource.
 .TP
-.B Line-Drawing Characters\fP (resource \fBfont-linedrawing\fP)
+.B Line-Drawing Characters\fP (resource \fBfont\-linedrawing\fP)
 When set, tells \fI\*n\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
 Compare to the \fBforceBoxChars\fP resource.
 .TP
-.B Packed Font\fP (resource \fBfont-packed\fP)
+.B Packed Font\fP (resource \fBfont\-packed\fP)
 When set, tells \fI\*n\fP to use the minimum glyph-width from a font
 when displaying characters.
 Use the maximum width (unchecked) to help display proportional fonts.
 Compare to the \fBforcePackedFont\fP resource.
 .TP
-.B Doublesized Characters\fP (resource \fBfont-doublesize\fP)
+.B Doublesized Characters\fP (resource \fBfont\-doublesize\fP)
 When set, \fI\*n\fP may ask the font server to produce scaled versions
 of the normal font, for VT102 double-size characters.
 .RE
@@ -6471,25 +6471,25 @@ of the normal font, for VT102 double-size characters.
 The third section allows you to modify the way it is specified:
 .RS
 .TP
-.B TrueType Fonts\fP (resource \fBrender-font\fP)
+.B TrueType Fonts\fP (resource \fBrender\-font\fP)
 If the \fBrenderFont\fP and corresponding resources were set,
 this is a further control whether \fI\*n\fP will actually use the
 Xft library calls to obtain a font.
 .TP
-.B UTF-8 Encoding\fP (resource \fButf8-mode\fP)
+.B UTF-8 Encoding\fP (resource \fButf8\-mode\fP)
 This controls whether \fI\*n\fP uses UTF-8 encoding of input/output.
 It is useful for temporarily switching \fI\*n\fP to display
 text from an application which does not follow the locale settings.
 It corresponds to the \fButf8\fP resource.
 .TP
-.B UTF-8 Fonts\fP (resource \fButf8-fonts\fP)
+.B UTF-8 Fonts\fP (resource \fButf8\-fonts\fP)
 This controls whether \fI\*n\fP uses UTF-8 fonts for display.
 It is useful for temporarily switching \fI\*n\fP to display
 text from an application which does not follow the locale settings.
 It combines the \fButf8\fP and \fButf8Fonts\fP resources,
 subject to the \fBlocale\fP resource.
 .TP
-.B UTF-8 Titles\fP (resource \fButf8-title\fP)
+.B UTF-8 Titles\fP (resource \fButf8\-title\fP)
 This controls whether \fI\*n\fP accepts UTF-8 encoding for
 title control sequences.
 It corresponds to the \fButf8Fonts\fP resource.
@@ -6516,29 +6516,29 @@ which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
 .RS
 .TP
-.B Allow Color Ops\fP (resource \fBallow-font-ops\fP)
+.B Allow Color Ops\fP (resource \fBallow\-font\-ops\fP)
 This corresponds to the \fBallowColorOps\fP resource.
 Enable or disable control sequences that set/query the colors.
 .TP
-.B Allow Font Ops\fP (resource \fBallow-font-ops\fP)
+.B Allow Font Ops\fP (resource \fBallow\-font\-ops\fP)
 This corresponds to the \fBallowFontOps\fP resource.
 Enable or disable control sequences that set/query the font.
 .TP
-.B Allow Mouse Ops\fP (resource \fBallow-mouse-ops\fP)
+.B Allow Mouse Ops\fP (resource \fBallow\-mouse\-ops\fP)
 Enable or disable control sequences that cause the terminal to
 send escape sequences on pointer-clicks and movement.
 This corresponds to the \fBallowMouseOps\fP resource.
 .TP
-.B Allow Tcap Ops\fP (resource \fBallow-tcap-ops\fP)
+.B Allow Tcap Ops\fP (resource \fBallow\-tcap\-ops\fP)
 Enable or disable control sequences that query the terminal's
 notion of its function-key strings, as termcap or terminfo capabilities.
 This corresponds to the \fBallowTcapOps\fP resource.
 .TP
-.B Allow Title Ops\fP (resource \fBallow-title-ops\fP)
+.B Allow Title Ops\fP (resource \fBallow\-title\-ops\fP)
 Enable or disable control sequences that modify the window title or icon name.
 This corresponds to the \fBallowTitleOps\fP resource.
 .TP
-.B Allow Window Ops\fP (resource \fBallow-window-ops\fP)
+.B Allow Window Ops\fP (resource \fBallow\-window\-ops\fP)
 Enable or disable extended window control sequences (as used in dtterm).
 This corresponds to the \fBallowWindowOps\fP resource.
 .RE
@@ -6799,68 +6799,68 @@ The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
-.B "allow-bold-fonts(\fIon/off/toggle\fP)"
+.B "allow\-bold\-fonts(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowBoldFonts\fP resource
-and is also invoked by the \fBallow-bold-fonts\fP entry in \fIfontMenu\fP.
+and is also invoked by the \fBallow\-bold\-fonts\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-color-ops(\fIon/off/toggle\fP)"
+.B "allow\-color\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowColorOps\fP resource and is also
-invoked by the \fBallow-color-ops\fP entry in \fIfontMenu\fP.
+invoked by the \fBallow\-color\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-font-ops(\fIon/off/toggle\fP)"
+.B "allow\-font\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowFontOps\fP resource and is also
-invoked by the \fBallow-font-ops\fP entry in \fIfontMenu\fP.
+invoked by the \fBallow\-font\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-mouse-ops(\fIon/off/toggle\fP)"
+.B "allow\-mouse\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowMousepOps\fP resource
-and is also invoked by the \fBallow-mouse-ops\fP entry in \fIfontMenu\fP.
+and is also invoked by the \fBallow\-mouse\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-send-events(\fIon/off/toggle\fP)"
+.B "allow\-send\-events(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowSendEvents\fP resource
 and is also invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
 .TP 8
-.B "allow-tcap-ops(\fIon/off/toggle\fP)"
+.B "allow\-tcap\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowTcapOps\fP resource
-and is also invoked by the \fBallow-tcap-ops\fP entry in \fIfontMenu\fP.
+and is also invoked by the \fBallow\-tcap\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-title-ops(\fIon/off/toggle\fP)"
+.B "allow\-title\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowTitleOps\fP resource
-and is also invoked by the \fBallow-title-ops\fP entry in \fIfontMenu\fP.
+and is also invoked by the \fBallow\-title\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "allow-window-ops(\fIon/off/toggle\fP)"
+.B "allow\-window\-ops(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBallowWindowOps\fP resource
-and is also invoked by the \fBallow-window-ops\fP entry in \fIfontMenu\fP.
+and is also invoked by the \fBallow\-window\-ops\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "alt-sends-escape()"
+.B "alt\-sends\-escape()"
 This action toggles the state of the \fBaltSendsEscape\fP resource.
 .TP 8
 .B "bell([\fIpercent\fP])"
 This action rings the keyboard bell at the specified percentage
 above or below the base volume.
 .TP 8
-.B "clear-saved-lines()"
-This action does \fBhard-reset()\fP and also clears the history
+.B "clear\-saved\-lines()"
+This action does \fBhard\-reset()\fP and also clears the history
 of lines saved off the top of the screen.
 It is also invoked from the \fBclearsavedlines\fP entry in \fIvtMenu\fP.
 The effect is identical to a hardware reset (RIS) control sequence.
 .TP 8
-.B "copy-selection(\fIdestname\fP [, \&...\&])"
+.B "copy\-selection(\fIdestname\fP [, \&...\&])"
 This action puts the currently selected text into all of the selections or
 cutbuffers specified by \fIdestname\fP.
-Unlike \fBselect-end\fP, it does not send a mouse position or otherwise
+Unlike \fBselect\-end\fP, it does not send a mouse position or otherwise
 modify the internal selection state.
 .TP 8
-.B "create-menu(\fIm/v/f/t\fP)"
+.B "create\-menu(\fIm/v/f/t\fP)"
 This action creates one of the menus used by \fI\*n\fP,
 if it has not been previously created.
 The parameter values are the menu names:
 \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, \fItekMenu\fP, respectively.
 .TP 8
-.B "dabbrev-expand()"
+.B "dabbrev\-expand()"
 Expands the word before cursor by searching in the preceding text on the
 screen and in the scrollback buffer for words starting with that
 abbreviation.
-Repeating \fBdabbrev-expand()\fP several times in sequence searches for an
+Repeating \fBdabbrev\-expand()\fP several times in sequence searches for an
 alternative expansion by looking farther back.
 Lack of more matches is signaled by a bell.
 Attempts to expand an empty word
@@ -6879,10 +6879,10 @@ Here is a resource setting for \fI\*n\fP which will do the same thing:
 .B "deiconify()"
 Changes the window state back to normal, if it was iconified.
 .TP 8
-.B "delete-is-del()"
+.B "delete\-is\-del()"
 This action toggles the state of the \fBdeleteIsDEL\fP resource.
 .TP 8
-.B "dired-button()"
+.B "dired\-button()"
 Handles a button event (other than press and release)
 by echoing the event's position
 (i.e., character line and column) in the following format:
@@ -6890,17 +6890,17 @@ by echoing the event's position
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .NE
 .TP 8
-.B "dump-html()"
+.B "dump\-html()"
 Invokes the \fBXHTML Screen Dump\fP feature.
 .TP 8
-.B "dump-svg()"
+.B "dump\-svg()"
 Invokes the \fBSVG Screen Dump\fP feature.
 .TP 8
-.B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, \&...\&])"
+.B "exec\-formatted(\fIformat\fP, \fIsourcename\fP [, \&...\&])"
 Execute an external command,
 using the current selection for part of the command's parameters.
 The first parameter, \fIformat\fP gives the basic command.
-Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
+Succeeding parameters specify the selection source as in \fBinsert\-selection\fP.
 .IP
 The \fIformat\fP parameter allows these substitutions:
 .RS
@@ -6958,11 +6958,11 @@ The new process is started when the mouse button is released:
     <Btn1Up>:\fBexec\-formatted\fP("xterm \-e view \*(AQ%t\*(AQ", \fBSELECT\fP)
 .NE
 .TP 8
-.B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
+.B "exec\-selectable(\fIformat\fP, \fIonClicks\fP)"
 Execute an external command,
 using data copied from the screen for part of the command's parameters.
 The first parameter, \fIformat\fP gives
-the basic command as in \fBexec-formatted\fP.
+the basic command as in \fBexec\-formatted\fP.
 The second parameter specifies the method for copying
 the data as in the \fBon2Clicks\fP resource.
 .TP 8
@@ -6972,7 +6972,7 @@ This action sets, unsets or toggles the \fBfullscreen\fP resource.
 .B "iconify()"
 Iconifies the window.
 .TP 8
-.B "hard-reset()"
+.B "hard\-reset()"
 This action resets the scrolling region, tabs, window size, and cursor keys
 and clears the screen.
 It is also invoked from the \fBhardreset\fP
@@ -6986,7 +6986,7 @@ escape sequences.
 This action inserts the character or string associated with
 the key that was pressed.
 .TP 8
-.B "insert-eight-bit()"
+.B "insert\-eight\-bit()"
 This action inserts an eight-bit (Meta) version of the character or string
 associated with the key that was pressed.
 Only single-byte values are treated specially.
@@ -7012,20 +7012,20 @@ send an ESC byte before the key, or
 send the key unaltered.
 .RE
 .TP 8
-.B "insert-formatted(\fIformat\fP, \fIsourcename\fP [, \&...\&])"
+.B "insert\-formatted(\fIformat\fP, \fIsourcename\fP [, \&...\&])"
 Insert the current selection or data related to it, formatted.
 The first parameter, \fIformat\fP gives the template for the data
-as in \fBexec-formatted\fP.
-Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
+as in \fBexec\-formatted\fP.
+Succeeding parameters specify the selection source as in \fBinsert\-selection\fP.
 .TP 8
-.B "insert-selectable(\fIformat\fP, \fIonClicks\fP)"
+.B "insert\-selectable(\fIformat\fP, \fIonClicks\fP)"
 Insert data copied from the screen, formatted.
 The first parameter, \fIformat\fP gives the template for the data
-as in \fBexec-formatted\fP.
+as in \fBexec\-formatted\fP.
 The second parameter specifies the method for copying
 the data as in the \fBon2Clicks\fP resource.
 .TP 8
-.B "insert-selection(\fIsourcename\fP [, \&...\&])"
+.B "insert\-selection(\fIsourcename\fP [, \&...\&])"
 This action inserts the string found in the selection or cutbuffer indicated
 by \fIsourcename\fP.
 Sources are checked in the order given (case is
@@ -7035,11 +7035,11 @@ Commonly-used selections include:
 Cut buffers are
 typically named \fBCUT_BUFFER0\fP through \fBCUT_BUFFER7\fP.
 .TP 8
-.B "insert-seven-bit()"
+.B "insert\-seven\-bit()"
 This action is a synonym for \fBinsert()\fP.
 The term \*(``seven-bit\*('' is misleading:
 it only implies that \fI\*n\fP does not try to add 128 to the key's value
-as in \fBinsert-eight-bit()\fP.
+as in \fBinsert\-eight\-bit()\fP.
 .TP 8
 .B "interpret(\fIcontrol-sequence\fP)"
 Interpret the given control sequence locally, i.e., without passing it to
@@ -7056,17 +7056,17 @@ name is \fIname\fP with the suffix \*(``\fIKeymap\fP\*(''
 (i.e., \fIname\fP\fBKeymap\fP, where case is significant).
 The name \fINone\fP restores the original translation table.
 .TP 8
-.B "larger-vt-font()"
+.B "larger\-vt\-font()"
 Set the font to the next larger one, based on the font dimensions.
-See also \fBset-vt-font()\fP.
+See also \fBset\-vt\-font()\fP.
 .TP 8
-.B "load-vt-fonts(\fIname\fP[,\fIclass\fP])"
+.B "load\-vt\-fonts(\fIname\fP[,\fIclass\fP])"
 Load fontnames from the given subresource name and class.
 That is, load the \*(``*VT100.\fIname\fP.font\*('',
 resource as \*(``*VT100.font\*('' etc.
 If no name is given, the original set of fontnames is restored.
 .IP
-Unlike \fBset-vt-font()\fR, this does not affect the escape- and select-fonts,
+Unlike \fBset\-vt\-font()\fR, this does not affect the escape- and select-fonts,
 since those are not based on resource values.
 It does affect the fonts loosely organized under the \*(``Default\*('' menu
 entry, including \fBfont\fP, \fBboldFont\fP, \fBwideFont\fP
@@ -7075,16 +7075,16 @@ and \fBwideBoldFont\fP.
 .B "maximize()"
 Resizes the window to fill the screen.
 .TP 8
-.B "meta-sends-escape()"
+.B "meta\-sends\-escape()"
 This action toggles the state of the \fBmetaSendsEscape\fP resource.
 .TP 8
-.B "popup-menu(\fImenuname\fP)"
+.B "popup\-menu(\fImenuname\fP)"
 This action displays the specified popup menu.
 Valid names (case is
 significant) include:  \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP,
 and \fItekMenu\fP.
 .TP 8
-.B "print(\fIprinter-flags\fP)"
+.B "print(\fIprinter\-flags\fP)"
 This action prints the window.
 It is also invoked by the \fBprint\fP entry in \fImainMenu\fP.
 .IP
@@ -7124,14 +7124,14 @@ the page is printed with ANSI color attributes
 (i.e., \fBprintAttributes\fP is \*(``2\*('').
 .RE
 .TP 8
-.B "print-everything(\fIprinter-flags\fP)"
+.B "print\-everything(\fIprinter\-flags\fP)"
 This action sends the entire text history, in addition to the text
 currently visible, to the program given in the \fBprinterCommand\fP resource.
 It allows the same optional parameters as the \fBprint\fP action.
 With a suitable printer command, the action can be used to load the text
 history in an editor.
 .TP 8
-.B "print-immediate()"
+.B "print\-immediate()"
 Sends the text of the current window directly to a file,
 as specified by the
 \fBprintFileImmediate\fP,
@@ -7139,7 +7139,7 @@ as specified by the
 \fBprintOptsImmediate\fP
 resources.
 .TP 8
-.B "print-on-error()"
+.B "print\-on\-error()"
 Toggles a flag telling \fI\*n\fP that if it exits with an X error,
 to send the text of the current window directly to a file,
 as specified by the
@@ -7148,7 +7148,7 @@ as specified by the
 \fBprintOptsOnXError\fP
 resources.
 .TP 8
-.B "print-redir()"
+.B "print\-redir()"
 This action toggles the \fBprinterControlMode\fR between 0 and 2.
 The corresponding popup menu entry is useful for switching the printer
 off if you happen to change your mind after deciding to print random
@@ -7160,7 +7160,7 @@ This action sends a SIGHUP to the subprogram and exits.
 It is also invoked
 by the \fBquit\fP entry in \fImainMenu\fP.
 .TP 8
-.B "readline-button()"
+.B "readline\-button()"
 Supports the optional readline feature by echoing repeated cursor forward
 or backward control sequences on button release event,
 to request that the host application update its notion of the cursor's
@@ -7173,7 +7173,7 @@ It is also invoked by the \fBredraw\fP entry in \fImainMenu\fP.
 .B "restore()"
 Restores the window to the size before it was last maximized.
 .TP 8
-.B "scroll-back(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
+.B "scroll\-back(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
 This action scrolls the text window backward so that text that had previously
 scrolled off the top of the screen is now visible.
 .IP
@@ -7193,8 +7193,8 @@ If the second parameter is omitted \*(``lines\*('' is used.
 If the third parameter \fImouse\fP is given, the action is ignored when
 mouse reporting is enabled.
 .TP 8
-.B "scroll-forw(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
-This action is similar to \fBscroll-back\fP except that it scrolls
+.B "scroll\-forw(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
+This action is similar to \fBscroll\-back\fP except that it scrolls
 in the other direction.
 .TP 8
 .B "secure()"
@@ -7202,56 +7202,56 @@ This action toggles the \fISecure Keyboard\fP mode
 (see \fBSECURITY\fP), and is invoked from the \fBsecurekbd\fP
 entry in \fImainMenu\fP.
 .TP 8
-.B "scroll-lock(\fIon/off/toggle\fP)"
+.B "scroll\-lock(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles internal state which tells
 \fI\*n\fP whether Scroll Lock is active,
 subject to the \fBallowScrollLock\fP resource.
 .TP 8
-.B "scroll-to(\fIcount\fP)"
+.B "scroll\-to(\fIcount\fP)"
 Scroll to the given line relative to the beginning of the saved-lines.
-For instance, \*(``\fBscroll-to(0)\fP\*('' would scroll to the beginning.
+For instance, \*(``\fBscroll\-to(0)\fP\*('' would scroll to the beginning.
 Two special nonnumeric parameters are recognized:
 .RS
 .TP 8
-.B scroll-to(begin)
+.B scroll\-to(begin)
 Scroll to the beginning of the saved lines.
 .TP 8
-.B scroll-to(end)
+.B scroll\-to(end)
 Scroll to the end of the saved lines, i.e., to the currently active page.
 .RE
 .TP 8
-.B "select-cursor-end(\fIdestname\fP [, \&...\&])"
-This action is similar to \fBselect-end\fP except that it should be used
-with \fBselect-cursor-start\fP.
+.B "select\-cursor\-end(\fIdestname\fP [, \&...\&])"
+This action is similar to \fBselect\-end\fP except that it should be used
+with \fBselect\-cursor\-start\fP.
 .TP 8
-.B "select-cursor-extend()"
-This action is similar to \fBselect-extend\fP except that it should be used
-with \fBselect-cursor-start\fP.
+.B "select\-cursor\-extend()"
+This action is similar to \fBselect\-extend\fP except that it should be used
+with \fBselect\-cursor\-start\fP.
 .TP 8
-.B "select-cursor-start()"
-This action is similar to \fBselect-start\fP except that it begins the
+.B "select\-cursor\-start()"
+This action is similar to \fBselect\-start\fP except that it begins the
 selection at the current text cursor position.
 .TP 8
-.B "select-end(\fIdestname\fP [, \&...\&])"
+.B "select\-end(\fIdestname\fP [, \&...\&])"
 This action puts the currently selected text into all of the selections or
 cutbuffers specified by \fIdestname\fP.
 It also sends a mouse position and updates the internal selection state
 to reflect the end of the selection process.
 .TP 8
-.B "select-extend()"
+.B "select\-extend()"
 This action tracks the pointer and extends the selection.
 It should only be bound to Motion events.
 .TP 8
-.B "select-set()"
+.B "select\-set()"
 This action stores text that corresponds to the current selection,
 without affecting the selection mode.
 .TP 8
-.B "select-start()"
+.B "select\-start()"
 This action begins text selection at the current pointer location.
 See
 the section on \fBPOINTER USAGE\fP for information on making selections.
 .TP 8
-.B "send-signal(\fIsigname\fP)"
+.B "send\-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
 to the \fI\*n\fP subprocess (the shell or program specified with
 the \fI\-e\fP command line option).
@@ -7272,151 +7272,151 @@ as \fItstp\fP), \fIcont\fP
 \fIquit\fP,
 \fIalrm\fP, \fIalarm\fP (same as \fIalrm\fP) and \fIkill\fP.
 .TP 8
-.B "set-8-bit-control(\fIon/off/toggle\fP)"
+.B "set\-8\-bit\-control(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBeightBitControl\fP resource.
-It is also invoked from the \fB8-bit-control\fP entry in \fIvtMenu\fP.
+It is also invoked from the \fB8\-bit\-control\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-allow132(\fIon/off/toggle\fP)"
+.B "set\-allow132(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBc132\fP resource.
 It is also invoked from the \fBallow132\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-altscreen(\fIon/off/toggle\fP)"
+.B "set\-altscreen(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles between the alternate and current screens.
 .TP 8
-.B "set-appcursor(\fIon/off/toggle\fP)"
+.B "set\-appcursor(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the handling Application Cursor Key mode
 and is also invoked by the \fBappcursor\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-appkeypad(\fIon/off/toggle\fP)"
+.B "set\-appkeypad(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the handling of Application Keypad mode
 and is also invoked by the \fBappkeypad\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-autolinefeed(\fIon/off/toggle\fP)"
+.B "set\-autolinefeed(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles automatic insertion of line feeds.
 It is also invoked by the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-autowrap(\fIon/off/toggle\fP)"
+.B "set\-autowrap(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles automatic wrapping of long lines.
 It is also invoked by the \fBautowrap\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-backarrow(\fIon/off/toggle\fP)"
+.B "set\-backarrow(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBbackarrowKey\fP resource.
 It is also invoked from the \fBbackarrow key\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-bellIsUrgent(\fIon/off/toggle\fP)"
+.B "set\-bellIsUrgent(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBbellIsUrgent\fP resource.
 It is also invoked by the \fBbellIsUrgent\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-cursorblink(\fIon/off/toggle\fP)"
+.B "set\-cursorblink(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBcursorBlink\fP resource.
 It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-cursesemul(\fIon/off/toggle\fP)"
+.B "set\-cursesemul(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBcurses\fP resource.
 It is also invoked from the \fBcursesemul\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-font-doublesize(\fIon/off/toggle\fP)"
+.B "set\-font\-doublesize(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfontDoublesize\fP resource.
-It is also invoked by the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fBfont\-doublesize\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-hp-function-keys(\fIon/off/toggle\fP)"
+.B "set\-hp\-function\-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
 It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-jumpscroll(\fIon/off/toggle\fP)"
+.B "set\-jumpscroll(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBjumpscroll\fP resource.
 It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-font-linedrawing(\fIon/off/toggle\fP)"
+.B "set\-font\-linedrawing(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fI\*n\fR's state regarding whether
 the current font has line-drawing characters and whether it should draw them
 directly.
-It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fBfont\-linedrawing\fP entry in \fIfontMenu\fP.
 .\" .\" not implemented
 .\" .TP 8
-.\" .B "set-font-loading(\fIon/off/toggle\fP)"
+.\" .B "set\-font\-loading(\fIon/off/toggle\fP)"
 .\" This action sets, unsets or toggles the TBD resource
 .\" which controls the ability to load VT220 soft fonts.
-.\" It is also invoked by the \fBfont-loadable\fP entry in \fIfontMenu\fP.
+.\" It is also invoked by the \fBfont\-loadable\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-font-packed(\fIon/off/toggle\fP)"
+.B "set\-font\-packed(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBforcePackedFont\fR resource
 which controls use of the font's minimum or maximum glyph width.
-It is also invoked by the \fBfont-packed\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fBfont\-packed\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-keep-clipboard(\fIon/off/toggle\fP)"
+.B "set\-keep\-clipboard(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBkeepClipboard\fP resource.
 .TP 8
-.B "set-keep-selection(\fIon/off/toggle\fP)"
+.B "set\-keep\-selection(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBkeepSelection\fP resource.
 It is also invoked by the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-logging(\fIon/off/toggle\fP)"
+.B "set\-logging(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the state of the logging option.
 .TP 8
-.B "set-old-function-keys(\fIon/off/toggle\fP)"
+.B "set\-old\-function\-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the state of legacy function keys.
 It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-marginbell(\fIon/off/toggle\fP)"
+.B "set\-marginbell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBmarginBell\fP resource.
 .TP 8
-.B "set-num-lock(\fIon/off/toggle\fP)"
+.B "set\-num\-lock(\fIon/off/toggle\fP)"
 This action toggles the state of the \fBnumLock\fP resource.
 .TP 8
-.B "set-pop-on-bell(\fIon/off/toggle\fP)"
+.B "set\-pop\-on\-bell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBpopOnBell\fP resource.
 It is also invoked by the \fBpoponbell\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-private-colors(\fIon/off/toggle\fP)"
+.B "set\-private\-colors(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBprivateColorRegisters\fP resource.
 .TP 8
-.B "set-render-font(\fIon/off/toggle\fP)"
+.B "set\-render\-font(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBrenderFont\fP resource.
-It is also invoked by the \fBrender-font\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fBrender\-font\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-reverse-video(\fIon/off/toggle\fP)"
+.B "set\-reverse\-video(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBreverseVideo\fP resource.
 It is also invoked by the \fBreversevideo\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-reversewrap(\fIon/off/toggle\fP)"
+.B "set\-reversewrap(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBreverseWrap\fP resource.
 It is also invoked by the \fBreversewrap\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-scroll-on-key(\fIon/off/toggle\fP)"
+.B "set\-scroll\-on\-key(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollKey\fP resource.
 It is also invoked from the \fBscrollkey\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-scroll-on-tty-output(\fIon/off/toggle\fP)"
+.B "set\-scroll\-on\-tty\-output(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollTtyOutput\fP resource.
 It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-scrollbar(\fIon/off/toggle\fP)"
+.B "set\-scrollbar(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollbar\fP resource.
 It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-sco-function-keys(\fIon/off/toggle\fP)"
+.B "set\-sco\-function\-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
 It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-select(\fIon/off/toggle\fP)"
+.B "set\-select(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
 It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-sixel-scrolling(\fIon/off/toggle\fP)"
+.B "set\-sixel\-scrolling(\fIon/off/toggle\fP)"
 This action toggles between inline (sixel scrolling) and absolute positioning.
 It can also be controlled via DEC private mode 80 (DECSDM) or from
 the \fBsixelScrolling\fP entry in the \fIbtMenu\fP.
 .TP 8
-.B "set-sun-function-keys(\fIon/off/toggle\fP)"
+.B "set\-sun\-function\-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBsunFunctionKeys\fP resource.
 It is also invoked by the \fBsunFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-sun-keyboard(\fIon/off/toggle\fP)"
+.B "set\-sun\-keyboard(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBsunKeyboard\fP resource.
 It is also invoked by the \fBsunKeyboard\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-tek-text(\fIlarge/2/3/small\fP)"
+.B "set\-tek\-text(\fIlarge/2/3/small\fP)"
 This action sets the font used in the Tektronix window to the value of the
 selected resource according to the argument.
 The argument can be either a keyword or single-letter alias,
@@ -7436,45 +7436,45 @@ small (s)
 Use resource \fBfontSmall\fP, same as menu entry \fBtektextsmall\fP.
 .RE
 .TP 8
-.B "set-terminal-type(\fItype\fP)"
+.B "set\-terminal\-type(\fItype\fP)"
 This action directs output to either the \fIvt\fP or \fItek\fP windows,
 according to the \fItype\fP string.
 It is also invoked by the
 \fBtekmode\fP entry in \fIvtMenu\fP and the \fBvtmode\fP entry in
 \fItekMenu\fP.
 .TP 8
-.B "set-titeInhibit(\fIon/off/toggle\fP)"
+.B "set\-titeInhibit(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBtiteInhibit\fP resource,
 which controls switching between the alternate and current screens.
 .TP 8
-.B "set-toolbar(\fIon/off/toggle\fP)"
+.B "set\-toolbar(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the toolbar feature.
 It is also invoked by the \fBtoolbar\fP entry in \fImainMenu\fP.
 .TP 8
-.B "set-utf8-fonts(\fIon/off/toggle\fP)"
+.B "set\-utf8\-fonts(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fButf8Fonts\fP resource.
-It is also invoked by the \fButf8-fonts\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fButf8\-fonts\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-utf8-mode(\fIon/off/toggle\fP)"
+.B "set\-utf8\-mode(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fButf8\fP resource.
-It is also invoked by the \fButf8-mode\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fButf8\-mode\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-utf8-title(\fIon/off/toggle\fP)"
+.B "set\-utf8\-title(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fButf8Title\fP resource.
-It is also invoked by the \fButf8-title\fP entry in \fIfontMenu\fP.
+It is also invoked by the \fButf8\-title\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
+.B "set\-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
 This action sets, unsets or toggles whether or not
 the \fIvt\fP or \fItek\fP windows are visible.
 It is also invoked from the \fBtekshow\fP and \fBvthide\fP entries
 in \fIvtMenu\fP and the \fBvtshow\fP and \fBtekhide\fP entries in
 \fItekMenu\fP.
 .TP 8
-.B "set-visual-bell(\fIon/off/toggle\fP)"
+.B "set\-visual\-bell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBvisualBell\fP resource.
 It is also invoked by the \fBvisualbell\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
+.B "set\-vt\-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
 This action sets the font or fonts currently being used
 in the VT\fIxxx\fP window.
 The first argument is a single character that specifies the font to be used:
@@ -7499,16 +7499,16 @@ If \fI\*n\fR is configured to support wide characters, an
 additional two optional parameters are recognized for the \fIe\fP argument:
 wide font and wide bold font.
 .TP 8
-.B "smaller-vt-font()"
+.B "smaller\-vt\-font()"
 Set the font to the next smaller one, based on the font dimensions.
-See also \fBset-vt-font()\fP.
+See also \fBset\-vt\-font()\fP.
 .TP 8
-.B "soft-reset()"
+.B "soft\-reset()"
 This action resets the scrolling region.
 It is also invoked from the \fBsoftreset\fP entry in \fIvtMenu\fP.
 The effect is identical to a soft reset (DECSTR) control sequence.
 .TP 8
-.B "spawn-new-terminal(\fIparams\fP)"
+.B "spawn\-new\-terminal(\fIparams\fP)"
 Spawn a new \fI\*n\fP process.
 This is available on systems which have a modern version of the
 process filesystem, e.g., \*(``/proc\*('', which \fI\*n\fP can read.
@@ -7523,12 +7523,12 @@ Otherwise, use the \fB$PATH\fP variable to find \fI\*n\fP.
 If parameters are given in the action,
 pass them to the new \fI\*n\fP process.
 .TP 8
-.B "start-extend()"
-This action is similar to \fBselect-start\fP except that the
+.B "start\-extend()"
+This action is similar to \fBselect\-start\fP except that the
 selection is extended to the current pointer location.
 .TP 8
-.B "start-cursor-extend()"
-This action is similar to \fBselect-extend\fP except that the
+.B "start\-cursor\-extend()"
+This action is similar to \fBselect\-extend\fP except that the
 selection is extended to the current text cursor position.
 .TP 8
 .B "string(\fIstring\fP)"
@@ -7539,20 +7539,20 @@ If the string argument begins with the
 characters \*(``0x\*('', it is interpreted
 as a hex character constant.
 .TP 8
-.B "tek-copy()"
+.B "tek\-copy()"
 This action copies the escape codes used to generate the current window
 contents to a file in the current directory beginning with the name COPY.
 It is also invoked from the \fBtekcopy\fP entry in \fItekMenu\fP.
 .TP 8
-.B "tek-page()"
+.B "tek\-page()"
 This action clears the Tektronix window.
 It is also invoked by the \fBtekpage\fP entry in \fItekMenu\fP.
 .TP 8
-.B "tek-reset()"
+.B "tek\-reset()"
 This action resets the Tektronix window.
 It is also invoked by the \fBtekreset\fP entry in \fItekMenu\fP.
 .TP 8
-.B "vi-button()"
+.B "vi\-button()"
 Handles a button event (other than press and release)
 by echoing a control sequence computed from the event's line number
 in the screen relative to the current line:
@@ -7572,13 +7572,13 @@ from the current line.
 The control sequence is omitted altogether if the button event is on the
 current line.
 .TP 8
-.B "visual-bell()"
+.B "visual\-bell()"
 This action flashes the window quickly.
 .
 .PP
 The Tektronix window also has the following action:
 .TP 8
-.B "gin-press(\fIl/L/m/M/r/R\fP)"
+.B "gin\-press(\fIl/L/m/M/r/R\fP)"
 This action sends the indicated graphics input code.
 .
 .SS Default Key Bindings
@@ -8133,7 +8133,7 @@ WM_CLIENT_LEADER(WINDOW): window id # 0x800023
 This shows the command-line arguments for \fI\*n\fP
 which are passed to X Toolkit during initialization, e.g.,
 .NS
-WM_COMMAND(STRING) = { "xterm", "-class", "UXTerm", "-title", "uxterm", "-u8" }
+WM_COMMAND(STRING) = { "xterm", "\-class", "UXTerm", "\-title", "uxterm", "\-u8" }
 .NE
 .TP 5
 .B WM_ICON_NAME
@@ -8147,7 +8147,7 @@ This shows the result from the \fBsetlocale\fP(3) function
 for the \fILC_CTYPE\fP category,
 e.g.,
 .NS
-WM_LOCALE_NAME(STRING) = "en_US.UTF-8"
+WM_LOCALE_NAME(STRING) = "en_US.UTF\-8"
 .NE
 .TP 5
 .B WM_NAME
@@ -8542,11 +8542,11 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 211 at the end of 2018.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 228 in September 2020.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,
 Ross Combs,
 Stephen P.\& Wall,
 David Wexelblat, and
-Thomas Dickey (invisible-island.net).
+Thomas Dickey (invisible\-island.net).
