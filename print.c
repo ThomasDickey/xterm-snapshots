@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.167 2020/01/18 18:50:09 tom Exp $ */
+/* $XTermId: print.c,v 1.169 2020/09/16 22:14:32 tom Exp $ */
 
 /*
  * Copyright 1997-2017,2020 by Thomas E. Dickey
@@ -73,6 +73,13 @@ static void send_SGR(XtermWidget /* xw */ ,
 		     unsigned /* bg */ );
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
+
+#if OPT_SIXEL_GRAPHICS
+static void setGraphicsPrintToHost(XtermWidget /* xw */ ,
+				   int /* enabled */ );
+#else
+#define setGraphicsPrintToHost(xw, enabled) /* nothing */
+#endif
 
 static void
 closePrinter(XtermWidget xw)
@@ -534,19 +541,28 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 
     if (private_seq) {
 	switch (param) {
+	case -1:
+	case 0:		/* VT340 */
+	    setGraphicsPrintToHost(xw, 0);	/* graphics to printer */
+	    break;
 	case 1:
 	    printCursorLine(xw);
 	    break;
+	case 2:		/* VT340 */
+	    setGraphicsPrintToHost(xw, 1);	/* graphics to host */
+	    break;
 	case 4:
-	    setPrinterControlMode(xw, 0);
+	    setPrinterControlMode(xw, 0);	/* autoprint disable */
 	    break;
 	case 5:
-	    setPrinterControlMode(xw, 1);
+	    setPrinterControlMode(xw, 1);	/* autoprint enable */
 	    break;
 	case 10:		/* VT320 */
+	    /* print whole screen, across sessions */
 	    xtermPrintScreen(xw, False, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 11:		/* VT320 */
+	    /* print all pages in current session */
 	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
 	    break;
 	}
@@ -557,10 +573,10 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	    xtermPrintScreen(xw, True, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 4:
-	    setPrinterControlMode(xw, 0);
+	    setPrinterControlMode(xw, 0);	/* printer controller mode off */
 	    break;
 	case 5:
-	    setPrinterControlMode(xw, 2);
+	    setPrinterControlMode(xw, 2);	/* printer controller mode on */
 	    break;
 #if OPT_SCREEN_DUMPS
 	case 10:
@@ -703,6 +719,17 @@ xtermHasPrinter(XtermWidget xw)
 
     return result;
 }
+
+#if OPT_SIXEL_GRAPHICS
+static void
+setGraphicsPrintToHost(XtermWidget xw, int enabled)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("graphics print to host enabled=%d\n", enabled));
+    screen->graphics_print_to_host = (Boolean) enabled;
+}
+#endif
 
 #define showPrinterControlMode(mode) \
 		(((mode) == 0) \

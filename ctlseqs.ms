@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.594 2020/08/03 23:44:47 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.597 2020/09/15 11:17:36 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #359
-.ds RF 2020/08/03
+.ds RF 2020/09/15
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1286,32 +1286,36 @@ and set VT100 mode.
   \*(Ps = \*4 \(-> Smooth (Slow) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Reverse Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Origin Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> Auto-wrap Mode (DECAWM), VT100.
-  \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM), VT100.
+  \*(Ps = \*7 \(-> Auto-Wrap Mode (DECAWM), VT100.
+  \*(Ps = \*8 \(-> Auto-Repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
 This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0 \(-> Show toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Start Blinking Cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Start Blinking Cursor (set only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Enable XOR of Blinking Cursor control sequence and menu.
-  \*(Ps = \*1\*8 \(-> Print form feed (DECPFF), VT220.
+  \*(Ps = \*1\*2 \(-> Start blinking cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Start blinking cursor (set only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*8 \(-> Print Form Feed (DECPFF), VT220.
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX), VT220.
-  \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM), VT220.
+  \*(Ps = \*2\*5 \(-> Show cursor (DECTCEM), VT220.
   \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
-  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK), VT240, \fI\*(xt\fP.
-  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
+  \*(Ps = \*3\*8 \(-> Enter Tektronix mode (DECTEK), VT240, \fI\*(xt\fP.
+  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 mode, \fI\*(xt\fP.
   \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets
 (DECNRCM), VT220.
-  \*(Ps = \*4\*4 \(-> Turn On Margin Bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*6 \(-> Start Logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*3 \(-> Enable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*4 \(-> Turn on margin bell, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Enable Graphics Print Color Mode (DECGPCM).
+  \*(Ps = \*4\*5 \(-> Reverse-wraparound mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Enable Graphics Print ColorSpace (DECGPCS).
+  \*(Ps = \*4\*6 \(-> Start logging, \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
   \*(Ps = \*4\*7 \(-> Use \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This may be disabled by the \fBtiteInhibit\fP resource.
-  \*(Ps = \*6\*6 \(-> Application keypad (DECNKM), VT320.
+  \*(Ps = \*4\*7 \(-> Enable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*6\*6 \(-> Application keypad mode (DECNKM), VT320.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
@@ -1420,28 +1424,32 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*4 \(-> Jump (Fast) Scroll (DECSCLM), VT100.
   \*(Ps = \*5 \(-> Normal Video (DECSCNM), VT100.
   \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM), VT100.
-  \*(Ps = \*7 \(-> No Auto-wrap Mode (DECAWM), VT100.
-  \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM), VT100.
+  \*(Ps = \*7 \(-> No Auto-Wrap Mode (DECAWM), VT100.
+  \*(Ps = \*8 \(-> No Auto-Repeat Keys (DECARM), VT100.
   \*(Ps = \*9 \(-> Don't send Mouse X & Y on button press, \fI\*(xt\fP.
   \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt).
-  \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Disable Blinking Cursor (reset only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Disable XOR of Blinking Cursor control sequence and menu.
-  \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF), VT220.
+  \*(Ps = \*1\*2 \(-> Stop blinking cursor (AT&T 610).
+  \*(Ps = \*1\*3 \(-> Disable blinking cursor (reset only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Disable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*8 \(-> Don't Print Form Feed (DECPFF), VT220.
   \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX), VT220.
-  \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM), VT220.
+  \*(Ps = \*2\*5 \(-> Hide cursor (DECTCEM), VT220.
   \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
-  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 mode, \fI\*(xt\fP.
   \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM),
 VT220.
-  \*(Ps = \*4\*4 \(-> Turn Off Margin Bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*6 \(-> Stop Logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*3 \(-> Disable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*4 \(-> Turn off margin bell, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Disable Graphics Print Color Mode (DECGPCM).
+  \*(Ps = \*4\*5 \(-> No Reverse-wraparound mode, \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Disable Graphics Print ColorSpace (DECGPCS).
+  \*(Ps = \*4\*6 \(-> Stop logging, \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
-  \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer, \fI\*(xt\fP.
-  \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM), VT320.
+  \*(Ps = \*4\*7 \(-> Use \fINormal Screen Buffer\fP, \fI\*(xt\fP.
+  \*(Ps = \*4\*7 \(-> Disable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*6\*6 \(-> Numeric keypad mode (DECNKM), VT320.
   \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),

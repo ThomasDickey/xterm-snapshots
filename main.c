@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.864 2020/06/23 22:42:56 tom Exp $ */
+/* $XTermId: main.c,v 1.865 2020/09/14 00:18:42 tom Exp $ */
 
 /*
  * Copyright 2002-2019,2020 by Thomas E. Dickey
@@ -1086,6 +1086,7 @@ DATA("-nul",		"*underLine",	XrmoptionNoArg,		"off"),
 DATA("+nul",		"*underLine",	XrmoptionNoArg,		"on"),
 DATA("-pc",		"*boldColors",	XrmoptionNoArg,		"on"),
 DATA("+pc",		"*boldColors",	XrmoptionNoArg,		"off"),
+DATA("-pf",		"*pointerFont",	XrmoptionSepArg,	NULL),
 DATA("-rw",		"*reverseWrap",	XrmoptionNoArg,		"on"),
 DATA("+rw",		"*reverseWrap",	XrmoptionNoArg,		"off"),
 DATA("-s",		"*multiScroll",	XrmoptionNoArg,		"on"),
@@ -1255,6 +1256,7 @@ static OptionHelp xtermOptions[] = {
 { "-cc classrange",        "specify additional character classes" },
 { "-/+cm",                 "turn off/on ANSI color mode" },
 { "-/+cn",                 "turn on/off cut newline inhibit" },
+{ "-pf fontname",          "cursor font for text area pointer" },
 { "-cr color",             "text cursor color" },
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",                 "turn off/on dynamic color selection" },

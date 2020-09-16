@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1005 2020/08/10 09:06:56 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1008 2020/09/15 21:47:34 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -410,7 +410,7 @@ typedef struct {
 
 #define MAX_XLFD_FONTS	1
 #define MAX_XFT_FONTS	1
-#define NMENUFONTS	9		/* font entries in fontMenu */
+#define NMENUFONTS	10		/* font entries in fontMenu */
 
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	30			/* Max. parameters		*/
@@ -1087,12 +1087,17 @@ typedef enum {
     ,srm_132COLS = 40
     ,srm_CURSES_HACK = 41
     ,srm_DECNRCM = 42
-    ,srm_MARGIN_BELL = 44
-    ,srm_REVERSEWRAP = 45
-#ifdef ALLOWLOGGING
-    ,srm_ALLOWLOGGING = 46
+#if OPT_SIXEL_GRAPHICS
+    ,srm_DECGEPM = 43		/* Graphics Expanded Print Mode */
 #endif
-    ,srm_ALTBUF = 47
+    ,srm_MARGIN_BELL = 44	/* also DECGPCM (Graphics Print Color Mode) */
+    ,srm_REVERSEWRAP = 45	/* also DECGPCS (Graphics Print Color Syntax) */
+#ifdef ALLOWLOGGING
+    ,srm_ALLOWLOGGING = 46	/* also DECGPBM (Graphics Print Background Mode) */
+#elif OPT_SIXEL_GRAPHICS
+    ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
+#endif
+    ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
     ,srm_DECNKM = 66
     ,srm_DECBKM = 67
     ,srm_DECLRMM = 69
@@ -1991,9 +1996,16 @@ typedef enum {
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
 #endif
+#if OPT_GRAPHICS
 	DP_X_PRIVATE_COLOR_REGISTERS,
+#endif
 #if OPT_SIXEL_GRAPHICS
 	DP_SIXEL_SCROLLS_RIGHT,
+	DP_DECGEPM,  /* Graphics Expanded Print Mode */
+	DP_DECGPCM,  /* Graphics Print Color Mode */
+	DP_DECGPCS,  /* Graphics Print Color Syntax */
+	DP_DECGPBM,  /* Graphics Print Background Mode */
+	DP_DECGRPM,  /* Graphics Rotated Print Mode */
 #endif
 	DP_LAST
 } SaveModes;
@@ -2112,8 +2124,8 @@ typedef struct {
 
 typedef struct {
 	Window		window;		/* X window id			*/
-	int		width;		/* width of columns		*/
-	int		height;		/* height of rows		*/
+	int		width;		/* width of columns in pixels	*/
+	int		height;		/* height of rows in pixels	*/
 	Dimension	fullwidth;	/* full width of window		*/
 	Dimension	fullheight;	/* full height of window	*/
 	int		f_width;	/* width of fonts in pixels	*/
@@ -2228,13 +2240,16 @@ typedef enum {
 
 #if OPT_SIXEL_GRAPHICS
 #define optSixelGraphics(screen) \
-	(GraphicsId(screen) == 240 || \
+	(GraphicsId(screen) == 125 || \
+	 GraphicsId(screen) == 240 || \
 	 GraphicsId(screen) == 241 || \
 	 GraphicsId(screen) == 330 || \
 	 GraphicsId(screen) == 340 || \
 	 GraphicsId(screen) == 382)
+#define if_SIXEL_GRAPHICS2(statement) if (optSixelGraphics(screen)) { statement; } else
 #else
 #define optSixelGraphics(screen) False
+#define if_SIXEL_GRAPHICS2(statement) /* nothing */
 #endif
 
 typedef struct {
@@ -2443,6 +2458,7 @@ typedef struct {
 	int		pointer_mode;	/* when to use hidden_cursor	*/
 	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
+	String		pointer_shape;	/* name of shape in cursor font */
 	Cursor		pointer_cursor;	/* pointer cursor in window	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
@@ -2662,6 +2678,16 @@ typedef struct {
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
 #endif
 
+	/* Graphics Printing */
+#if OPT_SIXEL_GRAPHICS
+	Boolean		graphics_print_to_host;
+	Boolean		graphics_expanded_print_mode;
+	Boolean		graphics_print_color_mode;
+	Boolean		graphics_print_color_syntax;
+	Boolean		graphics_print_background_mode;
+	Boolean		graphics_rotated_print_mode;
+#endif
+
 #if OPT_VT52_MODE
 	IFlags		vt52_save_flags;
 	Char		vt52_save_curgl;
@@ -2817,6 +2843,7 @@ typedef struct {
 #if OPT_TCAP_FKEYS
 	char **		tcap_fkeys;
 #endif
+	String		cursor_font_name;	/* alternate cursor font */
 } TScreen;
 
 typedef XTermFonts *(*MyGetFont) (TScreen *, int);

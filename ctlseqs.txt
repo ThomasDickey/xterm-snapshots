@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #359 (2020/08/03)
+               updated for XTerm Patch #359 (2020/09/15)
 
 
 
@@ -738,34 +738,38 @@ CSI ? Pm h
             Ps = 4  -> Smooth (Slow) Scroll (DECSCLM), VT100.
             Ps = 5  -> Reverse Video (DECSCNM), VT100.
             Ps = 6  -> Origin Mode (DECOM), VT100.
-            Ps = 7  -> Auto-wrap Mode (DECAWM), VT100.
-            Ps = 8  -> Auto-repeat Keys (DECARM), VT100.
+            Ps = 7  -> Auto-Wrap Mode (DECAWM), VT100.
+            Ps = 8  -> Auto-Repeat Keys (DECARM), VT100.
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
           tion Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
-            Ps = 1 2  -> Start Blinking Cursor (AT&T 610).
-            Ps = 1 3  -> Start Blinking Cursor (set only via resource or
+            Ps = 1 2  -> Start blinking cursor (AT&T 610).
+            Ps = 1 3  -> Start blinking cursor (set only via resource or
           menu).
-            Ps = 1 4  -> Enable XOR of Blinking Cursor control sequence
+            Ps = 1 4  -> Enable XOR of blinking cursor control sequence
           and menu.
-            Ps = 1 8  -> Print form feed (DECPFF), VT220.
+            Ps = 1 8  -> Print Form Feed (DECPFF), VT220.
             Ps = 1 9  -> Set print extent to full screen (DECPEX),
           VT220.
-            Ps = 2 5  -> Show Cursor (DECTCEM), VT220.
+            Ps = 2 5  -> Show cursor (DECTCEM), VT220.
             Ps = 3 0  -> Show scrollbar (rxvt).
             Ps = 3 5  -> Enable font-shifting functions (rxvt).
-            Ps = 3 8  -> Enter Tektronix Mode (DECTEK), VT240, xterm.
-            Ps = 4 0  -> Allow 80 -> 132 Mode, xterm.
+            Ps = 3 8  -> Enter Tektronix mode (DECTEK), VT240, xterm.
+            Ps = 4 0  -> Allow 80 -> 132 mode, xterm.
             Ps = 4 1  -> more(1) fix (see curses resource).
             Ps = 4 2  -> Enable National Replacement Character sets
           (DECNRCM), VT220.
-            Ps = 4 4  -> Turn On Margin Bell, xterm.
-            Ps = 4 5  -> Reverse-wraparound Mode, xterm.
-            Ps = 4 6  -> Start Logging, xterm.  This is normally dis-
+            Ps = 4 3  -> Enable Graphics Expanded Print Mode (DECGEPM).
+            Ps = 4 4  -> Turn on margin bell, xterm.
+            Ps = 4 4  -> Enable Graphics Print Color Mode (DECGPCM).
+            Ps = 4 5  -> Reverse-wraparound mode, xterm.
+            Ps = 4 5  -> Enable Graphics Print ColorSpace (DECGPCS).
+            Ps = 4 6  -> Start logging, xterm.  This is normally dis-
           abled by a compile-time option.
             Ps = 4 7  -> Use Alternate Screen Buffer, xterm.  This may
           be disabled by the titeInhibit resource.
-            Ps = 6 6  -> Application keypad (DECNKM), VT320.
+            Ps = 4 7  -> Enable Graphics Rotated Print Mode (DECGRPM).
+            Ps = 6 6  -> Application keypad mode (DECNKM), VT320.
             Ps = 6 7  -> Backarrow key sends backspace (DECBKM), VT340,
           VT420.  This sets the backarrowKey resource to "true".
             Ps = 6 9  -> Enable left and right margin mode (DECLRMM),
@@ -866,31 +870,35 @@ CSI ? Pm l
             Ps = 4  -> Jump (Fast) Scroll (DECSCLM), VT100.
             Ps = 5  -> Normal Video (DECSCNM), VT100.
             Ps = 6  -> Normal Cursor Mode (DECOM), VT100.
-            Ps = 7  -> No Auto-wrap Mode (DECAWM), VT100.
-            Ps = 8  -> No Auto-repeat Keys (DECARM), VT100.
+            Ps = 7  -> No Auto-Wrap Mode (DECAWM), VT100.
+            Ps = 8  -> No Auto-Repeat Keys (DECARM), VT100.
             Ps = 9  -> Don't send Mouse X & Y on button press, xterm.
             Ps = 1 0  -> Hide toolbar (rxvt).
-            Ps = 1 2  -> Stop Blinking Cursor (AT&T 610).
-            Ps = 1 3  -> Disable Blinking Cursor (reset only via
+            Ps = 1 2  -> Stop blinking cursor (AT&T 610).
+            Ps = 1 3  -> Disable blinking cursor (reset only via
           resource or menu).
-            Ps = 1 4  -> Disable XOR of Blinking Cursor control sequence
+            Ps = 1 4  -> Disable XOR of blinking cursor control sequence
           and menu.
-            Ps = 1 8  -> Don't print form feed (DECPFF), VT220.
+            Ps = 1 8  -> Don't Print Form Feed (DECPFF), VT220.
             Ps = 1 9  -> Limit print to scrolling region (DECPEX),
           VT220.
-            Ps = 2 5  -> Hide Cursor (DECTCEM), VT220.
+            Ps = 2 5  -> Hide cursor (DECTCEM), VT220.
             Ps = 3 0  -> Don't show scrollbar (rxvt).
             Ps = 3 5  -> Disable font-shifting functions (rxvt).
-            Ps = 4 0  -> Disallow 80 -> 132 Mode, xterm.
+            Ps = 4 0  -> Disallow 80 -> 132 mode, xterm.
             Ps = 4 1  -> No more(1) fix (see curses resource).
             Ps = 4 2  -> Disable National Replacement Character sets
           (DECNRCM), VT220.
-            Ps = 4 4  -> Turn Off Margin Bell, xterm.
-            Ps = 4 5  -> No Reverse-wraparound Mode, xterm.
-            Ps = 4 6  -> Stop Logging, xterm.  This is normally disabled
+            Ps = 4 3  -> Disable Graphics Expanded Print Mode (DECGEPM).
+            Ps = 4 4  -> Turn off margin bell, xterm.
+            Ps = 4 4  -> Disable Graphics Print Color Mode (DECGPCM).
+            Ps = 4 5  -> No Reverse-wraparound mode, xterm.
+            Ps = 4 5  -> Disable Graphics Print ColorSpace (DECGPCS).
+            Ps = 4 6  -> Stop logging, xterm.  This is normally disabled
           by a compile-time option.
             Ps = 4 7  -> Use Normal Screen Buffer, xterm.
-            Ps = 6 6  -> Numeric keypad (DECNKM), VT320.
+            Ps = 4 7  -> Disable Graphics Rotated Print Mode (DECGRPM).
+            Ps = 6 6  -> Numeric keypad mode (DECNKM), VT320.
             Ps = 6 7  -> Backarrow key sends delete (DECBKM), VT340,
           VT420.  This sets the backarrowKey resource to "false".
             Ps = 6 9  -> Disable left and right margin mode (DECLRMM),

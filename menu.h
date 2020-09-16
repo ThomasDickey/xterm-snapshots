@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.144 2020/06/02 23:49:05 tom Exp $ */
+/* $XTermId: menu.h,v 1.145 2020/09/15 11:09:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -293,7 +293,8 @@ typedef enum {
     fontMenu_font4,
     fontMenu_font5,
     fontMenu_font6,
-#define fontMenu_lastBuiltin fontMenu_font6
+    fontMenu_font7,
+#define fontMenu_lastBuiltin fontMenu_font7
     fontMenu_fontescape,
     fontMenu_fontsel,
 /* number of non-line items down to here should match NMENUFONTS in ptyx.h */
