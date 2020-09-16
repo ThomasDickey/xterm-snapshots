@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.952 2020/08/03 23:19:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.954 2020/09/16 21:50:00 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -704,15 +704,15 @@ make_hidden_cursor(XtermWidget xw)
 	fn = XLoadQueryFont(dpy, DEFFONT);
     }
 
-    if (fn != 0) {
+    if (fn != None) {
 	/* a space character seems to work as a cursor (dots are not needed) */
 	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
 	XFreeFont(dpy, fn);
     } else {
-	c = 0;
+	c = None;
     }
     TRACE(("XCreateGlyphCursor ->%#lx\n", c));
-    return (c);
+    return c;
 }
 
 /*
@@ -811,19 +811,56 @@ cleanup_colored_cursor(void)
 }
 
 Cursor
-make_colored_cursor(unsigned cursorindex,	/* index into font */
+make_colored_cursor(unsigned c_index,		/* index into font */
 		    unsigned long fg,	/* pixel value */
 		    unsigned long bg)	/* pixel value */
 {
     TScreen *screen = TScreenOf(term);
-    Cursor c;
+    Cursor c = None;
     Display *dpy = screen->display;
 
-    c = XCreateFontCursor(dpy, cursorindex);
+    TRACE(("alternate cursor font is \"%s\"\n", screen->cursor_font_name));
+    if (!IsEmpty(screen->cursor_font_name)) {
+	static XTermFonts myFont;
+
+	/* adapted from XCreateFontCursor(), which hardcodes the font name */
+	TRACE(("loading cursor from alternate cursor font\n"));
+	if ((myFont.fs = XLoadQueryFont(dpy, screen->cursor_font_name)) != 0) {
+	    if (!xtermMissingChar(c_index, &myFont)
+		&& !xtermMissingChar(c_index + 1, &myFont)) {
+#define DATA(c) { 0UL, c, c, c, 0, 0 }
+		static XColor const foreground = DATA(0);
+		static XColor const background = DATA(65535);
+#undef DATA
+
+		/*
+		 * Cursor fonts follow each shape glyph with a mask glyph; so
+		 * that character position 0 contains a shape, 1 the mask for
+		 * 0, 2 a shape, 3 a mask for 2, etc.  <X11/cursorfont.h>
+		 * contains defined names for each shape.
+		 */
+		c = XCreateGlyphCursor(dpy,
+				       myFont.fs->fid,	/* source_font */
+				       myFont.fs->fid,	/* mask_font */
+				       c_index + 0,	/* source_char */
+				       c_index + 1,	/* mask_char */
+				       &foreground,
+				       &background);
+	    }
+	    XFreeFont(dpy, myFont.fs);
+	}
+	if (c == None) {
+	    xtermWarning("cannot load cursor %u from alternate cursor font \"%s\"\n",
+			 c_index, screen->cursor_font_name);
+	}
+    }
+    if (c == None)
+	c = XCreateFontCursor(dpy, c_index);
+
     if (c != None) {
 	recolor_cursor(screen, c, fg, bg);
     }
-    return (c);
+    return c;
 }
 
 /* ARGSUSED */
@@ -5077,26 +5114,39 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
 	    break;
-	case srm_REVERSEWRAP:	/* reverse wraparound   */
-	    result = MdFlag(xw->flags, REVERSEWRAP);
+#if OPT_SIXEL_GRAPHICS
+	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
+	    result = MdBool(screen->graphics_expanded_print_mode);
 	    break;
-#ifdef ALLOWLOGGING
+#endif
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
+	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
+		result = MdFlag(xw->flags, REVERSEWRAP);
+	    break;
+#if defined(ALLOWLOGGING)
 	case srm_ALLOWLOGGING:	/* logging              */
-#ifdef ALLOWLOGFILEONOFF
-	    result = MdBool(screen->logging);
+	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+#if defined(ALLOWLOGFILEONOFF)
+		result = MdBool(screen->logging);
 #else
-	    result = ((MdBool(screen->logging) == mdMaybeSet)
-		      ? mdAlwaysSet
-		      : mdAlwaysReset);
-#endif /* ALLOWLOGFILEONOFF */
+		result = ((MdBool(screen->logging) == mdMaybeSet)
+			  ? mdAlwaysSet
+			  : mdAlwaysReset);
+#endif
+	    break;
+#elif OPT_SIXEL_GRAPHICS
+	case srm_DECGPBM:	/* Graphics Print Background Mode */
+	    result = MdBool(screen->graphics_print_background_mode);
 	    break;
 #endif
 	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    /* FALLTHRU */
 	case srm_OPT_ALTBUF:
-	    /* FALLTHRU */
-	case srm_ALTBUF:
 	    result = MdBool(screen->whichBuf);
+	    break;
+	case srm_ALTBUF:
+	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+		result = MdBool(screen->whichBuf);
 	    break;
 	case srm_DECNKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECKPAM);
@@ -5123,7 +5173,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 		result = 0;
 	    }
 	    break;
-	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
+	case srm_VT200_MOUSE:	/* xterm bogus sequence */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
 	    break;
 	case srm_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */

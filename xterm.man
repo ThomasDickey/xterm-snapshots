@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.814 2020/09/14 00:10:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.816 2020/09/16 22:44:45 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -995,6 +995,11 @@ This option enables the PC-style use of bold colors
 .TP 8
 .B +pc
 This option disables the PC-style use of bold colors.
+.TP 8
+.B \-pf \fIfont\fP
+This option specifies the font to be used for the pointer.
+The corresponding resource name is \fIpointerFont\fP.
+The resource value default is \fIcursor\fP.
 .TP 8
 .B \-pob
 This option indicates that the window should be raised whenever a
@@ -2456,7 +2461,7 @@ used for the bold attribute.
 .IP
 Note that \fI\*n\fP has one bold font which you may set explicitly.
 \fI\*N\fP attempts to derive a bold font for the other font selections
-(\fBfont1\fP through \fBfont6\fP).
+(\fBfont1\fP through \fBfont7\fP).
 If it cannot find a bold font, it will use the normal font.
 In each case (whether the explicit resource or the derived font),
 if the normal and bold fonts are distinct, this resource has no effect.
@@ -3529,6 +3534,10 @@ corresponding to \*(``Large\*('' in the standard menu.
 Specifies the name of the sixth alternative font,
 corresponding to \*(``Huge\*('' in the standard menu.
 .TP 8
+.B "font7\fP (class\fB Font7\fP)"
+Specifies the name of the seventh alternative font,
+corresponding to \*(``Enormous\*('' in the standard menu.
+.TP 8
 .B "fontDoublesize\fP (class\fB FontDoublesize\fP)"
 Specifies whether \fI\*n\fP should attempt to use font scaling to draw
 double-sized characters.
@@ -4377,6 +4386,11 @@ The default is
 Specifies the background color of the pointer.
 The default is
 \*(``XtDefaultBackground\*(''.
+.TP 8
+.B "pointerFont\fP (class\fB PointerFont\fP)"
+Specifies the font to be used for the pointer.
+The shapes specified by \fBpointerShape\fP are glyphs in this font.
+The resource value default is \fIcursor\fP.
 .TP 8
 .B "pointerMode\fP (class\fB PointerMode\fP)"
 Specifies when the pointer may be hidden as the user types.
@@ -5447,6 +5461,11 @@ This entry invokes the \fBset\-vt\-font(\fP\fI6\fP\fB)\fP action,
 letting the font using the \fBfont6\fP resource,
 e.g., \*(``Huge\*('' in the menu.
 .TP 8
+.B "font7\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBset\-vt\-font(\fP\fI7\fP\fB)\fP action,
+letting the font using the \fBfont7\fP resource,
+e.g., \*(``Enormous\*('' in the menu.
+.TP 8
 .B "fontescape\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset\-vt\-font(\fP\fIe\fP\fB)\fP action.
 .TP 8
@@ -6434,6 +6453,9 @@ Set the font to that given by the \fB*VT100.font5\fP resource.
 .TP
 .B Huge\fP (resource \fBfont6\fP)
 Set the font to that given by the \fB*VT100.font6\fP resource.
+.TP
+.B Enormous\fP (resource \fBfont7\fP)
+Set the font to that given by the \fB*VT100.font7\fP resource.
 .TP
 .B Escape Sequence\fP (resource \fBfontescape\fP)
 This allows you to set the font last specified by the Set
@@ -7474,7 +7496,7 @@ in \fIvtMenu\fP and the \fBvtshow\fP and \fBtekhide\fP entries in
 This action sets, unsets or toggles the \fBvisualBell\fP resource.
 It is also invoked by the \fBvisualbell\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set\-vt\-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
+.B "set\-vt\-font(\fId/1/2/3/4/5/6/7/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
 This action sets the font or fonts currently being used
 in the VT\fIxxx\fP window.
 The first argument is a single character that specifies the font to be used:
@@ -7484,8 +7506,8 @@ The first argument is a single character that specifies the font to be used:
 used when
 \fI\*n\fP was started),
 .HP
-\fI1\fP through \fI6\fP indicate the fonts
-specified by the \fBfont1\fP through \fBfont6\fP resources,
+\fI1\fP through \fI7\fP indicate the fonts
+specified by the \fBfont1\fP through \fBfont7\fP resources,
 .HP
 \fIe\fP or \fIE\fP
 indicate the normal and bold fonts that have been set through escape codes

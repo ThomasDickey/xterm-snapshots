@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.362 2020/06/02 23:44:02 tom Exp $ */
+/* $XTermId: menu.c,v 1.363 2020/09/15 11:09:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -410,6 +410,7 @@ MenuEntry fontMenuEntries[] = {
     { "font4",		do_vtfont,	NULL },
     { "font5",		do_vtfont,	NULL },
     { "font6",		do_vtfont,	NULL },
+    { "font7",		do_vtfont,	NULL },
     /* this is after the last builtin font; the other entries are special */
     { "fontescape",	do_vtfont,	NULL },
     { "fontsel",	do_vtfont,	NULL },
@@ -848,7 +849,7 @@ domenu(Widget w,
 	    int n;
 
 	    set_menu_font(True);
-	    for (n = fontMenu_font1; n <= fontMenu_font6; ++n) {
+	    for (n = fontMenu_font1; n <= fontMenu_font7; ++n) {
 		if (IsEmpty(screen->menu_font_names[n][fNorm]))
 		    SetItemSensitivity(fontMenuEntries[n].widget, False);
 	    }

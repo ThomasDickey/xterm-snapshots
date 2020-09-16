@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.239 2020/06/02 23:12:04 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.240 2020/09/15 09:21:12 tom Exp $ */
 
 /*
  * Copyright 2001-2019,2020 by Thomas E. Dickey
@@ -654,10 +654,11 @@ Tekparse(TekWidget tw)
 		x++;
 	    else if (c & WEST)
 		x--;
-	    if (tekscr->pen == PENDOWN)
+	    if (tekscr->pen == PENDOWN) {
 		TekDraw(tw, x, y);
-	    else
+	    } else {
 		TekMove(tw, x, y);
+	    }
 	    break;
 
 	case CASE_PLT_VEC:

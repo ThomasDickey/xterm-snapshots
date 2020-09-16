@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.687 2020/06/26 23:27:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.688 2020/09/15 11:09:06 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2057,6 +2057,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	Sres(XtNfont4, XtCFont4, MenuFontName(fontMenu_font4), NULL),
 	Sres(XtNfont5, XtCFont5, MenuFontName(fontMenu_font5), NULL),
 	Sres(XtNfont6, XtCFont6, MenuFontName(fontMenu_font6), NULL),
+	Sres(XtNfont7, XtCFont6, MenuFontName(fontMenu_font7), NULL),
     };
     Cardinal n, m;
     Bool status = True;
@@ -4508,6 +4509,9 @@ fillInFaceSize(XtermWidget xw, int fontnum)
 	    case fontMenu_font6:
 		face_size = LikeBitmap(200.0);
 		break;
+	    case fontMenu_font7:
+		face_size = LikeBitmap(240.0);
+		break;
 	    }
 	    TRACE(("builtin[%d] -> %f\n", fontnum, face_size));
 	}
@@ -4726,6 +4730,9 @@ xtermGetFont(const char *param)
     case '6':
 	fontnum = fontMenu_font6;
 	break;
+    case '7':
+	fontnum = fontMenu_font7;
+	break;
     case 'e':
     case 'E':
 	fontnum = fontMenu_fontescape;
@@ -4770,6 +4777,7 @@ HandleSetFont(Widget w,
 	    case fontMenu_font4:	/* FALLTHRU */
 	    case fontMenu_font5:	/* FALLTHRU */
 	    case fontMenu_font6:	/* FALLTHRU */
+	    case fontMenu_font7:	/* FALLTHRU */
 		break;
 	    case fontMenu_fontescape:
 #if OPT_WIDE_CHARS
