@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.954 2020/09/16 21:50:00 tom Exp $ */
+/* $XTermId: misc.c,v 1.955 2020/09/17 08:01:08 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4875,24 +4875,23 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 	/* FALLTHRU */
     default:
-	if (GraphicsId(screen) == 125 ||
+	if (optRegisGraphics(screen) ||
+	    optSixelGraphics(screen) ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
-	    case 'p':
+	    case 'p':		/* ReGIS */
 #if OPT_REGIS_GRAPHICS
-		if (GraphicsId(screen) == 125 ||
-		    optRegisGraphics(screen)) {
+		if (optRegisGraphics(screen)) {
 		    parse_regis(xw, &params, cp);
 		}
 #else
 		TRACE(("ignoring ReGIS graphic (compilation flag not enabled)\n"));
 #endif
 		break;
-	    case 'q':
+	    case 'q':		/* sixel */
 #if OPT_SIXEL_GRAPHICS
-		if (GraphicsId(screen) == 125 ||
-		    optSixelGraphics(screen)) {
+		if (optSixelGraphics(screen)) {
 		    (void) parse_sixel(xw, &params, cp);
 		}
 #else

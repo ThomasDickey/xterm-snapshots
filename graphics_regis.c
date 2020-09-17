@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.123 2020/09/16 22:13:59 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.124 2020/09/17 08:01:08 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014-2019,2020 by Ross Combs
@@ -200,7 +200,7 @@ typedef struct RegisGraphicsContext {
     XtermWidget current_widget;
     Graphic *destination_graphic;
     Graphic *display_graphic;
-    int graphics_id;
+    int graphics_termid;
     int x_off, y_off;
     int x_div, y_div;
     int width, height;
@@ -3630,7 +3630,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     /*
      * The VT240 and VT330 models convert to the closest grayscale value.
      */
-    if (context->graphics_id == 240 || context->graphics_id == 330) {
+    if (context->graphics_termid == 240 || context->graphics_termid == 330) {
 	hls2rgb(0, l, 0, &r, &g, &b);
 	TRACE(("converted to grayscale: %hd,%hd,%hd\n", r, g, b));
     }
@@ -4558,7 +4558,7 @@ load_regis_write_control_set(RegisParseState *state,
 }
 
 static void
-init_regis_write_controls(int graphics_id, unsigned all_planes,
+init_regis_write_controls(int graphics_termid, unsigned all_planes,
 			  RegisWriteControls *controls)
 {
     controls->pv_multiplier = 1U;
@@ -4567,7 +4567,7 @@ init_regis_write_controls(int graphics_id, unsigned all_planes,
     controls->invert_pattern = 0U;
     controls->plane_mask = all_planes;
     controls->write_style = WRITE_STYLE_OVERLAY;
-    switch (graphics_id) {
+    switch (graphics_termid) {
     case 125:			/* FIXME: verify */
     case 240:			/* FIXME: verify */
     case 241:			/* FIXME: verify */
@@ -4721,7 +4721,7 @@ init_regis_alphabets(RegisGraphicsContext *context)
 }
 
 static void
-init_regis_graphics_context(int graphics_id, int width, int height,
+init_regis_graphics_context(int graphics_termid, int width, int height,
 			    unsigned max_colors, const char *builtin_font,
 			    RegisGraphicsContext *context)
 {
@@ -4729,7 +4729,7 @@ init_regis_graphics_context(int graphics_id, int width, int height,
     context->display_graphic = NULL;
     context->display_page = 0U;
     context->destination_page = 0U;
-    context->graphics_id = graphics_id;
+    context->graphics_termid = graphics_termid;
 
     /* reset addressing / clear user coordinates */
     context->width = width;
@@ -4753,7 +4753,7 @@ init_regis_graphics_context(int graphics_id, int width, int height,
 
     context->builtin_font = builtin_font;
 
-    init_regis_write_controls(graphics_id, context->all_planes,
+    init_regis_write_controls(graphics_termid, context->all_planes,
 			      &context->persistent_write_controls);
     copy_regis_write_controls(&context->persistent_write_controls,
 			      &context->temporary_write_controls);
@@ -6102,8 +6102,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			}
 
 			if (color_only &&
-			    (context->graphics_id == 240 ||
-			     context->graphics_id == 330)) {
+			    (context->graphics_termid == 240 ||
+			     context->graphics_termid == 330)) {
 			    TRACE(("NOT setting color register %d to %hd,%hd,%hd\n",
 				   register_num, r, g, b));
 			} else {
@@ -7622,7 +7622,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     if (context->width == 0 || context->height == 0 ||
 	Pmode == 1 || Pmode == 3) {
 	init_regis_parse_state(state);
-	init_regis_graphics_context(GraphicsId(screen),
+	init_regis_graphics_context(GraphicsTermId(screen),
 				    screen->graphics_regis_def_wide,
 				    screen->graphics_regis_def_high,
 				    get_color_register_count(screen),

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1776 2020/09/16 22:36:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1779 2020/09/17 20:27:42 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -730,7 +730,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_GRAPHICS
-    Sres(XtNdecGraphicsID, XtCDecGraphicsID, screen.graph_id, DFT_DECID),
+    Sres(XtNdecGraphicsID, XtCDecGraphicsID, screen.graph_termid, DFT_DECID),
     Sres(XtNmaxGraphicSize, XtCMaxGraphicSize, screen.graphics_max_size,
 	 "1000x1000"),
 #endif
@@ -8800,6 +8800,12 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 }
 #endif /* OPT_XRES_QUERY */
 
+/*
+ * Decode a terminal-ID or graphics-terminal-ID, using the default terminal-ID
+ * if the value is outside a (looser) range than limitedTerminalID.  This uses
+ * a wider range, to avoid being a nuisance when using X resources with
+ * different configurations of xterm.
+ */
 static int
 decodeTerminalID(const char *value)
 {
@@ -8820,6 +8826,12 @@ decodeTerminalID(const char *value)
     return (int) result;
 }
 
+/*
+ * Ensures that the value returned by decodeTerminalID is either in the range
+ * of IDs matching a known terminal, or (failing that), set to the built-in
+ * default.  The DA response relies on having the ID being set to a known
+ * value.
+ */
 static int
 limitedTerminalID(int terminal_id)
 {
@@ -9179,20 +9191,28 @@ VTInitialize(Widget wrequest,
 
     init_Sres(screen.term_id);
     screen->terminal_id = decodeTerminalID(TScreenOf(request)->term_id);
+    /*
+     * (1) If a known terminal model, and not a graphical terminal, preserve
+     *     the terminal id.
+     * (2) Otherwise, if ReGIS or sixel graphics are enabled, preserve the ID,
+     *     even if it is not a known terminal.
+     * (3) Otherwise force the terminal ID to the min, max, or VT420 depending
+     *     on the input.
+     */
     switch (screen->terminal_id) {
-    case 52:
+    case 52:			/* MIN_DECID */
     case 100:
     case 101:
     case 102:
-    case 125:			/* maybe graphics */
+    case 125:			/* ReGIS graphics */
     case 131:
-    case 132:			/* maybe graphics */
+    case 132:			/* no graphics */
     case 220:
     case 320:
-    case 420:
+    case 420:			/* DFT_DECID, unless overridden in configure */
     case 510:
     case 520:
-    case 525:
+    case 525:			/* MAX_DECID */
 	break;
     default:
 #if OPT_REGIS_GRAPHICS
@@ -9851,9 +9871,9 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_GRAPHICS
-    init_Sres(screen.graph_id);
-    screen->graphics_id = decodeTerminalID(TScreenOf(request)->graph_id);
-    switch (screen->graphics_id) {
+    init_Sres(screen.graph_termid);
+    screen->graphics_termid = decodeTerminalID(TScreenOf(request)->graph_termid);
+    switch (screen->graphics_termid) {
     case 125:
     case 240:
     case 241:
@@ -9862,12 +9882,12 @@ VTInitialize(Widget wrequest,
     case 382:
 	break;
     default:
-	screen->graphics_id = 0;
+	screen->graphics_termid = 0;
 	break;
     }
-    TRACE(("graph_id '%s' -> graphics_id %d\n",
-	   screen->graph_id,
-	   screen->graphics_id));
+    TRACE(("graph_termid '%s' -> graphics_termid %d\n",
+	   screen->graph_termid,
+	   screen->graphics_termid));
 
     init_Ires(screen.numcolorregisters);
     TRACE(("initialized NUM_COLOR_REGISTERS to resource default: %d\n",
@@ -9882,7 +9902,7 @@ VTInitialize(Widget wrequest,
     {
 	int native_w, native_h;
 
-	switch (GraphicsId(screen)) {
+	switch (GraphicsTermId(screen)) {
 	case 125:
 	    native_w = 768;
 	    native_h = 460;
@@ -9894,11 +9914,11 @@ VTInitialize(Widget wrequest,
 	    native_h = 460;
 	    break;
 	case 330:
+	    /* FALLTHRU */
+	case 340:
 	    native_w = 800;
 	    native_h = 480;
 	    break;
-	case 340:
-	    /* FALLTHRU */
 	default:
 	    native_w = 800;
 	    native_h = 480;
@@ -9919,7 +9939,7 @@ VTInitialize(Widget wrequest,
 	screen->graphics_regis_def_wide = 1000;
 	if (!x_strcasecmp(screen->graphics_regis_screensize, "auto")) {
 	    TRACE(("setting default ReGIS screensize based on graphics_id %d\n",
-		   GraphicsId(screen)));
+		   GraphicsTermId(screen)));
 	    screen->graphics_regis_def_high = (Dimension) native_w;
 	    screen->graphics_regis_def_wide = (Dimension) native_h;
 	} else {
@@ -9956,7 +9976,7 @@ VTInitialize(Widget wrequest,
 	screen->graphics_max_wide = 1000;
 	if (!x_strcasecmp(screen->graphics_max_size, "auto")) {
 	    TRACE(("setting max graphics screensize based on graphics_id %d\n",
-		   GraphicsId(screen)));
+		   GraphicsTermId(screen)));
 	    screen->graphics_max_high = (Dimension) native_w;
 	    screen->graphics_max_wide = (Dimension) native_h;
 	} else {
