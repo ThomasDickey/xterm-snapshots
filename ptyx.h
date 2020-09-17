@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1008 2020/09/15 21:47:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1009 2020/09/17 08:04:40 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2220,32 +2220,32 @@ typedef enum {
 } XtCursorStyle;
 
 #if OPT_GRAPHICS
-#define GraphicsId(screen) (\
-	(screen)->graphics_id \
-	 ? (screen)->graphics_id \
+#define GraphicsTermId(screen) (\
+	(screen)->graphics_termid \
+	 ? (screen)->graphics_termid \
 	 : (screen)->terminal_id)
 #else
-#define GraphicsId(screen) (screen)->terminal_id
+#define GraphicsTermId(screen) (screen)->terminal_id
 #endif
 
 #if OPT_REGIS_GRAPHICS
 #define optRegisGraphics(screen) \
-	(GraphicsId(screen) == 240 || \
-	 GraphicsId(screen) == 241 || \
-	 GraphicsId(screen) == 330 || \
-	 GraphicsId(screen) == 340)
+	(GraphicsTermId(screen) == 125 || \
+	 GraphicsTermId(screen) == 240 || \
+	 GraphicsTermId(screen) == 241 || \
+	 GraphicsTermId(screen) == 330 || \
+	 GraphicsTermId(screen) == 340)
 #else
 #define optRegisGraphics(screen) False
 #endif
 
 #if OPT_SIXEL_GRAPHICS
 #define optSixelGraphics(screen) \
-	(GraphicsId(screen) == 125 || \
-	 GraphicsId(screen) == 240 || \
-	 GraphicsId(screen) == 241 || \
-	 GraphicsId(screen) == 330 || \
-	 GraphicsId(screen) == 340 || \
-	 GraphicsId(screen) == 382)
+	(GraphicsTermId(screen) == 240 || \
+	 GraphicsTermId(screen) == 241 || \
+	 GraphicsTermId(screen) == 330 || \
+	 GraphicsTermId(screen) == 340 || \
+	 GraphicsTermId(screen) == 382)
 #define if_SIXEL_GRAPHICS2(statement) if (optSixelGraphics(screen)) { statement; } else
 #else
 #define optSixelGraphics(screen) False
@@ -2654,8 +2654,8 @@ typedef struct {
 #endif
 
 #if OPT_GRAPHICS
-	String		graph_id;		/* resource for graphics_id */
-	int		graphics_id;		/* based on terminal_id   */
+	String		graph_termid;		/* resource for graphics_termid */
+	int		graphics_termid;	/* based on terminal_id   */
 	String		graphics_max_size;	/* given a size in pixels */
 	Dimension	graphics_max_wide;	/* ...corresponding width */
 	Dimension	graphics_max_high;	/* ...and height          */
