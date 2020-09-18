@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1779 2020/09/17 20:27:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1780 2020/09/17 23:54:16 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -12040,6 +12040,9 @@ ShowCursor(void)
 		xtermLoadItalics(xw);
 		setCgsFont(xw, currentWin, currentCgs,
 			   getter(screen, which_font));
+		getter = (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
+			  ? getItalicFont
+			  : getNormalFont);
 	    }
 	    currentGC = getCgsGC(xw, currentWin, currentCgs);
 #endif /* OPT_WIDE_ATTRS */
@@ -12208,6 +12211,9 @@ HideCursor(void)
 	    setCgsFont(xw, WhichVWin(screen),
 		       (CgsEnum) which_Cgs,
 		       getter(screen, which_font));
+	    getter = (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
+		      ? getItalicFont
+		      : getNormalFont);
 	}
     }
 #endif

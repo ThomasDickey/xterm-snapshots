@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.816 2020/09/16 22:44:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.820 2020/09/18 00:41:51 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -467,12 +467,12 @@ use the line-speed when optimizing their output to the screen.
 The
 default is \*(``38400\*(''.
 .TP 8
-.B +bc
-turn off text cursor blinking.
-This overrides the \fBcursorBlink\fR resource.
-.TP 8
 .B \-bc
 turn on text cursor blinking.
+This overrides the \fBcursorBlink\fR resource.
+.TP 8
+.B +bc
+turn off text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
 .BI \-bcf " milliseconds"
@@ -597,17 +597,6 @@ Encodings other than UTF-8 are supported by using \fIluit\fR.
 The \fB\-lc\fR option should be used instead of \fB\-en\fR for
 systems with locale support.
 .TP 8
-.BI \-fb " font"
-This option specifies a font to be used when displaying bold text.
-It sets the \fBboldFont\fR resource.
-.IP
-This font must be the same height and width as the normal font,
-otherwise it is ignored.
-If only one of the normal or bold fonts is specified, it will be used as the
-normal font and the bold font will be produced by overstriking this font.
-.IP
-See also the discussion of \fBboldMode\fP and \fBalwaysBoldMode\fP resources.
-.TP 8
 .BI \-fa " pattern"
 This option sets the pattern for fonts selected from the FreeType
 library if support for that library was compiled into \fI\*n\fP.
@@ -622,6 +611,17 @@ the \fB\-fa\fP setting overrides the latter.
 See also the \fBrenderFont\fP resource,
 which combines with this to determine whether FreeType fonts are
 initially active.
+.TP 8
+.BI \-fb " font"
+This option specifies a font to be used when displaying bold text.
+It sets the \fBboldFont\fR resource.
+.IP
+This font must be the same height and width as the normal font,
+otherwise it is ignored.
+If only one of the normal or bold fonts is specified, it will be used as the
+normal font and the bold font will be produced by overstriking this font.
+.IP
+See also the discussion of \fBboldMode\fP and \fBalwaysBoldMode\fP resources.
 .TP 8
 .B \-fbb
 This option indicates that \fI\*n\fP should
@@ -894,7 +894,7 @@ This corresponds to the \fBlocaleFilter\fR resource.
 .TP 8
 .B \-leftbar
 Force scrollbar to the left side of VT100 screen.
-This is the default, unless you have set the rightScrollBar resource.
+This is the default, unless you have set the \fBrightScrollBar\fR resource.
 .TP 8
 .BI \-lf " filename"
 Specify the log filename.
@@ -929,6 +929,10 @@ because \fI\*n\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
 whereas \fI\*n\ \-e\fP does not.
 .TP 8
+.B +ls
+This option indicates that the shell that is started should not be a login
+shell (i.e., it will be a normal \*(``subshell\*('').
+.TP 8
 .B \-maximized
 This option indicates that \fI\*n\fP should ask the window manager to
 maximize its layout on startup.
@@ -940,10 +944,6 @@ it is possible to do both with certain window managers.
 .B +maximized
 This option indicates that \fI\*n\fP should ask the window manager to
 not maximize its layout on startup.
-.TP 8
-.B +ls
-This option indicates that the shell that is started should not be a login
-shell (i.e., it will be a normal \*(``subshell\*('').
 .TP 8
 .B \-mb
 This option indicates that \fI\*n\fP should ring a margin bell when
@@ -1762,11 +1762,6 @@ the fontsize used.
 The default is
 \*(``25\*(''.
 .TP 8
-.B "messages\fP (class\fB Messages\fP)"
-Specifies whether write access to the terminal is allowed initially.
-See \fBmesg\fP(1).
-The default is \*(``true\*(''.
-.TP 8
 .B "menuLocale\fP (class\fB MenuLocale\fP)"
 Specify the locale used for character-set computations when loading
 the popup menus.
@@ -1778,6 +1773,11 @@ The default is \*(``C\*('' (POSIX).
 To use the current locale
 (only useful if you have localized the resource settings for the menu entries),
 set the resource to an empty string.
+.TP 8
+.B "messages\fP (class\fB Messages\fP)"
+Specifies whether write access to the terminal is allowed initially.
+See \fBmesg\fP(1).
+The default is \*(``true\*(''.
 .TP 8
 .B "minBufSize\fP (class\fB MinBufSize\fP)"
 Specify the minimum size of the input buffer, i.e., the amount of data
@@ -3479,6 +3479,13 @@ Specifies the pointsize of the fifth alternative font.
 .B "faceSize6\fP (class\fB FaceSize6\fP)"
 Specifies the pointsize of the sixth alternative font.
 .TP 8
+.B "fastScroll\fP (class\fB FastScroll\fP)"
+Modifies the effect of jump scroll (\fBjumpScroll\fP)
+by suppressing screen refreshes
+for the special case when output to the screen has completely shifted
+the contents off-screen.
+For instance, \fIcat\fP'ing a large file to the screen does this.
+.TP 8
 .B "font\fP (class\fB Font\fP)"
 Specifies the name of the normal font.
 The default is \*(``fixed\*(''.
@@ -3502,13 +3509,6 @@ xterm.vt100.utf8Fonts.font
 .NE
 .IP
 which is probably not what you intended.
-.TP 8
-.B "fastScroll\fP (class\fB FastScroll\fP)"
-Modifies the effect of jump scroll (\fBjumpScroll\fP)
-by suppressing screen refreshes
-for the special case when output to the screen has completely shifted
-the contents off-screen.
-For instance, \fIcat\fP'ing a large file to the screen does this.
 .TP 8
 .B "font1\fP (class\fB Font1\fP)"
 Specifies the name of the first alternative font,
@@ -3861,9 +3861,6 @@ The value given is the same as the final character in the control sequences
 which change character sets.
 The default is \*(``B\*('', which corresponds to US ASCII.
 .TP 8
-.B "\fIname\fP\fBKeymap\fP (class\fB \fIName\fP\fBKeymap\fP)"
-See the discussion of the \fBkeymap()\fP action.
-.TP 8
 .B "limitFontsets\fP (class\fB LimitFontsets\fP)"
 Limits the number of TrueType fallback fonts (i.e., fontset) which can be used.
 The default is \*(``50\*(''.
@@ -3980,11 +3977,6 @@ When using a locale-filter, e.g., with the \fI\-e\fP option, or the shell,
 If it fails, \fI\*n\fP will retry without the locale-filter.
 \fI\*N\fP warns about the failure before retrying.
 .TP 8
-.B "loginShell\fP (class\fB LoginShell\fP)"
-Specifies whether or not the shell to be run in the window should be started
-as a login shell.
-The default is \*(``false\*(''.
-.TP 8
 .B "logFile\fP (class\fB Logfile\fP)"
 Specify the name for \fI\*n\fP's log file.
 If no name is specified, \fI\*n\fP will generate a name when
@@ -4002,6 +3994,11 @@ If \*(``true\*('', (and if \fBlogInhibit\fP is not set)
 enable the logging feature.
 This resource is set/updated by the \fB\-l\fP option and the
 menu entry \fBLog to File\fP.
+The default is \*(``false\*(''.
+.TP 8
+.B "loginShell\fP (class\fB LoginShell\fP)"
+Specifies whether or not the shell to be run in the window should be started
+as a login shell.
 The default is \*(``false\*(''.
 .TP 8
 .B "marginBell\fP (class\fB MarginBell\fP)"
@@ -4250,6 +4247,9 @@ The default is \*(``false\*(''.
 Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is \*(``10\*(''.
+.TP 8
+.B "\fIname\fP\fBKeymap\fP (class\fB \fIName\fP\fBKeymap\fP)"
+See the discussion of the \fBkeymap()\fP action.
 .TP 8
 .B "nextEventDelay\fP (class\fB NextEventDelay\fP)"
 Specifies a delay time in milliseconds before checking for new X events.
