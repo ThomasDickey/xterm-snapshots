@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.253 2020/08/02 19:12:41 tom Exp $
+## $XTermId: Makefile.in,v 1.254 2020/09/18 21:23:27 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -543,6 +543,8 @@ check : $(TEST_PROGRAMS)
 		./test_wcwidth -s $$range; \
 		./test_wcwidth -s $$range -w; \
 	done'
+	@ $(SHELL) -c 'echo "** executing test_ptydata"; \
+		./test_ptydata -a'
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XTerm[1-9]*.* Xterm.log.* XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp

@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.148 2020/08/12 22:16:36 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.149 2020/09/18 22:45:13 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -643,6 +643,24 @@ noleaks_ptydata(void)
 
 #include "data.c"
 
+void
+NormalExit(void)
+{
+    fprintf(stderr, "NormalExit!\n");
+    exit(EXIT_SUCCESS);
+}
+
+void
+Panic(const char *s, int a)
+{
+    (void) s;
+    (void) a;
+    fprintf(stderr, "Panic!\n");
+    exit(EXIT_FAILURE);
+}
+
+#if OPT_WIDE_CHARS
+
 #ifdef ALLOWLOGGING
 void
 FlushLog(XtermWidget xw)
@@ -668,22 +686,6 @@ mk_wcwidth_init(int mode)
 void
 update_font_utf8_mode(void)
 {
-}
-
-void
-NormalExit(void)
-{
-    fprintf(stderr, "NormalExit!\n");
-    exit(EXIT_SUCCESS);
-}
-
-void
-Panic(const char *s, int a)
-{
-    (void) s;
-    (void) a;
-    fprintf(stderr, "Panic!\n");
-    exit(EXIT_FAILURE);
 }
 
 static int message_level = 0;
@@ -1001,4 +1003,14 @@ main(int argc, char **argv)
     }
     return EXIT_SUCCESS;
 }
+#else
+int
+main(int argc, char **argv)
+{
+    (void) argc;
+    (void) argv;
+    printf("Nothing to be done here...\n");
+    return EXIT_SUCCESS;
+}
+#endif /* OPT_WIDE_CHARS */
 #endif
