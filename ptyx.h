@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1009 2020/09/17 08:04:40 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.1012 2020/09/19 16:58:15 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -563,6 +563,10 @@ typedef enum {
 #define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
 #endif
 
+#ifndef OPT_PRINT_GRAPHICS
+#define OPT_PRINT_GRAPHICS 0 /* true if xterm supports screen dumps as sixel graphics */
+#endif
+
 #ifndef OPT_SCREEN_DUMPS
 #define OPT_SCREEN_DUMPS 1 /* true if xterm supports screen dumps */
 #endif
@@ -1087,14 +1091,14 @@ typedef enum {
     ,srm_132COLS = 40
     ,srm_CURSES_HACK = 41
     ,srm_DECNRCM = 42
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
     ,srm_DECGEPM = 43		/* Graphics Expanded Print Mode */
 #endif
     ,srm_MARGIN_BELL = 44	/* also DECGPCM (Graphics Print Color Mode) */
     ,srm_REVERSEWRAP = 45	/* also DECGPCS (Graphics Print Color Syntax) */
 #ifdef ALLOWLOGGING
     ,srm_ALLOWLOGGING = 46	/* also DECGPBM (Graphics Print Background Mode) */
-#elif OPT_SIXEL_GRAPHICS
+#elif OPT_PRINT_GRAPHICS
     ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
 #endif
     ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
@@ -2001,6 +2005,8 @@ typedef enum {
 #endif
 #if OPT_SIXEL_GRAPHICS
 	DP_SIXEL_SCROLLS_RIGHT,
+#endif
+#if OPT_PRINT_GRAPHICS
 	DP_DECGEPM,  /* Graphics Expanded Print Mode */
 	DP_DECGPCM,  /* Graphics Print Color Mode */
 	DP_DECGPCS,  /* Graphics Print Color Syntax */
@@ -2246,10 +2252,14 @@ typedef enum {
 	 GraphicsTermId(screen) == 330 || \
 	 GraphicsTermId(screen) == 340 || \
 	 GraphicsTermId(screen) == 382)
-#define if_SIXEL_GRAPHICS2(statement) if (optSixelGraphics(screen)) { statement; } else
 #else
 #define optSixelGraphics(screen) False
-#define if_SIXEL_GRAPHICS2(statement) /* nothing */
+#endif
+
+#if OPT_PRINT_GRAPHICS
+#define if_PRINT_GRAPHICS2(statement) if (optRegisGraphics(screen)) { statement; } else
+#else
+#define if_PRINT_GRAPHICS2(statement) /* nothing */
 #endif
 
 typedef struct {
@@ -2679,7 +2689,7 @@ typedef struct {
 #endif
 
 	/* Graphics Printing */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 	Boolean		graphics_print_to_host;
 	Boolean		graphics_expanded_print_mode;
 	Boolean		graphics_print_color_mode;

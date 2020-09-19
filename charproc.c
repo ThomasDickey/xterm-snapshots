@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1780 2020/09/17 23:54:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1781 2020/09/19 16:44:40 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -520,7 +520,7 @@ static XtResource xterm_resources[] =
     Sres(XtNfont4, XtCFont4, screen.MenuFontName(fontMenu_font4), NULL),
     Sres(XtNfont5, XtCFont5, screen.MenuFontName(fontMenu_font5), NULL),
     Sres(XtNfont6, XtCFont6, screen.MenuFontName(fontMenu_font6), NULL),
-    Sres(XtNfont7, XtCFont6, screen.MenuFontName(fontMenu_font7), NULL),
+    Sres(XtNfont7, XtCFont7, screen.MenuFontName(fontMenu_font7), NULL),
 
     Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
     Sres(XtNboldFont, XtCBoldFont, misc.default_font.f_b, DEFBOLDFONT),
@@ -3990,7 +3990,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     * Both the VT220 manual and DEC STD 070 (which documents
 		     * levels 1-4 in detail) state that it is a soft reset.
 		     *
-		     * Perhaps both sets of manuals are right (unlikely). 
+		     * Perhaps both sets of manuals are right (unlikely).
 		     * Kermit says it's soft.
 		     */
 		    ReallyReset(xw, False, False);
@@ -6261,13 +6261,13 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
 	    set_bool_mode(screen->graphics_expanded_print_mode);
 	    break;
 #endif
 	case srm_MARGIN_BELL:	/* margin bell (xterm) also DECGPCM (Graphics Print Color Mode) */
-	    if_SIXEL_GRAPHICS2(set_bool_mode(screen->graphics_print_color_mode)) {
+	    if_PRINT_GRAPHICS2(set_bool_mode(screen->graphics_print_color_mode)) {
 		set_bool_mode(screen->marginbell);
 		if (!screen->marginbell)
 		    screen->bellArmed = -1;
@@ -6275,14 +6275,14 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 	case srm_REVERSEWRAP:	/* reverse wraparound (xterm) also DECGPCS (Graphics Print Color Syntax) */
-	    if_SIXEL_GRAPHICS2(set_bool_mode(screen->graphics_print_color_syntax)) {
+	    if_PRINT_GRAPHICS2(set_bool_mode(screen->graphics_print_color_syntax)) {
 		(*func) (&xw->flags, REVERSEWRAP);
 		update_reversewrap();
 	    }
 	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
-	    if_SIXEL_GRAPHICS2(set_bool_mode(screen->graphics_print_background_mode)) {
+	    if_PRINT_GRAPHICS2(set_bool_mode(screen->graphics_print_background_mode)) {
 #ifdef ALLOWLOGFILEONOFF
 		/*
 		 * if this feature is enabled, logging may be
@@ -6298,7 +6298,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* ALLOWLOGFILEONOFF */
 	    }
 	    break;
-#elif OPT_SIXEL_GRAPHICS
+#elif OPT_PRINT_GRAPHICS
 	case srm_DECGPBM:	/* Graphics Print Background Mode */
 	    set_bool_mode(screen->graphics_print_background_mode);
 	    break;
@@ -6331,7 +6331,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 	case srm_ALTBUF:	/* alternate buffer (xterm) also DECGRPM (Graphics Rotated Print Mode) */
-	    if_SIXEL_GRAPHICS2(set_bool_mode(screen->graphics_rotated_print_mode)) {
+	    if_PRINT_GRAPHICS2(set_bool_mode(screen->graphics_rotated_print_mode)) {
 		if (!xw->misc.titeInhibit) {
 		    if (IsSM()) {
 			ToAlternate(xw, False);
@@ -6665,30 +6665,30 @@ savemodes(XtermWidget xw)
 		DoSM(DP_DECNRCM, xw->flags & NATIONAL);
 	    }
 	    break;
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
 	    DoSM(DP_DECGEPM, screen->graphics_expanded_print_mode);
 	    break;
 #endif
 	case srm_MARGIN_BELL:	/* margin bell (xterm) also DECGPCM (Graphics Print Color Mode) */
-	    if_SIXEL_GRAPHICS2(DoSM(DP_DECGPCM, screen->graphics_print_color_mode)) {
+	    if_PRINT_GRAPHICS2(DoSM(DP_DECGPCM, screen->graphics_print_color_mode)) {
 		DoSM(DP_X_MARGIN, screen->marginbell);
 	    }
 	    break;
 	case srm_REVERSEWRAP:	/* reverse wraparound (xterm) also DECGPCS (Graphics Print Color Syntax) */
-	    if_SIXEL_GRAPHICS2(DoSM(DP_DECGPCS, screen->graphics_print_color_syntax)) {
+	    if_PRINT_GRAPHICS2(DoSM(DP_DECGPCS, screen->graphics_print_color_syntax)) {
 		DoSM(DP_X_REVWRAP, xw->flags & REVERSEWRAP);
 	    }
 	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
-	    if_SIXEL_GRAPHICS2(DoSM(DP_DECGPBM, screen->graphics_print_background_mode)) {
+	    if_PRINT_GRAPHICS2(DoSM(DP_DECGPBM, screen->graphics_print_background_mode)) {
 #ifdef ALLOWLOGFILEONOFF
 		DoSM(DP_X_LOGGING, screen->logging);
 #endif /* ALLOWLOGFILEONOFF */
 	    }
 	    break;
-#elif OPT_SIXEL_GRAPHICS
+#elif OPT_PRINT_GRAPHICS
 	case srm_DECGPBM:	/* Graphics Print Background Mode */
 	    DoSM(DP_DECGPBM, screen->graphics_print_background_mode);
 	    break;
@@ -6699,7 +6699,7 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_ALTBUF, screen->whichBuf);
 	    break;
 	case srm_ALTBUF:	/* alternate buffer (xterm) also DECGRPM (Graphics Rotated Print Mode) */
-	    if_SIXEL_GRAPHICS2(DoSM(DP_DECGRPM, screen->graphics_rotated_print_mode)) {
+	    if_PRINT_GRAPHICS2(DoSM(DP_DECGRPM, screen->graphics_rotated_print_mode)) {
 		DoSM(DP_X_ALTBUF, screen->whichBuf);
 	    }
 	    break;
@@ -6994,27 +6994,27 @@ restoremodes(XtermWidget xw)
 		    modified_DECNRCM(xw);
 	    }
 	    break;
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
 	    DoRM(DP_DECGEPM, screen->graphics_expanded_print_mode);
 	    break;
 #endif
 	case srm_MARGIN_BELL:	/* margin bell (xterm) also DECGPCM (Graphics Print Color Mode) */
-	    if_SIXEL_GRAPHICS2(DoRM(DP_DECGPCM, screen->graphics_print_color_mode)) {
+	    if_PRINT_GRAPHICS2(DoRM(DP_DECGPCM, screen->graphics_print_color_mode)) {
 		if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
 		    screen->bellArmed = -1;
 		update_marginbell();
 	    }
 	    break;
 	case srm_REVERSEWRAP:	/* reverse wraparound (xterm) also DECGPCS (Graphics Print Color Syntax) */
-	    if_SIXEL_GRAPHICS2(DoRM(DP_DECGPCS, screen->graphics_print_color_syntax)) {
+	    if_PRINT_GRAPHICS2(DoRM(DP_DECGPCS, screen->graphics_print_color_syntax)) {
 		bitcpy(&xw->flags, screen->save_modes[DP_X_REVWRAP], REVERSEWRAP);
 		update_reversewrap();
 	    }
 	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
-	    if_SIXEL_GRAPHICS2(DoRM(DP_DECGPBM, screen->graphics_print_background_mode)) {
+	    if_PRINT_GRAPHICS2(DoRM(DP_DECGPBM, screen->graphics_print_background_mode)) {
 #ifdef ALLOWLOGFILEONOFF
 		if (screen->save_modes[DP_X_LOGGING])
 		    StartLog(xw);
@@ -7024,7 +7024,7 @@ restoremodes(XtermWidget xw)
 		/* update_logging done by StartLog and CloseLog */
 	    }
 	    break;
-#elif OPT_SIXEL_GRAPHICS
+#elif OPT_PRINT_GRAPHICS
 	case srm_DECGPBM:	/* Graphics Print Background Mode */
 	    DoRM(DP_DECGPBM, screen->graphics_print_background_mode);
 	    break;
@@ -7043,7 +7043,7 @@ restoremodes(XtermWidget xw)
 	    }
 	    break;
 	case srm_ALTBUF:	/* alternate buffer (xterm) also DECGRPM (Graphics Rotated Print Mode) */
-	    if_SIXEL_GRAPHICS2(DoRM(DP_DECGRPM, screen->graphics_rotated_print_mode)) {
+	    if_PRINT_GRAPHICS2(DoRM(DP_DECGRPM, screen->graphics_rotated_print_mode)) {
 		if (!xw->misc.titeInhibit) {
 		    if (screen->save_modes[DP_X_ALTBUF])
 			ToAlternate(xw, False);
@@ -9204,9 +9204,8 @@ VTInitialize(Widget wrequest,
     case 100:
     case 101:
     case 102:
-    case 125:			/* ReGIS graphics */
     case 131:
-    case 132:			/* no graphics */
+    case 132:
     case 220:
     case 320:
     case 420:			/* DFT_DECID, unless overridden in configure */
@@ -10022,6 +10021,8 @@ VTInitialize(Widget wrequest,
 
 #if OPT_SIXEL_GRAPHICS
     init_Bres(screen.sixel_scrolls_right);
+#endif
+#if OPT_PRINT_GRAPHICS
     init_Bres(screen.graphics_print_to_host);
     init_Bres(screen.graphics_expanded_print_mode);
     init_Bres(screen.graphics_print_color_mode);

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.169 2020/09/16 22:14:32 tom Exp $ */
+/* $XTermId: print.c,v 1.170 2020/09/19 16:28:48 Ross.Combs Exp $ */
 
 /*
  * Copyright 1997-2017,2020 by Thomas E. Dickey
@@ -74,7 +74,7 @@ static void send_SGR(XtermWidget /* xw */ ,
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
 
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 static void setGraphicsPrintToHost(XtermWidget /* xw */ ,
 				   int /* enabled */ );
 #else
@@ -542,13 +542,13 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
     if (private_seq) {
 	switch (param) {
 	case -1:
-	case 0:		/* VT340 */
+	case 0:		/* VT125 */
 	    setGraphicsPrintToHost(xw, 0);	/* graphics to printer */
 	    break;
 	case 1:
 	    printCursorLine(xw);
 	    break;
-	case 2:		/* VT340 */
+	case 2:		/* VT125 */
 	    setGraphicsPrintToHost(xw, 1);	/* graphics to host */
 	    break;
 	case 4:
@@ -720,7 +720,7 @@ xtermHasPrinter(XtermWidget xw)
     return result;
 }
 
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 static void
 setGraphicsPrintToHost(XtermWidget xw, int enabled)
 {

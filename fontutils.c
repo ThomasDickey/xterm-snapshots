@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.688 2020/09/15 11:09:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.689 2020/09/19 16:31:05 Ross.Combs Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2057,7 +2057,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	Sres(XtNfont4, XtCFont4, MenuFontName(fontMenu_font4), NULL),
 	Sres(XtNfont5, XtCFont5, MenuFontName(fontMenu_font5), NULL),
 	Sres(XtNfont6, XtCFont6, MenuFontName(fontMenu_font6), NULL),
-	Sres(XtNfont7, XtCFont6, MenuFontName(fontMenu_font7), NULL),
+	Sres(XtNfont7, XtCFont7, MenuFontName(fontMenu_font7), NULL),
     };
     Cardinal n, m;
     Bool status = True;

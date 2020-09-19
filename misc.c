@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.955 2020/09/17 08:01:08 Ross.Combs Exp $ */
+/* $XTermId: misc.c,v 1.956 2020/09/19 16:28:48 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5113,18 +5113,18 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
 	    break;
-#if OPT_SIXEL_GRAPHICS
+#if OPT_PRINT_GRAPHICS
 	case srm_DECGEPM:	/* Graphics Expanded Print Mode */
 	    result = MdBool(screen->graphics_expanded_print_mode);
 	    break;
 #endif
 	case srm_REVERSEWRAP:	/* reverse wraparound   */
-	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
 		result = MdFlag(xw->flags, REVERSEWRAP);
 	    break;
 #if defined(ALLOWLOGGING)
 	case srm_ALLOWLOGGING:	/* logging              */
-	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
 #if defined(ALLOWLOGFILEONOFF)
 		result = MdBool(screen->logging);
 #else
@@ -5133,7 +5133,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 			  : mdAlwaysReset);
 #endif
 	    break;
-#elif OPT_SIXEL_GRAPHICS
+#elif OPT_PRINT_GRAPHICS
 	case srm_DECGPBM:	/* Graphics Print Background Mode */
 	    result = MdBool(screen->graphics_print_background_mode);
 	    break;
@@ -5144,7 +5144,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->whichBuf);
 	    break;
 	case srm_ALTBUF:
-	    if_SIXEL_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
+	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_background_mode))
 		result = MdBool(screen->whichBuf);
 	    break;
 	case srm_DECNKM:
