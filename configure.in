@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.370 2020/09/17 00:32:14 tom Exp $
+dnl $XTermId: configure.in,v 1.372 2020/09/19 16:50:26 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1053,6 +1053,16 @@ if test "$enable_regis_graphics" = yes || test "$enable_sixel_graphics" = yes ; 
 	EXTRAHDRS="$EXTRAHDRS graphics.h"
 	EXTRASRCS="$EXTRASRCS graphics.c"
 	EXTRAOBJS="$EXTRAOBJS graphics.o"
+fi
+
+AC_MSG_CHECKING(if you want sixel screen dump support)
+CF_ARG_DISABLE(print-graphics,
+	[  --disable-print-graphics disable screen dump to sixel support],
+	[enable_print_graphics=no],
+	[enable_print_graphics=$enable_regis_graphics])
+AC_MSG_RESULT($enable_print_graphics)
+if test "$enable_print_graphics" = yes ; then
+	AC_DEFINE(OPT_PRINT_GRAPHICS,1,[Define to 1 to enable screen dump to sixel support])
 fi
 
 AC_MSG_CHECKING(if you want VT420 rectangle support)

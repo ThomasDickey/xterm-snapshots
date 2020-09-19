@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.875 2020/09/16 21:49:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.876 2020/09/19 16:31:05 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -720,6 +720,7 @@ extern char **environ;
 #define XtCFont4		"Font4"
 #define XtCFont5		"Font5"
 #define XtCFont6		"Font6"
+#define XtCFont7		"Font7"
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"

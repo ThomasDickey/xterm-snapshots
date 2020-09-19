@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.184 2020/07/25 17:58:05 tom Exp $
+-- $XTermId: INSTALL,v 1.185 2020/09/19 16:53:27 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2019,2020 by Thomas E. Dickey
 --
@@ -265,6 +265,10 @@ The options (in alphabetic order):
 	functions for setting/getting the selection data, termed "paste64".
 
 	(see ctlseqs.ms description of OSC 52, and DECSET 2004).
+
+  --disable-print-graphics disable screen dump to sixel support
+
+	Do not compile-in code to support screen-dumps for ReGIS graphics.
 
   --disable-pty-handshake disable support for pty handshakes
 
@@ -712,7 +716,7 @@ The options (in alphabetic order):
 	control sequences document to html.  The default value for the option
 	is "man2html".  If the "man2html" script is not found, then "groff" is
 	used with groff's special options.
-	
+
 	The "man2html" script reads formatted nroff output from its standard
 	input, and writes html to its standard output.  Other input/output
 	conventions are not currently supported.
