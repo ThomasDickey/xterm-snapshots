@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #359 (2020/09/15)
+               updated for XTerm Patch #359 (2020/09/18)
 
 
 
@@ -371,9 +371,9 @@ ESC l     Memory Lock (per HP terminals).  Locks memory above the cur-
 
 ESC m     Memory Unlock (per HP terminals).
 
-ESC n     Invoke the G2 Character Set as GL (LS2) as GL.
+ESC n     Invoke the G2 Character Set as GL (LS2).
 
-ESC o     Invoke the G3 Character Set as GL (LS3) as GL.
+ESC o     Invoke the G3 Character Set as GL (LS3).
 
 ESC |     Invoke the G3 Character Set as GR (LS3R).
 

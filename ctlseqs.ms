@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.597 2020/09/15 11:17:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.598 2020/09/18 08:18:40 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #359
-.ds RF 2020/09/15
+.ds RF 2020/09/18
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -818,11 +818,11 @@ Memory Unlock (per HP terminals).
 .
 .iP
 .IP \\*(Es\\*n
-Invoke the G2 Character Set as GL (LS2) as GL.
+Invoke the G2 Character Set as GL (LS2).
 .
 .iP
 .IP \\*(Es\\*o
-Invoke the G3 Character Set as GL (LS3) as GL.
+Invoke the G3 Character Set as GL (LS3).
 .
 .iP
 .IP \\*(Es\\*|
