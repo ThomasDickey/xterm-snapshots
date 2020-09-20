@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #359 (2020/09/18)
+               updated for XTerm Patch #360 (2020/09/20)
 
 
 
@@ -2572,9 +2572,9 @@ SGR-Pixels (1016)
 Sixel Graphics
 
 If xterm is configured as VT240, VT241, VT330, VT340 or VT382 using the
-decTerminalID resource, it supports Sixel Graphics controls, a palleted
-bitmap graphics system using sets of six vertical pixels as the basic
-element.
+decTerminalID or decGraphicsID resource, it supports Sixel Graphics con-
+trols, a palleted bitmap graphics system using sets of six vertical pix-
+els as the basic element.
 
 CSI Ps c  Send Device Attributes (Primary DA), xterm.  xterm responds to
           Send Device Attributes (Primary DA) with these additional
@@ -2608,8 +2608,8 @@ DCS Pa ; Pb ; Ph q  Ps..Ps ST
 ReGIS Graphics
 
 If xterm is configured as VT125, VT240, VT241, VT330 or VT340 using the
-decTerminalID resource, it supports Remote Graphic Instruction Set, a
-graphics description language.
+decTerminalID or decGraphicsID resource, it supports Remote Graphic
+Instruction Set, a graphics description language.
 
 CSI Ps c  Send Device Attributes (Primary DA), DEC graphics terminals,
           xterm.  xterm responds to Send Device Attributes (Primary DA)

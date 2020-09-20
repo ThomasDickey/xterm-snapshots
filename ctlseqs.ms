@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.598 2020/09/18 08:18:40 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.599 2020/09/20 22:36:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #359
-.ds RF 2020/09/18
+.ds LF Patch #360
+.ds RF 2020/09/20
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3429,7 +3429,10 @@ VT241,
 VT330,
 VT340 or
 VT382
-using the \fBdecTerminalID\fP resource,
+using the
+\fBdecTerminalID\fP or
+\fBdecGraphicsID\fP
+resource,
 it supports Sixel Graphics controls, a palleted bitmap graphics system
 using sets of six vertical pixels as the basic element.
 .St
@@ -3471,7 +3474,10 @@ VT240,
 VT241,
 VT330 or
 VT340
-using the \fBdecTerminalID\fP resource,
+using the
+\fBdecTerminalID\fP or
+\fBdecGraphicsID\fP
+resource,
 it supports Remote Graphic Instruction Set, a graphics description language.
 .St
 .IP \\*(Cs\\*(Ps\\*s\\*c
