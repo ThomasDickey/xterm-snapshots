@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.585 2020/08/04 08:10:25 tom Exp $ */
+/* $XTermId: button.c,v 1.586 2020/09/20 20:46:35 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4860,8 +4860,8 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
     }
 
     if (screen->extend_coords == SET_PIXEL_POSITION_MOUSE) {
-	row = event->y;
-	col = event->x;
+	row = event->y - OriginY(screen);
+	col = event->x - OriginX(screen);
     } else {
 	/* Compute character position of mouse pointer */
 	row = (event->y - screen->border) / FontHeight(screen);
