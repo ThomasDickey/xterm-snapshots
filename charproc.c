@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1781 2020/09/19 16:44:40 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1783 2020/09/29 08:16:11 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5633,9 +5633,7 @@ WrapLine(XtermWidget xw)
     if (ld != 0) {
 	/* mark that we had to wrap this line */
 	LineSetFlag(ld, LINEWRAPPED);
-	if (screen->show_wrap_marks) {
-	    ShowWrapMarks(xw, screen->cur_row, ld);
-	}
+	ShowWrapMarks(xw, screen->cur_row, ld);
 	xtermAutoPrint(xw, '\n');
 	xtermIndex(xw, 1);
 	set_cur_col(screen, ScrnLeftMargin(xw));
@@ -10254,6 +10252,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	}
     }
 #endif
+    FreeMarkGCs(xw);
     TRACE_FREE_LEAK(screen->unparse_bfr);
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
@@ -13086,6 +13085,7 @@ set_cursor_gcs(XtermWidget xw)
 	}
 	set_cursor_outline_gc(xw, screen->always_highlight, fg, bg, cc);
 	changed = True;
+	FreeMarkGCs(xw);
     }
 
     if (changed) {

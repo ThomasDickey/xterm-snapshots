@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.590 2020/06/07 19:42:38 tom Exp $ */
+/* $XTermId: screen.c,v 1.592 2020/09/29 08:04:34 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1430,13 +1430,53 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    }
 	});
 	LineClrWrapped(ld);
-	if (screen->show_wrap_marks) {
-	    ShowWrapMarks(xw, row, ld);
-	}
+	ShowWrapMarks(xw, row, ld);
     }
     ClearCells(xw, 0, n, row, (last - (int) n));
 
 #undef MemMove
+}
+
+#define WhichMarkGC(set) (set ? 1 : 0)
+#define WhichMarkColor(set) T_COLOR(screen, (set ? TEXT_CURSOR : TEXT_BG))
+
+void
+FreeMarkGCs(XtermWidget xw)
+{
+    TScreen *const screen = TScreenOf(xw);
+    Display *const display = screen->display;
+    VTwin *vwin = WhichVWin(screen);
+    int which;
+
+    for (which = 0; which < 2; ++which) {
+	if (vwin->marker_gc[which] != NULL) {
+	    XFreeGC(display, vwin->marker_gc[which]);
+	    vwin->marker_gc[which] = NULL;
+	}
+    }
+}
+
+static GC
+MakeMarkGC(XtermWidget xw, Boolean set)
+{
+    TScreen *const screen = TScreenOf(xw);
+    VTwin *vwin = WhichVWin(screen);
+    int which = WhichMarkGC(set);
+
+    if (vwin->marker_gc[which] == NULL) {
+	Display *const display = screen->display;
+	Window const drawable = VDrawable(screen);
+	XGCValues xgcv;
+	XtGCMask mask = GCForeground;
+
+	memset(&xgcv, 0, sizeof(xgcv));
+	xgcv.foreground = WhichMarkColor(set);
+	vwin->marker_gc[which] = XCreateGC(display,
+					   drawable,
+					   mask,
+					   &xgcv);
+    }
+    return vwin->marker_gc[which];
 }
 
 /*
@@ -1447,19 +1487,20 @@ void
 ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
-    Boolean set = (Boolean) LineTstWrapped(ld);
-    CgsEnum cgsId = set ? gcVTcursFilled : gcVTcursReverse;
-    VTwin *currentWin = WhichVWin(screen);
-    int y = row * FontHeight(screen) + screen->border;
-    int x = LineCursorX(screen, ld, screen->max_col + 1);
+    if (screen->show_wrap_marks) {
+	Boolean set = (Boolean) LineTstWrapped(ld);
+	int y = row * FontHeight(screen) + screen->border;
+	int x = LineCursorX(screen, ld, screen->max_col + 1);
 
-    TRACE2(("ShowWrapMarks %d:%s\n", row, BtoS(set)));
+	TRACE2(("ShowWrapMarks %d:%s\n", row, BtoS(set)));
 
-    XFillRectangle(screen->display, VDrawable(screen),
-		   getCgsGC(xw, currentWin, cgsId),
-		   x, y,
-		   (unsigned) screen->border,
-		   (unsigned) FontHeight(screen));
+	XFillRectangle(screen->display,
+		       VDrawable(screen),
+		       MakeMarkGC(xw, set),
+		       x, y,
+		       (unsigned) screen->border,
+		       (unsigned) FontHeight(screen));
+    }
 }
 
 /*
@@ -1552,9 +1593,7 @@ ScrnRefresh(XtermWidget xw,
 	    break;
 	}
 
-	if (screen->show_wrap_marks) {
-	    ShowWrapMarks(xw, lastind, ld);
-	}
+	ShowWrapMarks(xw, lastind, ld);
 
 	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
@@ -1907,9 +1946,7 @@ ClearBufRows(XtermWidget xw,
 		SetLineDblCS(ld, CSET_SWL);
 	    });
 	    LineClrWrapped(ld);
-	    if (screen->show_wrap_marks) {
-		ShowWrapMarks(xw, row, ld);
-	    }
+	    ShowWrapMarks(xw, row, ld);
 	    ClearCells(xw, 0, len, row, 0);
 	}
     }

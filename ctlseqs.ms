@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.599 2020/09/20 22:36:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.600 2020/09/30 01:00:53 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #360
-.ds RF 2020/09/20
+.ds LF Patch #361
+.ds RF 2020/09/29
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1271,7 +1271,7 @@ Tab Clear (TBC).
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*h
 Set Mode (SM).
-  \*(Ps = \*2 \(-> Keyboard Action Mode (AM).
+  \*(Ps = \*2 \(-> Keyboard Action Mode (KAM).
   \*(Ps = \*4 \(-> Insert Mode (IRM).
   \*(Ps = \*1\*2 \(-> Send/receive (SRM).
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM).
@@ -1410,7 +1410,7 @@ Media Copy (MC), DEC-specific.
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*l
 Reset Mode (RM).
-  \*(Ps = \*2 \(-> Keyboard Action Mode (AM).
+  \*(Ps = \*2 \(-> Keyboard Action Mode (KAM).
   \*(Ps = \*4 \(-> Replace Mode (IRM).
   \*(Ps = \*1\*2 \(-> Send/receive (SRM).
   \*(Ps = \*2\*0 \(-> Normal Linefeed (LNM).

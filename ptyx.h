@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1012 2020/09/19 16:58:15 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1013 2020/09/29 00:27:38 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2141,6 +2141,7 @@ typedef struct {
 	SbInfo		sb_info;
 	GC		filler_gc;	/* filler's fg/bg		*/
 	GC		border_gc;	/* inner border's fg/bg		*/
+	GC		marker_gc[2];	/* wrap-marks			*/
 #if USE_DOUBLE_BUFFER
 	Drawable	drawable;	/* X drawable id                */
 #endif

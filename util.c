@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.856 2020/08/17 22:25:21 tom Exp $ */
+/* $XTermId: util.c,v 1.857 2020/09/29 08:05:41 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1822,9 +1822,7 @@ ClearRight(XtermWidget xw, int n)
 
     /* with the right part cleared, we can't be wrapping */
     LineClrWrapped(ld);
-    if (screen->show_wrap_marks) {
-	ShowWrapMarks(xw, screen->cur_row, ld);
-    }
+    ShowWrapMarks(xw, screen->cur_row, ld);
     ResetWrap(screen);
 }
 
@@ -2479,6 +2477,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
     if (COLOR_DEFINED(pNew, TEXT_CURSOR)) {
 	T_COLOR(screen, TEXT_CURSOR) = COLOR_VALUE(pNew, TEXT_CURSOR);
 	TRACE(("... TEXT_CURSOR: %#lx\n", T_COLOR(screen, TEXT_CURSOR)));
+	FreeMarkGCs(xw);
 	/* no repaint needed */
     } else if ((T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG)) &&
 	       (COLOR_DEFINED(pNew, TEXT_FG))) {
@@ -2488,6 +2487,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	    if (screen->Vshow)
 		repaint = True;
 	}
+	FreeMarkGCs(xw);
     }
 
     if (COLOR_DEFINED(pNew, TEXT_FG)) {
@@ -2501,6 +2501,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	    setCgsBack(xw, win, gcBoldReverse, fg);
 	    repaint = True;
 	}
+	FreeMarkGCs(xw);
     }
 
     if (COLOR_DEFINED(pNew, TEXT_BG)) {
@@ -2721,6 +2722,7 @@ reallySwapColors(XtermWidget xw, ToSwap * list, int count)
 	    redoCgs(xw, list[j].fg, list[j].bg, (CgsEnum) k);
 	}
     }
+    FreeMarkGCs(xw);
 }
 
 static void
@@ -2755,9 +2757,9 @@ ReverseVideo(XtermWidget xw)
 	swapAColor(8, 15);
     });
 
-    if (T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG))
+    if (T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG)) {
 	T_COLOR(screen, TEXT_CURSOR) = T_COLOR(screen, TEXT_BG);
-
+    }
 #define swapTColor(a,b) swapAnyColor(Tcolors, a, b)
     swapTColor(TEXT_FG, TEXT_BG);
     swapTColor(MOUSE_FG, MOUSE_BG);

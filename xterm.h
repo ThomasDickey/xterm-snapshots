@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.876 2020/09/19 16:31:05 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.877 2020/09/29 00:47:11 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1399,6 +1399,7 @@ extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last *
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
 extern void CopyCells (TScreen * /* screen */, LineData * /* src */, LineData * /* dst */, int /* col */, int /* len */, Bool /* down */);
 extern void FullScreen (XtermWidget /* xw */, int /* mode */);
+extern void FreeMarkGCs (XtermWidget /* xw */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
