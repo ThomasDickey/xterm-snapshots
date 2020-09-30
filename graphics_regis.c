@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.124 2020/09/17 08:01:08 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.125 2020/09/29 18:44:25 tom Exp $ */
 
 /*
  * Copyright 2014-2019,2020 by Ross Combs
@@ -2266,7 +2266,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 	for (xx = 0U; xx < w; xx++) {
 	    byte = yy * GLYPH_WIDTH_BYTES(w) + (xx >> 3U);
 	    bit = xx & 7U;
-	    pixels[yy * w + xx] = ((unsigned) glyph[byte] >> (7U - bit)) & 1U;
+	    pixels[yy * w + xx] = (Char) (((unsigned) glyph[byte]
+					   >> (7U - bit)) & 1U);
 	}
     }
 

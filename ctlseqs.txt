@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #360 (2020/09/20)
+               updated for XTerm Patch #361 (2020/09/29)
 
 
 
@@ -724,7 +724,7 @@ CSI Ps g  Tab Clear (TBC).
             Ps = 3  -> Clear All.
 
 CSI Pm h  Set Mode (SM).
-            Ps = 2  -> Keyboard Action Mode (AM).
+            Ps = 2  -> Keyboard Action Mode (KAM).
             Ps = 4  -> Insert Mode (IRM).
             Ps = 1 2  -> Send/receive (SRM).
             Ps = 2 0  -> Automatic Newline (LNM).
@@ -857,7 +857,7 @@ CSI ? Ps i
             Ps = 1 1  -> Print all pages.
 
 CSI Pm l  Reset Mode (RM).
-            Ps = 2  -> Keyboard Action Mode (AM).
+            Ps = 2  -> Keyboard Action Mode (KAM).
             Ps = 4  -> Replace Mode (IRM).
             Ps = 1 2  -> Send/receive (SRM).
             Ps = 2 0  -> Normal Linefeed (LNM).

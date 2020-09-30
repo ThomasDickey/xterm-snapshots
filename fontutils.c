@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.689 2020/09/19 16:31:05 Ross.Combs Exp $ */
+/* $XTermId: fontutils.c,v 1.690 2020/09/29 18:43:42 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -2891,7 +2891,8 @@ linedrawing_gaps(XtermWidget xw, XftFont *font)
 			    unsigned xx = 0;
 			    switch (g->bitmap.pixel_mode) {
 			    case FT_PIXEL_MODE_MONO:
-				xx = (data[k + (c / 8)] >> (c % 8)) & 1;
+				xx = (unsigned) ((data[k + (c / 8)]
+						  >> (c % 8)) & 1);
 				break;
 			    case FT_PIXEL_MODE_GRAY:
 				xx = data[k + c];
@@ -3948,8 +3949,8 @@ xtermDrawBoxChar(XTermDraw * params,
 	points[4].y = points[0].y;
 
 	for (n = 0; n < npoints; ++n) {
-	    points[n].x = (short) SCALED_X(points[n].x);
-	    points[n].y = (short) SCALED_Y(points[n].y);
+	    points[n].x = (short) (SCALED_X(points[n].x));
+	    points[n].y = (short) (SCALED_Y(points[n].y));
 	    points[n].x = (short) (points[n].x + x);
 	    points[n].y = (short) (points[n].y + y);
 	}

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.956 2020/09/19 16:28:48 Ross.Combs Exp $ */
+/* $XTermId: misc.c,v 1.957 2020/09/29 07:56:53 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5894,6 +5894,7 @@ ReverseOldColors(XtermWidget xw)
 	EXCHANGE(pOld->colors[TEK_FG], pOld->colors[TEK_BG], tmpPix);
 	EXCHANGE(pOld->names[TEK_FG], pOld->names[TEK_BG], tmpName);
 #endif
+	FreeMarkGCs(xw);
     }
     return;
 }
