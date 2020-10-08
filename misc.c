@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.957 2020/09/29 07:56:53 tom Exp $ */
+/* $XTermId: misc.c,v 1.958 2020/10/06 19:20:09 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -6918,6 +6918,17 @@ xtermOpenApplication(XtAppContext * app_context_return,
     XtSetErrorHandler(NULL);
 
     return result;
+}
+
+/*
+ * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
+ * our own error-handler.
+ */
+/* ARGSUSED */
+int
+ignore_x11_error(Display *dpy GCC_UNUSED, XErrorEvent *event GCC_UNUSED)
+{
+    return 1;
 }
 
 static int x11_errors;

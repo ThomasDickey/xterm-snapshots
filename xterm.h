@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.877 2020/09/29 00:47:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.879 2020/10/07 08:19:04 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -913,7 +913,9 @@ extern void ScrollSelection (TScreen * /* screen */, int  /* amount */,  Bool /*
 extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL * /* start */, int /* firstrow */, int /* lastrow */);
 extern void ViButton                   PROTO_XT_ACTIONS_ARGS;
 
-extern int xtermUtf8ToTextList(XtermWidget /* xw */, XTextProperty * /* text_prop */, char *** /* text_list */, int * /* text_list_count */);
+extern void UnmapSelections (XtermWidget /* xw */);
+extern int xtermUtf8ToTextList (XtermWidget /* xw */, XTextProperty * /* text_prop */, char *** /* text_list */, int * /* text_list_count */);
+extern void xtermButtonInit (XtermWidget /* xw */);
 
 #if OPT_DEC_LOCATOR
 extern void GetLocatorPosition (XtermWidget  /* w */);
@@ -1160,6 +1162,7 @@ extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t /* uid */, gid_t /* gid */, Bool /* append */, char * /* pathname */, unsigned /* mode */);
 extern int getVisualDepth (XtermWidget /* xw */);
 extern int getVisualInfo (XtermWidget /* xw */);
+extern int ignore_x11_error(Display * /* dpy */, XErrorEvent * /* event */);
 extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
