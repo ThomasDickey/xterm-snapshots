@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1013 2020/09/29 00:27:38 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1014 2020/10/06 19:26:00 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3019,9 +3019,11 @@ typedef struct
 {
     xtermKeyboardType type;
     IFlags flags;
-    char *shell_translations;
-    char *xterm_translations;
+    char *shell_translations;	/* shell's translations, for input check */
+    char *xterm_translations;	/* xterm's translations, for input check */
     char *extra_translations;
+    char *print_translations;	/* printable translations for buttons */
+    unsigned shift_buttons;	/* special shift-modifier for mouse-buttons */
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif

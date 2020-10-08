@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.820 2020/09/18 00:41:51 tom Exp $
+.\" $XTermId: xterm.man,v 1.821 2020/10/08 00:24:39 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -5590,8 +5590,25 @@ for the built-in set of \fBtranslations\fP resources.
 .
 .SS "Selection Functions"
 .PP
-The selection functions are invoked when the pointer buttons are used with no
-modifiers, and when they are used with the \*(``shift\*('' key.
+By default,
+the selection functions are invoked
+when the pointer buttons are used with no modifiers,
+and when they are used with the \*(``shift\*('' key.
+The \*(``shift\*('' key is special,
+because \fI\*n\fP uses that to ensure that selection functions
+are still available when it is programmed to send escape sequences
+in one of the mouse modes
+(see \fIXterm Control Sequences\fP,
+as well as the resource \fBdisallowedMouseOps\fP).
+.PP
+At startup, \fI\*n\fP inspects the \fBtranslations\fP resource to
+see which pointer buttons may be used in this way,
+and remembers these buttons when deciding whether to send
+escape sequences or perform selection
+when those buttons are used with the \*(``shift\*('' modifier.
+Other pointer buttons, e.g., typically those sent for wheel mouse events,
+are not affected.
+.PP
 The assignment of the functions described below to keys and buttons may
 be changed through the resource database; see \fBActions\fP below.
 .

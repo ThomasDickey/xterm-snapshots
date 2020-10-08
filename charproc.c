@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1783 2020/09/29 08:16:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1786 2020/10/07 08:22:58 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -8319,8 +8319,12 @@ VTInit(XtermWidget xw)
     XtOverrideTranslations(vtparent, XtParseTranslationTable(xterm_trans));
     (void) XSetWMProtocols(XtDisplay(vtparent), XtWindow(vtparent),
 			   &wm_delete_window, 1);
-    TRACE_TRANS("shell", vtparent);
-    TRACE_TRANS("vt100", (Widget) (xw));
+
+    if (IsEmpty(xw->keyboard.print_translations)) {
+	TRACE_TRANS("shell", vtparent);
+	TRACE_TRANS("vt100", (Widget) (xw));
+	xtermButtonInit(xw);
+    }
 
     ScrnAllocBuf(xw);
 
@@ -10429,6 +10433,8 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
+    TRACE_FREE_LEAK(xw->keyboard.print_translations);
+    UnmapSelections(xw);
 
     XtFree((void *) (xw->visInfo));
 
@@ -12900,7 +12906,7 @@ HandleIgnore(Widget w,
 	switch (event->type) {
 	case ButtonPress:
 	case ButtonRelease:
-	default:
+	case MotionNotify:
 	    (void) SendMousePosition(xw, event);
 	    break;
 	}

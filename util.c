@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.857 2020/09/29 08:05:41 tom Exp $ */
+/* $XTermId: util.c,v 1.858 2020/10/01 08:11:43 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2200,11 +2200,14 @@ vertical_copy_area(XtermWidget xw,
 
 	if (screen->show_wrap_marks) {
 	    int row;
+	    int first = firstline - amount;
+	    int last = firstline + nlines + amount;
 
-	    for (row = firstline; row < firstline + nlines; ++row) {
+	    for (row = first; row < last; ++row) {
 		CLineData *ld;
+		int mapped = amount + row + screen->topline;
 
-		if ((ld = getLineData(screen, row)) != 0) {
+		if ((ld = getLineData(screen, mapped)) != 0) {
 		    ShowWrapMarks(xw, row, ld);
 		}
 	    }
