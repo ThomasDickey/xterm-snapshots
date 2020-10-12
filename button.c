@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.601 2020/10/08 01:04:13 tom Exp $ */
+/* $XTermId: button.c,v 1.604 2020/10/12 11:21:35 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1435,6 +1435,40 @@ HandleKeyboardSelectEnd(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TRACE(("HandleKeyboardSelectEnd\n"));
 	do_select_end(xw, event, params, num_params, True);
+    }
+}
+
+void
+HandlePointerMotion(Widget w,
+		    XEvent *event,
+		    String *params,	/* selections */
+		    Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    (void) params;
+    (void) num_params;
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandlePointerMotion\n"));
+	if (event->type == MotionNotify)
+	    (void) SendMousePosition(xw, event);
+    }
+}
+
+void
+HandlePointerButton(Widget w,
+		    XEvent *event,
+		    String *params,	/* selections */
+		    Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    (void) params;
+    (void) num_params;
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandlePointerButton\n"));
+	if (IsBtnEvent(event))
+	    (void) SendMousePosition(xw, event);
     }
 }
 

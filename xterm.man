@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.821 2020/10/08 00:24:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.823 2020/10/12 11:17:50 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -1808,6 +1808,11 @@ assigns key bindings to the
 \fBscroll\-back()\fP and
 \fBscroll\-forw()\fP actions.
 .TP
+pointer
+assigns pointer \fImotion\fP and \fIbutton\fP events to the
+\fBpointer\-motion()\fP and
+\fBpointer\-button()\fP actions respectively.
+.TP
 popup-menu
 assigns mouse-buttons with the \fIcontrol\fP modifier to the popup-menus.
 .TP
@@ -1821,6 +1826,12 @@ assigns a key\-binding to the \fBscroll\-lock()\fP action.
 select
 assigns mouse- and keypress-combinations
 to actions which manipulate the selection.
+.IP
+\fI\*N\fP also uses these actions to capture mouse button and motion
+events which can be manipulated with the mouse protocol control sequences.
+If the \fIselect\fP translations are omitted,
+then the \fBpointer\-motion\fP and \fBpointer\-button\fP handle
+these mouse protocol control sequences instead.
 .TP
 shift\-fonts
 assigns key-bindings to
@@ -6939,7 +6950,8 @@ Invokes the \fBSVG Screen Dump\fP feature.
 Execute an external command,
 using the current selection for part of the command's parameters.
 The first parameter, \fIformat\fP gives the basic command.
-Succeeding parameters specify the selection source as in \fBinsert\-selection\fP.
+Succeeding parameters specify the selection source
+as in \fBinsert\-selection\fP.
 .IP
 The \fIformat\fP parameter allows these substitutions:
 .RS
@@ -7055,7 +7067,8 @@ send the key unaltered.
 Insert the current selection or data related to it, formatted.
 The first parameter, \fIformat\fP gives the template for the data
 as in \fBexec\-formatted\fP.
-Succeeding parameters specify the selection source as in \fBinsert\-selection\fP.
+Succeeding parameters specify the selection source
+as in \fBinsert\-selection\fP.
 .TP 8
 .B "insert\-selectable(\fIformat\fP, \fIonClicks\fP)"
 Insert data copied from the screen, formatted.
@@ -7116,6 +7129,18 @@ Resizes the window to fill the screen.
 .TP 8
 .B "meta\-sends\-escape()"
 This action toggles the state of the \fBmetaSendsEscape\fP resource.
+.TP 8
+.B "pointer\-button()"
+Use this action as a fall-back to handle button press- and release-events
+for the mouse control sequence protocol
+when the selection-related translations are suppressed with the
+\fBomitTranslation\fP resource.
+.TP 8
+.B "pointer\-motion()"
+Use this action as a fall-back to handle motion-events
+for the mouse control sequence protocol
+when the selection-related translations are suppressed with the
+\fBomitTranslation\fP resource.
 .TP 8
 .B "popup\-menu(\fImenuname\fP)"
 This action displays the specified popup menu.
@@ -7668,6 +7693,9 @@ These are for the \fIvt100\fP widget:
        @Num_Lock Ctrl <Btn5Down>:\fBscroll\-forw\fP(1,halfpage,m) \\n\\\&
                       <Btn5Down>:\fBscroll\-forw\fP(5,line,m)     \\n\\\&
                          <BtnUp>:\fBselect\-end\fP(\fBSELECT\fP, \fBCUT_BUFFER0\fP) \\n\\\&
+                     <BtnMotion>:\fBpointer\-motion\fP() \\n\\\&
+                       <BtnDown>:\fBpointer\-button\fP() \\n\\\&
+                         <BtnUp>:\fBpointer\-button\fP() \\n\\\&
                        <BtnDown>:\fBignore\fP()
 .NE
 .PP
