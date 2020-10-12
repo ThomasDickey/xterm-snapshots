@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.592 2020/09/29 08:04:34 tom Exp $ */
+/* $XTermId: screen.c,v 1.593 2020/10/12 18:56:04 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -503,10 +503,10 @@ Reallocate(XtermWidget xw,
 		    (unsigned) move_down
 #endif
 	);
-    free(oldBufHead);
 
     /* Now free the old data */
     free(oldBufData);
+    free(oldBufHead);
 
     TRACE(("...Reallocate %dx%d ->%p\n", nrow, ncol, (void *) newBufHead));
     return move_down ? move_down : -move_up;	/* convert to rows */

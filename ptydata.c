@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.149 2020/09/18 22:45:13 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.150 2020/10/12 18:46:28 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -630,11 +630,9 @@ noleaks_ptydata(void)
 {
     if (VTbuffer != 0) {
 #if OPT_WIDE_CHARS
-	if (VTbuffer->write_buf != 0)
-	    free(VTbuffer->write_buf);
+	free(VTbuffer->write_buf);
 #endif
-	free(VTbuffer);
-	VTbuffer = 0;
+	FreeAndNull(VTbuffer);
     }
 }
 #endif

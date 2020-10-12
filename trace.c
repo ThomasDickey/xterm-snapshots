@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.221 2020/10/06 19:20:09 tom Exp $ */
+/* $XTermId: trace.c,v 1.222 2020/10/12 18:49:54 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -328,9 +328,8 @@ visibleChars(const Char *buf, unsigned len)
 		dst += strlen(dst);
 	    }
 	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
+    } else {
+	FreeAndNull(result);
 	used = 0;
     }
     return NonNull(result);
@@ -384,9 +383,8 @@ visibleIChars(const IChar *buf, unsigned len)
 		dst += strlen(dst);
 	    }
 	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
+    } else {
+	FreeAndNull(result);
 	used = 0;
     }
     return NonNull(result);

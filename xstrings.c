@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.77 2020/06/23 22:45:04 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.78 2020/10/12 18:50:28 tom Exp $ */
 
 /*
  * Copyright 2000-2019,2020 by Thomas E. Dickey
@@ -175,8 +175,7 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 		/* use the other passwd-data including shell */
 		alloc_pw(in_out, &pw2);
 	    } else {
-		free(login_name);
-		login_name = NULL;
+		FreeAndNull(login_name);
 	    }
 	    if (ok2)
 		free_pw(&pw2);

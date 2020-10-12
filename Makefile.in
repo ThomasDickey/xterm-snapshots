@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.254 2020/09/18 21:23:27 tom Exp $
+## $XTermId: Makefile.in,v 1.256 2020/10/12 19:37:04 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -64,7 +64,8 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(EXTRA_CPPFLAGS)
+PIXMAPDIR_DEF	= @no_pixmapdir@-DPIXMAP_ROOTDIR=\"@PIXMAPDIR@/\" 
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(PIXMAPDIR_DEF) $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@ @EXTRA_LDFLAGS@
 LIBS		= @LIBS@

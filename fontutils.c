@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.690 2020/09/29 18:43:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.691 2020/10/12 18:32:23 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -386,15 +386,13 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
     /*
      * XGetAtomName allocates memory - don't leak
      */
-    if (last_name != 0)
-	XFree(last_name);
+    XFree(last_name);
     last_name = name;
 
     if (result != 0) {
 	if (!check_fontname(name))
 	    return 0;
-	if (*result != 0)
-	    free(*result);
+	free(*result);
 	*result = x_strdup(name);
     }
 
@@ -1136,10 +1134,7 @@ xtermFreeFontInfo(XTermFonts * target)
 {
     target->chrset = 0;
     target->flags = 0;
-    if (target->fn != 0) {
-	free(target->fn);
-	target->fn = 0;
-    }
+    FreeAndNull(target->fn);
     target->fs = 0;
 }
 
@@ -1787,8 +1782,7 @@ xtermLoadFont(XtermWidget xw,
     return 1;
 
   bad:
-    if (tmpname)
-	free(tmpname);
+    free(tmpname);
 
 #if OPT_RENDERFONT
     if ((fontnum == fontMenu_fontsel) && (fontnum != screen->menu_font_number)) {

@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.41 2020/07/06 20:00:12 tom Exp $ */
+/* $XTermId: charclass.c,v 1.42 2020/10/12 18:23:18 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2020 by Thomas E. Dickey
@@ -289,10 +289,7 @@ report_wide_char_class(void)
 void
 noleaks_CharacterClass(void)
 {
-    if (classtab != 0) {
-	free(classtab);
-	classtab = 0;
-    }
+    FreeAndNull(classtab);
 }
 #endif
 #endif /* OPT_WIDE_CHARS */
