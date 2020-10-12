@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.879 2020/10/07 08:19:04 tom Exp $ */
+/* $XTermId: xterm.h,v 1.880 2020/10/09 00:34:18 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -903,6 +903,8 @@ extern void HandleKeyboardSelectEnd    PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectExtend PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectStart  PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardStartExtend  PROTO_XT_ACTIONS_ARGS;
+extern void HandlePointerMotion        PROTO_XT_ACTIONS_ARGS;
+extern void HandlePointerButton        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectEnd            PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectExtend         PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectSet            PROTO_XT_ACTIONS_ARGS;

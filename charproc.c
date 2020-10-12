@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1786 2020/10/07 08:22:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1788 2020/10/09 08:13:21 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -261,6 +261,8 @@ static XtActionsRec actionsList[] = {
     { "insert-seven-bit",	HandleKeyPressed },
     { "interpret",		HandleInterpret },
     { "keymap",			HandleKeymapChange },
+    { "pointer-motion",		HandlePointerMotion },
+    { "pointer-button",		HandlePointerButton },
     { "popup-menu",		HandlePopupMenu },
     { "print",			HandlePrintScreen },
     { "print-everything",	HandlePrintEverything },
@@ -918,6 +920,8 @@ xtermAddInput(Widget w)
 	{ "insert",		    HandleKeyPressed }, /* alias */
 	{ "insert-eight-bit",	    HandleEightBitKeyPressed },
 	{ "insert-seven-bit",	    HandleKeyPressed },
+	{ "pointer-motion",	    HandlePointerMotion },
+	{ "pointer-button",	    HandlePointerButton },
 	{ "secure",		    HandleSecure },
 	{ "string",		    HandleStringEvent },
 	{ "scroll-back",	    HandleScrollBack },
@@ -13203,9 +13207,16 @@ VTInitTranslations(void)
                       <Btn5Down>:scroll-forw(5,line,m)     \n\
 "
 	),
+	DATA("pointer",
+"\
+                     <BtnMotion>:pointer-motion() \n\
+                       <BtnDown>:pointer-button() \n\
+                         <BtnUp>:pointer-button() \n\
+"
+	),
 	DATA("default",
 "\
-                       <BtnDown>:ignore() \n\
+                         <BtnUp>:ignore() \n\
 "
 	)
     };
