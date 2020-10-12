@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1788 2020/10/09 08:13:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1789 2020/10/12 18:26:54 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -10179,15 +10179,11 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
 	    TRACE(("freed " #name ": %p\n", (const void *) name)); \
-	    free((void *) name); \
-	    name = 0; \
+	    FreeAndNull(name); \
 	}
 
 #define FREE_LEAK(name) \
-	if (name) { \
-	    free((void *) name); \
-	    name = 0; \
-	}
+	FreeAndNull(name)
 
 #if OPT_INPUT_METHOD
 static void
@@ -12662,11 +12658,8 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 {
     ReallyReset(xw, full, saved);
 
-    free(myState.string_area);
-    myState.string_area = 0;
-
-    free(myState.print_area);
-    myState.print_area = 0;
+    FreeAndNull(myState.string_area);
+    FreeAndNull(myState.print_area);
 
     longjmp(vtjmpbuf, 1);	/* force ground state in parser */
 }

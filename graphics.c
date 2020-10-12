@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.91 2020/09/17 08:01:08 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.92 2020/10/12 17:58:12 Walter.Harms Exp $ */
 
 /*
  * Copyright 2013-2019,2020 by Ross Combs
@@ -169,10 +169,8 @@ static Graphic *
 freeGraphic(Graphic *obj)
 {
     if (obj) {
-	if (obj->pixels)
-	    free(obj->pixels);
-	if (obj->private_color_registers)
-	    free(obj->private_color_registers);
+	free(obj->pixels);
+	free(obj->private_color_registers);
 	free(obj);
     }
     return NULL;

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.958 2020/10/06 19:20:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.959 2020/10/12 18:40:19 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1018,8 +1018,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
     }
 
     /* We are the parent; clean up */
-    if (child_cwd)
-	free(child_cwd);
+    free(child_cwd);
     free(child_exe);
 }
 #endif /* OPT_EXEC_XTERM */
@@ -1508,13 +1507,11 @@ dabbrev_expand(XtermWidget xw)
 	cell.col = screen->cur_col;
 	cell.row = screen->cur_row;
 
-	if (dabbrev_hint != 0)
-	    free(dabbrev_hint);
+	free(dabbrev_hint);
 
 	if ((dabbrev_hint = dabbrev_prev_word(xw, &cell, &ld)) != 0) {
 
-	    if (lastexpansion != 0)
-		free(lastexpansion);
+	    free(lastexpansion);
 
 	    if ((lastexpansion = strdup(dabbrev_hint)) != 0) {
 
@@ -1530,10 +1527,8 @@ dabbrev_expand(XtermWidget xw)
 	    return result;
 	}
 	if (!screen->dabbrev_working) {
-	    if (lastexpansion != 0) {
-		free(lastexpansion);
-		lastexpansion = 0;
-	    }
+	    free(lastexpansion);
+	    lastexpansion = 0;
 	    return result;
 	}
     }
@@ -4171,8 +4166,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	if (strcmp(buf, "?")) {
 	    char *bp;
 	    if ((bp = x_strdup(buf)) != NULL) {
-		if (screen->logfile)
-		    free(screen->logfile);
+		free(screen->logfile);
 		screen->logfile = bp;
 		break;
 	    }
@@ -4242,11 +4236,8 @@ reset_decudk(XtermWidget xw)
 {
     int n;
     for (n = 0; n < MAX_UDK; n++) {
-	if (xw->work.user_keys[n].str != 0) {
-	    free(xw->work.user_keys[n].str);
-	    xw->work.user_keys[n].str = 0;
-	    xw->work.user_keys[n].len = 0;
-	}
+	FreeAndNull(xw->work.user_keys[n].str);
+	xw->work.user_keys[n].len = 0;
     }
 }
 
@@ -4279,8 +4270,7 @@ parse_decudk(XtermWidget xw, const char *cp)
 	}
 	if (len > 0 && key < MAX_UDK) {
 	    str[len] = '\0';
-	    if (xw->work.user_keys[key].str != 0)
-		free(xw->work.user_keys[key].str);
+	    free(xw->work.user_keys[key].str);
 	    xw->work.user_keys[key].str = str;
 	    xw->work.user_keys[key].len = len;
 	    TRACE(("parse_decudk %d:%.*s\n", key, len, str));
@@ -5393,10 +5383,7 @@ x_find_icon(char **work, int *state, const char *filename, const char *suffix)
     if (*state >= 0) {
 	size_t length;
 
-	if (*work) {
-	    free(*work);
-	    *work = 0;
-	}
+	FreeAndNull(*work);
 	length = 3 + strlen(prefix) + strlen(filename) + strlen(larger) +
 	    strlen(suffix);
 	if ((result = malloc(length)) != 0) {
@@ -5571,8 +5558,7 @@ xtermLoadIcon(XtermWidget xw, const char *icon_hint)
 	}
     }
 
-    if (workname != 0)
-	free(workname);
+    free(workname);
 
 #else
     (void) xw;
@@ -6602,10 +6588,7 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 
 #ifdef NO_LEAKS
     if (descs == 0) {
-	if (res_array != 0) {
-	    free(res_array);
-	    res_array = 0;
-	}
+	FreeAndNull(res_array);
     } else
 #endif
     if (res_array == 0) {
@@ -6636,8 +6619,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #ifdef NO_LEAKS
     if (descs == 0 && opt_array != 0) {
 	sortedOptDescs(descs, numDescs);
-	free(opt_array);
-	opt_array = 0;
+	FreeAndNull(opt_array);
 	return 0;
     } else if (options == 0 || descs == 0) {
 	return 0;

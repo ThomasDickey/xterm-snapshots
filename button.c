@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.604 2020/10/12 11:21:35 tom Exp $ */
+/* $XTermId: button.c,v 1.605 2020/10/12 18:22:07 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1893,8 +1893,7 @@ UnmapSelections(XtermWidget xw)
     if (screen->mappedSelect) {
 	for (n = 0; screen->mappedSelect[n] != 0; ++n)
 	    free((void *) screen->mappedSelect[n]);
-	free(screen->mappedSelect);
-	screen->mappedSelect = 0;
+	FreeAndNull(screen->mappedSelect);
     }
 }
 
@@ -1939,8 +1938,7 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 			while (j != 0) {
 			    free((void *) result[--j]);
 			}
-			free(result);
-			result = 0;
+			FreeAndNull(result);
 			break;
 		    }
 		}
@@ -4284,8 +4282,7 @@ ClearSelectionBuffer(TScreen *screen, String selection)
 {
     int which = TargetToSelection(screen, selection);
     SelectedCells *scp = &(screen->selected_cells[okSelectionCode(which)]);
-    free(scp->data_buffer);
-    scp->data_buffer = 0;
+    FreeAndNull(scp->data_buffer);
     scp->data_limit = 0;
     scp->data_length = 0;
     screen->base64_count = 0;

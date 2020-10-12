@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.865 2020/09/14 00:18:42 tom Exp $ */
+/* $XTermId: main.c,v 1.866 2020/10/12 18:37:02 tom Exp $ */
 
 /*
  * Copyright 2002-2019,2020 by Thomas E. Dickey
@@ -3600,8 +3600,7 @@ resetShell(char *oldPath)
 {
     char *newPath = x_strdup("/bin/sh");
     char *envPath = getenv("SHELL");
-    if (oldPath != 0)
-	free(oldPath);
+    free(oldPath);
     if (!IsEmpty(envPath))
 	xtermSetenv("SHELL", newPath);
     return newPath;

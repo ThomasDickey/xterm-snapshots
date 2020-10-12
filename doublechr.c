@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.102 2020/06/02 23:51:56 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.103 2020/10/12 18:29:24 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -184,10 +184,7 @@ discard_font(XtermWidget xw, int n)
 
     data->chrset = 0;
     data->flags = 0;
-    if (data->fn != 0) {
-	free(data->fn);
-	data->fn = 0;
-    }
+    FreeAndNull(data->fn);
     xtermCloseFont(xw, data);
 
     screen->fonts_used -= 1;
@@ -279,8 +276,7 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 		if (!strcmp(data->fn, name)
 		    && data->fs != 0) {
 		    found = True;
-		    free(name);
-		    name = NULL;
+		    FreeAndNull(name);
 		} else {
 		    discard_font(params->xw, n);
 		}

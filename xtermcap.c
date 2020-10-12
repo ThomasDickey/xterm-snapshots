@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.55 2020/06/30 20:20:01 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.56 2020/10/12 18:51:05 tom Exp $ */
 
 /*
  * Copyright 2007-2018,2020 by Thomas E. Dickey
@@ -645,8 +645,7 @@ free_termcap(XtermWidget xw)
 		free(fkey);
 	    }
 	}
-	free(screen->tcap_fkeys);
-	screen->tcap_fkeys = 0;
+	FreeAndNull(screen->tcap_fkeys);
     }
 #endif
     TcapFree();

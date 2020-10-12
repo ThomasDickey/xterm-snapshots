@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1014 2020/10/06 19:26:00 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1016 2020/10/12 19:27:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -130,11 +130,16 @@
 	BumpBuffer(type, BfBuf(type), BfLen(type), want)
 
 #define FreeTypedBuffer(type) \
-	if (BfBuf(type) != 0) { \
-	    free(BfBuf(type)); \
-	    BfBuf(type) = 0; \
-	} \
-	BfLen(type) = 0
+	do { \
+	    FreeAndNull(BfBuf(type)); \
+	    BfLen(type) = 0; \
+	} while (0)
+
+#define FreeAndNull(value) \
+	do { \
+	    free((void *)(value)); \
+	    value = NULL; \
+	} while (0)
 
 /*
 ** System V definitions
