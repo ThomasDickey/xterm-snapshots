@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.363 2020/09/15 11:09:06 tom Exp $ */
+/* $XTermId: menu.c,v 1.364 2020/10/13 08:07:27 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -599,7 +599,7 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 	}
 	break;
     case vtMenu:
-#ifndef NO_ACTIVE_ICON
+#if !defined(NO_ACTIVE_ICON) && !OPT_TOOLBAR
 	if (!getIconicFont(screen)->fs || !screen->iconVwin.window) {
 	    result[vtMenu_activeicon] = True;
 	}

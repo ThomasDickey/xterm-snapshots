@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1789 2020/10/12 18:26:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1791 2020/10/14 21:43:18 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -10800,6 +10800,38 @@ LookupCursorShape(const char *name)
     return result;
 }
 
+#if USE_DOUBLE_BUFFER
+static Boolean
+allocateDbe(XtermWidget xw, VTwin *target)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = False;
+
+    target->drawable = target->window;
+
+    if (resource.buffered) {
+	Window win = target->window;
+	Drawable d;
+	int major, minor;
+	if (XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
+	    d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
+					   (XdbeSwapAction) XdbeCopied);
+	    if (d == None) {
+		fprintf(stderr, "Couldn't allocate a back buffer!\n");
+		exit(3);
+	    }
+	    target->drawable = d;
+	    screen->needSwap = 1;
+	    TRACE(("initialized double-buffering\n"));
+	    result = True;
+	} else {
+	    resource.buffered = False;
+	}
+    }
+    return result;
+}
+#endif /* USE_DOUBLE_BUFFER */
+
 /*ARGSUSED*/
 static void
 VTRealize(Widget w,
@@ -11012,25 +11044,12 @@ VTRealize(Widget w,
 		      InputOutput, CopyFromParent,
 		      *valuemask | CWBitGravity, values);
 #if USE_DOUBLE_BUFFER
-    screen->fullVwin.drawable = screen->fullVwin.window;
-
-    if (resource.buffered) {
-	Window win = screen->fullVwin.window;
-	Drawable d;
-	int major, minor;
-	if (XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
-	    d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
-					   (XdbeSwapAction) XdbeCopied);
-	    if (d == None) {
-		fprintf(stderr, "Couldn't allocate a back buffer!\n");
-		exit(3);
-	    }
-	    screen->fullVwin.drawable = d;
-	    screen->needSwap = 1;
-	    TRACE(("initialized double-buffering\n"));
-	} else {
-	    resource.buffered = False;
-	}
+    if (allocateDbe(xw, &(screen->fullVwin))) {
+	screen->needSwap = 1;
+	TRACE(("initialized full double-buffering\n"));
+    } else {
+	resource.buffered = False;
+	screen->fullVwin.drawable = screen->fullVwin.window;
     }
 #endif /* USE_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;
@@ -11108,8 +11127,14 @@ VTRealize(Widget w,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
 #if USE_DOUBLE_BUFFER
-	screen->iconVwin.drawable = screen->iconVwin.window;
-#endif
+	if (allocateDbe(xw, &(screen->iconVwin))) {
+	    TRACE(("initialized icon double-buffering\n"));
+	} else {
+	    resource.buffered = False;
+	    screen->iconVwin.drawable = screen->iconVwin.window;
+	    screen->fullVwin.drawable = screen->fullVwin.window;
+	}
+#endif /* USE_DOUBLE_BUFFER */
 	XtVaSetValues(shell,
 		      XtNiconWindow, screen->iconVwin.window,
 		      (XtPointer) 0);

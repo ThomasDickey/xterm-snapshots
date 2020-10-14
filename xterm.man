@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.823 2020/10/12 11:17:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.824 2020/10/13 22:12:15 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -5561,17 +5561,27 @@ This entry invokes the \fBset\-visibility(\fP\fItek,toggle\fP\fB)\fP action.
 The following resources are useful when specified for the Athena Scrollbar
 widget:
 .TP 8
-.B "thickness\fP (class\fB Thickness\fP)"
-Specifies the width in pixels of the scrollbar.
-.TP 8
 .B "background\fP (class\fB Background\fP)"
 Specifies the color to use for the background of the scrollbar.
 .TP 8
 .B "foreground\fP (class\fB Foreground\fP)"
 Specifies the color to use for the foreground of the scrollbar.
-The \*(``thumb\*(''
-of the scrollbar is a simple checkerboard pattern alternating pixels for
+.TP 8
+.B "thickness\fP (class\fB Thickness\fP)"
+Specifies the width in pixels of the scrollbar (default: 14).
+.IP
+This may be overridden by the \fBwidth\fP resource.
+.TP 8
+.B "thumb\fP (class\fB Thumb\fP)"
+The default \*(``thumb\*('' pixmap used for
+the scrollbar is a simple checkerboard pattern alternating pixels for
 foreground and background color.
+.TP 8
+.B "width\fP (class\fB Width\fP)"
+Specifies the width in pixels of the scrollbar (default: 0).
+.IP
+The widget checks the \fIwidth\fP resource first,
+using the \fIthickness\fP value if the \fIwidth\fP is zero.
 .
 .
 .SH "POINTER USAGE"

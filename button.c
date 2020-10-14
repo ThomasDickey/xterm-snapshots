@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.605 2020/10/12 18:22:07 tom Exp $ */
+/* $XTermId: button.c,v 1.606 2020/10/14 19:02:49 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -415,7 +415,7 @@ xtermButtonInit(XtermWidget xw)
 	    if (state == scanMods) {
 		if (len == 7 && !x_strncasecmp(data + first, "button", len - 1)) {
 		    have_button = data[first + 6] - '0';
-		} else if (len == 5 && !strncasecmp(data + first, "shift", len)) {
+		} else if (len == 5 && !x_strncasecmp(data + first, "shift", len)) {
 		    have_shift = True;
 		}
 	    } else if (state == scanKey) {
