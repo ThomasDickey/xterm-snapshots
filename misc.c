@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.959 2020/10/12 18:40:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.960 2020/10/14 19:07:13 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -829,8 +829,8 @@ make_colored_cursor(unsigned c_index,		/* index into font */
 	    if (!xtermMissingChar(c_index, &myFont)
 		&& !xtermMissingChar(c_index + 1, &myFont)) {
 #define DATA(c) { 0UL, c, c, c, 0, 0 }
-		static XColor const foreground = DATA(0);
-		static XColor const background = DATA(65535);
+		static XColor foreground = DATA(0);
+		static XColor background = DATA(65535);
 #undef DATA
 
 		/*
@@ -1371,7 +1371,7 @@ void
 xtermPerror(const char *fmt, ...)
 {
     int save_err = errno;
-    char *msg = strerror(errno);
+    const char *msg = strerror(errno);
     va_list ap;
 
     fflush(stdout);
@@ -5938,7 +5938,7 @@ const char *
 SysErrorMsg(int code)
 {
     static const char unknown[] = "unknown error";
-    char *s = strerror(code);
+    const char *s = strerror(code);
     return s ? s : unknown;
 }
 
@@ -7290,7 +7290,7 @@ allocColorSlot(XtermWidget xw, int slot)
     if (slot >= 0 && slot < MAX_SAVED_SGR) {
 	ColorSlot *palette;
 	if ((palette = s->palettes[slot]) == 0) {
-	    s->palettes[slot] = (ColorSlot *) calloc(1,
+	    s->palettes[slot] = (ColorSlot *) calloc((size_t)1,
 						     sizeof(ColorSlot)
 						     + (sizeof(ColorRes)
 							* MAXCOLORS));

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.593 2020/10/12 18:56:04 tom Exp $ */
+/* $XTermId: screen.c,v 1.594 2020/10/14 19:03:53 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1457,7 +1457,7 @@ FreeMarkGCs(XtermWidget xw)
 }
 
 static GC
-MakeMarkGC(XtermWidget xw, Boolean set)
+MakeMarkGC(XtermWidget xw, Bool set)
 {
     TScreen *const screen = TScreenOf(xw);
     VTwin *vwin = WhichVWin(screen);
@@ -1488,7 +1488,7 @@ ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
     if (screen->show_wrap_marks) {
-	Boolean set = (Boolean) LineTstWrapped(ld);
+	Bool set = (Bool) LineTstWrapped(ld);
 	int y = row * FontHeight(screen) + screen->border;
 	int x = LineCursorX(screen, ld, screen->max_col + 1);
 
