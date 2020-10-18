@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.606 2020/10/14 19:02:49 tom Exp $ */
+/* $XTermId: button.c,v 1.607 2020/10/18 20:48:23 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -470,6 +470,7 @@ InterpretButton(XtermWidget xw, XButtonEvent *event)
 {
     Bool result = False;
     unsigned check = (event->state & AllModifiers);
+
     /*
      * Check if the modifier(s) comprise just the shift-key, and if the button
      * number is something that Xt might support in a translations resource.
@@ -489,8 +490,17 @@ static Bool
 InterpretEvent(XtermWidget xw, XEvent *event)
 {
     Bool result = False;	/* if not a button, is motion */
-    if (IsBtnEvent(event))
+    if (IsBtnEvent(event)) {
 	result = InterpretButton(xw, (XButtonEvent *) event);
+    } else if (event->type == MotionNotify) {
+#define Button1Index 8		/* X.h should have done this */
+	unsigned state = event->xmotion.state;
+	unsigned bmask = state >> Button1Index;
+	if ((xw->keyboard.shift_buttons & bmask) != 0
+	    && (state & AllModifiers) == ShiftMask) {
+	    result = True;
+	}
+    }
     return result;
 }
 

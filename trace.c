@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.222 2020/10/12 18:49:54 tom Exp $ */
+/* $XTermId: trace.c,v 1.224 2020/10/18 21:50:12 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -804,9 +804,11 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       formatEventMask(mask_buffer, ev->xbutton.state, True)));
 	break;
     case MotionNotify:
-	TRACE((" (%d,%d)",
+	TRACE((" (%d,%d) state %#x %s",
 	       ev->xmotion.y_root,
-	       ev->xmotion.x_root));
+	       ev->xmotion.x_root,
+	       ev->xmotion.state,
+	       formatEventMask(mask_buffer, ev->xmotion.state, True)));
 	break;
     case EnterNotify:
     case LeaveNotify:
@@ -908,11 +910,25 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	}
 	break;
     case NoExpose:
-	TRACE((" send_event:%d display %p major:%d minor:%d\n",
+	TRACE((" send_event:%d display %p major:%d minor:%d",
 	       ev->xnoexpose.send_event,
 	       (void *) ev->xnoexpose.display,
 	       ev->xnoexpose.major_code,
 	       ev->xnoexpose.minor_code));
+	break;
+    case SelectionRequest:
+	TRACE((" owner:%#lx requestor:%#lx",
+	       ev->xselectionrequest.owner,
+	       ev->xselectionrequest.requestor));
+	TRACE((" selection:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.selection)));
+	TRACE((" target:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.target)));
+	TRACE((" property:%s",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xselectionrequest.property)));
 	break;
     default:
 	TRACE((":FIXME"));
