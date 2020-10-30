@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.859 2020/10/14 00:45:31 tom Exp $ */
+/* $XTermId: util.c,v 1.868 2020/10/29 21:45:46 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3486,7 +3486,7 @@ drawClippedXftString(XTermDraw * params,
 #endif
 	if (screen->use_clipping || halfHigh) {
 	    XRectangle clip;
-	    double adds = ((double) screen->scale_height - 1.0) * fontHigh;
+	    double adds = ((double) screen->scale_height - 1.0f) * fontHigh;
 	    int height = dimRound(adds + fontHigh);
 	    int descnt = dimRound(adds / 2.0) + FontDescent(screen);
 	    int clip_x = (x);
@@ -3533,7 +3533,7 @@ drawClippedXftString(XTermDraw * params,
 
     xtermXftDrawString(params, attr_flags,
 		       fg_color,
-		       font, x, y,
+		       font, x, y + ScaleShift(screen),
 		       text,
 		       len,
 		       True);
@@ -3551,7 +3551,7 @@ drawClippedXftString(XTermDraw * params,
 				GetNormalFont(screen, name)
 #endif
 
-static int
+static void
 drawUnderline(XtermWidget xw,
 	      GC gc,
 	      unsigned attr_flags,
@@ -3592,7 +3592,6 @@ drawUnderline(XtermWidget xw,
 		      y);
 	}
     }
-    return y;
 }
 
 #if OPT_WIDE_ATTRS
@@ -3693,9 +3692,10 @@ drawXtermText(XTermDraw * params,
 	      Cardinal len)
 {
     XTermDraw recur = *params;
+    TScreen *screen = TScreenOf(recur.xw);
     int x = start_x;
     int y = start_y;
-    TScreen *screen = TScreenOf(recur.xw);
+    int y_shift = ScaleShift(screen);
     Cardinal real_length = len;
     Cardinal underline_len = 0;
     /* Intended width of the font to draw (as opposed to the actual width of
@@ -3712,6 +3712,11 @@ drawXtermText(XTermDraw * params,
     if (text == 0)
 	return 0;
 #endif
+    TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
+	   screen->cursor_state == OFF ? ' ' : '*',
+	   y, x, recur.this_chrset, len,
+	   visibleIChars(text, len)));
+
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(recur.this_chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -3720,11 +3725,6 @@ drawXtermText(XTermDraw * params,
 	 */
 	int inx = 0;
 	GC gc2;
-
-	TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
-	       screen->cursor_state == OFF ? ' ' : '*',
-	       y, x, recur.this_chrset, len,
-	       visibleIChars(text, len)));
 
 #if OPT_RENDERFONT
 	if (UsingRenderFont(recur.xw)) {
@@ -3920,10 +3920,10 @@ drawXtermText(XTermDraw * params,
 		XftFont *tempFont = 0;
 #define CURR_TEMP (tempFont ? tempFont : currFont)
 
-		if (xtermIsDecGraphic(ch)) {
+		if (xtermIsDecGraphic(ch) || ch == 0) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
-		     * in cells 1-31.  Assume this (we cannot inspect the
+		     * in cells 0-31.  Assume this (we cannot inspect the
 		     * picture easily...), and attempt to fill in from real
 		     * line-drawing character in the font at the Unicode
 		     * position.  Failing that, use our own box-characters.
@@ -4010,9 +4010,13 @@ drawXtermText(XTermDraw * params,
 			Dimension old_high = screen->fnt_high;
 			screen->fnt_wide = (Dimension) FontWidth(screen);
 			screen->fnt_high = (Dimension) FontHeight(screen);
+
 			xtermDrawBoxChar(&recur, ch,
 					 gc,
-					 curX, y - FontAscent(screen), 1);
+					 curX,
+					 y - FontAscent(screen),
+					 1,
+					 True);
 			curX += FontWidth(screen);
 			underline_len += 1;
 			screen->fnt_wide = old_wide;
@@ -4072,14 +4076,14 @@ drawXtermText(XTermDraw * params,
 	}
 #endif /* OPT_BOX_CHARS */
 
-	(void) drawUnderline(recur.xw,
-			     gc,
-			     recur.attr_flags,
-			     underline_len,
-			     FontWidth(screen),
-			     x,
-			     y,
-			     did_ul);
+	drawUnderline(recur.xw,
+		      gc,
+		      recur.attr_flags,
+		      underline_len,
+		      FontWidth(screen),
+		      x,
+		      y + y_shift,
+		      did_ul);
 
 	x += (int) len *FontWidth(screen);
 
@@ -4229,10 +4233,10 @@ drawXtermText(XTermDraw * params,
 		else if (ch_width < 0)
 		    ch_width = 1;	/* special case for combining char */
 		if (!ucs_workaround(&recur, ch, gc, x, y)) {
-		    xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width);
+		    xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width, False);
 		}
 #else
-		xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width);
+		xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width, False);
 #endif
 		x += (ch_width * FontWidth(screen));
 		first = last + 1;
@@ -4274,7 +4278,7 @@ drawXtermText(XTermDraw * params,
 	   DrawFlags(),
 	   recur.this_chrset, len,
 	   visibleIChars(text, len)));
-    if (screen->scale_height != (float) 1.0) {
+    if (screen->scale_height != 1.0f) {
 	xtermFillCells(&recur, gc, x, y, (Cardinal) len);
     }
     y += FontAscent(screen);
@@ -4457,12 +4461,12 @@ drawXtermText(XTermDraw * params,
 	if (recur.draw_flags & NOBACKGROUND) {
 	    XDrawString16(screen->display,
 			  VDrawable(screen), gc,
-			  x, y + ascent_adjust,
+			  x, y + y_shift + ascent_adjust,
 			  buffer, dst);
 	} else if (dst <= MaxImageString) {
 	    XDrawImageString16(screen->display,
 			       VDrawable(screen), gc,
-			       x, y + ascent_adjust,
+			       x, y + y_shift + ascent_adjust,
 			       buffer, dst);
 	} else {
 	    int b_pos;
@@ -4473,7 +4477,7 @@ drawXtermText(XTermDraw * params,
 		XDrawImageString16(screen->display,
 				   VDrawable(screen), gc,
 				   x + (b_pos * FontWidth(screen)),
-				   y + ascent_adjust,
+				   y + y_shift + ascent_adjust,
 				   buffer + b_pos,
 				   b_max);
 	    }
@@ -4490,7 +4494,7 @@ drawXtermText(XTermDraw * params,
 	    }
 	    XDrawString16(screen->display, VDrawable(screen), gc,
 			  x + 1,
-			  y + ascent_adjust,
+			  y + y_shift + ascent_adjust,
 			  buffer, dst);
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		endClipping(screen, gc);
@@ -4524,10 +4528,10 @@ drawXtermText(XTermDraw * params,
 
 	if (recur.draw_flags & NOBACKGROUND) {
 	    XDrawString(screen->display, VDrawable(screen), gc,
-			x, y, buffer, length);
+			x, y + y_shift, buffer, length);
 	} else if (length <= MaxImageString) {
 	    XDrawImageString(screen->display, VDrawable(screen), gc,
-			     x, y, buffer, length);
+			     x, y + y_shift, buffer, length);
 	} else {
 	    int b_pos;
 	    int b_max = MaxImageString;
@@ -4537,7 +4541,7 @@ drawXtermText(XTermDraw * params,
 		XDrawImageString(screen->display,
 				 VDrawable(screen), gc,
 				 x + (b_pos * FontWidth(screen)),
-				 y,
+				 y + y_shift,
 				 buffer + b_pos,
 				 b_max);
 	    }
@@ -4554,21 +4558,21 @@ drawXtermText(XTermDraw * params,
 		beginClipping(screen, gc, font_width, length);
 	    }
 	    XDrawString(screen->display, VDrawable(screen), gc,
-			x + 1, y, buffer, length);
+			x + 1, y + y_shift, buffer, length);
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		endClipping(screen, gc);
 	    }
 	}
     }
 
-    (void) drawUnderline(recur.xw,
-			 gc,
-			 recur.attr_flags,
-			 underline_len,
-			 font_width,
-			 x,
-			 y,
-			 did_ul);
+    drawUnderline(recur.xw,
+		  gc,
+		  recur.attr_flags,
+		  underline_len,
+		  font_width,
+		  x,
+		  y + y_shift,
+		  did_ul);
 
     x += ((int) real_length) * FontWidth(screen);
     return x;

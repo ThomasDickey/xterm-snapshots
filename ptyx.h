@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1016 2020/10/12 19:27:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1017 2020/10/28 07:51:06 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3511,6 +3511,13 @@ extern Window VDrawable(TScreen * /* screen */);
 #endif
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
+
+/* y -> y_shift, to center text versus the cursor */
+#define ScaleShift(screen) \
+	    (int) ((IsIcon(screen) || (screen->scale_height <= 1.0f)) \
+	           ? 0.0f \
+	           : ((float) WhichVWin(screen)->f_height \
+		      * ((float) screen->scale_height - 1.0f) / 2.0f))
 
 #define BorderGC(w,sp)		WhichVWin(sp)->border_gc
 #define FillerGC(w,sp)		WhichVWin(sp)->filler_gc

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.256 2020/10/12 19:37:04 tom Exp $
+## $XTermId: Makefile.in,v 1.257 2020/10/29 21:43:54 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -190,7 +190,7 @@ TEKPARSE_H = Tekparse.h Tekparse.hin
 main$o : main.h
 misc$o : version.h
 
-$(OBJS1) : xterm.h ptyx.h xtermcfg.h
+$(OBJS1) : xterm.h ptyx.h fontutils.h menu.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
