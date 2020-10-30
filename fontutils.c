@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.691 2020/10/12 18:32:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.696 2020/10/30 00:41:52 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -3656,7 +3656,8 @@ xtermDrawBoxChar(XTermDraw * params,
 		 GC gc,
 		 int x,
 		 int y,
-		 int cells)
+		 int cells,
+		 Bool xftords)
 {
     TScreen *screen = TScreenOf(params->xw);
     /* *INDENT-OFF* */
@@ -3795,43 +3796,46 @@ xtermDrawBoxChar(XTermDraw * params,
 	SEG(  0,	    MID_HIGH,	  CHR_WIDE,	MID_HIGH),
 	-1
     };
-    /* *INDENT-ON* */
 
-    static const short *lines[] =
+    static const struct {
+	const int mode;			/* 1=y, 2=x, 3=both */
+	const short *data;
+    } lines[] =
     {
-	0,			/* 00 (unused) */
-	0,			/* 01 diamond */
-	0,			/* 02 box */
-	glyph_ht,		/* 03 HT */
-	glyph_ff,		/* 04 FF */
-	0,			/* 05 CR */
-	glyph_lf,		/* 06 LF */
-	0,			/* 07 degrees (small circle) */
-	plus_or_minus,		/* 08 */
-	glyph_nl,		/* 09 */
-	glyph_vt,		/* 0A */
-	lower_right_corner,	/* 0B */
-	upper_right_corner,	/* 0C */
-	upper_left_corner,	/* 0D */
-	lower_left_corner,	/* 0E */
-	cross,			/* 0F */
-	scan_line_1,		/* 10 */
-	scan_line_3,		/* 11 */
-	scan_line_7,		/* 12 */
-	scan_line_9,		/* 13 */
-	horizontal_line,	/* 14 */
-	left_tee,		/* 15 */
-	right_tee,		/* 16 */
-	bottom_tee,		/* 17 */
-	top_tee,		/* 18 */
-	vertical_line,		/* 19 */
-	less_than_or_equal,	/* 1A */
-	greater_than_or_equal,	/* 1B */
-	greek_pi,		/* 1C */
-	not_equal_to,		/* 1D */
-	0,			/* 1E LB */
-	0,			/* 1F bullet */
+	{ 0, 0 },			/* 00 (unused) */
+	{ 0, 0 },			/* 01 diamond */
+	{ 0, 0 },			/* 02 box */
+	{ 0, glyph_ht },		/* 03 HT */
+	{ 0, glyph_ff },		/* 04 FF */
+	{ 0, 0 },			/* 05 CR */
+	{ 0, glyph_lf },		/* 06 LF */
+	{ 0, 0 },			/* 07 degrees (small circle) */
+	{ 3, plus_or_minus },		/* 08 */
+	{ 0, glyph_nl },		/* 09 */
+	{ 0, glyph_vt },		/* 0A */
+	{ 3, lower_right_corner },	/* 0B */
+	{ 3, upper_right_corner },	/* 0C */
+	{ 3, upper_left_corner },	/* 0D */
+	{ 3, lower_left_corner },	/* 0E */
+	{ 3, cross },			/* 0F */
+	{ 2, scan_line_1 },		/* 10 */
+	{ 2, scan_line_3 },		/* 11 */
+	{ 2, scan_line_7 },		/* 12 */
+	{ 2, scan_line_9 },		/* 13 */
+	{ 2, horizontal_line },		/* 14 */
+	{ 3, left_tee },		/* 15 */
+	{ 3, right_tee },		/* 16 */
+	{ 3, bottom_tee },		/* 17 */
+	{ 3, top_tee },			/* 18 */
+	{ 1, vertical_line },		/* 19 */
+	{ 0, less_than_or_equal },	/* 1A */
+	{ 0, greater_than_or_equal },	/* 1B */
+	{ 0, greek_pi },		/* 1C */
+	{ 0, not_equal_to },		/* 1D */
+	{ 0, 0 },			/* 1E LB */
+	{ 0, 0 },			/* 1F bullet */
     };
+    /* *INDENT-ON* */
 
     GC gc2;
     CgsEnum cgsId = (ch == 2) ? gcDots : gcLine;
@@ -3883,9 +3887,21 @@ xtermDrawBoxChar(XTermDraw * params,
     }
 #endif
 
-    TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
+    /*
+     * Line-drawing characters show use the full (scaled) cellsize, while
+     * other characters should be shifted to center them vertically.
+     */
+    if (!xftords) {
+	if ((ch < XtNumber(lines)) && (lines[ch].mode & 3) != 0) {
+	    font_height = (unsigned) ((float) font_height * screen->scale_height);
+	} else {
+	    y += ScaleShift(screen);
+	}
+    }
+
+    TRACE(("DRAW_BOX(%02X) cell %dx%d at %d,%d%s\n",
 	   ch, font_height, font_width, y, x,
-	   (ch >= (sizeof(lines) / sizeof(lines[0]))
+	   ((ch >= XtNumber(lines))
 	    ? "-BAD"
 	    : "")));
 
@@ -3981,8 +3997,8 @@ xtermDrawBoxChar(XTermDraw * params,
 		 x + x_coord, y + y_coord, width, width,
 		 0,
 		 360 * 64);
-    } else if (ch < (sizeof(lines) / sizeof(lines[0]))
-	       && (p = lines[ch]) != 0) {
+    } else if (ch < XtNumber(lines)
+	       && (p = lines[ch].data) != 0) {
 	int coord[4];
 	int n = 0;
 	while (*p >= 0) {
@@ -4532,7 +4548,7 @@ useFaceSizes(XtermWidget xw)
 	int n;
 
 	for (n = 0; n < NMENU_RENDERFONTS; ++n) {
-	    if (xw->misc.face_size[n] <= (float) 0.0) {
+	    if (xw->misc.face_size[n] <= 0.0f) {
 		nonzero = False;
 		break;
 	    }

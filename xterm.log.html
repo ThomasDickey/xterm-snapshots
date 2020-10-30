@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2263 2020/10/18 21:54:43 tom Exp $
+  $XTermId: xterm.log.html,v 1.2265 2020/10/29 21:00:20 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -1008,6 +1008,19 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve display when <code>scaleHeight</code> is greater
+    than 1:
+
+      <ul>
+        <li>the text-cursor is vertically-centered on the current
+        line, rather than only extending below the current line
+        (report by Manu Chaturvedi).</li>
+
+        <li>the built-in line-drawing characters extend to the
+        scaled cell-height.</li>
+      </ul>
+    </li>
+
     <li>fill-in special case for motion-events to match the changes
     for shift-key in pointer-button events from <a href=
     "#xterm_361">patch #361</a>.</li>

@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.72 2019/07/19 00:45:03 tom Exp $ */
+/* $XTermId: main.h,v 1.73 2020/10/27 00:10:16 tom Exp $ */
 
 /*
- * Copyright 2000-2018,2019 by Thomas E. Dickey
+ * Copyright 2000-2019,2020 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -254,6 +254,9 @@
 #define DEFLOCALEFILTER1(x)	DEFLOCALEFILTER2(x)
 #define DEFLOCALEFILTER		DEFLOCALEFILTER1(PROJECTROOT) "/bin/luit"
 #endif
+
+#define MIN_SCALE_HEIGHT	0.9f
+#define MAX_SCALE_HEIGHT	1.5f
 
 /*
  * See lib/Xt/Resources.c

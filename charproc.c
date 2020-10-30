@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1791 2020/10/14 21:43:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1794 2020/10/27 00:07:59 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4092,8 +4092,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			case 1:	/* read */
 			    TRACE(("Get sixel graphics geometry\n"));
 			    status = 0;		/* success */
-			    result = Min(Width(screen), screen->graphics_max_wide);
-			    result2 = Min(Height(screen), screen->graphics_max_high);
+			    result = Min(Width(screen), (int) screen->graphics_max_wide);
+			    result2 = Min(Height(screen), (int) screen->graphics_max_high);
 			    break;
 			case 2:	/* reset */
 			    /* FALLTHRU */
@@ -9183,10 +9183,10 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.scrollkey);
 
     init_Dres(screen.scale_height);
-    if (screen->scale_height < (float) 0.9)
-	screen->scale_height = (float) 0.9;
-    if (screen->scale_height > (float) 1.5)
-	screen->scale_height = (float) 1.5;
+    if (screen->scale_height < MIN_SCALE_HEIGHT)
+	screen->scale_height = MIN_SCALE_HEIGHT;
+    if (screen->scale_height > MAX_SCALE_HEIGHT)
+	screen->scale_height = MAX_SCALE_HEIGHT;
 
     init_Bres(misc.autoWrap);
     init_Bres(misc.login_shell);
