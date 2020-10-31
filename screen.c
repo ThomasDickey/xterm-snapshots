@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.594 2020/10/14 19:03:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.595 2020/10/31 08:23:13 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2329,20 +2329,19 @@ ScreenResize(XtermWidget xw,
 #endif /* NO_ACTIVE_ICON */
 
 #ifdef TTYSIZE_STRUCT
-    update_winsize(screen->respond, rows, cols, height, width);
-
+    if (update_winsize(screen->respond, rows, cols, height, width) == 0) {
 #if defined(SIGWINCH) && defined(TIOCGPGRP)
-    if (screen->pid > 1) {
-	int pgrp;
+	if (screen->pid > 1) {
+	    int pgrp;
 
-	TRACE(("getting process-group\n"));
-	if (ioctl(screen->respond, TIOCGPGRP, &pgrp) != -1) {
-	    TRACE(("sending SIGWINCH to process group %d\n", pgrp));
-	    kill_process_group(pgrp, SIGWINCH);
+	    TRACE(("getting process-group\n"));
+	    if (ioctl(screen->respond, TIOCGPGRP, &pgrp) != -1) {
+		TRACE(("sending SIGWINCH to process group %d\n", pgrp));
+		kill_process_group(pgrp, SIGWINCH);
+	    }
 	}
-    }
 #endif /* SIGWINCH */
-
+    }
 #else
     TRACE(("ScreenResize cannot do anything to pty\n"));
 #endif /* TTYSIZE_STRUCT */

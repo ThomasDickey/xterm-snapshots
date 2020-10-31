@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.880 2020/10/09 00:34:18 tom Exp $ */
+/* $XTermId: xterm.h,v 1.881 2020/10/31 00:42:45 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1166,6 +1166,7 @@ extern int getVisualDepth (XtermWidget /* xw */);
 extern int getVisualInfo (XtermWidget /* xw */);
 extern int ignore_x11_error(Display * /* dpy */, XErrorEvent * /* event */);
 extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
+extern int update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermClosestColor (XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
@@ -1209,7 +1210,6 @@ extern void set_tek_visibility (Bool /* on */);
 extern void set_vt_visibility (Bool /* on */);
 extern void switch_modes (Bool /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
-extern void update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern void xevents (XtermWidget /* xw */);
 extern void xt_error (String /* message */) GCC_NORETURN;
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
