@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.607 2020/10/18 20:48:23 tom Exp $ */
+/* $XTermId: button.c,v 1.614 2020/11/06 23:35:02 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -134,27 +134,10 @@ extern String _XtPrintXlations(Widget w,
 #define GET_LINEDATA(screen, row) \
 	getLineData(screen, ROW2INX(screen, row))
 
-    /*
-     * We reserve shift modifier for cut/paste operations.
-     *
-     * In principle we can pass through control and meta modifiers, but in
-     * practice, the popup menu uses control, and the window manager is likely
-     * to use meta, so those events usually are not delivered to
-     * SendMousePosition.
-     */
 #define MaxMouseBtn  5
-#define AllModifiers (ShiftMask | LockMask | ControlMask | Mod1Mask | \
-		      Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask)
 
 #define IsBtnEvent(event) ((event)->type == ButtonPress || (event)->type == ButtonRelease)
 #define IsKeyEvent(event) ((event)->type == KeyPress    || (event)->type == KeyRelease)
-
-#define KeyState(x) (((int) ((x) & (ShiftMask|ControlMask))) \
-			  + (((x) & Mod1Mask) ? 2 : 0))
-    /* adds together the bits:
-       shift key -> 1
-       meta key  -> 2
-       control key -> 4 */
 
 #define	Coordinate(s,c)	((c)->row * MaxCols(s) + (c)->col)
 
@@ -450,6 +433,77 @@ xtermButtonInit(XtermWidget xw)
 }
 
 /*
+ * Shift and control are regular X11 modifiers, but meta is not:
+ * + X10 (which had no xmodmap utility) had a meta mask, but X11 did not.
+ * + X11R1 introduced xmodmap, along with the current set of modifier masks.
+ *   The meta key has been assumed to be mod1 since X11R1.
+ *   The initial xterm logic in X11 was different, but gave the same result.
+ * + X11R2 modified xterm was to eliminate the X10 table which provided part of
+ *   the meta logic.
+ * + X11R3 modified Xt, making Meta_L and Meta_R assignable via xmodmap, and
+ *   equating Alt with Meta.  Neither Alt/Meta are modifiers, but Alt is more
+ *   likely to be on the keyboard.  This release also added keymap tables for
+ *   the server; Meta was used frequently in HP keymaps, which were the most
+ *   extensive set of keymaps.
+ * + X11R4 mentions Meta in the ICCCM, stating that if Meta_L or Meta_R are
+ *   found in the keysyms for a given modifier, that the client should use
+ *   that modifier.
+ *
+ * This function follows the ICCCM, picking the modifier which contains the
+ * Meta_L/Meta_R keysyms (if available), falling back to the Alt_L/Alt_R
+ * (as per X11R3), and ultimately to mod1 (per X11R1).
+ */
+static unsigned
+MetaMask(XtermWidget xw)
+{
+#if OPT_NUM_LOCK
+    unsigned meta = xw->work.meta_mods;
+    if (meta == 0)
+	meta = xw->work.alt_mods;
+    if (meta == 0)
+	meta = Mod1Mask;
+#else
+    unsigned meta = Mod1Mask;
+    (void) xw;
+#endif
+    return meta;
+}
+
+/*
+ * Returns a mask of the modifiers we may use for modifying the mouse protocol
+ * response strings.
+ */
+static unsigned
+OurModifiers(XtermWidget xw)
+{
+    return (ShiftMask
+	    | ControlMask
+	    | MetaMask(xw));
+}
+
+/*
+ * The actual check for the shift-mask, to see if it should tell xterm to
+ * ignore mouse-protocol in favor of select/paste actions depends upon whether
+ * the modifyOtherKeys resource is set to 2.
+ */
+static Boolean
+ShiftOverride(XtermWidget xw, unsigned state)
+{
+    unsigned check = (state & OurModifiers(xw));
+    Boolean result = False;
+
+    if (check & ShiftMask) {
+	if (xw->keyboard.modify_now.other_keys > 1) {
+	    if (check == ShiftMask)
+		result = True;
+	} else {
+	    result = True;
+	}
+    }
+    return result;
+}
+
+/*
  * Normally xterm treats the shift-modifier specially when the mouse protocol
  * is active.  The translations resource binds otherwise unmodified button
  * for these mouse-related events:
@@ -469,17 +523,16 @@ static Bool
 InterpretButton(XtermWidget xw, XButtonEvent *event)
 {
     Bool result = False;
-    unsigned check = (event->state & AllModifiers);
 
     /*
      * Check if the modifier(s) comprise just the shift-key, and if the button
      * number is something that Xt might support in a translations resource.
      */
-    if ((check == ShiftMask)
+    if (ShiftOverride(xw, event->state)
 	&& event->button > 0
 	&& event->button <= MaxMouseBtn) {
 	if (xw->keyboard.shift_buttons & (1U << (event->button - 1))) {
-	    TRACE(("...shift overrides mouse-protocol\n"));
+	    TRACE(("...shift-button overrides mouse-protocol\n"));
 	    result = True;
 	}
     }
@@ -497,7 +550,8 @@ InterpretEvent(XtermWidget xw, XEvent *event)
 	unsigned state = event->xmotion.state;
 	unsigned bmask = state >> Button1Index;
 	if ((xw->keyboard.shift_buttons & bmask) != 0
-	    && (state & AllModifiers) == ShiftMask) {
+	    && ShiftOverride(xw, state)) {
+	    TRACE(("...shift-motion overrides mouse-protocol\n"));
 	    result = True;
 	}
     }
@@ -5001,6 +5055,19 @@ SaveText(TScreen *screen,
     return (result);
 }
 
+/*
+ * This adds together the bits:
+ *   shift key   -> 1
+ *   meta key    -> 2
+ *   control key -> 4
+ */
+static unsigned
+KeyState(XtermWidget xw, unsigned x)
+{
+    return ((((x) & (ShiftMask | ControlMask)))
+	    + (((x) & MetaMask(xw)) ? 2 : 0));
+}
+
 /* 32 + following 8-bit word:
 
    1:0  Button no: 0, 1, 2.  3=release.
@@ -5014,9 +5081,9 @@ SaveText(TScreen *screen,
 
 /* Position: 32 - 255. */
 static int
-BtnCode(XButtonEvent *event, int button)
+BtnCode(XtermWidget xw, XButtonEvent *event, int button)
 {
-    int result = (int) (32 + (KeyState(event->state) << 2));
+    int result = (int) (32 + (KeyState(xw, event->state) << 2));
 
     if (event->type == MotionNotify)
 	result += 32;
@@ -5051,7 +5118,7 @@ EmitButtonCode(XtermWidget xw,
     if (okSendMousePos(xw) == X10_MOUSE) {
 	value = CharOf(' ' + button);
     } else {
-	value = BtnCode(event, button);
+	value = BtnCode(xw, event, button);
     }
 
     switch (screen->extend_coords) {
