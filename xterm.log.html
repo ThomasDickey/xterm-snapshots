@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2266 2020/10/31 09:46:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2268 2020/11/07 00:42:37 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -1008,6 +1008,24 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improved mouse-button reporting (prompted by discussion
+    with Stephane Chazelas)
+
+      <ul>
+        <li>narrow the scope of the change for shift-key in
+        <a href="#xterm_361">patch #361</a> to make it apply only
+        when the <code>modifyOtherKeys</code> resource is set to 2
+        (i.e., &ldquo;program mode&rdquo;). Also, when checking the
+        shift-key, ignore modifiers other than shift, control and
+        &ldquo;meta&rdquo;</li>
+
+        <li>use the alt/meta modifier information obtained in
+        <code>VTInitModifiers</code> to replace a hard-coded
+        <em>mod1</em> used to detect &ldquo;Meta&rdquo; for
+        mouse-button responses.</li>
+      </ul>
+    </li>
+
     <li>reduce <code>SIGWINCH</code>'s sent to the client by
     filtering out duplicates.</li>
 

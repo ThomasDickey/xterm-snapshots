@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.600 2020/09/30 01:00:53 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.602 2020/11/07 00:12:50 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #361
-.ds RF 2020/09/29
+.ds LF Patch #362
+.ds RF 2020/11/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1461,8 +1461,10 @@ VT510 and up.
 release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Don't use Hilite Mouse Tracking, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBButton-event tracking\fP.
-  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking, \fI\*(xt\fP.  See the section \fBAny-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBButton-event tracking\fP.
+  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking, \fI\*(xt\fP.
+See the section \fBAny-event tracking\fP.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send \fBFocusIn/FocusOut\fP events, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode, \fI\*(xt\fP.
@@ -3200,15 +3202,40 @@ On button press or release, \fI\*(xt\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy.
 .bP
 The low two bits of \*(Cb encode button information:
-0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
+.RS
+.IP
+0=MB1 pressed,
+.br
+1=MB2 pressed,
+.br
+2=MB3 pressed, and
+.br
+3=release.
+.RE
 .bP
 The next three bits encode the modifiers which were down when the button was
-pressed and are added together:  4=Shift, 8=Meta, 16=Control.
-Note however that the shift and control bits are normally unavailable
-because \fI\*(xt\fP uses the control modifier with mouse for popup menus,
-and the shift modifier is used in the default translations for button events.
-The \fIMeta\fP modifier recognized by \fI\*(xt\fP is the \fImod1\fP mask,
-and is not necessarily the \*(``Meta\*('' key (see \fBxmodmap\fP(1)).
+pressed and are added together:
+.RS
+.IP
+4=Shift,
+.br
+8=Meta, and
+.br
+16=Control.
+.RE
+.IP
+The \fIshift\fP and \fIcontrol\fP modifiers are normally irrelevant
+because \fI\*(xt\fP uses the \fIcontrol\fP modifier with mouse for popup menus,
+and the \fIshift\fP modifier is used in the default translations for button
+events.
+.IP
+There is no predefined \fImeta\fP modifier.
+\fI\*(XT\fP checks first if the keysyms listed in the predefined modifiers
+include \fBMeta_L\fP or \fBMeta_R\fP.
+If found, \fI\*(xt\fP uses that modifier for \fImeta\fP.
+Next, it tries \fBAlt_L\fP or \fBAlt_R\fP.
+If none of those are found, \fI\*(xt\fP uses the \fImod1\fP modifier,
+This is not necessarily the \*(``Meta\*('' key according to \fBxmodmap\fP(1).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.

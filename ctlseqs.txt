@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #361 (2020/09/29)
+               updated for XTerm Patch #362 (2020/11/06)
 
 
 
@@ -2354,17 +2354,30 @@ release.  Modifier key (shift, ctrl, meta) information is also sent.  It
 is enabled by specifying parameter 1000 to DECSET.  On button press or
 release, xterm sends CSI M CbCxCy.
 
-o   The low two bits of Cb encode button information: 0=MB1 pressed,
-    1=MB2 pressed, 2=MB3 pressed, 3=release.
+o   The low two bits of Cb encode button information:
+
+              0=MB1 pressed,
+              1=MB2 pressed,
+              2=MB3 pressed, and
+              3=release.
 
 o   The next three bits encode the modifiers which were down when the
-    button was pressed and are added together:  4=Shift, 8=Meta, 16=Con-
-    trol.  Note however that the shift and control bits are normally
-    unavailable because xterm uses the control modifier with mouse for
-    popup menus, and the shift modifier is used in the default transla-
-    tions for button events.  The Meta modifier recognized by xterm is
-    the mod1 mask, and is not necessarily the "Meta" key (see
-    xmodmap(1)).
+    button was pressed and are added together:
+
+              4=Shift,
+              8=Meta, and
+              16=Control.
+
+    The shift and control modifiers are normally irrelevant because
+    xterm uses the control modifier with mouse for popup menus, and the
+    shift modifier is used in the default translations for button
+    events.
+
+    There is no predefined meta modifier.  XTerm checks first if the
+    keysyms listed in the predefined modifiers include Meta_L or Meta_R.
+    If found, xterm uses that modifier for meta.  Next, it tries Alt_L
+    or Alt_R.  If none of those are found, xterm uses the mod1 modifier,
+    This is not necessarily the "Meta" key according to xmodmap(1).
 
 o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
     in X10 mode.
