@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.696 2020/10/30 00:41:52 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.697 2020/11/08 20:06:01 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -4128,7 +4128,7 @@ findXftGlyph(XtermWidget xw, XftFont *given, unsigned wc)
 							    + table[n]));
 	if (check[fontnum].font == given) {
 	    which = &check[fontnum];
-	    tag = whichFontEnum(n);
+	    tag = whichFontEnum((VTFontEnum) n);
 	    break;
 	}
     }
