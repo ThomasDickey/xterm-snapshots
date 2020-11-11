@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.961 2020/10/31 08:23:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.962 2020/11/08 20:06:38 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -7296,8 +7296,7 @@ allocColorSlot(XtermWidget xw, int slot)
     ColorSlot *result = NULL;
 
     if (slot >= 0 && slot < MAX_SAVED_SGR) {
-	ColorSlot *palette;
-	if ((palette = s->palettes[slot]) == 0) {
+	if (s->palettes[slot] == NULL) {
 	    s->palettes[slot] = (ColorSlot *) calloc((size_t) 1,
 						     sizeof(ColorSlot)
 						     + (sizeof(ColorRes)

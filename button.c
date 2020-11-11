@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.614 2020/11/06 23:35:02 tom Exp $ */
+/* $XTermId: button.c,v 1.615 2020/11/08 20:11:57 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4453,14 +4453,12 @@ _ConvertSelectionHelper(Widget w,
 						    XTextProperty *),
 			XICCEncodingStyle conversion_style)
 {
-    XtermWidget xw;
-
     *value = 0;
     *length = 0;
     *type = 0;
     *format = 0;
 
-    if ((xw = getXtermWidget(w)) != 0) {
+    if (getXtermWidget(w) != 0) {
 	Display *dpy = XtDisplay(w);
 	XTextProperty textprop;
 	int out_n = 0;
@@ -5343,9 +5341,9 @@ XtermMouseModes
 okSendMousePos(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    XtermMouseModes result = screen->send_mouse_pos;
+    XtermMouseModes result = (XtermMouseModes) screen->send_mouse_pos;
 
-    switch (result) {
+    switch ((int) result) {
     case MOUSE_OFF:
 	break;
     case X10_MOUSE:

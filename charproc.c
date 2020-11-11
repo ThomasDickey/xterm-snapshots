@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1794 2020/10/27 00:07:59 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1796 2020/11/11 22:26:06 Walter.Harms Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -9036,6 +9036,9 @@ VTInitialize(Widget wrequest,
 #endif /* OPT_COLOR_RES2 */
     TScreen *screen = TScreenOf(wnew);
     char *saveLocale = xtermSetLocale(LC_NUMERIC, "C");
+#if OPT_BLINK_CURS
+    int ebValue;
+#endif
 
 #if OPT_TRACE
     check_bitmasks();
@@ -9135,9 +9138,8 @@ VTInitialize(Widget wrequest,
 #endif
 #if OPT_BLINK_CURS
     init_Sres(screen.cursor_blink_s);
-    wnew->screen.cursor_blink =
-	extendedBoolean(wnew->screen.cursor_blink_s,
-			tblBlinkOps, cbLAST);
+    ebValue = extendedBoolean(wnew->screen.cursor_blink_s, tblBlinkOps, cbLAST);
+    wnew->screen.cursor_blink = (BlinkOps) ebValue;
     init_Bres(screen.cursor_blink_xor);
     init_Ires(screen.blink_on);
     init_Ires(screen.blink_off);
@@ -10419,8 +10421,7 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
 
-    if (screen->selection_atoms)
-	XtFree((void *) (screen->selection_atoms));
+    XtFree((void *) (screen->selection_atoms));
 
     for (n = 0; n < MAX_SELECTIONS; ++n) {
 	free(screen->selected_cells[n].data_buffer);
@@ -13316,7 +13317,6 @@ VTInitTranslations(void)
 void
 noleaks_charproc(void)
 {
-    if (v_buffer != 0)
-	free(v_buffer);
+    free(v_buffer);
 }
 #endif

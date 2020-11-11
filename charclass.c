@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.42 2020/10/12 18:23:18 tom Exp $ */
+/* $XTermId: charclass.c,v 1.43 2020/11/08 20:06:53 tom Exp $ */
 
 /*
  * Copyright 2002-2017,2020 by Thomas E. Dickey
@@ -273,7 +273,7 @@ report_wide_char_class(void)
 	printf("\tU+%04X .. U+%04X %s\n",
 	       classtab[i].first,
 	       classtab[i].last,
-	       class_name(classtab[i].cclass));
+	       class_name((Classes) classtab[i].cclass));
     }
     printf("\n");
     printf("These class-names are used internally (the first character code in a class):\n");
