@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: modify-keys.pl,v 1.90 2020/01/18 18:38:44 tom Exp $
+# $XTermId: modify-keys.pl,v 1.91 2020/11/15 16:43:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -1404,11 +1404,16 @@ sub report_keys_used() {
         $Shifted{$code} = $code unless ( $Shifted{$code} );
 
         for my $t ( 1 .. $type{SIZE} - 1 ) {
-            $sym             = $symCache[ $obj{CODE} + $t ];
-            $code            = "";
-            $code            = $keySyms{$sym} if ( $keySyms{$sym} );
-            $keysUsed{$code} = $sym;
-            $links[0] = &link_data( "symmap", "summary", 4, $sym );
+            $sym = $symCache[ $obj{CODE} + $t ];
+            if ( $keySyms{$sym} ) {
+                $code = $keySyms{$sym};
+                $keysUsed{$code} = $sym;
+                $links[0] = &link_data( "symmap", "summary", 4, $sym );
+            }
+            else {
+                $code  = "";
+                @links = ();
+            }
             &print_data(
                 \@links,
                 5,  "",                                         #
