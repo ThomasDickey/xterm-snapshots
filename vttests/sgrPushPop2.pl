@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: sgrPushPop2.pl,v 1.3 2020/06/11 22:14:19 tom Exp $
+# $XTermId: sgrPushPop2.pl,v 1.4 2020/12/13 15:05:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -34,7 +34,6 @@
 
 use strict;
 use warnings;
-use diagnostics;
 
 use Getopt::Std;
 

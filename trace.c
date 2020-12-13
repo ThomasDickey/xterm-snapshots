@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.224 2020/10/18 21:50:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.225 2020/12/13 18:55:50 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -90,36 +90,28 @@ TraceOpen(void)
 
     if (!trace_fp) {
 	mode_t oldmask = umask(077);
-	char name[BUFSIZ];
-#if 0				/* usually I do not want unique names */
+	/*
+	 * Put the trace-file in user's home-directory if the current
+	 * directory is not writable.
+	 */
+	char *home = (access(".", R_OK | W_OK) == 0) ? "." : getenv("HOME");
+	char *name = malloc(strlen(home) + strlen(trace_who) + 50);
+#if OPT_TRACE_UNIQUE		/* usually I do not want unique names */
 	int unique;
 	for (unique = 0;; ++unique) {
 	    if (unique)
-		sprintf(name, "Trace-%s.out-%d", trace_who, unique);
+		sprintf(name, "%s/Trace-%s.out-%d", home, trace_who, unique);
 	    else
-		sprintf(name, "Trace-%s.out", trace_who);
+		sprintf(name, "%s/Trace-%s.out", home, trace_who);
 	    if ((trace_fp = fopen(name, "r")) == 0) {
 		break;
 	    }
 	    fclose(trace_fp);
 	}
 #else
-	sprintf(name, "Trace-%s.out", trace_who);
+	sprintf(name, "%s/Trace-%s.out", home, trace_who);
 #endif
 	trace_fp = fopen(name, "w");
-	/*
-	 * Try to put the trace-file in user's home-directory if the current
-	 * directory is not writable.
-	 */
-	if (trace_fp == 0) {
-	    char *home = getenv("HOME");
-	    if (home != 0) {
-		sprintf(name, "%.*s/Trace-%.8s.out",
-			(BUFSIZ - 21), home,
-			trace_who);
-		trace_fp = fopen(name, "w");
-	    }
-	}
 	if (trace_fp != 0) {
 	    fprintf(trace_fp, "%s\n", xtermVersion());
 	    TraceIds(NULL, 0);
@@ -129,6 +121,7 @@ TraceOpen(void)
 	    exit(EXIT_FAILURE);
 	}
 	(void) umask(oldmask);
+	free (name);
     }
     return trace_fp;
 }

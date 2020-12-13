@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.595 2020/10/31 08:23:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.596 2020/12/10 19:43:26 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2032,7 +2032,7 @@ ScreenResize(XtermWidget xw,
 			     : 0);
 #endif
 	    if (screen->cursor_state)
-		HideCursor();
+		HideCursor(xw);
 #if OPT_SAVE_LINES
 	    /*
 	     * The non-visible buffer is simple, since we will not copy data

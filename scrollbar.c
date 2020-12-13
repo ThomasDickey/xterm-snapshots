@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.209 2020/06/02 23:50:06 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.210 2020/12/10 19:43:26 tom Exp $ */
 
 /*
  * Copyright 2000-2019,2020 by Thomas E. Dickey
@@ -400,7 +400,7 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 	    int scrolltop, scrollheight, refreshtop;
 
 	    if (screen->cursor_state)
-		HideCursor();
+		HideCursor(xw);
 	    lines = i > 0 ? i : -i;
 	    if (lines > MaxRows(screen))
 		lines = MaxRows(screen);

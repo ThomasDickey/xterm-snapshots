@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.962 2020/11/08 20:06:38 tom Exp $ */
+/* $XTermId: misc.c,v 1.963 2020/12/10 19:44:08 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -203,10 +203,10 @@ selectwindow(XtermWidget xw, int flag)
 #endif
 
 	if (screen->cursor_state && CursorMoved(screen))
-	    HideCursor();
+	    HideCursor(xw);
 	screen->select |= flag;
 	if (screen->cursor_state)
-	    ShowCursor();
+	    ShowCursor(xw);
     }
     GetScrollLock(screen);
 }
@@ -242,9 +242,9 @@ unselectwindow(XtermWidget xw, int flag)
 
 	    screen->select &= ~flag;
 	    if (screen->cursor_state && CursorMoved(screen))
-		HideCursor();
+		HideCursor(xw);
 	    if (screen->cursor_state)
-		ShowCursor();
+		ShowCursor(xw);
 	}
     }
 }

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1017 2020/10/28 07:51:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1018 2020/12/13 18:55:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -806,6 +806,10 @@ typedef enum {
 
 #ifndef OPT_TRACE_FLAGS
 #define OPT_TRACE_FLAGS 0 /* additional tracing used for SCRN_BUF_FLAGS */
+#endif
+
+#ifndef OPT_TRACE_UNIQUE
+#define OPT_TRACE_UNIQUE 0 /* true if we're using multiple trace files */
 #endif
 
 #ifndef OPT_VT52_MODE

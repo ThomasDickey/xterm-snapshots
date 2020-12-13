@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.103 2020/10/12 18:29:24 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.104 2020/12/10 19:43:26 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -68,7 +68,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
 		   visibleDblChrset(oldChrSet),
 		   visibleDblChrset(newChrSet)));
-	    HideCursor();
+	    HideCursor(xw);
 
 	    /* If switching from single-width, keep the cursor in the visible part
 	     * of the line.

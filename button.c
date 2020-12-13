@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.615 2020/11/08 20:11:57 tom Exp $ */
+/* $XTermId: button.c,v 1.616 2020/12/10 19:43:26 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2919,7 +2919,7 @@ StartSelect(XtermWidget xw, const CELL *cell)
 
     TRACE(("StartSelect row=%d, col=%d\n", cell->row, cell->col));
     if (screen->cursor_state)
-	HideCursor();
+	HideCursor(xw);
     if (screen->numberOfClicks == 1) {
 	/* set start of selection */
 	screen->rawPos = *cell;

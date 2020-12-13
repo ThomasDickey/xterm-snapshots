@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.257 2020/10/29 21:43:54 tom Exp $
+## $XTermId: Makefile.in,v 1.258 2020/12/11 09:25:33 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -577,8 +577,9 @@ realclean : distclean
 maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
 ################################################################################
-terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
-termcap.out : termcap		; tic -a -C -U termcap >$@
+TIC=tic
+terminfo.out : terminfo		; $(TIC) -a -I -1 terminfo >$@
+termcap.out : termcap		; $(TIC) -a -C -U termcap >$@
 ################################################################################
 docs-ctlseqs \
 docs :: $(srcdir)/ctlseqs.txt @MAN2HTML_NOTE@ ctlseqs.html @GROFF_NOTE@ ctlseqs.pdf ctlseqs.ps

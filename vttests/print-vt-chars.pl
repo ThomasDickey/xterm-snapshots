@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $Id: print-vt-chars.pl,v 1.22 2020/01/18 18:38:48 tom Exp $
+# $Id: print-vt-chars.pl,v 1.23 2020/12/13 15:05:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -35,7 +35,6 @@
 
 use strict;
 use warnings;
-use diagnostics;
 
 $| = 2;
 
