@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.189 2020/06/06 21:15:44 tom Exp $
+# $XTermId: terminfo,v 1.190 2020/12/11 09:23:14 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -1012,6 +1012,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	mc5=\E[5i,
 	meml=\El,
 	memu=\Em,
+	nel=\EE,
 	op=\E[39;49m,
 	rc=\E8,
 	rev=\E[7m,

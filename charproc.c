@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1796 2020/11/11 22:26:06 Walter.Harms Exp $ */
+/* $XTermId: charproc.c,v 1.1798 2020/12/10 19:44:08 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -3740,7 +3740,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECALN:
 	    TRACE(("CASE_DECALN - alignment test\n"));
 	    if (screen->cursor_state)
-		HideCursor();
+		HideCursor(xw);
 	    /*
 	     * DEC STD 070 does not mention left/right margins.  Likely the
 	     * text was for VT100, and not updated for VT420.
@@ -3842,7 +3842,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		Boolean change = True;
 		int blinks = screen->cursor_blink_esc;
 
-		HideCursor();
+		HideCursor(xw);
 
 		switch (GetParam(0)) {
 		case DEFAULT:
@@ -5307,13 +5307,15 @@ v_write(int f, const Char *data, unsigned len)
 }
 
 static void
-updateCursor(TScreen *screen)
+updateCursor(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->cursor_set != screen->cursor_state) {
 	if (screen->cursor_set)
-	    ShowCursor();
+	    ShowCursor(xw);
 	else
-	    HideCursor();
+	    HideCursor(xw);
     }
 }
 
@@ -5326,7 +5328,7 @@ reallyStopBlinking(XtermWidget xw)
     if (screen->cursor_state == BLINKED_OFF) {
 	/* force cursor to display if it is enabled */
 	screen->cursor_state = !screen->cursor_set;
-	updateCursor(screen);
+	updateCursor(xw);
 	xevents(xw);
     }
 }
@@ -5343,8 +5345,8 @@ update_the_screen(XtermWidget xw)
     moved = CursorMoved(screen);
     if (screen->cursor_set && moved) {
 	if (screen->cursor_state)
-	    HideCursor();
-	ShowCursor();
+	    HideCursor(xw);
+	ShowCursor(xw);
 #if OPT_INPUT_METHOD
 	PreeditPosition(xw);
 #endif
@@ -5353,7 +5355,7 @@ update_the_screen(XtermWidget xw)
 	if (moved)
 	    PreeditPosition(xw);
 #endif
-	updateCursor(screen);
+	updateCursor(xw);
     }
 }
 
@@ -7977,7 +7979,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 
     screen->whichBuf = toBuf;
     if (screen->cursor_state)
-	HideCursor();
+	HideCursor(xw);
 
     rows = MaxRows(screen);
     SwitchBufPtrs(screen, toBuf);
@@ -8069,7 +8071,7 @@ VTRun(XtermWidget xw)
     if (!setjmp(VTend))
 	VTparse(xw);
     StopBlinking(xw);
-    HideCursor();
+    HideCursor(xw);
     screen->cursor_set = OFF;
     TRACE(("... VTRun\n"));
 }
@@ -10900,7 +10902,7 @@ VTRealize(Widget w,
 	int other = LookupCursorShape(screen->pointer_shape);
 
 	TRACE(("looked up shape index %d from shape name \"%s\"\n", other,
-	       screen->pointer_shape));
+	       NonNull(screen->pointer_shape)));
 	if (other >= 0)
 	    shape = (unsigned) other;
 
@@ -11742,11 +11744,10 @@ reverseCgs(XtermWidget xw, unsigned attr_flags, Bool hilite, int font)
  * Shows cursor at new cursor position in screen.
  */
 void
-ShowCursor(void)
+ShowCursor(XtermWidget xw)
 {
-    XtermWidget xw = term;
-    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
+    XTermDraw params;
     IChar base;
     unsigned flags;
     CellColor fg_bg = initCColor;
@@ -12005,7 +12006,7 @@ ShowCursor(void)
 	     * different rules.  Just redraw the text-cell, and draw the
 	     * underline or bar on top of it.
 	     */
-	    HideCursor();
+	    HideCursor(xw);
 
 	    /*
 	     * Our current-GC is likely to have been modified in HideCursor().
@@ -12132,11 +12133,10 @@ ShowCursor(void)
  * hide cursor at previous cursor position in screen.
  */
 void
-HideCursor(void)
+HideCursor(XtermWidget xw)
 {
-    XtermWidget xw = term;
-    XTermDraw params;
     TScreen *screen = TScreenOf(xw);
+    XTermDraw params;
     GC currentGC;
     int x, y;
     IChar base;
@@ -12377,13 +12377,13 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     if (DoStartBlinking(screen)) {
 	if (screen->cursor_state == ON) {
 	    if (screen->select || screen->always_highlight) {
-		HideCursor();
+		HideCursor(xw);
 		if (screen->cursor_state == OFF)
 		    screen->cursor_state = BLINKED_OFF;
 	    }
 	} else if (screen->cursor_state == BLINKED_OFF) {
 	    screen->cursor_state = OFF;
-	    ShowCursor();
+	    ShowCursor(xw);
 	    if (screen->cursor_state == OFF)
 		screen->cursor_state = BLINKED_OFF;
 	}
