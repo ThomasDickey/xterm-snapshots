@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.824 2020/10/13 22:12:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.829 2020/12/17 00:27:20 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -4800,6 +4800,76 @@ The \fBset\-select\fP action can change this at runtime,
 allowing the user to work with programs that handle only one of these
 mechanisms.
 The default is \*(``false\*('', which tells it to use \fBPRIMARY\fP.
+.TP 8
+.B "shiftEscape\fP (class\fB ShiftEscape\fP)"
+\fI\*N\fP uses the \fBtranslations\fP resource to determine how
+to invoke actions for selecting and copying text using the
+pointer (e.g., a mouse).
+It also provides a mouse protocol which can be used by
+applications running in an xterm to detect mouse button clicks.
+.IP
+The mouse protocol causes \fI\*n\fP to send special escape sequences
+which allow an application to determine if \fImodifiers\fP
+(i.e., one or more of
+\fIshift\fP,
+\fIcontrol\fP,
+\fIalt\fP, and
+\fImeta\fP) were used.
+.IP
+\fI\*N\fP provides this mouse protocol by interpreting button-
+and motion-events in the functions which the \fBtranslations\fP resource
+calls for selecting and copying text:
+.RS
+.IP
+.nf
+\fBinsert-selection\fP
+\fBselect-end\fP
+\fBselect-extend\fP
+\fBselect-start\fP
+\fBstart-extend\fP
+.fi
+.RE
+.IP
+While the mouse protocol is active,
+\fI\*n\fP reserves most of the mouse button events
+for sending special escape sequences to the application.
+\fI\*N\fP normally allows you
+to use the \fIshift\fP-key
+to temporarily override this mouse protocol,
+permitting the selection and copying actions to be used.
+.IP
+The \fBshiftEscape\fP resource setting allows you
+to tell \fI\*n\fP whether to use
+the \fIshift\fP-key in this way (i.e., overriding the mouse protocol).
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP 3
+false (0)
+Mouse protocol does not send special escapes when \fIshift\fP-key is used.
+.TP 3
+true (1)
+Mouse protocol may send special escapes when \fIshift\fP-key is used.
+.IP
+At startup,
+\fI\*n\fP analyzes the \fBtranslations\fP to see which buttons are used
+in the (mouse) button-related bindings for selection and copying text.
+If the \fIshift\fP-key is not mentioned explicitly in a button's binding,
+\fI\*n\fP allows that button with \fIshift\fP-key for overriding the
+mouse protocol.
+.TP 3
+always (2)
+Mouse protocol can always send special escapes when \fIshift\fP-key is used.
+.TP 3
+never (3)
+Mouse protocol will never send special escapes when \fIshift\fP-key is used.
+.RE
+.IP
+\fI\*N\fP interprets a control sequence which can change this
+setting between 
+\*(``true\*('' and
+\*(``false\*(''.
+The default is \*(``false\*(''.
 .TP 8
 .B "shiftFonts\fP (class\fB ShiftFonts\fP)"
 Specifies whether to enable the actions

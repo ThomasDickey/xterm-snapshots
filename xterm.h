@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.882 2020/12/10 19:41:57 tom Exp $ */
+/* $XTermId: xterm.h,v 1.883 2020/12/15 21:36:32 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -600,6 +600,7 @@ extern char **environ;
 #define XtNscrollLines		"scrollLines"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
 #define XtNselectToClipboard	"selectToClipboard"
+#define XtNshiftEscape		"shiftEscape"
 #define XtNshiftFonts		"shiftFonts"
 #define XtNshowBlinkAsBold	"showBlinkAsBold"
 #define XtNshowMissingGlyphs	"showMissingGlyphs"
@@ -797,6 +798,7 @@ extern char **environ;
 #define XtCScrollCond		"ScrollCond"
 #define XtCScrollLines		"ScrollLines"
 #define XtCSelectToClipboard	"SelectToClipboard"
+#define XtCShiftEscape		"ShiftEscape"
 #define XtCShiftFonts		"ShiftFonts"
 #define XtCShowBlinkAsBold	"ShowBlinkAsBold"
 #define XtCShowMissingGlyphs	"ShowMissingGlyphs"

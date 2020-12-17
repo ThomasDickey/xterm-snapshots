@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #362 (2020/11/06)
+               updated for XTerm Patch #362 (2020/12/15)
 
 
 
@@ -1333,6 +1333,23 @@ CSI s     Save cursor, available only when DECLRMM is disabled (SCOSC,
 CSI Pl ; Pr s
           Set left and right margins (DECSLRM), VT420 and up.  This is
           available only when DECLRMM is enabled.
+
+CSI > Ps s
+          Set/reset shift-escape options (XTSHIFTESCAPE), xterm.  This
+          corresponds to the shiftEscape resource.
+
+          Valid values for the parameter:
+            Ps = 0  -> allow shift-key to override mouse protocol.
+            Ps = 1  -> conditionally allow shift-key as modifier in
+          mouse protocol.
+
+          These resource values are disallowed in the control sequence:
+            Ps = 2  -> always allow shift-key as modifier in mouse pro-
+          tocol.
+            Ps = 3  -> never allow shift-key as modifier in mouse proto-
+          col.
+
+          If no parameter is given, xterm uses the default, which is 0 .
 
 CSI ? Pm s
           Save DEC Private Mode Values (XTSAVE), xterm.  Ps values are

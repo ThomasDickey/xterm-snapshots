@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.602 2020/11/07 00:12:50 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.604 2020/12/16 01:33:13 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #362
-.ds RF 2020/11/06
+.ds RF 2020/12/15
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1961,6 +1961,22 @@ Save cursor, available only when DECLRMM is disabled (SCOSC, also ANSI.SYS).
 .IP \\*(Cs\\*(Pl\\*s\\*;\\*(Pr\\*s\\*(cs
 Set left and right margins (DECSLRM), VT420 and up.
 This is available only when DECLRMM is enabled.
+.
+.iP
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*(cs
+Set/reset shift-escape options (XTSHIFTESCAPE), \fI\*(xt\fP.
+This corresponds to the \fBshiftEscape\fP resource.
+.iP
+Valid values for the parameter:
+  \*(Ps = \*0 \(-> allow shift-key to override mouse protocol.
+  \*(Ps = \*1 \(-> conditionally allow shift-key as modifier in mouse protocol.
+.iP
+These resource values are disallowed in the control sequence:
+  \*(Ps = \*2 \(-> always allow shift-key as modifier in mouse protocol.
+  \*(Ps = \*3 \(-> never allow shift-key as modifier in mouse protocol.
+.iP
+If no parameter is given, \fI\*(xt\fP uses the default,
+which is \*0.
 .
 .iP
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
