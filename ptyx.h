@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1018 2020/12/13 18:55:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1020 2020/12/15 21:43:50 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1272,6 +1272,14 @@ typedef enum {
     , epNL
     , epLAST
 } PasteControls;
+
+typedef enum {			/* legal values for keyboard.shift_escape */
+    ssFalse = 0
+    , ssTrue = 1
+    , ssAlways = 2
+    , ssNever = 3
+    , ssLAST
+} ShiftEscapeOps;
 
 /*
  * xterm uses these codes for the its push-SGR feature.  They match where
@@ -3033,6 +3041,8 @@ typedef struct
     char *extra_translations;
     char *print_translations;	/* printable translations for buttons */
     unsigned shift_buttons;	/* special shift-modifier for mouse-buttons */
+    int shift_escape;		/* working value of shiftEscape */
+    char * shift_escape_s;	/* resource for shiftEscape */
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif

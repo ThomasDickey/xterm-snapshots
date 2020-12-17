@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.63 2020/06/23 20:17:35 tom Exp $
+# $XTermId: VTparse.def,v 1.64 2020/12/15 21:37:33 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -217,3 +217,4 @@ CASE_REPORT_VERSION		# XTVERSION
 CASE_XTERM_PUSH_COLORS		# XTPUSHCOLORS
 CASE_XTERM_REPORT_COLORS	# XTREPORTCOLORS
 CASE_XTERM_POP_COLORS		# XTPOPCOLORS
+CASE_XTERM_SHIFT_ESCAPE		# XTSHIFTESCAPE

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.225 2020/12/13 18:55:50 tom Exp $ */
+/* $XTermId: trace.c,v 1.226 2020/12/17 00:36:39 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -89,12 +89,13 @@ TraceOpen(void)
     trace_out = trace_who;
 
     if (!trace_fp) {
+	static char dot[] = ".";
 	mode_t oldmask = umask(077);
 	/*
 	 * Put the trace-file in user's home-directory if the current
 	 * directory is not writable.
 	 */
-	char *home = (access(".", R_OK | W_OK) == 0) ? "." : getenv("HOME");
+	char *home = (access(dot, R_OK | W_OK) == 0) ? dot : getenv("HOME");
 	char *name = malloc(strlen(home) + strlen(trace_who) + 50);
 #if OPT_TRACE_UNIQUE		/* usually I do not want unique names */
 	int unique;

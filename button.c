@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.616 2020/12/10 19:43:26 tom Exp $ */
+/* $XTermId: button.c,v 1.627 2020/12/17 00:35:37 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -270,6 +270,24 @@ enum {
     scanArgs
 };
 
+#if OPT_TRACE > 1
+static const char *
+visibleScan(int mode)
+{
+    const char *result = "?";
+#define DATA(name) case name: result = #name; break
+    switch (mode) {
+	DATA(scanMods);
+	DATA(scanKey);
+	DATA(scanColon);
+	DATA(scanFunc);
+	DATA(scanArgs);
+    }
+#undef DATA
+    return result;
+}
+#endif
+
 #define L_BRACK '<'
 #define R_BRACK '>'
 #define L_PAREN '('
@@ -387,15 +405,21 @@ xtermButtonInit(XtermWidget xw)
 	int have_button = -1;
 	Bool want_button = False;
 	Bool have_shift = False;
+	unsigned allowed = 0;
+	unsigned disallow = 0;
 
 	TRACE(("xtermButtonInit length %ld\n", strlen(result)));
 	xw->keyboard.print_translations = data;
 	while ((next = scanTrans(data, &state, &state2, &first, &last)) != 0) {
 	    unsigned len = (last - first);
-	    TRACE2(("parse %d:%d..%d '%.*s'\n",
-		    state, first, last,
+	    TRACE2(("parse %s:%d..%d '%.*s'\n",
+		    visibleScan(state), first, last,
 		    len, data + first));
 	    if (state == scanMods) {
+		if (len > 1 && data[first] == '~') {
+		    len--;
+		    first++;
+		}
 		if (len == 7 && !x_strncasecmp(data + first, "button", len - 1)) {
 		    have_button = data[first + 6] - '0';
 		} else if (len == 5 && !x_strncasecmp(data + first, "shift", len)) {
@@ -409,12 +433,18 @@ xtermButtonInit(XtermWidget xw)
 		    have_button = data[first] - '0';
 		    want_button = False;
 		}
-	    } else if (state == scanFunc && have_button > 0 && !have_shift) {
+	    } else if (state == scanFunc && have_button > 0) {
 		Cardinal n;
+		unsigned bmask = 1U << (have_button - 1);
 		for (n = 0; n < XtNumber(table); ++n) {
 		    if (!x_strncasecmp(table[n], data + first, len)) {
-			TRACE(("...button %d: %s\n", have_button, table[n]));
-			xw->keyboard.shift_buttons |= 1U << (have_button - 1);
+			TRACE(("...button %d: %s%s\n",
+			       have_button, table[n],
+			       have_shift ? " (disallow)" : ""));
+			if (have_shift)
+			    disallow |= bmask;
+			else
+			    allowed |= bmask;
 			break;
 		    }
 		}
@@ -428,6 +458,23 @@ xtermButtonInit(XtermWidget xw)
 	    data = next;
 	}
 	XFree((char *) result);
+	xw->keyboard.shift_buttons = allowed & ~disallow;
+#if OPT_TRACE
+	if (xw->keyboard.shift_buttons) {
+	    int button = 0;
+	    unsigned mask = xw->keyboard.shift_buttons;
+	    TRACE(("...Buttons used for selection that can be overridden:"));
+	    while (mask != 0) {
+		++button;
+		if ((mask & 1) != 0)
+		    TRACE((" %d", button));
+		mask >>= 1;
+	    }
+	    TRACE(("\n"));
+	} else {
+	    TRACE(("...No buttons used with selection can be overridden\n"));
+	}
+#endif
     }
     XSetErrorHandler(save);
 }
@@ -483,23 +530,34 @@ OurModifiers(XtermWidget xw)
 
 /*
  * The actual check for the shift-mask, to see if it should tell xterm to
- * ignore mouse-protocol in favor of select/paste actions depends upon whether
- * the modifyOtherKeys resource is set to 2.
+ * override mouse-protocol in favor of select/paste actions depends upon
+ * whether the shiftEscape resource is set to true/always vs false/never.
  */
 static Boolean
-ShiftOverride(XtermWidget xw, unsigned state)
+ShiftOverride(XtermWidget xw, unsigned state, int button)
 {
     unsigned check = (state & OurModifiers(xw));
     Boolean result = False;
 
     if (check & ShiftMask) {
-	if (xw->keyboard.modify_now.other_keys > 1) {
-	    if (check == ShiftMask)
-		result = True;
-	} else {
+	if (xw->keyboard.shift_escape == ssFalse ||
+	    xw->keyboard.shift_escape == ssNever) {
 	    result = True;
+	} else if (xw->keyboard.shift_escape == ssTrue) {
+	    /*
+	     * Check if the button is one that we found does not directly use
+	     * the shift-modifier in its bindings to select/copy actions.
+	     */
+	    if (button > 0 && button <= MaxMouseBtn) {
+		if (xw->keyboard.shift_buttons & (1U << (button - 1))) {
+		    result = True;
+		}
+	    } else {
+		result = True;	/* unlikely, and we don't care */
+	    }
 	}
     }
+    TRACE2(("ShiftOverride ( %#x -> %#x ) %d\n", state, check, result));
     return result;
 }
 
@@ -524,16 +582,25 @@ InterpretButton(XtermWidget xw, XButtonEvent *event)
 {
     Bool result = False;
 
-    /*
-     * Check if the modifier(s) comprise just the shift-key, and if the button
-     * number is something that Xt might support in a translations resource.
-     */
-    if (ShiftOverride(xw, event->state)
-	&& event->button > 0
-	&& event->button <= MaxMouseBtn) {
-	if (xw->keyboard.shift_buttons & (1U << (event->button - 1))) {
-	    TRACE(("...shift-button overrides mouse-protocol\n"));
-	    result = True;
+    if (ShiftOverride(xw, event->state, (int) event->button)) {
+	TRACE(("...shift-button #%d overrides mouse-protocol\n", event->button));
+	result = True;
+    }
+    return result;
+}
+
+#define Button1Index 8		/* X.h should have done this */
+
+static int
+MotionButton(unsigned state)
+{
+    unsigned bmask = state >> Button1Index;
+    int result = 1;
+
+    if (bmask != 0) {
+	while (!(bmask & 1)) {
+	    ++result;
+	    bmask >>= 1;
 	}
     }
     return result;
@@ -543,15 +610,18 @@ static Bool
 InterpretEvent(XtermWidget xw, XEvent *event)
 {
     Bool result = False;	/* if not a button, is motion */
+
     if (IsBtnEvent(event)) {
 	result = InterpretButton(xw, (XButtonEvent *) event);
     } else if (event->type == MotionNotify) {
-#define Button1Index 8		/* X.h should have done this */
 	unsigned state = event->xmotion.state;
-	unsigned bmask = state >> Button1Index;
-	if ((xw->keyboard.shift_buttons & bmask) != 0
-	    && ShiftOverride(xw, state)) {
-	    TRACE(("...shift-motion overrides mouse-protocol\n"));
+	int button = MotionButton(state);
+
+	if (ShiftOverride(xw, state, button)) {
+	    TRACE(("...shift-motion #%d (%d,%d) overrides mouse-protocol\n",
+		   button,
+		   event->xmotion.y,
+		   event->xmotion.x));
 	    result = True;
 	}
     }

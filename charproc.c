@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1798 2020/12/10 19:44:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1803 2020/12/16 16:10:25 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -697,6 +697,8 @@ static XtResource xterm_resources[] =
     CLICK_RES("3", screen.onClick[2], "line"),
     CLICK_RES("4", screen.onClick[3], 0),
     CLICK_RES("5", screen.onClick[4], 0),
+
+    Sres(XtNshiftEscape, XtCShiftEscape, keyboard.shift_escape_s, "false"),
 
 #if OPT_MOD_FKEYS
     Ires(XtNmodifyKeyboard, XtCModifyKeyboard,
@@ -4958,6 +4960,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 #endif
+	case CASE_XTERM_SHIFT_ESCAPE:
+	    TRACE(("CASE_XTERM_SHIFT_ESCAPE\n"));
+	    value = ((nparam == 0)
+		     ? 0
+		     : one_if_default(0));
+	    if (value >= 0 && value <= 1)
+		xw->keyboard.shift_escape = value;
+	    ResetState(sp);
+	    break;
+
 #if OPT_MOD_FKEYS
 	case CASE_SET_MOD_FKEYS:
 	    TRACE(("CASE_SET_MOD_FKEYS\n"));
@@ -8987,6 +8999,15 @@ VTInitialize(Widget wrequest,
 #undef DATA
 #endif
 
+#define DATA(name) { #name, ss##name }
+    static const FlagList tblShift2S[] =
+    {
+	DATA(Always)
+	,DATA(Never)
+	,DATA_END
+    };
+#undef DATA
+
 #if OPT_WIDE_CHARS
 #define DATA(name) { #name, u##name }
     static const FlagList tblUtf8Mode[] =
@@ -10120,6 +10141,10 @@ VTInitialize(Widget wrequest,
 
     wnew->initflags = wnew->flags;
 
+    init_Sres(keyboard.shift_escape_s);
+    wnew->keyboard.shift_escape =
+	extendedBoolean(wnew->keyboard.shift_escape_s, tblShift2S, ssLAST);
+
 #if OPT_MOD_FKEYS
     init_Ires(keyboard.modify_1st.allow_keys);
     init_Ires(keyboard.modify_1st.cursor_keys);
@@ -10185,9 +10210,6 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
 	    TRACE(("freed " #name ": %p\n", (const void *) name)); \
 	    FreeAndNull(name); \
 	}
-
-#define FREE_LEAK(name) \
-	FreeAndNull(name)
 
 #if OPT_INPUT_METHOD
 static void
@@ -10274,6 +10296,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->pointer_shape);
     TRACE_FREE_LEAK(screen->term_id);
 #if OPT_WIDE_CHARS
+    TRACE_FREE_LEAK(screen->utf8_mode_s);
+    TRACE_FREE_LEAK(screen->utf8_fonts_s);
+    TRACE_FREE_LEAK(screen->utf8_title_s);
 #if OPT_LUIT_PROG
     TRACE_FREE_LEAK(xw->misc.locale_str);
     TRACE_FREE_LEAK(xw->misc.localefilter);
@@ -10388,6 +10413,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
 #endif
 
+    TRACE_FREE_LEAK(xw->work.wm_name);
     freeFontLists(&(xw->work.fonts.x11));
 #if OPT_RENDERFONT
     freeFontLists(&(xw->work.fonts.xft));
@@ -10417,11 +10443,27 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
 
-#if OPT_SELECT_REGEX
-    for (n = 0; n < NSELECTUNITS; ++n) {
-	FREE_LEAK(screen->selectExpr[n]);
-    }
+#if OPT_BLINK_CURS
+    TRACE_FREE_LEAK(screen->cursor_blink_s);
 #endif
+
+#if OPT_REGIS_GRAPHICS
+    TRACE_FREE_LEAK(screen->graphics_regis_default_font);
+    TRACE_FREE_LEAK(screen->graphics_regis_screensize);
+#endif
+#if OPT_GRAPHICS
+    TRACE_FREE_LEAK(screen->graph_termid);
+    TRACE_FREE_LEAK(screen->graphics_max_size);
+#endif
+
+    for (n = 0; n < NSELECTUNITS; ++n) {
+#if OPT_SELECT_REGEX
+	TRACE_FREE_LEAK(screen->selectExpr[n]);
+#endif
+#if OPT_XRES_QUERY
+	TRACE_FREE_LEAK(screen->onClick[n]);
+#endif
+    }
 
     XtFree((void *) (screen->selection_atoms));
 
@@ -10433,6 +10475,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	TRACE_FREE_LEAK(defaultTranslations);
     }
     TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
+    TRACE_FREE_LEAK(xw->keyboard.shift_escape_s);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
