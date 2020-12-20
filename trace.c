@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.226 2020/12/17 00:36:39 tom Exp $ */
+/* $XTermId: trace.c,v 1.227 2020/12/20 16:23:05 tom Exp $ */
 
 /*
  * Copyright 1997-2019,2020 by Thomas E. Dickey
@@ -122,7 +122,7 @@ TraceOpen(void)
 	    exit(EXIT_FAILURE);
 	}
 	(void) umask(oldmask);
-	free (name);
+	free(name);
     }
     return trace_fp;
 }
@@ -909,6 +909,11 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	       (void *) ev->xnoexpose.display,
 	       ev->xnoexpose.major_code,
 	       ev->xnoexpose.minor_code));
+	break;
+    case SelectionClear:
+	TRACE((" selection:%s",
+	       TraceAtomName(ev->xselectionclear.display,
+			     ev->xselectionclear.selection)));
 	break;
     case SelectionRequest:
 	TRACE((" owner:%#lx requestor:%#lx",

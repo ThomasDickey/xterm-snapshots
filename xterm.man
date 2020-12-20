@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.829 2020/12/17 00:27:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.831 2020/12/19 01:18:45 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -1503,6 +1503,27 @@ Abbreviated options also are supported, e.g.,
 .
 .SH RESOURCES
 \fI\*N\fP understands all of the core X Toolkit resource names and classes.
+It also uses the X Toolkit resource types (such as
+booleans,
+colors,
+fonts, 
+integers, and
+strings)
+along with their respective converters.
+Those resource types are not always sufficient:
+.bP
+\fI\*N\fP's resource values may be lists of names.
+X Toolkit resource types do not include lists.
+\fI\*N\fP uses a string for the resource, and parses it.
+.IP
+Comma-separated lists of names ignore case.
+.bP
+\fI\*N\fP may defer processing a resource until it is needed.
+For example, \fBfont2\fP through \fBfont7\fP are loaded as needed,
+to start faster.
+Again, the actual resource type is a string,
+parsed and used when needed.
+.PP
 Application specific resources
 (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*('') follow:
 .SS Application Resources
@@ -3126,7 +3147,7 @@ The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
 The default value is
 .NS
-BS,HT,DEL,ESC
+BS,DEL,ENT,EOT,ESC,NUL
 .NE
 .IP
 The names are listed below:
@@ -3135,26 +3156,16 @@ The names are listed below:
 C0
 all ASCII control characters.
 .TP 5
-BS
-ASCII backspace
-.TP 5
-CR
-ASCII carriage-return
+\fIIndividual C0 characters\fP
+NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, HT, LF, VT,
+FF, CR, SO, SI, DLE, DC1, DC2, DC3, DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS,
+GS, RS, US
 .TP 5
 DEL
 ASCII delete
 .TP 5
-ESC
-ASCII escape
-.TP 5
-FF
-ASCII form-feed
-.TP 5
-HT
-ASCII tab
-.TP 5
 NL
-ASCII line-feed, i.e., \*(``newline\*(''.
+ASCII line-feed, i.e., \*(``newline\*('' is the same as LF.
 .RE
 .TP 8
 .B "disallowedTcapOps\fP (class\fB DisallowedTcapOps\fP)"
