@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.963 2020/12/10 19:44:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.964 2020/12/20 20:51:10 Leandro.Lupori Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2541,11 +2541,17 @@ loadColorTable(XtermWidget xw, unsigned length)
 
 	if (screen->cmap_data != 0) {
 	    unsigned i;
+	    unsigned shift;
+
+	    if (getVisualInfo(xw))
+		shift = xw->rgb_shifts[2];
+	    else
+		shift = 0;
 
 	    screen->cmap_size = length;
 
 	    for (i = 0; i < screen->cmap_size; i++) {
-		screen->cmap_data[i].pixel = (unsigned long) i;
+		screen->cmap_data[i].pixel = (unsigned long) i << shift;
 	    }
 	    result = (Boolean) (XQueryColors(screen->display,
 					     cmap,
