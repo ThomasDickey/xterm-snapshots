@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1020 2020/12/15 21:43:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1023 2020/12/18 23:37:35 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1262,14 +1262,43 @@ typedef enum {
 } MouseOps;
 
 typedef enum {
-    epC0 = 1
-    , epBS
-    , epCR
-    , epDEL
-    , epESC
-    , epFF
-    , epHT
-    , epNL
+#define DATA(name) ep##name
+    DATA(NUL) = 0
+    , DATA(SOH) =  1
+    , DATA(STX) =  2
+    , DATA(ETX) =  3
+    , DATA(EOT) =  4
+    , DATA(ENQ) =  5
+    , DATA(ACK) =  6
+    , DATA(BEL) =  7
+    , DATA(BS)  =  8
+    , DATA(HT)  =  9
+    , DATA(LF)  = 10
+    , DATA(VT)  = 11
+    , DATA(FF)  = 12
+    , DATA(CR)  = 13
+    , DATA(SO)  = 14
+    , DATA(SI)  = 15
+    , DATA(DLE) = 16
+    , DATA(DC1) = 17
+    , DATA(DC2) = 18
+    , DATA(DC3) = 19
+    , DATA(DC4) = 20
+    , DATA(NAK) = 21
+    , DATA(SYN) = 22
+    , DATA(ETB) = 23
+    , DATA(CAN) = 24
+    , DATA(EM)  = 25
+    , DATA(SUB) = 26
+    , DATA(ESC) = 27
+    , DATA(FS)  = 28
+    , DATA(GS)  = 29
+    , DATA(RS)  = 30
+    , DATA(US)  = 31
+    /* aliases */
+    , DATA(C0)
+    , DATA(DEL)
+#undef DATA
     , epLAST
 } PasteControls;
 

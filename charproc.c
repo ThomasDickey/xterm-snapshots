@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1803 2020/12/16 16:10:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1807 2020/12/19 00:16:05 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -8672,9 +8672,14 @@ set_flags_from_list(char *target,
     while (!IsEmpty(source)) {
 	char *next = ParseList(&source);
 	Boolean found = False;
+	char flag = 1;
 
 	if (next == 0)
 	    break;
+	if (*next == '~') {
+	    flag = 0;
+	    next++;
+	}
 	if (isdigit(CharOf(*next))) {
 	    char *temp;
 	    int value = (int) strtol(next, &temp, 0);
@@ -8683,7 +8688,7 @@ set_flags_from_list(char *target,
 	    } else {
 		for (n = 0; list[n].name != 0; ++n) {
 		    if (list[n].code == value) {
-			target[value] = 1;
+			target[value] = flag;
 			found = True;
 			TRACE(("...found %s (%d)\n", list[n].name, value));
 			break;
@@ -8694,7 +8699,7 @@ set_flags_from_list(char *target,
 	    for (n = 0; list[n].name != 0; ++n) {
 		if (!x_wildstrcmp(next, list[n].name)) {
 		    int value = list[n].code;
-		    target[value] = 1;
+		    target[value] = flag;
 		    found = True;
 		    TRACE(("...found %s (%d)\n", list[n].name, value));
 		}
@@ -8928,19 +8933,49 @@ VTInitialize(Widget wrequest,
 #undef DATA
 
 #define DATA(name) { #name, ep##name }
+#define DATA2(alias,name) { #alias, ep##name }
     static const FlagList tblPasteControls[] =
     {
-	DATA(C0)
+	DATA(NUL)
+	,DATA(SOH)
+	,DATA(STX)
+	,DATA(ETX)
+	,DATA(EOT)
+	,DATA(ENQ)
+	,DATA(ACK)
+	,DATA(BEL)
 	,DATA(BS)
-	,DATA(CR)
-	,DATA(DEL)
-	,DATA(ESC)
-	,DATA(FF)
 	,DATA(HT)
-	,DATA(NL)
+	,DATA(LF)
+	,DATA(VT)
+	,DATA(FF)
+	,DATA(CR)
+	,DATA(SO)
+	,DATA(SI)
+	,DATA(DLE)
+	,DATA(DC1)
+	,DATA(DC2)
+	,DATA(DC3)
+	,DATA(DC4)
+	,DATA(NAK)
+	,DATA(SYN)
+	,DATA(ETB)
+	,DATA(CAN)
+	,DATA(EM)
+	,DATA(SUB)
+	,DATA(ESC)
+	,DATA(FS)
+	,DATA(GS)
+	,DATA(RS)
+	,DATA(US)
+    /* aliases */
+	,DATA2(NL, LF)
+	,DATA(C0)
+	,DATA(DEL)
 	,DATA_END
     };
 #undef DATA
+#undef DATA2
 
 #define DATA(name) { #name, et##name }
     static const FlagList tblTcapOps[] =
@@ -9970,8 +10005,8 @@ VTInitialize(Widget wrequest,
 	if (!x_strcasecmp(screen->graphics_regis_screensize, "auto")) {
 	    TRACE(("setting default ReGIS screensize based on graphics_id %d\n",
 		   GraphicsTermId(screen)));
-	    screen->graphics_regis_def_high = (Dimension) native_w;
-	    screen->graphics_regis_def_wide = (Dimension) native_h;
+	    screen->graphics_regis_def_high = (Dimension) native_h;
+	    screen->graphics_regis_def_wide = (Dimension) native_w;
 	} else {
 	    int conf_high;
 	    int conf_wide;
@@ -10007,8 +10042,8 @@ VTInitialize(Widget wrequest,
 	if (!x_strcasecmp(screen->graphics_max_size, "auto")) {
 	    TRACE(("setting max graphics screensize based on graphics_id %d\n",
 		   GraphicsTermId(screen)));
-	    screen->graphics_max_high = (Dimension) native_w;
-	    screen->graphics_max_wide = (Dimension) native_h;
+	    screen->graphics_max_high = (Dimension) native_h;
+	    screen->graphics_max_wide = (Dimension) native_w;
 	} else {
 	    int conf_high;
 	    int conf_wide;

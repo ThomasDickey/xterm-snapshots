@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.627 2020/12/17 00:35:37 tom Exp $ */
+/* $XTermId: button.c,v 1.629 2020/12/20 17:02:30 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2537,28 +2537,7 @@ removeControls(XtermWidget xw, char *value)
 
 	    if (ch < 32) {
 		ReplacePaste(epC0);
-		switch (ch) {
-		case ANSI_BS:
-		    ReplacePaste(epBS);
-		    break;
-		case ANSI_CR:
-		    ReplacePaste(epCR);
-		    break;
-		case ANSI_ESC:
-		    ReplacePaste(epESC);
-		    break;
-		case ANSI_FF:
-		    ReplacePaste(epFF);
-		    break;
-		case ANSI_HT:
-		    ReplacePaste(epHT);
-		    break;
-		case ANSI_LF:
-		    ReplacePaste(epNL);
-		    break;
-		default:
-		    continue;
-		}
+		ReplacePaste(ch);
 		++dst;
 	    } else if (ch == ANSI_DEL) {
 		ReplacePaste(epDEL);

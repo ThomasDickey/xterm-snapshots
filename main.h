@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.73 2020/10/27 00:10:16 tom Exp $ */
+/* $XTermId: main.h,v 1.74 2020/12/19 00:19:51 tom Exp $ */
 
 /*
  * Copyright 2000-2019,2020 by Thomas E. Dickey
@@ -132,7 +132,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_PASTE_CONTROLS
-#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,HT,DEL,ESC"
+#define DEF_DISALLOWED_PASTE_CONTROLS	"BS,DEL,ENQ,EOT,ESC,NUL"
 #endif
 
 #ifndef DEF_DISALLOWED_TCAP
