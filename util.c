@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.869 2020/12/10 19:43:26 tom Exp $ */
+/* $XTermId: util.c,v 1.871 2020/12/21 22:01:11 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -2076,16 +2076,40 @@ CopyWait(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     XEvent reply;
     XEvent *rep = &reply;
+#ifndef NO_ACTIVE_ICON
+    int retries = 0;
+#endif
 
 #if USE_DOUBLE_BUFFER
     if (resource.buffered)
 	return;
 #endif
 
-    while (XCheckWindowEvent(screen->display,
-			     VWindow(screen),
-			     ExposureMask,
-			     &reply)) {
+    for (;;) {
+#ifndef NO_ACTIVE_ICON
+	if (xw->work.active_icon != eiFalse) {
+	    /*
+	     * The XWindowEvent call blocks until an event is available.  That
+	     * can hang when using active-icon and iconifying/deiconifying
+	     * while the terminal is receiving lots of output.  Checking with
+	     * this call on the other hand may lose exposure events which
+	     * arrive too late.  As a compromise, try several times with a
+	     * time-delay before assuming no more events are available.
+	     */
+	    if (XCheckWindowEvent(screen->display,
+				  VWindow(screen),
+				  ExposureMask,
+				  &reply)) {
+		retries = 0;
+	    } else {
+		if (++retries >= 10)
+		    return;
+		usleep(10000U);	/* wait 10msec */
+		continue;
+	    }
+	} else
+#endif
+	    XWindowEvent(screen->display, VWindow(screen), ExposureMask, &reply);
 	switch (reply.type) {
 	case Expose:
 	    HandleExposure(xw, &reply);
