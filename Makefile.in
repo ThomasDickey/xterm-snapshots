@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.258 2020/12/11 09:25:33 tom Exp $
+## $XTermId: Makefile.in,v 1.259 2020/12/23 09:20:01 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -169,7 +169,7 @@ all :	$(PROGRAMS)
 @GROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.$(manext).txt :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Tascii -man | col -bx" >$@
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -rHY=0 -Tascii -man | col -bx" >$@
 @GROFF_NOTE@
 @MAN2HTML_NOTE@.ms.html :
 @MAN2HTML_NOTE@	./@MAN2HTML_TEMP@ $* ms ms >$@
@@ -178,7 +178,7 @@ all :	$(PROGRAMS)
 @GROFF_NOTE@	$(SHELL) -c "tbl $< | groff -ms" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.ms.txt :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Tascii -ms | col -bx" >$@
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -rHY=0 -Tascii -ms | col -bx" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.ps.pdf :
 @GROFF_NOTE@	ps2pdf $*.ps

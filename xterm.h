@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.883 2020/12/15 21:36:32 tom Exp $ */
+/* $XTermId: xterm.h,v 1.884 2020/12/23 00:21:44 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1014,7 +1014,7 @@ extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
 extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);
 extern void xtermAddInput (Widget  /* w */);
-extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* prefix */, int /* suffix */);
+extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
 
 #if OPT_BLINK_CURS
 extern void ToggleCursorBlink(XtermWidget /* xw */);

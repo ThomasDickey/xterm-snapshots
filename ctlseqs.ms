@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.604 2020/12/16 01:33:13 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.607 2020/12/23 09:20:39 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #362
-.ds RF 2020/12/15
+.ds LF Patch #363
+.ds RF 2020/12/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -757,6 +757,7 @@ Unlike the 94-character sets, these can have different values than
 ASCII space and DEL for the mapping of 0x20 and 0x7f.
 The valid final characters \*(Cc for this control are:
   \*(Cc = \*A \(-> ISO Latin-1 Supplemental, VT300.
+  \*(Cc = \*(cB \(-> ISO Latin-2 Supplemental, VT500.
   \*(Cc = \*F \(-> ISO Greek Supplemental, VT500.
   \*(Cc = \*H \(-> ISO Hebrew Supplemental, VT500.
   \*(Cc = \*L \(-> ISO Latin-Cyrillic, VT500.
@@ -4072,13 +4073,11 @@ The latter was introduced in X10.4:
 .RS
 .ft C
 .na
-.hy 0
 Most Dec Private mode settings can be saved away internally using \\E[?ns,
 where n is the same number to set or reset the Dec Private mode.  The
 mode can be restored using \\E[?nr.  This can be used in termcap for vi, for
 example, to turn off saving of lines, but restore whatever the original
 state was on exit.
-.hy
 .ad
 .ft R
 .RE
@@ -4093,7 +4092,6 @@ That is implied by the description's mention of \fIHFT\fP:
 .iP
 .RS
 .na
-.hy 0
 .ft C
 The aixterm command provides a standard terminal type for programs that
 do not interact directly with Enhanced X-Windows.
@@ -4103,7 +4101,6 @@ The VT102 mode is activated by the -v flag.
 .ft R
 .ad
 .RE
-.hy
 .IP
 Unlike \fI\*(xt\fP, there are no resource names for the 16 colors,
 leaving the reader to assume that the mapping is hard-coded.

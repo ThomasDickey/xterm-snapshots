@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.964 2020/12/20 20:51:10 Leandro.Lupori Exp $ */
+/* $XTermId: misc.c,v 1.965 2020/12/23 00:21:44 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -4553,9 +4553,9 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     /* SCS designators */
     for (value = 0; value < NUM_GSETS; ++value) {
 	if (*cp == '%') {
-	    xtermDecodeSCS(xw, value, '%', *++cp);
+	    xtermDecodeSCS(xw, value, 0, '%', *++cp);
 	} else if (*cp != '\0') {
-	    xtermDecodeSCS(xw, value, '\0', *cp);
+	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
 	} else {
 	    return;
 	}
