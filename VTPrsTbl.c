@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.102 2020/12/16 01:00:57 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.103 2020/12/22 20:29:32 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -6666,7 +6666,7 @@ CASE_GROUND_STATE,
 /*	@		A		B		C	*/
 CASE_GROUND_STATE,
 CASE_GSETS3,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*	D		E		F		G	*/
 CASE_GROUND_STATE,
@@ -6826,7 +6826,7 @@ CASE_GROUND_STATE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
 CASE_GROUND_STATE,
 CASE_GSETS3,
-CASE_GROUND_STATE,
+CASE_GSETS5,
 CASE_GROUND_STATE,
 /*      Adiaeresis      Aring           AE              Ccedilla        */
 CASE_GROUND_STATE,

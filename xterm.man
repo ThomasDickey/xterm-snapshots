@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.831 2020/12/19 01:18:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.833 2020/12/24 12:49:26 tom Exp $
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
 .\"
@@ -5236,6 +5236,10 @@ which tells \fI\*n\fP to flash the entire screen.
 .B "vt100Graphics\fP (class\fB VT100Graphics\fP)"
 This specifies whether \fI\*n\fP will interpret VT100 graphic character
 escape sequences while in UTF-8 mode.
+This feature also applies to code-pages (e.g., for VT320 and VT520)
+and National Replacement Character Sets (VT220 and up),
+but not US-ASCII (the initially selected character set),
+to avoid conflict with UTF-8.
 The default is \*(``true\*('',
 to provide support for various legacy applications.
 .TP 8

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1807 2020/12/19 00:16:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1817 2020/12/24 18:06:14 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1748,7 +1748,10 @@ init_groundtable(TScreen *screen, struct ParseState *sp)
 static void
 select_charset(struct ParseState *sp, int type, int size)
 {
-    TRACE(("select_charset %d %d\n", type, size));
+    TRACE(("select_charset G%d size %d -> G%d size %d\n",
+	   sp->scstype, sp->scssize,
+	   type, size));
+
     sp->scstype = type;
     sp->scssize = size;
     if (size == 94) {
@@ -1758,7 +1761,7 @@ select_charset(struct ParseState *sp, int type, int size)
     }
 }
 /* *INDENT-OFF* */
-static struct {
+static const struct {
     DECNRCM_codes result;
     int prefix;
     int suffix;
@@ -1794,6 +1797,7 @@ static struct {
     { nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
+    { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0 },
     /* VT5xx */
     { nrc_Cyrillic,          '&', '4', 5, 9, 1 },
     { nrc_Greek,             '"', '>', 5, 9, 1 },
@@ -1804,6 +1808,7 @@ static struct {
     { nrc_DEC_Turkish_Supp,  '%', '0', 5, 9, 0 },
     { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0 },
     { nrc_ISO_Hebrew_Supp,   0,   'H', 5, 9, 0 },
+    { nrc_ISO_Latin_2_Supp,  0,   'B', 5, 9, 0 },
     { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0 },
     { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0 },
     /* VT5xx (not implemented) */
@@ -1836,7 +1841,7 @@ encode_scs(DECNRCM_codes value)
 #endif
 
 void
-xtermDecodeSCS(XtermWidget xw, int which, int prefix, int suffix)
+xtermDecodeSCS(XtermWidget xw, int which, int sgroup, int prefix, int suffix)
 {
     TScreen *screen = TScreenOf(xw);
     Cardinal n;
@@ -1846,6 +1851,7 @@ xtermDecodeSCS(XtermWidget xw, int which, int prefix, int suffix)
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (prefix == scs_table[n].prefix
 	    && suffix == scs_table[n].suffix
+	    && sgroup == scs_table[n].min_level
 	    && screen->vtXX_level >= scs_table[n].min_level
 	    && screen->vtXX_level <= scs_table[n].max_level
 	    && (scs_table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
@@ -1855,10 +1861,19 @@ xtermDecodeSCS(XtermWidget xw, int which, int prefix, int suffix)
     }
     if (result != nrc_Unknown) {
 	initCharset(screen, which, result);
-	TRACE(("setting G%d to %s\n", which, visibleScsCode((int) result)));
+	TRACE(("setting G%d to table #%d %s",
+	       which, n, visibleScsCode((int) result)));
     } else {
-	TRACE(("...unknown GSET\n"));
+	TRACE(("...unknown GSET"));
+	initCharset(screen, which, nrc_ASCII);
     }
+#if OPT_TRACE
+    TRACE((" ("));
+    if (prefix)
+	TRACE(("prefix='%c', ", prefix));
+    TRACE(("suffix='%c', sgroup=%d", suffix, sgroup));
+    TRACE((")\n"));
+#endif
 }
 
 /*
@@ -3756,21 +3771,28 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS5:
-	    if (screen->vtXX_level < 5) {
-		ResetState(sp);
-		break;
+	    if (screen->vtXX_level >= 5) {
+		TRACE(("CASE_GSETS5(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, 5, 0, (int) c);
 	    }
-	    /* FALLTHRU */
+	    ResetState(sp);
+	    break;
+
 	case CASE_GSETS3:
-	    if (screen->vtXX_level < 3) {
-		ResetState(sp);
-		break;
+	    if (screen->vtXX_level >= 3) {
+		TRACE(("CASE_GSETS3(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, 3, 0, (int) c);
 	    }
-	    /* FALLTHRU */
+	    ResetState(sp);
+	    break;
+
 	case CASE_GSETS:
-	    if (screen->vtXX_level >= 2 || strchr("012AB", (int) c) != 0) {
+	    if (strchr("012AB", (int) c) != 0) {
 		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-		xtermDecodeSCS(xw, sp->scstype, 0, (int) c);
+		xtermDecodeSCS(xw, sp->scstype, 1, 0, (int) c);
+	    } else if (screen->vtXX_level >= 2) {
+		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+		xtermDecodeSCS(xw, sp->scstype, 2, 0, (int) c);
 	    }
 	    ResetState(sp);
 	    break;
@@ -4929,7 +4951,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_GSETS_DQUOTE:
 	    if (screen->vtXX_level >= 5) {
 		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
-		xtermDecodeSCS(xw, sp->scstype, '"', (int) c);
+		xtermDecodeSCS(xw, sp->scstype, 5, '"', (int) c);
 	    }
 	    ResetState(sp);
 	    break;
@@ -4942,7 +4964,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_GSETS_AMPRSND:
 	    if (screen->vtXX_level >= 5) {
 		TRACE(("CASE_GSETS_AMPRSND(%d) = '%c'\n", sp->scstype, c));
-		xtermDecodeSCS(xw, sp->scstype, '&', (int) c);
+		xtermDecodeSCS(xw, sp->scstype, 5, '&', (int) c);
 	    }
 	    ResetState(sp);
 	    break;
@@ -4955,7 +4977,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_GSETS_PERCENT:
 	    if (screen->vtXX_level >= 3) {
 		TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-		xtermDecodeSCS(xw, sp->scstype, '%', (int) c);
+		switch (c) {
+		case '0':	/* DEC Turkish */
+		case '2':	/* Turkish */
+		case '=':	/* Hebrew */
+		    value = 5;
+		    break;
+		case '5':	/* DEC Supplemental Graphics */
+		case '6':	/* Portuguese */
+		default:
+		    value = 3;
+		    break;
+		}
+		xtermDecodeSCS(xw, sp->scstype, value, '%', (int) c);
 	    }
 	    ResetState(sp);
 	    break;
@@ -11172,8 +11206,10 @@ VTRealize(Widget w,
 	if (x_strncasecmp(xw->work.wm_name, "fvwm", 4) &&
 	    x_strncasecmp(xw->work.wm_name, "window maker", 12)) {
 	    xw->work.active_icon = eiFalse;
+	    TRACE(("... disable active_icon\n"));
 	}
     }
+    TRACE((".. if active_icon (%d), get its font\n", xw->work.active_icon));
     if (xw->work.active_icon && getIconicFont(screen)->fs) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
