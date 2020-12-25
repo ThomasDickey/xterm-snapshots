@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.607 2020/12/23 09:20:39 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.609 2020/12/25 14:17:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2019,2020 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #363
-.ds RF 2020/12/23
+.ds RF 2020/12/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -719,7 +719,7 @@ There are a few other 94-character sets:
   \*(Cc = \*< \(-> DEC Supplemental, VT200.
   \*(Cc = \*> \(-> DEC Technical, VT300.
 .br
-These are documented as NRCS:
+These are documented as 94-character sets (like USASCII) without NRCS:
   \*(Cc = \*(Dq\*4 \(-> DEC Hebrew, VT500.
   \*(Cc = \*(Dq\*? \(-> DEC Greek, VT500.
   \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
@@ -859,8 +859,8 @@ The second parameter:
   \*(Ps = \*0 \(<- Lock the keys (default).
   \*(Ps = \*1 \(<- Do not lock.
 .iP
-The third parameter is a ';'-separated list of strings denoting
-the key-code separated by a '/' from the hex-encoded key value.
+The third parameter is a \*(``;\*(''-separated list of strings denoting
+the key-code separated by a \*(``/\*('' from the hex-encoded key value.
 The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .
 .iP
