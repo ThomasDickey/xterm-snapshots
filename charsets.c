@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.111 2020/12/24 18:49:03 tom Exp $ */
+/* $XTermId: charsets.c,v 1.113 2020/12/25 15:15:37 tom Exp $ */
 
 /*
  * Copyright 1998-2019,2020 by Thomas E. Dickey
@@ -1542,7 +1542,7 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_DEC_Turkish_Supp(code);
 	break;
 
-    case nrc_Cyrillic:
+    case nrc_DEC_Cyrillic:
 	map_DEC_Cyrillic(code);
 	break;
 
@@ -1766,7 +1766,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    map_DEC_Turkish_Supp(chr = seven);
 	    break;
 
-	case nrc_Cyrillic:
+	case nrc_DEC_Cyrillic:
 	    map_DEC_Cyrillic(chr = seven);
 	    break;
 
@@ -1778,12 +1778,17 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	}
 	/*
 	 * The state machine already treated DEL as a nonprinting and
-	 * nonspacing character.  If we have DEL now, simply render
-	 * it as a blank.
+	 * nonspacing character.  If we have DEL now, remove it.
 	 */
-	if (chr == ANSI_DEL)
-	    chr = ' ';
-	*s = (IChar) A2E(chr);
+	if (chr == ANSI_DEL) {
+	    IChar *s1;
+	    --ptr;
+	    for (s1 = s; s1 < ptr; ++s1) {
+		s1[0] = s1[1];
+	    }
+	} else {
+	    *s = (IChar) A2E(chr);
+	}
     }
     TRACE(("%d\t%s\n",
 	   count,

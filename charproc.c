@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1817 2020/12/24 18:06:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1819 2020/12/25 15:15:37 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1799,10 +1799,10 @@ static const struct {
     { nrc_Portugese,         '%', '6', 3, 9, 1 },
     { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0 },
     /* VT5xx */
-    { nrc_Cyrillic,          '&', '4', 5, 9, 1 },
     { nrc_Greek,             '"', '>', 5, 9, 1 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1 },
     { nrc_Turkish,	     '%', '2', 5, 9, 1 },
+    { nrc_DEC_Cyrillic,      '&', '4', 5, 9, 0 },
     { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0 },
     { nrc_DEC_Hebrew_Supp,   '"', '4', 5, 9, 0 },
     { nrc_DEC_Turkish_Supp,  '%', '0', 5, 9, 0 },
@@ -5719,7 +5719,7 @@ dotext(XtermWidget xw,
 #if OPT_WIDE_CHARS
     if (screen->vt100_graphics)
 #endif
-	if (!xtermCharSetOut(xw, buf, buf + len, charset))
+	if (!(len = xtermCharSetOut(xw, buf, buf + len, charset)))
 	    return;
 
     if_OPT_XMC_GLITCH(screen, {

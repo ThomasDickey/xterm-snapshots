@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1025 2020/12/23 01:04:00 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1026 2020/12/25 15:15:37 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -1026,7 +1026,7 @@ typedef enum {
     nrc_ASCII = 0
     ,nrc_British		/* vt100 */
     ,nrc_British_Latin_1	/* vt3xx */
-    ,nrc_Cyrillic		/* vt5xx */
+    ,nrc_DEC_Cyrillic		/* vt5xx */
     ,nrc_DEC_Spec_Graphic	/* vt100 */
     ,nrc_DEC_Alt_Chars		/* vt100 */
     ,nrc_DEC_Alt_Graphics	/* vt100 */

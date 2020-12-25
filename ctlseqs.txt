@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2020)
-               updated for XTerm Patch #363 (2020/12/23)
+               updated for XTerm Patch #363 (2020/12/25)
 
 
 
@@ -313,7 +313,8 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
             C = 0  -> DEC Special Character and Line Drawing Set, VT100.
             C = <  -> DEC Supplemental, VT200.
             C = >  -> DEC Technical, VT300.
-          These are documented as NRCS:
+          These are documented as 94-character sets (like USASCII)
+          without NRCS:
             C = " 4  -> DEC Hebrew, VT500.
             C = " ?  -> DEC Greek, VT500.
             C = % 0  -> DEC Turkish, VT500.
@@ -404,8 +405,8 @@ DCS Ps ; Ps | Pt ST
             Ps = 0  <- Lock the keys (default).
             Ps = 1  <- Do not lock.
 
-          The third parameter is a ';'-separated list of strings
-          denoting the key-code separated by a '/' from the hex-encoded
+          The third parameter is a ";"-separated list of strings
+          denoting the key-code separated by a "/" from the hex-encoded
           key value.  The key codes correspond to the DEC function-key
           codes (e.g., F6=17).
 
@@ -3054,12 +3055,12 @@ o   The control sequences for saving/restoring the cursor and for
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
+    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3069,7 +3070,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.
