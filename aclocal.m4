@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.463 2020/11/26 22:37:55 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.464 2020/12/26 15:35:53 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4033,7 +4033,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 8 updated: 2018/06/27 18:44:03
+dnl CF_WITH_MAN2HTML version: 9 updated: 2020/12/26 10:35:53
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -4119,6 +4119,7 @@ export GROFF_NO_SGR
 
 CF_EOF
 
+NROFF_OPTS=
 if test "x$cf_with_groff" = xyes
 then
 	MAN2HTML_NOTE="$GROFF_NOTE"
@@ -4127,6 +4128,16 @@ then
 $SHELL -c "$TBL_PATH \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
 CF_EOF
 else
+	# disable hyphenation if this is groff
+	if test "x$GROFF_PATH" != xno
+	then
+		AC_MSG_CHECKING(if nroff is really groff)
+		cf_check_groff=`$NROFF_PATH --version 2>/dev/null | grep groff`
+		test -n "$cf_check_groff" && cf_check_groff=yes
+		test -n "$cf_check_groff" || cf_check_groff=no
+		AC_MSG_RESULT($cf_check_groff)
+		test "x$cf_check_groff" = xyes && NROFF_OPTS="-rHY=0"
+	fi
 	MAN2HTML_NOTE=""
 	CF_PATH_SYNTAX(cf_man2html)
 	MAN2HTML_PATH="$cf_man2html"
@@ -4180,10 +4191,10 @@ CF_EOF
 MAN2HTML_OPTS="\$MAN2HTML_OPTS -index -title="\$ROOT\(\$TYPE\)" -compress -pgsize $cf_man2html_page"
 case \${TYPE} in
 (ms)
-	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
+	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH $NROFF_OPTS -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
 	;;
 (*)
-	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
+	$TBL_PATH \${ROOT}.\${TYPE} | $NROFF_PATH $NROFF_OPTS -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
 	;;
 esac
 CF_EOF

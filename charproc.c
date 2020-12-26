@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1819 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1820 2020/12/25 22:12:54 tom Exp $ */
 
 /*
  * Copyright 1999-2019,2020 by Thomas E. Dickey
@@ -5719,7 +5719,7 @@ dotext(XtermWidget xw,
 #if OPT_WIDE_CHARS
     if (screen->vt100_graphics)
 #endif
-	if (!(len = xtermCharSetOut(xw, buf, buf + len, charset)))
+	if (!(len = (Cardinal) xtermCharSetOut(xw, buf, buf + len, charset)))
 	    return;
 
     if_OPT_XMC_GLITCH(screen, {
