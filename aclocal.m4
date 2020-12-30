@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.464 2020/12/26 15:35:53 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.466 2020/12/27 12:44:45 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3598,7 +3598,7 @@ if test "$with_dbmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_DESKTOP_CATEGORY version: 5 updated: 2015/04/12 15:39:00
+dnl CF_WITH_DESKTOP_CATEGORY version: 6 updated: 2020/12/27 07:44:45
 dnl ------------------------
 dnl Taking into account the absence of standardization of desktop categories
 dnl take a look to see whether other applications on the current system are
@@ -3661,16 +3661,28 @@ then
 			do
 				read cf_desktop_this
 				test -z "$cf_desktop_this" && break
-				case $cf_desktop_this in
-				(Qt*|GTK*|KDE*|GNOME*|*XFCE*|*Xfce*)
+				if test -s conftest.2
+				then
+					grep -w "$cf_desktop_this" conftest.2 >/dev/null && continue 
+				elif test -s conftest.3
+				then
+					grep -w "$cf_desktop_this" conftest.3 >/dev/null && continue 
+				fi
+				case "$cf_desktop_this" in
+				(-*)
+					;;
+				(Qt*|*Xfce*|*[[ABCDEFGHIJKLMNOPQRSTUVWXYZ]][[ABCDEFGHIJKLMNOPQRSTUVWXYZ]]*)
+					CF_VERBOSE(ignored $cf_desktop_this)
+					echo "$cf_desktop_this" >> conftest.3
 					;;
 				($3)
-					test "x$cf_desktop_last" != "x$cf_desktop_this" && echo $cf_desktop_this >>conftest.2
+					CF_VERBOSE(applied $cf_desktop_this)
+					test "x$cf_desktop_last" != "x$cf_desktop_this" && echo "$cf_desktop_this" >>conftest.2
 					;;
 				esac
 				cf_desktop_last=$cf_desktop_this
 			done
-			cf_desktop_want=`cat conftest.2 | tr '\n' ';'`
+			cf_desktop_want=`tr '\n' ';' < conftest.2`
 		fi
 		if test -n "$cf_desktop_want"
 		then
