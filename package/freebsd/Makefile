@@ -1,4 +1,4 @@
-# $XTermId: Makefile,v 1.84 2020/11/15 16:38:35 tom Exp $
+# $XTermId: Makefile,v 1.85 2020/12/27 12:20:40 tom Exp $
 # $FreeBSD: head/x11/xterm/Makefile 492827 2019-02-13 06:43:36Z ehaupt $
 
 # This is adapted from the FreeBSD port, installing as "xterm-dev" with
@@ -7,7 +7,7 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	363
+PORTVERSION=	364
 CATEGORIES=	x11
 MASTER_SITES=	ftp://ftp.invisible-island.net/xterm/:src1 \
 		https://invisible-mirror.net/archives/xterm/:src1
