@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.482 2021/01/04 00:24:14 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.483 2021/01/06 20:57:30 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -639,7 +639,7 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_LEAKS version: 7 updated: 2012/10/02 20:55:03
+dnl CF_DISABLE_LEAKS version: 8 updated: 2021/01/05 20:05:09
 dnl ----------------
 dnl Combine no-leak checks with the libraries or tools that are used for the
 dnl checks.
@@ -652,17 +652,19 @@ AC_REQUIRE([CF_WITH_VALGRIND])
 AC_MSG_CHECKING(if you want to perform memory-leak testing)
 AC_ARG_ENABLE(leaks,
 	[  --disable-leaks         test: free permanent memory, analyze leaks],
-	[if test "x$enableval" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi],
-	: ${with_no_leaks:=no})
+	[enable_leaks=no],
+	[enable_leaks=yes])
+dnl TODO - drop with_no_leaks
+if test "x$enable_leaks" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi
 AC_MSG_RESULT($with_no_leaks)
 
-if test "$with_no_leaks" = yes ; then
+if test "$enable_leaks" = no ; then
 	AC_DEFINE(NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
 	AC_DEFINE(YY_NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_RPATH_HACK version: 2 updated: 2011/02/13 13:31:33
+dnl CF_DISABLE_RPATH_HACK version: 3 updated: 2021/01/05 20:14:44
 dnl ---------------------
 dnl The rpath-hack makes it simpler to build programs, particularly with the
 dnl *BSD ports which may have essential libraries in unusual places.  But it
@@ -673,10 +675,13 @@ AC_DEFUN([CF_DISABLE_RPATH_HACK],
 AC_MSG_CHECKING(if rpath-hack should be disabled)
 CF_ARG_DISABLE(rpath-hack,
 	[  --disable-rpath-hack    don't add rpath options for additional libraries],
-	[cf_disable_rpath_hack=yes],
-	[cf_disable_rpath_hack=no])
+	[enable_rpath_hack=no],
+	[enable_rpath_hack=yes])
+dnl TODO - drop cf_disable_rpath_hack
+if test "x$enable_rpath_hack" = xno; then cf_disable_rpath_hack=yes; else cf_disable_rpath_hack=no; fi
 AC_MSG_RESULT($cf_disable_rpath_hack)
-if test "$cf_disable_rpath_hack" = no ; then
+
+if test "$enable_rpath_hack" = yes ; then
 	CF_RPATH_HACK
 fi
 ])
@@ -708,7 +713,7 @@ CF_ARG_OPTION(narrowproto,
 AC_MSG_RESULT($enable_narrowproto)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_ENABLE_WARNINGS version: 8 updated: 2020/12/31 18:40:20
+dnl CF_ENABLE_WARNINGS version: 9 updated: 2021/01/05 19:40:50
 dnl ------------------
 dnl Configure-option to enable gcc warnings
 dnl
@@ -726,10 +731,10 @@ CF_FIX_WARNINGS(LDFLAGS)
 AC_MSG_CHECKING(if you want to turn on gcc warnings)
 CF_ARG_ENABLE(warnings,
 	[  --enable-warnings       test: turn on gcc compiler warnings],
-	[with_warnings=yes],
-	[with_warnings=no])
-AC_MSG_RESULT($with_warnings)
-if test "$with_warnings" = "yes"
+	[enable_warnings=yes],
+	[enable_warnings=no])
+AC_MSG_RESULT($enable_warnings)
+if test "$enable_warnings" = "yes"
 then
 	ifelse($2,,[CF_GCC_ATTRIBUTES])
 	CF_GCC_WARNINGS($1)
@@ -1848,7 +1853,7 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me:-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_NO_LEAKS_OPTION version: 7 updated: 2020/12/31 18:40:20
+dnl CF_NO_LEAKS_OPTION version: 8 updated: 2021/01/05 20:05:09
 dnl ------------------
 dnl see CF_WITH_NO_LEAKS
 AC_DEFUN([CF_NO_LEAKS_OPTION],[
@@ -1859,7 +1864,7 @@ AC_ARG_WITH($1,
 	 $4
 ])
 	: "${with_cflags:=-g}"
-	: "${with_no_leaks:=yes}"
+	: "${enable_leaks:=no}"
 	 with_$1=yes],
 	[with_$1=])
 AC_MSG_RESULT(${with_$1:-no})
