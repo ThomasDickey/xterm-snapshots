@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.629 2020/12/20 17:02:30 tom Exp $ */
+/* $XTermId: button.c,v 1.630 2021/01/23 00:14:49 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3660,8 +3660,12 @@ okPosition(TScreen *screen,
 
     if (cell->row > screen->max_row) {
 	result = False;
+	TRACE(("okPosition cell row %d > screen max %d\n", cell->row, screen->max_row));
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
+	TRACE(("okPosition cell col %d > screen max %d\n", cell->col,
+	       (LastTextCol(screen, *ld, cell->row) + 1)));
 	if (cell->row < screen->max_row) {
+	    TRACE(("okPosition cell row %d < screen max %d\n", cell->row, screen->max_row));
 	    cell->col = 0;
 	    *ld = GET_LINEDATA(screen, ++cell->row);
 	    result = False;
@@ -4054,8 +4058,11 @@ ComputeSelect(XtermWidget xw,
     case Select_WORD:
 	TRACE(("Select_WORD\n"));
 	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
+	    CELL mark;
 	    cclass = CClassOf(startSel);
+	    TRACE(("...starting with class %d\n", cclass));
 	    do {
+		mark = screen->startSel;
 		--screen->startSel.col;
 		if (screen->startSel.col < 0
 		    && isPrevWrapped(startSel)) {
@@ -4064,18 +4071,24 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->startSel.col >= 0
 		     && CClassSelects(startSel, cclass));
-	    ++screen->startSel.col;
+	    screen->startSel = mark;
 	}
 #if OPT_WIDE_CHARS
-	if (screen->startSel.col
-	    && XTERM_CELL(screen->startSel.row,
-			  screen->startSel.col) == HIDDEN_CHAR)
-	    screen->startSel.col++;
+#define SkipHiddenCell(mark) \
+	if (mark.col && XTERM_CELL(mark.row, mark.col) == HIDDEN_CHAR) \
+	    mark.col++
+#else
+#define SkipHiddenCell(mark)	/* nothing */
 #endif
+	SkipHiddenCell(screen->startSel);
+
+	screen->endSel = screen->startSel;
+	ld.endSel = ld.startSel;
 
 	if (okPosition(screen, &(ld.endSel), &(screen->endSel))) {
 	    int length = LastTextCol(screen, ld.endSel, screen->endSel.row);
 	    cclass = CClassOf(endSel);
+	    TRACE(("...ending with class %d\n", cclass));
 	    do {
 		++screen->endSel.col;
 		if (screen->endSel.col > length
@@ -4088,22 +4101,8 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->endSel.col <= length
 		     && CClassSelects(endSel, cclass));
-	    /* Word-select selects if pointing to any char in "word",
-	     * especially note that it includes the last character in a word.
-	     * So we do no --endSel.col and do special eol handling.
-	     */
-	    if (screen->endSel.col > length + 1
-		&& MoreRows(endSel)) {
-		screen->endSel.col = 0;
-		NextRow(endSel);
-	    }
 	}
-#if OPT_WIDE_CHARS
-	if (screen->endSel.col
-	    && XTERM_CELL(screen->endSel.row,
-			  screen->endSel.col) == HIDDEN_CHAR)
-	    screen->endSel.col++;
-#endif
+	SkipHiddenCell(screen->endSel);
 
 	screen->saveStartW = screen->startSel;
 	break;

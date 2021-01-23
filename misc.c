@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.965 2020/12/23 00:21:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.966 2021/01/22 00:49:09 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -484,6 +484,24 @@ mergeConfigureEvents(XEvent *target)
     return XtAppPending(app_con);
 }
 
+#define SAME(a,b,name) ((a)->xbutton.name == (b)->xbutton.name)
+#define SameButtonEvent(a,b) ( \
+	SAME(a,b,type) && \
+	SAME(a,b,serial) && \
+	SAME(a,b,send_event) && \
+	SAME(a,b,display) && \
+	SAME(a,b,window) && \
+	SAME(a,b,root) && \
+	SAME(a,b,subwindow) && \
+	SAME(a,b,time) && \
+	SAME(a,b,x) && \
+	SAME(a,b,y) && \
+	SAME(a,b,x_root) && \
+	SAME(a,b,y_root) && \
+	SAME(a,b,state) && \
+	SAME(a,b,button) && \
+	SAME(a,b,same_screen))
+
 /*
  * Work around a bug in the X mouse code, which delivers duplicate events.
  */
@@ -498,7 +516,7 @@ mergeButtonEvents(XEvent *target)
 
     if (XtAppPending(app_con)
 	&& XtAppPeekEvent(app_con, &next_event)
-	&& !memcmp(target, &next_event, sizeof(XButtonEvent))) {
+	&& SameButtonEvent(target, &next_event)) {
 	Boolean merge_this = False;
 	XButtonEvent *q = (XButtonEvent *) (&next_event);
 

@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.833 2020/12/24 12:49:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.835 2021/01/23 00:14:49 tom Exp $
 .\"
-.\" Copyright 1996-2019,2020 by Thomas E. Dickey
+.\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -4340,6 +4340,16 @@ The resource value can be one of these:
 .B word
 Select a \*(``word\*('' as determined by the \fBcharClass\fP resource.
 See the \fBCHARACTER CLASSES\fP section.
+.IP
+If the pointer is on a \*(``word\*('' then \fI\*n\fP searches back
+to the beginning of the word, and then to the end.
+.IP
+If the pointer is not on a \*(``word\*('' then the result depends
+on whether it is on whitespace (including a newline), or past
+the end of the line.
+In the latter case \fI\*n\fP may select
+a \*(``word\*('' beginning after the newline,
+if there is no additional whitespace.
 .TP
 .B line
 Select a line (counting wrapping).

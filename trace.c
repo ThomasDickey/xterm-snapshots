@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.230 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: trace.c,v 1.231 2021/01/22 00:32:47 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -359,7 +359,7 @@ visibleIChars(const IChar *buf, unsigned len)
     static unsigned used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
+	unsigned limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
 	    used = limit;
