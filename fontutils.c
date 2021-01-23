@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.697 2020/11/08 20:06:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.698 2021/01/22 01:22:01 tom Exp $ */
 
 /*
- * Copyright 1998-2019,2020 by Thomas E. Dickey
+ * Copyright 1998-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3135,8 +3135,11 @@ xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 	for (n = 0; n < pub->limit; ++n) {
 	    if (pub->cache[n].font) {
 		closeCachedXft(screen, pub->cache[n].font);
+		pub->cache[n].font = 0;
 	    }
 	}
+	free(pub->cache);
+	pub->cache = NULL;
     }
 }
 
