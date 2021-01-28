@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.28 2020/12/16 13:11:18 tom Exp $
+-- $XTermId: THANKS,v 1.29 2021/01/28 01:13:56 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -133,6 +133,7 @@ Kiyokazu Suto
 Larry Hynes
 Larry Riedel
 Lauri Tirkkonen
+Leandro Lupori
 Lee Olsen
 Loïc Minier
 Marc Bevand
@@ -204,6 +205,7 @@ Ryan Johnson
 Sam Stephenson
 Samuel Thibault
 Scott Sewall
+Sean C Farley
 Semen A Ustimenko
 Sergei Laskavy
 Sergey Vlasov
@@ -216,6 +218,7 @@ Sven Joachim
 Sven Verdoolaege
 Taketo Kabe
 Taneli Huuskonen
+Tavis Ormandy
 Ted Phelps
 Thierry Reding
 Thomas Wolff
