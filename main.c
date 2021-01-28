@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.866 2020/10/12 18:37:02 tom Exp $ */
+/* $XTermId: main.c,v 1.868 2021/01/28 01:23:28 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2020 by Thomas E. Dickey
+ * Copyright 2002-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -103,6 +103,7 @@
 #include <X11/Xaw3d/Form.h>
 #elif defined(HAVE_LIB_XAW3DXFT)
 #include <X11/Xaw3dxft/Form.h>
+#include <X11/Xaw3dxft/Xaw3dXft.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
@@ -2207,6 +2208,9 @@ main(int argc, char *argv[]ENVP_ARG)
     char *my_class = x_strdup(DEFCLASS);
     unsigned line_speed = VAL_LINE_SPEED;
     Window winToEmbedInto = None;
+#if defined(HAVE_LIB_XAW3DXFT)
+    Xaw3dXftData *xaw3dxft_data;
+#endif
 
     ProgramName = argv[0];
 
@@ -2324,6 +2328,12 @@ main(int argc, char *argv[]ENVP_ARG)
     /* This dumped core on HP-UX 9.05 with X11R5 */
 #if OPT_I18N_SUPPORT
     XtSetLanguageProc(NULL, NULL, NULL);
+#endif
+
+    /* enable Xft support in Xaw3DXft */
+#if defined(HAVE_LIB_XAW3DXFT)
+    GET_XAW3DXFT_DATA(xaw3dxft_data);
+    xaw3dxft_data->encoding = -1;
 #endif
 
 #ifdef TERMIO_STRUCT		/* { */

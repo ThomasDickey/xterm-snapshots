@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.835 2021/01/23 00:14:49 tom Exp $
+.\" $XTermId: xterm.man,v 1.838 2021/01/26 20:51:49 Sean.Farley Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1498,7 +1498,7 @@ X Toolkit accepts alternate names for a few of these options, e.g.,
 \*(``\fB\-foreground\fP\*('' for \*(``\fB\-fg\fP\*(''
 .PP
 Abbreviated options also are supported, e.g.,
-\*(``\fB\-v\fP\*('' for \*(``\fB\-verbose\fP.\*(''
+\*(``\fB\-v\fP\*('' for \*(``\fB\-version\fP.\*(''
 .
 .
 .SH RESOURCES
@@ -3147,7 +3147,7 @@ The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
 The default value is
 .NS
-BS,DEL,ENT,EOT,ESC,NUL
+BS,DEL,ENQ,EOT,ESC,NUL
 .NE
 .IP
 The names are listed below:
@@ -3867,7 +3867,8 @@ copied to the clipboard rather than asking the clipboard for its
 current contents when told to provide the selection.
 The default is \*(``false\*(''.
 .IP
-The menu entry \fBKeep Clipboard\fP allows you to change this at runtime.
+If compiled into \fI\*n\fP, the menu entry \fBKeep Clipboard\fP allows you to
+change this at runtime.
 .TP 8
 .B "keepSelection\fP (class\fB KeepSelection\fP)"
 Specifies whether \fI\*n\fR will keep the selection even after the

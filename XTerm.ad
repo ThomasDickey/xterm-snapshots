@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.104 2020/09/15 21:08:00 tom Exp $
+! $XTermId: XTerm.ad,v 1.105 2021/01/26 20:40:37 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -87,6 +87,7 @@
 *vtMenu*scrollttyoutput*Label:  Scroll to Bottom on Tty Output
 *vtMenu*allow132*Label: Allow 80/132 Column Switching
 *vtMenu*keepSelection*Label: Keep Selection
+*vtMenu*keepClipboard*Label: Keep Clipboard
 *vtMenu*selectToClipboard*Label: Select to Clipboard
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell
