@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.698 2021/01/22 01:22:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.699 2021/01/31 17:51:30 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -1279,7 +1279,7 @@ xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 }
 #endif
 
-#if OPT_TRACE
+#if OPT_TRACE && OPT_BOX_CHARS
 static void
 show_font_misses(const char *name, XTermFonts * fp)
 {
