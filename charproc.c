@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1820 2020/12/25 22:12:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1821 2021/01/31 15:44:45 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2291,6 +2291,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	deferparsing(c, sp);
 	return True;
     }
+    sp->check_recur++;
 
     do {
 #if OPT_WIDE_CHARS
@@ -2661,9 +2662,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ENQ:
 	    TRACE(("CASE_ENQ - answerback\n"));
-	    for (count = 0; screen->answer_back[count] != 0; count++)
-		unparseputc(xw, screen->answer_back[count]);
-	    unparse_end(xw);
+	    if (sp->check_recur == 0) {
+		for (count = 0; screen->answer_back[count] != 0; count++)
+		    unparseputc(xw, screen->answer_back[count]);
+		unparse_end(xw);
+	    }
 	    break;
 
 	case CASE_BELL:
@@ -2671,7 +2674,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (sp->string_mode == ANSI_OSC) {
 		if (sp->string_used)
 		    sp->string_area[--(sp->string_used)] = '\0';
-		do_osc(xw, sp->string_area, sp->string_used, (int) c);
+		if (sp->check_recur <= 1)
+		    do_osc(xw, sp->string_area, sp->string_used, (int) c);
 		ResetState(sp);
 	    } else {
 		/* bell */
@@ -3742,6 +3746,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_TEK4014
 	    if (TEK4014_ACTIVE(xw)) {
 		TRACE(("Tek4014 is now active...\n"));
+		if (sp->check_recur)
+		    sp->check_recur--;
 		return False;
 	    }
 #endif
@@ -4191,26 +4197,27 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (!sp->string_used)
 		break;
 	    sp->string_area[--(sp->string_used)] = '\0';
-	    switch (sp->string_mode) {
-	    case ANSI_APC:
-		/* ignored */
-		break;
-	    case ANSI_DCS:
-		do_dcs(xw, sp->string_area, sp->string_used);
-		break;
-	    case ANSI_OSC:
-		do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
-		break;
-	    case ANSI_PM:
-		/* ignored */
-		break;
-	    case ANSI_SOS:
-		/* ignored */
-		break;
-	    default:
-		TRACE(("unknown mode\n"));
-		break;
-	    }
+	    if (sp->check_recur <= 1)
+		switch (sp->string_mode) {
+		case ANSI_APC:
+		    /* ignored */
+		    break;
+		case ANSI_DCS:
+		    do_dcs(xw, sp->string_area, sp->string_used);
+		    break;
+		case ANSI_OSC:
+		    do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
+		    break;
+		case ANSI_PM:
+		    /* ignored */
+		    break;
+		case ANSI_SOS:
+		    /* ignored */
+		    break;
+		default:
+		    TRACE(("unknown mode\n"));
+		    break;
+		}
 	    break;
 
 	case CASE_SOS:
@@ -5140,19 +5147,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 				      && (sp->parsestate != sos_table));
 #endif
 
+    if (sp->check_recur)
+	sp->check_recur--;
     return True;
-}
-
-static Boolean
-redoparsing(XtermWidget xw, unsigned c, struct ParseState *sp, unsigned check)
-{
-    Boolean result = False;
-    if (!(sp->check_recur & check)) {
-	UIntSet(sp->check_recur, check);
-	result = doparsing(xw, c, sp);
-	UIntClr(sp->check_recur, check);
-    }
-    return result;
 }
 
 static void
@@ -5166,18 +5163,25 @@ VTparse(XtermWidget xw)
 
     do {
 	keep_running = doparsing(xw, doinput(xw), &myState);
-	while (myState.defer_used) {
-	    Char *deferred = myState.defer_area;
-	    size_t len = myState.defer_used;
-	    size_t i;
-	    myState.defer_area = NULL;
-	    myState.defer_size = 0;
-	    myState.defer_used = 0;
-	    for (i = 0; i < len; i++) {
-		(void) doparsing(xw, deferred[i], &myState);
+	if (myState.check_recur == 0 && myState.defer_used != 0) {
+	    while (myState.defer_used) {
+		Char *deferred = myState.defer_area;
+		size_t len = myState.defer_used;
+		size_t i;
+		myState.defer_area = NULL;
+		myState.defer_size = 0;
+		myState.defer_used = 0;
+		for (i = 0; i < len; i++) {
+		    (void) doparsing(xw, deferred[i], &myState);
+		}
+		free(deferred);
 	    }
-	    free(deferred);
+	} else {
+	    free(myState.defer_area);
 	}
+	myState.defer_area = NULL;
+	myState.defer_size = 0;
+	myState.defer_used = 0;
     } while (keep_running);
 }
 
@@ -7937,7 +7941,7 @@ unparseputc(XtermWidget xw, int c)
 
     /* If send/receive mode is reset, we echo characters locally */
     if ((xw->keyboard.flags & MODE_SRM) == 0) {
-	(void) redoparsing(xw, (unsigned) c, &myState, PARSE_SRM);
+	doparsing(xw, (unsigned) c, &myState);
     }
 }
 
@@ -10280,6 +10284,13 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
 	    FreeAndNull(name); \
 	}
 
+#define TRACE_FREE_GC(name,part) \
+	if (part) { \
+	    TRACE(("freed %s " #part ": %p\n", name, (const void *) part)); \
+	    XFreeGC(dpy, part); \
+	    part = 0; \
+	}
+
 #if OPT_INPUT_METHOD
 static void
 cleanupInputMethod(XtermWidget xw)
@@ -10296,12 +10307,25 @@ cleanupInputMethod(XtermWidget xw)
 #define cleanupInputMethod(xw)	/* nothing */
 #endif
 
+#ifdef NO_LEAKS
+#define FREE_VT_WIN(name) freeVTwin(dpy, #name, &(screen->name))
+static void
+freeVTwin(Display *dpy, const char *whichWin, VTwin *win)
+{
+    TRACE_FREE_GC(whichWin, win->filler_gc);
+    TRACE_FREE_GC(whichWin, win->border_gc);
+    TRACE_FREE_GC(whichWin, win->marker_gc[0]);
+    TRACE_FREE_GC(whichWin, win->marker_gc[1]);
+}
+#endif
+
 static void
 VTDestroy(Widget w GCC_UNUSED)
 {
 #ifdef NO_LEAKS
     XtermWidget xw = (XtermWidget) w;
     TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
     Cardinal n, k;
 
     StopBlinking(xw);
@@ -10402,6 +10426,11 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
     noleaks_cachedCgs(xw);
     free_termcap(xw);
+
+    FREE_VT_WIN(fullVwin);
+#ifndef NO_ACTIVE_ICON
+    FREE_VT_WIN(iconVwin);
+#endif /* NO_ACTIVE_ICON */
 
     TRACE_FREE_LEAK(screen->selection_targets_8bit);
 #if OPT_SELECT_REGEX
