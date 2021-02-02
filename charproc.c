@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1821 2021/01/31 15:44:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1822 2021/02/02 00:11:06 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -8369,7 +8369,7 @@ VTInit(XtermWidget xw)
 {
     Widget vtparent = SHELL_OF(xw);
 
-    TRACE(("VTInit {{\n"));
+    TRACE(("VTInit " TRACE_L "\n"));
 
     XtRealizeWidget(vtparent);
     XtOverrideTranslations(vtparent, XtParseTranslationTable(xterm_trans));
@@ -8384,7 +8384,7 @@ VTInit(XtermWidget xw)
 
     ScrnAllocBuf(xw);
 
-    TRACE(("...}} VTInit\n"));
+    TRACE(("..." TRACE_R " VTInit\n"));
     return (1);
 }
 
@@ -9141,7 +9141,7 @@ VTInitialize(Widget wrequest,
     check_tables();
 #endif
 
-    TRACE(("VTInitialize wnew %p, %d / %d resources\n",
+    TRACE(("VTInitialize wnew %p, %d / %d resources " TRACE_L "\n",
 	   (void *) wnew, XtNumber(xterm_resources), MAXRESOURCES));
     assert(XtNumber(xterm_resources) < MAXRESOURCES);
 
@@ -10246,6 +10246,7 @@ VTInitialize(Widget wrequest,
 	reportResources(wnew);
 #endif
     xtermResetLocale(LC_NUMERIC, saveLocale);
+    TRACE(("" TRACE_R " VTInitialize\n"));
     return;
 }
 
@@ -10991,7 +10992,7 @@ VTRealize(Widget w,
     Atom pid_atom;
     int i;
 
-    TRACE(("VTRealize {{\n"));
+    TRACE(("VTRealize " TRACE_L "\n"));
 
     TabReset(xw->tabs);
 
@@ -11381,7 +11382,7 @@ VTRealize(Widget w,
     }
 
     xtermSetWinSize(xw);
-    TRACE(("}} VTRealize\n"));
+    TRACE(("" TRACE_R " VTRealize\n"));
 }
 
 #if OPT_INPUT_METHOD
@@ -12854,8 +12855,9 @@ set_character_class(char *s)
 {
 #define FMT "%s in range string \"%s\" (position %d)\n"
 
-    TRACE(("set_character_class(%s) {{\n", NonNull(s)));
+    TRACE(("set_character_class(%s) " TRACE_L "\n", NonNull(s)));
     if (IsEmpty(s)) {
+	TRACE((TRACE_R " ERR set_character_class\n"));
 	return -1;
     } else {
 	CCLASS state = ccLO;
@@ -12881,6 +12883,7 @@ set_character_class(char *s)
 	    case ccID:
 		if (!isdigit(ch)) {
 		    xtermWarning(FMT, "missing number", s, i);
+		    TRACE((TRACE_R " ERR set_character_class\n"));
 		    return (-1);
 		}
 		value = strtol(s + i, &t, 0);
@@ -12921,6 +12924,7 @@ set_character_class(char *s)
 		    goto apply_class;
 		} else {
 		    xtermWarning(FMT, "unexpected character", s, i);
+		    TRACE((TRACE_R " ERR set_character_class\n"));
 		    return (-1);
 		}
 		break;
@@ -12934,6 +12938,7 @@ set_character_class(char *s)
 	    case ccCOMMA:
 		if (SetCharacterClassRange(arg[0], arg[1], arg[2]) != 0) {
 		    xtermWarning(FMT, "bad range", s, i);
+		    TRACE((TRACE_R " ERR set_character_class\n"));
 		    return -1;
 		}
 		state = ccLO;
@@ -12943,12 +12948,13 @@ set_character_class(char *s)
 	if (state >= ccDASH) {
 	    if (SetCharacterClassRange(arg[0], arg[1], arg[2]) != 0) {
 		xtermWarning(FMT, "bad range", s, i);
+		TRACE((TRACE_R " ERR set_character_class\n"));
 		return -1;
 	    }
 	}
     }
 
-    TRACE(("}} set_character_class\n"));
+    TRACE((TRACE_R " OK set_character_class\n"));
     return (0);
 #undef FMT
 }

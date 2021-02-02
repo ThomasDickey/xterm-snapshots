@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.868 2021/01/28 01:23:28 tom Exp $ */
+/* $XTermId: main.c,v 1.870 2021/02/02 00:20:59 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -1027,6 +1027,7 @@ DATA("-fbb",		"*freeBoldBox", XrmoptionNoArg,		"off"),
 DATA("+fbb",		"*freeBoldBox", XrmoptionNoArg,		"on"),
 DATA("-fbx",		"*forceBoxChars", XrmoptionNoArg,	"off"),
 DATA("+fbx",		"*forceBoxChars", XrmoptionNoArg,	"on"),
+DATA("-fc",		"*initialFont",	XrmoptionSepArg,	NULL),
 #ifndef NO_ACTIVE_ICON
 DATA("-fi",		"*iconFont",	XrmoptionSepArg,	NULL),
 #endif /* NO_ACTIVE_ICON */
@@ -1222,6 +1223,7 @@ static OptionHelp xtermOptions[] = {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
+{ "-fc fontmenu",          "start with named fontmenu choice" },
 { "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
 #if OPT_RENDERFONT

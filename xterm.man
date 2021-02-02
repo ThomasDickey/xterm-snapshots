@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.838 2021/01/26 20:51:49 Sean.Farley Exp $
+.\" $XTermId: xterm.man,v 1.839 2021/02/02 00:24:46 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -645,6 +645,10 @@ It sets the \fBforceBoxChars\fP resource to \*(``false\*(''.
 This option indicates that \fI\*n\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
 It sets the \fBforceBoxChars\fP resource to \*(``true\*(''.
+.TP 8
+.BI \-fc " fontchoice"
+Specify the initial font chosen from the font menu.
+The option value corresponds to the \fBinitialFont\fP resource.
 .TP 8
 .BI \-fd " pattern"
 This option sets the pattern for double-width fonts selected from the FreeType
