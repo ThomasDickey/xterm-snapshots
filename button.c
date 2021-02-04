@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.630 2021/01/23 00:14:49 tom Exp $ */
+/* $XTermId: button.c,v 1.631 2021/02/04 01:00:26 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -161,7 +161,8 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
-static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
+static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool
+			  extend, Bool normal);
 static void EditorButton(XtermWidget xw, XButtonEvent *event);
 static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
 		      num_params, Bool use_cursor_loc);
@@ -2983,7 +2984,7 @@ StartSelect(XtermWidget xw, const CELL *cell)
 	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = *cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False, True);
 }
 
 static void
@@ -3188,7 +3189,7 @@ do_start_extend(XtermWidget xw,
 	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True, True);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -3220,7 +3221,7 @@ ExtendExtend(XtermWidget xw, const CELL *cell)
     } else {
 	screen->endExt = *cell;
     }
-    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False, True);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -4001,7 +4002,8 @@ static void
 ComputeSelect(XtermWidget xw,
 	      CELL *startc,
 	      CELL *endc,
-	      Bool extend)
+	      Bool extend,
+	      Bool normal)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4071,7 +4073,10 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->startSel.col >= 0
 		     && CClassSelects(startSel, cclass));
-	    screen->startSel = mark;
+	    if (normal)
+		++screen->startSel.col;
+	    else
+		screen->startSel = mark;
 	}
 #if OPT_WIDE_CHARS
 #define SkipHiddenCell(mark) \
@@ -4082,8 +4087,10 @@ ComputeSelect(XtermWidget xw,
 #endif
 	SkipHiddenCell(screen->startSel);
 
-	screen->endSel = screen->startSel;
-	ld.endSel = ld.startSel;
+	if (!normal) {
+	    screen->endSel = screen->startSel;
+	    ld.endSel = ld.startSel;
+	}
 
 	if (okPosition(screen, &(ld.endSel), &(screen->endSel))) {
 	    int length = LastTextCol(screen, ld.endSel, screen->endSel.row);
@@ -4101,6 +4108,12 @@ ComputeSelect(XtermWidget xw,
 		}
 	    } while (screen->endSel.col <= length
 		     && CClassSelects(endSel, cclass));
+	    if (normal
+		&& screen->endSel.col > length + 1
+		&& MoreRows(endSel)) {
+		screen->endSel.col = 0;
+		NextRow(endSel);
+	    }
 	}
 	SkipHiddenCell(screen->endSel);
 
@@ -5561,7 +5574,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
 	finish->col = screen->max_col;
     }
 
-    ComputeSelect(xw, start, finish, False);
+    ComputeSelect(xw, start, finish, False, False);
     SaltTextAway(xw,
 		 TargetToSelection(screen, PRIMARY_NAME),
 		 &(screen->startSel), &(screen->endSel));
