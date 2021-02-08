@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.870 2021/02/02 00:20:59 tom Exp $ */
+/* $XTermId: main.c,v 1.871 2021/02/08 23:10:13 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -108,6 +108,12 @@
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
 #include <X11/XawPlus/Form.h>
+#endif
+
+#else
+
+#if defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Xaw3dXft.h>
 #endif
 
 #endif /* OPT_TOOLBAR */
