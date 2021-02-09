@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.631 2021/02/04 01:00:26 tom Exp $ */
+/* $XTermId: button.c,v 1.634 2021/02/09 23:04:41 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -4323,6 +4323,7 @@ SaltTextAway(XtermWidget xw,
     int i;
     int eol;
     int need = 0;
+    size_t have = 0;
     Char *line;
     Char *lp;
     CELL first = *cellc;
@@ -4357,7 +4358,11 @@ SaltTextAway(XtermWidget xw,
 
     /* UTF-8 may require more space */
     if_OPT_WIDE_CHARS(screen, {
-	need *= 4;
+	if (need > 0) {
+	    if (screen->max_combining > 0)
+		need += screen->max_combining;
+	    need *= 6;
+	}
     });
 
     /* now get some memory to save it in */
@@ -4395,10 +4400,20 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%u:%s\n", (unsigned) (lp - line),
-	   visibleChars(line, (unsigned) (lp - line))));
+    have = (size_t) (lp - line);
+    /*
+     * Scanning the buffer twice is unnecessary.  Discard unwanted memory if
+     * the estimate is too-far off.
+     */
+    if ((have * 2) < (size_t) need) {
+	scp->data_limit = have + 1;
+	line = realloc(line, scp->data_limit);
+    }
 
-    scp->data_length = (size_t) (lp - line);
+    TRACE(("Salted TEXT:%u:%s\n", (unsigned) have,
+	   visibleChars(line, (unsigned) have)));
+
+    scp->data_length = have;
 }
 
 #if OPT_PASTE64
