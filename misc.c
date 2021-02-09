@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.966 2021/01/22 00:49:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.967 2021/02/09 01:26:39 Jiri.Bohac Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -223,12 +223,13 @@ unselectwindow(XtermWidget xw, int flag)
 	xtermDisplayCursor(xw);
     }
 
+    screen->select &= ~flag;
+
     if (!screen->always_highlight) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(xw)) {
 	    if (!Ttoggled)
 		TCursorToggle(tekWidget, TOGGLE);
-	    screen->select &= ~flag;
 	    if (!Ttoggled)
 		TCursorToggle(tekWidget, TOGGLE);
 	} else
@@ -240,7 +241,6 @@ unselectwindow(XtermWidget xw, int flag)
 		XUnsetICFocus(input->xic);
 #endif
 
-	    screen->select &= ~flag;
 	    if (screen->cursor_state && CursorMoved(screen))
 		HideCursor(xw);
 	    if (screen->cursor_state)
