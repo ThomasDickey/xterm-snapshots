@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1822 2021/02/02 00:11:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1823 2021/02/08 23:51:37 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2662,7 +2662,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ENQ:
 	    TRACE(("CASE_ENQ - answerback\n"));
-	    if (sp->check_recur == 0) {
+	    if (((xw->keyboard.flags & MODE_SRM) == 0)
+		? (sp->check_recur == 0)
+		: (sp->check_recur <= 1)) {
 		for (count = 0; screen->answer_back[count] != 0; count++)
 		    unparseputc(xw, screen->answer_back[count]);
 		unparse_end(xw);
