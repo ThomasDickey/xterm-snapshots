@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.967 2021/02/09 01:26:39 Jiri.Bohac Exp $ */
+/* $XTermId: misc.c,v 1.968 2021/02/10 00:50:59 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -4530,7 +4530,7 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     screen->cur_col = (value - 1);
 
     /* page */
-    if ((value = parse_int_param(&cp)) != 1)
+    if (parse_int_param(&cp) != 1)
 	return;
 
     /* rendition */
@@ -4565,7 +4565,7 @@ restore_DECCIR(XtermWidget xw, const char *cp)
     screen->curgr = (Char) value;
 
     /* character-set size */
-    if ((value = parse_chr_param(&cp)) != 0x4f)		/* works for xterm */
+    if (parse_chr_param(&cp) != 0x4f)	/* works for xterm */
 	return;
 
     /* SCS designators */
