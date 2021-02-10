@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.634 2021/02/09 23:04:41 tom Exp $ */
+/* $XTermId: button.c,v 1.636 2021/02/10 01:14:51 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -409,7 +409,7 @@ xtermButtonInit(XtermWidget xw)
 	unsigned allowed = 0;
 	unsigned disallow = 0;
 
-	TRACE(("xtermButtonInit length %ld\n", strlen(result)));
+	TRACE(("xtermButtonInit length %ld\n", (long) strlen(result)));
 	xw->keyboard.print_translations = data;
 	while ((next = scanTrans(data, &state, &state2, &first, &last)) != 0) {
 	    unsigned len = (last - first);
@@ -4406,14 +4406,20 @@ SaltTextAway(XtermWidget xw,
      * the estimate is too-far off.
      */
     if ((have * 2) < (size_t) need) {
+	Char *next;
 	scp->data_limit = have + 1;
-	line = realloc(line, scp->data_limit);
+	next = realloc(line, scp->data_limit);
+	if (next == NULL) {
+	    free(line);
+	    scp->data_length = 0;
+	    scp->data_limit = 0;
+	}
+	scp->data_buffer = next;
     }
+    scp->data_length = have;
 
     TRACE(("Salted TEXT:%u:%s\n", (unsigned) have,
-	   visibleChars(line, (unsigned) have)));
-
-    scp->data_length = have;
+	   visibleChars(scp->data_buffer, (unsigned) have)));
 }
 
 #if OPT_PASTE64
@@ -4892,7 +4898,7 @@ _OwnSelection(XtermWidget xw,
 	    scp = &(screen->selected_cells[CutBufferToCode(cutbuffer)]);
 	    if (scp->data_length > limit) {
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-		       scp->data_length, cutbuffer));
+		       (unsigned long) scp->data_length, cutbuffer));
 		xtermWarning("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			     (unsigned long) scp->data_length, cutbuffer);
 	    } else {
@@ -4948,8 +4954,8 @@ _OwnSelection(XtermWidget xw,
 				   SelectionDone);
 	    }
 	}
-	TRACE(("... _OwnSelection used length %ld value %s\n",
-	       scp->data_length,
+	TRACE(("... _OwnSelection used length %lu value %s\n",
+	       (unsigned long) scp->data_length,
 	       visibleChars(scp->data_buffer,
 			    (unsigned) scp->data_length)));
     }

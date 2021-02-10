@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1823 2021/02/08 23:51:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1825 2021/02/10 00:49:52 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3516,7 +3516,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    });
 		    break;
 		default:
-		    skip += NPARAM;
+		    /* later: skip += NPARAM; */
 		    break;
 		}
 	    }
@@ -7860,7 +7860,7 @@ unparseseq(XtermWidget xw, ANSI *ap)
 		unparseputc(xw, ap->a_param[i]);
 		break;
 	    default:
-		unparseputn(xw, (unsigned) ap->a_param[i]);
+		unparseputn(xw, (unsigned) (UParm) ap->a_param[i]);
 		break;
 	    }
 	}

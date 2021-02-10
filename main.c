@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.871 2021/02/08 23:10:13 tom Exp $ */
+/* $XTermId: main.c,v 1.872 2021/02/10 00:33:22 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -3499,7 +3499,7 @@ findValidShell(const char *haystack, const char *needle)
 
     TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
 
-    for (s = t = haystack; (s != 0) && (*s != '\0'); s = t) {
+    for (s = haystack; (s != 0) && (*s != '\0'); s = t) {
 	++count;
 	if ((t = strchr(s, '\n')) == 0) {
 	    t = s + strlen(s);
