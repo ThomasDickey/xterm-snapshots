@@ -3112,6 +3112,7 @@ typedef struct _Misc {
     Boolean login_shell;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
+    Boolean resizeByPixel;
     XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;

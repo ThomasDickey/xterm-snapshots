@@ -4638,8 +4638,13 @@ xtermSizeHints(XtermWidget xw, int scrollbarWidth)
     xw->hints.base_width += BorderWidth(xw) * 2;
 #endif
 
-    xw->hints.width_inc = FontWidth(screen);
-    xw->hints.height_inc = FontHeight(screen);
+    if (xw->misc.resizeByPixel) {
+        xw->hints.width_inc = 1;
+        xw->hints.height_inc = 1;
+    } else {
+        xw->hints.width_inc = FontWidth(screen);
+        xw->hints.height_inc = FontHeight(screen);
+    }
     xw->hints.min_width = xw->hints.base_width + xw->hints.width_inc;
     xw->hints.min_height = xw->hints.base_height + xw->hints.height_inc;
 
