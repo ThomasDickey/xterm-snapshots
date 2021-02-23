@@ -3213,7 +3213,9 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 	    unset_resize_increments(xw);
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
 	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
-	    set_resize_increments(xw);
+	    if (!xw->misc.resizeByPixel) {
+	        set_resize_increments(xw);
+	    }
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
 	} else {
 	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);

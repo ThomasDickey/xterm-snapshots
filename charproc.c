@@ -481,6 +481,7 @@ static XtResource xterm_resources[] =
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
     Bres(XtNprinterNewLine, XtCPrinterNewLine, SPS.printer_newline, True),
     Bres(XtNquietGrab, XtCQuietGrab, screen.quiet_grab, False),
+    Bres(XtNresizeByPixel, XtCResizeByPixel, misc.resizeByPixel, False),
     Bres(XtNreverseVideo, XtCReverseVideo, misc.re_verse, False),
     Bres(XtNreverseWrap, XtCReverseWrap, misc.reverseWrap, False),
     Bres(XtNscrollBar, XtCScrollBar, misc.scrollbar, False),
@@ -9522,6 +9523,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.cdXtraScroll);
     init_Bres(misc.color_inner_border);
     init_Bres(misc.dynamicColors);
+    init_Bres(misc.resizeByPixel);
 
 #if OPT_DEC_CHRSET
     for (i = 0; i < NUM_CHRSET; i++) {
