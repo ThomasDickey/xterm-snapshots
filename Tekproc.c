@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.241 2021/02/02 00:19:32 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.242 2021/02/26 00:05:44 tom Exp $ */
 
 /*
  * Copyright 2001-2020,2021 by Thomas E. Dickey
@@ -1515,11 +1515,15 @@ TekInitialize(Widget wrequest,
     min_height = (unsigned) (TEKMINHEIGHT + border);
 
     TRACE(("parsing T_geometry %s\n", NonNull(xw->misc.T_geometry)));
-    pr = XParseGeometry(xw->misc.T_geometry,
-			&winX,
-			&winY,
-			&width,
-			&height);
+    if (strlen(xw->misc.T_geometry) <= MAX_U_STRING) {
+	pr = XParseGeometry(xw->misc.T_geometry,
+			    &winX,
+			    &winY,
+			    &width,
+			    &height);
+    } else {
+	pr = 0;
+    }
 
     /* window-manager hints will do this anyway... */
     if (height < min_height) {

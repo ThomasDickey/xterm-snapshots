@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1825 2021/02/10 00:49:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1827 2021/02/25 23:51:51 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2831,8 +2831,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam > 0) {
 		value = zero_if_default(nparam - 1);
 		SetParam(nparam - 1, (10 * value) + ((int) c - '0'));
-		if (GetParam(nparam - 1) > 65535)
-		    SetParam(nparam - 1, 65535);
+		if (GetParam(nparam - 1) > MAX_I_PARAM)
+		    SetParam(nparam - 1, MAX_I_PARAM);
 		if (sp->parsestate == csi_table)
 		    sp->parsestate = csi2_table;
 	    }
@@ -8188,7 +8188,7 @@ VTResize(Widget w)
     }
 }
 
-#define okDimension(src,dst) ((src <= 32767) \
+#define okDimension(src,dst) ((src <= MAX_U_COORD) \
 			  && ((dst = (Dimension) src) == src))
 
 static void
@@ -9503,8 +9503,8 @@ VTInitialize(Widget wrequest,
 
 #ifndef NO_ACTIVE_ICON
     init_Sres(screen.icon_fontname);
-    getIconicFont(screen)->fs = XLoadQueryFont(screen->display,
-					       screen->icon_fontname);
+    getIconicFont(screen)->fs = xtermLoadQueryFont(wnew,
+						   screen->icon_fontname);
     TRACE(("iconFont '%s' %sloaded successfully\n",
 	   screen->icon_fontname,
 	   getIconicFont(screen)->fs ? "" : "NOT "));
@@ -11210,8 +11210,7 @@ VTRealize(Widget w,
     screen->icon_fontnum = -1;
     if (getIconicFont(screen)->fs == 0) {
 	getIconicFont(screen)->fs =
-	    XLoadQueryFont(screen->display,
-			   screen->MenuFontName(fontMenu_font1));
+	    xtermLoadQueryFont(xw, screen->MenuFontName(fontMenu_font1));
 	ReportIcons(("%susing font1 '%s' as iconFont\n",
 		     (getIconicFont(screen)->fs
 		      ? ""

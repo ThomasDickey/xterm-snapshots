@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.872 2021/02/10 00:33:22 tom Exp $ */
+/* $XTermId: main.c,v 1.873 2021/02/25 00:13:56 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -1395,7 +1395,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+sm",                 "turn on/off the session-management support" },
 #endif
 #if OPT_MAXIMIZE
-{"-/+maximized",           "turn on/off maxmize on startup" },
+{"-/+maximized",           "turn on/off maximize on startup" },
 {"-/+fullscreen",          "turn on/off fullscreen on startup" },
 #endif
 { NULL, NULL }};

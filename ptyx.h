@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1026 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1028 2021/02/25 23:51:51 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -406,6 +406,12 @@ typedef struct {
 #ifndef DFT_KBD_DIALECT
 #define DFT_KBD_DIALECT "B"		/* default USASCII */
 #endif
+
+#define MAX_I_PARAM	65535		/* parameters */
+#define MAX_I_DELAY	32767		/* time-delay in ReGIS */
+#define MAX_U_COLOR	65535u		/* colors */
+#define MAX_U_COORD	32767u		/* coordinates */
+#define MAX_U_STRING	65535u		/* string-length */
 
 /* constants used for utf8 mode */
 #define UCS_REPL	0xfffd
