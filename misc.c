@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.968 2021/02/10 00:50:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.969 2021/02/25 23:41:44 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -717,9 +717,9 @@ make_hidden_cursor(XtermWidget xw)
      * server insists on drawing _something_.
      */
     TRACE(("Ask for nil2 font\n"));
-    if ((fn = XLoadQueryFont(dpy, "nil2")) == 0) {
+    if ((fn = xtermLoadQueryFont(xw, "nil2")) == 0) {
 	TRACE(("...Ask for fixed font\n"));
-	fn = XLoadQueryFont(dpy, DEFFONT);
+	fn = xtermLoadQueryFont(xw, DEFFONT);
     }
 
     if (fn != None) {
@@ -843,7 +843,8 @@ make_colored_cursor(unsigned c_index,		/* index into font */
 
 	/* adapted from XCreateFontCursor(), which hardcodes the font name */
 	TRACE(("loading cursor from alternate cursor font\n"));
-	if ((myFont.fs = XLoadQueryFont(dpy, screen->cursor_font_name)) != 0) {
+	myFont.fs = xtermLoadQueryFont(term, screen->cursor_font_name);
+	if (myFont.fs != NULL) {
 	    if (!xtermMissingChar(c_index, &myFont)
 		&& !xtermMissingChar(c_index + 1, &myFont)) {
 #define DATA(c) { 0UL, c, c, c, 0, 0 }
@@ -3092,8 +3093,13 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
     Boolean result = False;
     TScreen *screen = TScreenOf(xw);
     Colormap cmap = xw->core.colormap;
+    size_t have = strlen(spec);
 
-    if (XParseColor(screen->display, cmap, spec, def)) {
+    if (have == 0 || have > MAX_U_STRING) {
+	if (resource.reportColors) {
+	    printf("color  (ignored, length %ld)\n", have);
+	}
+    } else if (XParseColor(screen->display, cmap, spec, def)) {
 	XColor save_def = *def;
 	if (resource.reportColors) {
 	    printf("color  %04x/%04x/%04x = \"%s\"\n",

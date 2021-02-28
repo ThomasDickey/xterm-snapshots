@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.872 2021/01/31 18:12:09 tom Exp $ */
+/* $XTermId: util.c,v 1.873 2021/02/26 00:05:21 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -5499,7 +5499,9 @@ XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geom
 	parsestring = buf;
 	parse_xinerama_screen(display, at + 1, ret);
     }
-    return XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h);
+    return ((strlen(parsestring) <= MAX_U_STRING)
+	    ? XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h)
+	    : 0);
 }
 
 #if USE_DOUBLE_BUFFER
