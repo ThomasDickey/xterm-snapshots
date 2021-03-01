@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.839 2021/02/02 00:24:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.841 2021/03/01 21:47:23 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -4697,6 +4697,20 @@ then start by using the TrueType font rather than the bitmap font.
 .RE
 .RE
 .TP 8
+.B "resizeByPixel\fP (class\fB ResizeByPixel\fP)"
+Set this \*(``true\*(''
+to disable hints to the window manager that request resizing
+by character rather than pixels.
+.IP
+Most window managers provide visual feedback showing the size of a
+window as you resize it, using these hints.
+When you maximize \fI\*n\fP, it disables those hints to allow
+the window manager to make better use of fractional rows or columns.
+Setting this resource disables the hints all the time.
+.IP
+The default is
+\*(``false\*(''.
+.TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
 Affects the behavior when the window is resized to be taller or shorter.
 \fBNorthWest\fP
@@ -7130,14 +7144,14 @@ the data as in the \fBon2Clicks\fP resource.
 .B "fullscreen(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfullscreen\fP resource.
 .TP 8
-.B "iconify()"
-Iconifies the window.
-.TP 8
 .B "hard\-reset()"
 This action resets the scrolling region, tabs, window size, and cursor keys
 and clears the screen.
 It is also invoked from the \fBhardreset\fP
 entry in \fIvtMenu\fP.
+.TP 8
+.B "iconify()"
+Iconifies the window.
 .TP 8
 .B "ignore()"
 This action ignores the event but checks for special pointer position
@@ -7371,11 +7385,6 @@ mouse reporting is enabled.
 This action is similar to \fBscroll\-back\fP except that it scrolls
 in the other direction.
 .TP 8
-.B "secure()"
-This action toggles the \fISecure Keyboard\fP mode
-(see \fBSECURITY\fP), and is invoked from the \fBsecurekbd\fP
-entry in \fImainMenu\fP.
-.TP 8
 .B "scroll\-lock(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles internal state which tells
 \fI\*n\fP whether Scroll Lock is active,
@@ -7393,6 +7402,11 @@ Scroll to the beginning of the saved lines.
 .B scroll\-to(end)
 Scroll to the end of the saved lines, i.e., to the currently active page.
 .RE
+.TP 8
+.B "secure()"
+This action toggles the \fISecure Keyboard\fP mode
+(see \fBSECURITY\fP), and is invoked from the \fBsecurekbd\fP
+entry in \fImainMenu\fP.
 .TP 8
 .B "select\-cursor\-end(\fIdestname\fP [, \&...\&])"
 This action is similar to \fBselect\-end\fP except that it should be used
@@ -7481,25 +7495,17 @@ It is also invoked from the \fBbackarrow key\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBbellIsUrgent\fP resource.
 It is also invoked by the \fBbellIsUrgent\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set\-cursorblink(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBcursorBlink\fP resource.
-It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
-.TP 8
 .B "set\-cursesemul(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBcurses\fP resource.
 It is also invoked from the \fBcursesemul\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set\-cursorblink(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBcursorBlink\fP resource.
+It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set\-font\-doublesize(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfontDoublesize\fP resource.
 It is also invoked by the \fBfont\-doublesize\fP entry in \fIfontMenu\fP.
-.TP 8
-.B "set\-hp\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
-It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
-.TP 8
-.B "set\-jumpscroll(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBjumpscroll\fP resource.
-It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set\-font\-linedrawing(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fI\*n\fR's state regarding whether
@@ -7518,6 +7524,14 @@ This action sets, unsets or toggles the \fBforcePackedFont\fR resource
 which controls use of the font's minimum or maximum glyph width.
 It is also invoked by the \fBfont\-packed\fP entry in \fIfontMenu\fP.
 .TP 8
+.B "set\-hp\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
+It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
+.B "set\-jumpscroll(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBjumpscroll\fP resource.
+It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set\-keep\-clipboard(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBkeepClipboard\fP resource.
 .TP 8
@@ -7528,15 +7542,15 @@ It is also invoked by the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .B "set\-logging(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the state of the logging option.
 .TP 8
-.B "set\-old\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the state of legacy function keys.
-It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
-.TP 8
 .B "set\-marginbell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBmarginBell\fP resource.
 .TP 8
 .B "set\-num\-lock(\fIon/off/toggle\fP)"
 This action toggles the state of the \fBnumLock\fP resource.
+.TP 8
+.B "set\-old\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the state of legacy function keys.
+It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set\-pop\-on\-bell(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBpopOnBell\fP resource.
@@ -7557,6 +7571,10 @@ It is also invoked by the \fBreversevideo\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBreverseWrap\fP resource.
 It is also invoked by the \fBreversewrap\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set\-sco\-function\-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
+It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set\-scroll\-on\-key(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollKey\fP resource.
 It is also invoked from the \fBscrollkey\fP entry in \fIvtMenu\fP.
@@ -7568,10 +7586,6 @@ It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 .B "set\-scrollbar(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscrollbar\fP resource.
 It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set\-sco\-function\-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
-It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set\-select(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
@@ -7697,13 +7711,13 @@ Otherwise, use the \fB$PATH\fP variable to find \fI\*n\fP.
 If parameters are given in the action,
 pass them to the new \fI\*n\fP process.
 .TP 8
-.B "start\-extend()"
-This action is similar to \fBselect\-start\fP except that the
-selection is extended to the current pointer location.
-.TP 8
 .B "start\-cursor\-extend()"
 This action is similar to \fBselect\-extend\fP except that the
 selection is extended to the current text cursor position.
+.TP 8
+.B "start\-extend()"
+This action is similar to \fBselect\-start\fP except that the
+selection is extended to the current pointer location.
 .TP 8
 .B "string(\fIstring\fP)"
 This action inserts the specified text string as if it had been typed.

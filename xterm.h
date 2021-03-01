@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.884 2020/12/23 00:21:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.886 2021/03/01 22:01:52 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -588,6 +588,7 @@ extern char **environ;
 #define XtNregisDefaultFont	"regisDefaultFont"
 #define XtNregisScreenSize	"regisScreenSize"
 #define XtNrenderFont		"renderFont"
+#define XtNresizeByPixel	"resizeByPixel"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
@@ -787,6 +788,7 @@ extern char **environ;
 #define XtCRegisDefaultFont	"RegisDefaultFont"
 #define XtCRegisScreenSize	"RegisScreenSize"
 #define XtCRenderFont		"RenderFont"
+#define XtCResizeByPixel	"ResizeByPixel"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
