@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1028 2021/02/25 23:51:51 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1029 2021/03/01 08:54:14 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3118,6 +3118,7 @@ typedef struct _Misc {
     Boolean login_shell;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
+    Boolean resizeByPixel;
     XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;
