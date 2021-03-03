@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.702 2021/02/26 00:21:38 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.703 2021/03/02 00:25:24 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -5118,7 +5118,7 @@ save2FontList(XtermWidget xw,
 		    next[count++] = value;
 		    next[count] = 0;
 		    *list = next;
-		    TRACE(("... saved %s %s %lu:%s\n",
+		    TRACE(("... saved \"%s\" \"%s\" %lu:\"%s\"\n",
 			   whichFontList(xw, target),
 			   whichFontList2(xw, *list),
 			   (unsigned long) count,
@@ -5176,7 +5176,8 @@ allocFontList(XtermWidget xw,
 	int pass;
 	char **list = 0;
 
-	TRACE(("allocFontList %s %s '%s'\n", whichFontEnum(which), name, blob));
+	TRACE(("allocFontList %s name=\"%s\" source=\"%s\"\n",
+	       whichFontEnum(which), name, blob));
 
 	for (pass = 0; pass < 2; ++pass) {
 	    unsigned count = 0;
