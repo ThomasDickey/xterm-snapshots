@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.171 2021/02/28 17:39:40 tom Exp $ */
+/* $XTermId: print.c,v 1.172 2021/03/02 00:19:13 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -836,6 +836,7 @@ xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
 
 	umask(save_umask);
 	screen->printer_state = save_state;
+	free(my_filename);
     }
 }
 
