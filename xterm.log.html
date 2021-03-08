@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2321 2021/03/03 01:21:24 tom Exp $
+  $XTermId: xterm.log.html,v 1.2322 2021/03/08 00:22:42 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1015,6 +1015,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modified <code>CopyWait</code> event retries to use shorter
+    sleeps, to improve responsiveness (tmux #2556).</li>
+
     <li>improve quoting/escaping in demo-scripts per
     shellcheck.</li>
 
