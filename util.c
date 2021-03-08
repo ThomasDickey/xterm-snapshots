@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.874 2021/03/01 08:54:26 tom Exp $ */
+/* $XTermId: util.c,v 1.876 2021/03/08 00:20:23 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2102,9 +2102,9 @@ CopyWait(XtermWidget xw)
 				  &reply)) {
 		retries = 0;
 	    } else {
-		if (++retries >= 10)
+		if (++retries >= 1000)
 		    return;
-		usleep(10000U);	/* wait 10msec */
+		usleep(100U);	/* wait 0.1msec */
 		continue;
 	    }
 	} else

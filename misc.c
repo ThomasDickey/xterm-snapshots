@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.969 2021/02/25 23:41:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.970 2021/03/07 22:51:46 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3097,7 +3097,7 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 
     if (have == 0 || have > MAX_U_STRING) {
 	if (resource.reportColors) {
-	    printf("color  (ignored, length %ld)\n", have);
+	    printf("color  (ignored, length %lu)\n", have);
 	}
     } else if (XParseColor(screen->display, cmap, spec, def)) {
 	XColor save_def = *def;
