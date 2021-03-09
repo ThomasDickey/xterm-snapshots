@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.873 2021/02/25 00:13:56 tom Exp $ */
+/* $XTermId: main.c,v 1.874 2021/03/09 01:19:34 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -904,6 +904,9 @@ static XtResource application_resources[] =
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
+#ifdef HAVE_LIB_XCURSOR
+    Sres("cursorTheme", "CursorTheme", cursorTheme, "none"),
+#endif
 #if OPT_PRINT_ON_EXIT
     Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
     Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
@@ -2477,6 +2480,10 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#ifdef HAVE_LIB_XCURSOR
+	if (strcmp(resource.cursorTheme, "default"))
+	    init_colored_cursor(XtDisplay(toplevel));
+#endif
 #if USE_DOUBLE_BUFFER
 	if (resource.buffered_fps <= 0)
 	    resource.buffered_fps = DEF_BUFFER_RATE;
