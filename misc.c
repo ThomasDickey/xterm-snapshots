@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.970 2021/03/07 22:51:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.972 2021/03/09 01:22:19 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -739,10 +739,10 @@ make_hidden_cursor(XtermWidget xw)
  * default theme.  Testing seems to show that we only have to provide this
  * until the window is initialized.
  */
+#ifdef HAVE_LIB_XCURSOR
 void
 init_colored_cursor(Display *dpy)
 {
-#ifdef HAVE_LIB_XCURSOR
     static const char theme[] = "index.theme";
     static const char pattern[] = "xtermXXXXXX";
     char *env = getenv("XCURSOR_THEME");
@@ -753,7 +753,11 @@ init_colored_cursor(Display *dpy)
      */
     if (IsEmpty(env)) {
 	env = XGetDefault(dpy, "Xcursor", "theme");
+	TRACE(("XGetDefault Xcursor theme \"%s\"\n", NonNull(env)));
+    } else {
+	TRACE(("getenv(XCURSOR_THEME) \"%s\"\n", NonNull(env)));
     }
+
     /*
      * If neither found, provide our own default theme.
      */
@@ -761,6 +765,8 @@ init_colored_cursor(Display *dpy)
 	const char *tmp_dir;
 	char *filename;
 	size_t needed;
+
+	TRACE(("init_colored_cursor will make an empty Xcursor theme\n"));
 
 	if ((tmp_dir = getenv("TMPDIR")) == 0) {
 	    tmp_dir = P_tmpdir;
@@ -790,21 +796,25 @@ init_colored_cursor(Display *dpy)
 
 		strcat(leaf, "/");
 		strcat(leaf, theme);
+
 		if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
 		    fprintf(fp, "[Icon Theme]\n");
 		    fclose(fp);
 		    *leaf = '\0';
 		    xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
 		    *leaf = '/';
+
+		    TRACE(("...initialized xterm_cursor_theme \"%s\"\n",
+			   xterm_cursor_theme));
+		    atexit(cleanup_colored_cursor);
+		} else {
+		    FreeAndNull(xterm_cursor_theme);
 		}
-		atexit(cleanup_colored_cursor);
 	    }
 	}
     }
-#else
-    (void) dpy;
-#endif /* HAVE_LIB_XCURSOR */
 }
+#endif /* HAVE_LIB_XCURSOR */
 
 /*
  * Once done, discard the file and directory holding it.
@@ -821,9 +831,8 @@ cleanup_colored_cursor(void)
 	    && (sb.st_mode & S_IFMT) == S_IFDIR) {
 	    unlink(xterm_cursor_theme);
 	    rmdir(my_path);
-	    free(xterm_cursor_theme);
-	    xterm_cursor_theme = 0;
 	}
+	FreeAndNull(xterm_cursor_theme);
     }
 #endif /* HAVE_LIB_XCURSOR */
 }
@@ -6925,8 +6934,6 @@ xtermOpenApplication(XtAppContext * app_context_return,
 			     fallback_resources,
 			     NULL, 0);
 #endif /* OPT_SESSION_MGT */
-    init_colored_cursor(XtDisplay(result));
-
     XtSetErrorHandler(NULL);
 
     return result;
