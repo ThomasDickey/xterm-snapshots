@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.185 2020/09/19 16:53:27 tom Exp $
+-- $XTermId: INSTALL,v 1.186 2021/03/21 16:44:06 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2019,2020 by Thomas E. Dickey
+-- Copyright 1997-2020,2021 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -379,6 +379,11 @@ The options (in alphabetic order):
   	The wide-character code supports Unicode and UTF-8.
 
 	This is normally enabled.
+
+  --disable-xcursor       disable cursorTheme resource
+
+	Do not compile-in code that sets the XCURSOR_THEME environment variable
+	to enable/disable cursor themes.
 
   --disable-ziconbeep     disable -ziconbeep option
 
