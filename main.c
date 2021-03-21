@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.875 2021/03/21 15:33:32 tom Exp $ */
+/* $XTermId: main.c,v 1.876 2021/03/21 19:59:30 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -143,9 +143,9 @@
 #include <grp.h>		/* initgroups() */
 #endif
 
-static void hungtty(int) GCC_NORETURN;
-static void Syntax(char *) GCC_NORETURN;
-static void HsSysError(int) GCC_NORETURN;
+static GCC_NORETURN void hungtty(int);
+static GCC_NORETURN void Syntax(char *);
+static GCC_NORETURN void HsSysError(int);
 
 #if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || ( defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 1) )
 #define USE_POSIX_SIGNALS
