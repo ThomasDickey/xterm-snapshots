@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.874 2021/03/09 01:19:34 tom Exp $ */
+/* $XTermId: main.c,v 1.875 2021/03/21 15:33:32 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -2481,8 +2481,16 @@ main(int argc, char *argv[]ENVP_ARG)
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
 #ifdef HAVE_LIB_XCURSOR
-	if (strcmp(resource.cursorTheme, "default"))
+	if (!strcmp(resource.cursorTheme, "none")) {
+	    TRACE(("startup with no cursorTheme\n"));
 	    init_colored_cursor(XtDisplay(toplevel));
+	} else {
+	    const char *theme = resource.cursorTheme;
+	    if (IsEmpty(theme))
+		theme = "default";
+	    TRACE(("startup with \"%s\" cursorTheme\n", theme));
+	    xtermSetenv("XCURSOR_THEME", theme);
+	}
 #endif
 #if USE_DOUBLE_BUFFER
 	if (resource.buffered_fps <= 0)
