@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.972 2021/03/09 01:22:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.979 2021/03/24 00:27:48 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -67,7 +67,6 @@
 
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
-#include <X11/cursorfont.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
@@ -220,7 +219,7 @@ unselectwindow(XtermWidget xw, int flag)
 
     if (screen->hide_pointer && screen->pointer_mode < pFocused) {
 	screen->hide_pointer = False;
-	xtermDisplayCursor(xw);
+	xtermDisplayPointer(xw);
     }
 
     screen->select &= ~flag;
@@ -314,16 +313,16 @@ do_xevents(XtermWidget xw)
 }
 
 void
-xtermDisplayCursor(XtermWidget xw)
+xtermDisplayPointer(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
     if (screen->Vshow) {
 	if (screen->hide_pointer) {
-	    TRACE(("Display hidden_cursor\n"));
+	    TRACE(("Display text pointer (hidden)\n"));
 	    XDefineCursor(screen->display, VWindow(screen), screen->hidden_cursor);
 	} else {
-	    TRACE(("Display pointer_cursor\n"));
+	    TRACE(("Display text pointer (visible)\n"));
 	    recolor_cursor(screen,
 			   screen->pointer_cursor,
 			   T_COLOR(screen, MOUSE_FG),
@@ -366,7 +365,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     if (enable) {
 	if (screen->hide_pointer) {
 	    screen->hide_pointer = False;
-	    xtermDisplayCursor(xw);
+	    xtermDisplayPointer(xw);
 	    switch (screen->send_mouse_pos) {
 	    case ANY_EVENT_MOUSE:
 		break;
@@ -384,7 +383,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 	} else {
 	    tried = 0;
 	    screen->hide_pointer = True;
-	    xtermDisplayCursor(xw);
+	    xtermDisplayPointer(xw);
 	    MotionOn(screen, xw);
 	}
     }
@@ -889,6 +888,148 @@ make_colored_cursor(unsigned c_index,		/* index into font */
 	recolor_cursor(screen, c, fg, bg);
     }
     return c;
+}
+
+/* adapted from <X11/cursorfont.h> */
+static int
+LookupCursorShape(const char *name)
+{
+#define DATA(name) { XC_##name, #name }
+    static struct {
+	int code;
+	const char name[25];
+    } table[] = {
+	DATA(X_cursor),
+	    DATA(arrow),
+	    DATA(based_arrow_down),
+	    DATA(based_arrow_up),
+	    DATA(boat),
+	    DATA(bogosity),
+	    DATA(bottom_left_corner),
+	    DATA(bottom_right_corner),
+	    DATA(bottom_side),
+	    DATA(bottom_tee),
+	    DATA(box_spiral),
+	    DATA(center_ptr),
+	    DATA(circle),
+	    DATA(clock),
+	    DATA(coffee_mug),
+	    DATA(cross),
+	    DATA(cross_reverse),
+	    DATA(crosshair),
+	    DATA(diamond_cross),
+	    DATA(dot),
+	    DATA(dotbox),
+	    DATA(double_arrow),
+	    DATA(draft_large),
+	    DATA(draft_small),
+	    DATA(draped_box),
+	    DATA(exchange),
+	    DATA(fleur),
+	    DATA(gobbler),
+	    DATA(gumby),
+	    DATA(hand1),
+	    DATA(hand2),
+	    DATA(heart),
+	    DATA(icon),
+	    DATA(iron_cross),
+	    DATA(left_ptr),
+	    DATA(left_side),
+	    DATA(left_tee),
+	    DATA(leftbutton),
+	    DATA(ll_angle),
+	    DATA(lr_angle),
+	    DATA(man),
+	    DATA(middlebutton),
+	    DATA(mouse),
+	    DATA(pencil),
+	    DATA(pirate),
+	    DATA(plus),
+	    DATA(question_arrow),
+	    DATA(right_ptr),
+	    DATA(right_side),
+	    DATA(right_tee),
+	    DATA(rightbutton),
+	    DATA(rtl_logo),
+	    DATA(sailboat),
+	    DATA(sb_down_arrow),
+	    DATA(sb_h_double_arrow),
+	    DATA(sb_left_arrow),
+	    DATA(sb_right_arrow),
+	    DATA(sb_up_arrow),
+	    DATA(sb_v_double_arrow),
+	    DATA(shuttle),
+	    DATA(sizing),
+	    DATA(spider),
+	    DATA(spraycan),
+	    DATA(star),
+	    DATA(target),
+	    DATA(tcross),
+	    DATA(top_left_arrow),
+	    DATA(top_left_corner),
+	    DATA(top_right_corner),
+	    DATA(top_side),
+	    DATA(top_tee),
+	    DATA(trek),
+	    DATA(ul_angle),
+	    DATA(umbrella),
+	    DATA(ur_angle),
+	    DATA(watch),
+	    DATA(xterm),
+    };
+#undef DATA
+    Cardinal j;
+    int result = -1;
+    if (!IsEmpty(name)) {
+	for (j = 0; j < XtNumber(table); ++j) {
+	    if (!strcmp(name, table[j].name)) {
+		result = table[j].code;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+void
+xtermSetupPointer(XtermWidget xw, const char *theShape)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned shape = XC_xterm;
+    int other = LookupCursorShape(theShape);
+    unsigned which;
+
+    if (other >= 0 && other < XC_num_glyphs)
+	shape = (unsigned) other;
+
+    TRACE(("looked up shape index %d from shape name \"%s\"\n", other,
+	   NonNull(theShape)));
+
+    which = (unsigned) (shape / 2);
+    if (xw->work.pointer_cursors[which] == None) {
+	TRACE(("creating text pointer cursor from shape %d\n", shape));
+	xw->work.pointer_cursors[which] =
+	    make_colored_cursor(shape,
+				T_COLOR(screen, MOUSE_FG),
+				T_COLOR(screen, MOUSE_BG));
+    } else {
+	TRACE(("updating text pointer cursor for shape %d\n", shape));
+	recolor_cursor(screen,
+		       screen->pointer_cursor,
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
+    }
+    if (screen->pointer_cursor != xw->work.pointer_cursors[which]) {
+	screen->pointer_cursor = xw->work.pointer_cursors[which];
+	TRACE(("defining text pointer cursor with shape %d\n", shape));
+	XDefineCursor(screen->display, VShellWindow(xw), screen->pointer_cursor);
+	if (XtIsRealized((Widget) xw)) {
+	    /* briefly override pointerMode after changing the pointer */
+	    if (screen->pointer_mode != pNever)
+		screen->hide_pointer = True;
+	    xtermShowPointer(xw, True);
+	}
+    }
 }
 
 /* ARGSUSED */
@@ -4188,6 +4329,10 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	if (xw->misc.dynamicColors) {
 	    ResetColorsRequest(xw, mode);
 	}
+	break;
+
+    case 22:
+	xtermSetupPointer(xw, buf);
 	break;
 
     case 30:

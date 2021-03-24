@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.486 2021/03/21 17:55:08 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.487 2021/03/23 00:37:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -266,10 +266,18 @@ ifelse([$3],,[    :]dnl
 ])dnl
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_C11_NORETURN version: 1 updated: 2021/03/20 12:00:25
+dnl CF_C11_NORETURN version: 2 updated: 2021/03/22 20:37:21
 dnl ---------------
 AC_DEFUN([CF_C11_NORETURN],
 [
+AC_MSG_CHECKING(if you want to use C11 _Noreturn feature)
+CF_ARG_ENABLE(stdnoreturn,
+	[  --enable-stdnoreturn    enable C11 _Noreturn feature for diagnostics],
+	[enable_stdnoreturn=yes],
+	[enable_stdnoreturn=no])
+AC_MSG_RESULT($enable_stdnoreturn)
+
+if test $enable_stdnoreturn = yes; then
 AC_CACHE_CHECK([for C11 _Noreturn feature], cf_cv_c11_noreturn,
 	[AC_TRY_COMPILE([
 #include <stdio.h>
@@ -281,6 +289,9 @@ static void giveup(void) { exit(0); }
 	cf_cv_c11_noreturn=yes,
 	cf_cv_c11_noreturn=no)
 	])
+else
+	cf_cv_c11_noreturn=no,
+fi
 
 if test "$cf_cv_c11_noreturn" = yes; then
 	AC_DEFINE(HAVE_STDNORETURN_H, 1)

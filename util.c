@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.876 2021/03/08 00:20:23 tom Exp $ */
+/* $XTermId: util.c,v 1.877 2021/03/21 21:27:08 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2804,7 +2804,7 @@ ReverseVideo(XtermWidget xw)
     TRACE(("...swapping done, set ReverseVideo %s\n", BtoS(xw->misc.re_verse)));
 
     if (XtIsRealized((Widget) xw)) {
-	xtermDisplayCursor(xw);
+	xtermDisplayPointer(xw);
     }
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1828 2021/03/01 08:54:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1830 2021/03/21 22:45:24 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -83,7 +83,6 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <X11/cursorfont.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
@@ -10847,108 +10846,6 @@ initBorderGC(XtermWidget xw, VTwin *win)
     }
 #endif
 }
-
-/* adapted from <X11/cursorfont.h> */
-static int
-LookupCursorShape(const char *name)
-{
-#define DATA(name) { XC_##name, #name }
-    static struct {
-	int code;
-	const char name[25];
-    } table[] = {
-	DATA(X_cursor),
-	    DATA(arrow),
-	    DATA(based_arrow_down),
-	    DATA(based_arrow_up),
-	    DATA(boat),
-	    DATA(bogosity),
-	    DATA(bottom_left_corner),
-	    DATA(bottom_right_corner),
-	    DATA(bottom_side),
-	    DATA(bottom_tee),
-	    DATA(box_spiral),
-	    DATA(center_ptr),
-	    DATA(circle),
-	    DATA(clock),
-	    DATA(coffee_mug),
-	    DATA(cross),
-	    DATA(cross_reverse),
-	    DATA(crosshair),
-	    DATA(diamond_cross),
-	    DATA(dot),
-	    DATA(dotbox),
-	    DATA(double_arrow),
-	    DATA(draft_large),
-	    DATA(draft_small),
-	    DATA(draped_box),
-	    DATA(exchange),
-	    DATA(fleur),
-	    DATA(gobbler),
-	    DATA(gumby),
-	    DATA(hand1),
-	    DATA(hand2),
-	    DATA(heart),
-	    DATA(icon),
-	    DATA(iron_cross),
-	    DATA(left_ptr),
-	    DATA(left_side),
-	    DATA(left_tee),
-	    DATA(leftbutton),
-	    DATA(ll_angle),
-	    DATA(lr_angle),
-	    DATA(man),
-	    DATA(middlebutton),
-	    DATA(mouse),
-	    DATA(pencil),
-	    DATA(pirate),
-	    DATA(plus),
-	    DATA(question_arrow),
-	    DATA(right_ptr),
-	    DATA(right_side),
-	    DATA(right_tee),
-	    DATA(rightbutton),
-	    DATA(rtl_logo),
-	    DATA(sailboat),
-	    DATA(sb_down_arrow),
-	    DATA(sb_h_double_arrow),
-	    DATA(sb_left_arrow),
-	    DATA(sb_right_arrow),
-	    DATA(sb_up_arrow),
-	    DATA(sb_v_double_arrow),
-	    DATA(shuttle),
-	    DATA(sizing),
-	    DATA(spider),
-	    DATA(spraycan),
-	    DATA(star),
-	    DATA(target),
-	    DATA(tcross),
-	    DATA(top_left_arrow),
-	    DATA(top_left_corner),
-	    DATA(top_right_corner),
-	    DATA(top_side),
-	    DATA(top_tee),
-	    DATA(trek),
-	    DATA(ul_angle),
-	    DATA(umbrella),
-	    DATA(ur_angle),
-	    DATA(watch),
-	    DATA(xterm),
-    };
-#undef DATA
-    Cardinal j;
-    int result = -1;
-    if (!IsEmpty(name)) {
-	for (j = 0; j < XtNumber(table); ++j) {
-	    if (!strcmp(name, table[j].name)) {
-		result = table[j].code;
-		break;
-	    }
-	}
-    }
-    return result;
-}
-
 #if USE_DOUBLE_BUFFER
 static Boolean
 allocateDbe(XtermWidget xw, VTwin *target)
@@ -11042,28 +10939,7 @@ VTRealize(Widget w,
     }
 #endif
 
-    /* making cursor */
-    if (screen->pointer_cursor == None) {
-	unsigned shape = XC_xterm;
-	int other = LookupCursorShape(screen->pointer_shape);
-
-	TRACE(("looked up shape index %d from shape name \"%s\"\n", other,
-	       NonNull(screen->pointer_shape)));
-	if (other >= 0)
-	    shape = (unsigned) other;
-
-	TRACE(("creating text pointer cursor from shape %d\n", shape));
-	screen->pointer_cursor =
-	    make_colored_cursor(shape,
-				T_COLOR(screen, MOUSE_FG),
-				T_COLOR(screen, MOUSE_BG));
-    } else {
-	TRACE(("recoloring existing text pointer cursor\n"));
-	recolor_cursor(screen,
-		       screen->pointer_cursor,
-		       T_COLOR(screen, MOUSE_FG),
-		       T_COLOR(screen, MOUSE_BG));
-    }
+    xtermSetupPointer(xw, screen->pointer_shape);
 
     /* set defaults */
     pos.x = 1;

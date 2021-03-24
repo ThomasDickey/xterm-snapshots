@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.242 2021/02/26 00:05:44 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.243 2021/03/21 22:08:46 tom Exp $ */
 
 /*
  * Copyright 2001-2020,2021 by Thomas E. Dickey
@@ -81,7 +81,6 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <X11/cursorfont.h>
 #include <X11/Xmu/CharSet.h>
 
 #if OPT_TOOLBAR
