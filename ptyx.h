@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1029 2021/03/01 08:54:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1030 2021/03/21 22:11:10 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -67,6 +67,8 @@
 #include <X11/Shell.h>		/* for XtNdieCallback, etc. */
 #include <X11/StringDefs.h>	/* for standard resource names */
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
+#include <X11/cursorfont.h>
+
 
 #undef bcopy
 #undef bzero
@@ -2524,7 +2526,7 @@ typedef struct {
 	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
 	String		pointer_shape;	/* name of shape in cursor font */
-	Cursor		pointer_cursor;	/* pointer cursor in window	*/
+	Cursor		pointer_cursor;	/* current pointer cursor	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
@@ -3184,6 +3186,8 @@ typedef struct _Work {
 	char *str;
 	int len;
     } user_keys[MAX_UDK];
+#define MAX_POINTER (XC_num_glyphs/2)
+    Cursor pointer_cursors[MAX_POINTER]; /* saved cursors	*/
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
     char *wm_name;

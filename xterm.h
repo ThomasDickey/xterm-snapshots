@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.888 2021/03/21 19:54:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.890 2021/03/21 22:44:36 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1224,13 +1224,14 @@ extern void xevents (XtermWidget /* xw */);
 extern GCC_NORETURN void xt_error (String /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
-extern void xtermDisplayCursor (XtermWidget /* xw */);
+extern void xtermDisplayPointer (XtermWidget /* xw */);
 extern void xtermDeiconify (XtermWidget /* xw */);
 extern void xtermEmbedWindow (Window /* winToEmbedInfo */);
 extern void xtermIconify (XtermWidget /* xw */);
 extern void xtermLoadIcon (XtermWidget /* xw */, const char * /* icon_hint */);
 extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
+extern void xtermSetupPointer (XtermWidget /* xw */, const char * /* theShape */);
 extern void xtermSetWinSize (XtermWidget /* xw */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 extern void xtermUnsetenv (const char * /* var */);
