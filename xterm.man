@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.843 2021/03/21 16:24:29 tom Exp $
+.\" $XTermId: xterm.man,v 1.844 2021/03/26 23:11:13 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1649,8 +1649,8 @@ The default core cursors are 8x8 pixels;
 Some cursor themes include cursors up to the X server limit of 64x64 pixels.
 .RE
 .IP
-At startup, \fI\*n\fP sets the \fBXCURSOR_THEME\fP to enable or disable
-the cursor theme feature.
+At startup, \fI\*n\fP sets the \fBXCURSOR_THEME\fP environment variable
+to enable or disable the cursor theme feature.
 The default value is \*(``none\*(''.
 Other values (including \*(``default\*('') are passed to the Xcursor
 library to select a cursor theme.
