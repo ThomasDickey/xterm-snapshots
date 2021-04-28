@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.844 2021/03/26 23:11:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.845 2021/04/23 08:04:07 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1628,7 +1628,7 @@ The default is
 and is limited to the range 1 through 100.
 .TP 8
 .B "cursorTheme\fP (class\fB CursorTheme\fP)"
-The Xcursor(__miscmansuffix__) library provides a way to 
+The Xcursor(__miscmansuffix__) library provides a way to change the pointer shape and size.
 The X11 library uses this library to extend the font- and glyph-cursor
 calls used by applications such as \fI\*n\fP  to substitute external
 files for the built-in \*(``core\*('' cursors provided by X.
