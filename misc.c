@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.979 2021/03/24 00:27:48 tom Exp $ */
+/* $XTermId: misc.c,v 1.980 2021/05/31 23:47:35 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -6989,11 +6989,72 @@ getXtermWidget(Widget w)
 }
 
 #if OPT_SESSION_MGT
+
+#if OPT_TRACE
+static void
+trace_1_SM(const char *tag, String name)
+{
+    Arg args[1];
+    char *buf = 0;
+
+    XtSetArg(args[0], name, &buf);
+    XtGetValues(toplevel, args, 1);
+
+    if (strstr(name, "Path") || strstr(name, "Directory")) {
+	TRACE(("%s %s: %s\n", tag, name, NonNull(buf)));
+    } else if (strstr(name, "Command")) {
+	if (buf != NULL) {
+	    char **vec = (char **) buf;
+	    int n;
+	    TRACE(("%s %s:\n", tag, name));
+	    for (n = 0; vec[n] != NULL; ++n) {
+		TRACE((" arg[%d] = %s\n", n, vec[n]));
+	    }
+	} else {
+	    TRACE(("%s %s: %p\n", tag, name, buf));
+	}
+    } else {
+	TRACE(("%s %s: %p\n", tag, name, buf));
+    }
+}
+static void
+trace_SM_props(void)
+{
+    /* *INDENT-OFF* */
+    static struct { String app, cls; } table[] = {
+	{ XtNcurrentDirectory,	XtCCurrentDirectory },
+	{ XtNdieCallback,	XtNdiscardCommand },
+	{ XtCDiscardCommand,	XtNenvironment },
+	{ XtCEnvironment,	XtNinteractCallback },
+	{ XtNjoinSession,	XtCJoinSession },
+	{ XtNprogramPath,	XtCProgramPath },
+	{ XtNresignCommand,	XtCResignCommand },
+	{ XtNrestartCommand,	XtCRestartCommand },
+	{ XtNrestartStyle,	XtCRestartStyle },
+	{ XtNsaveCallback,	XtNsaveCompleteCallback },
+	{ XtNsessionID,		XtCSessionID },
+	{ XtNshutdownCommand,	XtCShutdownCommand },
+    };
+    /* *INDENT-ON* */
+    Cardinal n;
+    TRACE(("Session properties:\n"));
+    for (n = 0; n < XtNumber(table); ++n) {
+	trace_1_SM("app", table[n].app);
+	trace_1_SM("cls", table[n].cls);
+    }
+}
+#define TRACE_SM_PROPS()	trace_SM_props()
+#else
+#define TRACE_SM_PROPS()	/* nothing */
+#endif
+
 static void
 die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
 	     XtPointer call_data GCC_UNUSED)
 {
+    TRACE(("die_callback %p\n", die_callback));
+    TRACE_SM_PROPS();
     NormalExit();
 }
 
@@ -7004,7 +7065,19 @@ save_callback(Widget w GCC_UNUSED,
 {
     XtCheckpointToken token = (XtCheckpointToken) call_data;
     /* we have nothing to save */
+    TRACE(("save_callback:\n"));
+    TRACE(("... save_type            <-%d\n", token->save_type));
+    TRACE(("... interact_style       <-%d\n", token->interact_style));
+    TRACE(("... shutdown             <-%s\n", BtoS(token->shutdown)));
+    TRACE(("... fast                 <-%s\n", BtoS(token->fast)));
+    TRACE(("... cancel_shutdown      <-%s\n", BtoS(token->cancel_shutdown)));
+    TRACE(("... phase                <-%d\n", token->phase));
+    TRACE(("... interact_dialog_type ->%d\n", token->interact_dialog_type));
+    TRACE(("... request_cancel       ->%s\n", BtoS(token->request_cancel)));
+    TRACE(("... request_next_phase   ->%s\n", BtoS(token->request_next_phase)));
+    TRACE(("... save_success         ->%s\n", BtoS(token->save_success)));
     token->save_success = True;
+    TRACE_SM_PROPS();
 }
 
 static void
@@ -7029,6 +7102,9 @@ xtermOpenSession(void)
 	TRACE(("Enabling session-management callbacks\n"));
 	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
 	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+
+	TRACE_SM_PROPS();
+	xtermUpdateRestartCommand(term);
     }
 }
 
@@ -7036,6 +7112,99 @@ void
 xtermCloseSession(void)
 {
     IceRemoveConnectionWatch(icewatch, NULL);
+}
+
+#define RESTART_PARAMS 2
+
+void
+xtermUpdateRestartCommand(XtermWidget xw)
+{
+    if (resource.sessionMgt) {
+	Arg args[1];
+	char **cmd = 0;
+
+	XtSetArg(args[0], XtNrestartCommand, &cmd);
+	XtGetValues(toplevel, args, 1);
+	if (cmd != NULL) {
+	    static Cardinal my_params = 0;
+
+	    const char *fc_option = "-fc";
+
+	    TScreen *screen = TScreenOf(xw);
+	    Boolean changed = False;
+	    Boolean first = False;
+	    Cardinal argc;
+	    Cardinal want;
+	    Cardinal source, target;
+
+	    TRACE(("xtermUpdateRestartCommand\n"));
+	    for (argc = 0; cmd[argc] != NULL; ++argc) {
+		TRACE((" arg[%d] = %s\n", argc, cmd[argc]));
+		;
+	    }
+	    want = argc - (restart_params + RESTART_PARAMS);
+
+	    TRACE((" argc:           %d\n", argc));
+	    TRACE((" restart_params: %d\n", restart_params));
+	    TRACE((" want to insert: %d\n", want));
+
+	    /*
+	     * If we already have the font-choice option, do not add it again.
+	     */
+	    if (argc > (Cardinal) (restart_params + RESTART_PARAMS)
+		&& !strcmp(cmd[want], fc_option)) {
+		my_params = (want);
+	    } else {
+		first = True;
+		my_params = (argc - restart_params);
+	    }
+	    TRACE((" my_params:      %d\n", my_params));
+
+	    if (restart_command == NULL) {
+		Cardinal need = argc + RESTART_PARAMS + 1;
+
+		restart_command = TypeCallocN(char *, need);
+
+		for (source = target = 0; cmd[source]; ++source) {
+		    if (source == my_params) {
+			char choice[10];
+			sprintf(choice, "%d", screen->menu_font_number);
+			if (first) {
+			    restart_command[target++] = x_strdup(fc_option);
+			    restart_command[target++] = x_strdup(choice);
+			    changed = True;
+			    TRACE((" inserted param: %s (%d)\n", choice, target - 1));
+			} else if (strcmp(choice, cmd[target])) {
+			    free(restart_command[target]);
+			    restart_command[target] = x_strdup(choice);
+			    changed = True;
+			    TRACE((" replace param:  %s (%d)\n", choice, target));
+			}
+		    }
+		    restart_command[target++] = x_strdup(cmd[source]);
+		}
+		restart_command[target] = NULL;
+	    } else if (my_params < argc) {
+		/* use previous insertion-point for updating */
+		if (!strcmp(cmd[my_params], fc_option)) {
+		    char choice[10];
+		    sprintf(choice, "%d", screen->menu_font_number);
+		    target = my_params + 1;
+		    if (strcmp(choice, cmd[target])) {
+			free(restart_command[target]);
+			restart_command[target] = x_strdup(choice);
+			changed = True;
+			TRACE((" updated param:  %s (%d)\n", choice, target));
+		    }
+		}
+	    }
+	    if (changed) {
+		XtSetArg(args[0], XtNrestartCommand, restart_command);
+		XtSetValues(toplevel, args, 1);
+	    }
+	}
+	TRACE_SM_PROPS();
+    }
 }
 #endif /* OPT_SESSION_MGT */
 
