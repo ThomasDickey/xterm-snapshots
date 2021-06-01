@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.890 2021/03/21 22:44:36 tom Exp $ */
+/* $XTermId: xterm.h,v 1.892 2021/06/01 00:25:12 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1300,9 +1300,11 @@ extern void HandleInsertSelectable     PROTO_XT_ACTIONS_ARGS;
 #if OPT_SESSION_MGT
 extern void xtermCloseSession (void);
 extern void xtermOpenSession (void);
+extern void xtermUpdateRestartCommand(XtermWidget /* xw */);
 #else
 #define xtermCloseSession() /* nothing */
 #define xtermOpenSession() /* nothing */
+#define xtermUpdateRestartCommand(xw) /* nothing */
 #endif
 
 #if OPT_WIDE_CHARS
