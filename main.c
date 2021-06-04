@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.880 2021/05/27 22:29:30 tom Exp $ */
+/* $XTermId: main.c,v 1.881 2021/06/03 21:23:20 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -2480,7 +2480,7 @@ main(int argc, char *argv[]ENVP_ARG)
 					sessionShellWidgetClass,
 					NULL, 0);
 	TRACE(("created toplevel widget %p, window %#lx\n",
-	       toplevel, XtWindow(toplevel)));
+	       (void *) toplevel, XtWindow(toplevel)));
 
 	XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				  application_resources,
@@ -2661,7 +2661,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 						 (XtPointer) 0);
     TRACE(("created vt100 widget %p, window %#lx\n",
-	   term, XtWindow(term)));
+	   (void *) term, XtWindow(term)));
     decode_keyboard_type(term, &resource);
 
     screen = TScreenOf(term);

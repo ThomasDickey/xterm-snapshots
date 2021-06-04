@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.704 2021/05/27 23:03:18 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.705 2021/06/02 23:49:10 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -4926,7 +4926,6 @@ SetVTFont(XtermWidget xw,
 	    FREE_FNAME(f_wb);
 #endif
 	}
-	xtermUpdateRestartCommand(xw);
     } else {
 	Bell(xw, XkbBI_MinorError, 0);
     }
