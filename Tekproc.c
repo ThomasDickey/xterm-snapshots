@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.244 2021/05/12 23:55:13 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.245 2021/06/03 21:23:18 tom Exp $ */
 
 /*
  * Copyright 2001-2020,2021 by Thomas E. Dickey
@@ -403,7 +403,7 @@ TekInit(void)
 #endif
 				    (XtPointer) 0);
 	TRACE(("created tek4014 widget %p, window %#lx\n",
-	       tekWidget, XtWindow(tekWidget)));
+	       (void *) tekWidget, XtWindow(tekWidget)));
 #if OPT_TOOLBAR
 	ShowToolbar(resource.toolBar);
 #endif
