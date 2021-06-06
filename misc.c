@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.983 2021/06/04 00:31:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.984 2021/06/06 22:00:59 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -7529,12 +7529,23 @@ update_winsize(int fd, int rows, int cols, int height, int width)
 #ifdef TTYSIZE_STRUCT
     static int last_rows = -1;
     static int last_cols = -1;
+    static int last_high = -1;
+    static int last_wide = -1;
 
-    if (rows != last_rows || cols != last_cols) {
+    TRACE(("update_winsize %dx%d (%dx%d) -> %dx%d (%dx%d)\n",
+	   last_rows, last_cols, last_high, last_wide,
+	   rows, cols, height, width));
+
+    if (rows != last_rows
+	|| cols != last_cols
+	|| last_high != height
+	|| last_wide != width) {
 	TTYSIZE_STRUCT ts;
 
 	last_rows = rows;
 	last_cols = cols;
+	last_high = height;
+	last_wide = width;
 	setup_winsize(ts, rows, cols, height, width);
 	TRACE_RC(code, SET_TTYSIZE(fd, ts));
 	trace_winsize(ts, "from SET_TTYSIZE");
