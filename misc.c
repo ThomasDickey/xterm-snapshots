@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.987 2021/06/07 20:47:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.988 2021/06/07 23:19:42 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -7180,6 +7180,7 @@ formatFontParam(char *result, XtermWidget xw, const FontParams * parameter)
 	    break;
 	case S_ARG:
 	    strcpy(next, TypedPtr(char *));
+#if OPT_RENDERFONT
 	    if (!strcmp(parameter->name, XtNfaceName)) {
 		if (IsEmpty(next)
 		    && xw->work.render_font) {
@@ -7191,6 +7192,7 @@ formatFontParam(char *result, XtermWidget xw, const FontParams * parameter)
 		    strcpy(next, "DefaultOff");
 		}
 	    }
+#endif
 	    break;
 	}
     }
