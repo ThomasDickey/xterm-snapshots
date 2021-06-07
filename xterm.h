@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.892 2021/06/01 00:25:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.893 2021/06/06 23:14:40 Stelios.Bounanos Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -454,6 +454,7 @@ extern char **environ;
 #define XtNappkeypadDefault	"appkeypadDefault"
 #define XtNassumeAllChars	"assumeAllChars"
 #define XtNautoWrap		"autoWrap"
+#define XtNautoScrollLock	"autoScrollLock"
 #define XtNawaitInput		"awaitInput"
 #define XtNbackarrowKey		"backarrowKey"
 #define XtNbellIsUrgent		"bellIsUrgent"
@@ -668,6 +669,7 @@ extern char **environ;
 #define XtCAppkeypadDefault	"AppkeypadDefault"
 #define XtCAssumeAllChars	"AssumeAllChars"
 #define XtCAutoWrap		"AutoWrap"
+#define XtCAutoScrollLock	"AutoScrollLock"
 #define XtCAwaitInput		"AwaitInput"
 #define XtCBackarrowKey		"BackarrowKey"
 #define XtCBellIsUrgent		"BellIsUrgent"

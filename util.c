@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.877 2021/03/21 21:27:08 tom Exp $ */
+/* $XTermId: util.c,v 1.878 2021/06/06 23:14:52 Stelios.Bounanos Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -627,7 +627,8 @@ xtermScroll(XtermWidget xw, int amount)
 	refreshheight = 0;
     } else
 #if OPT_SCROLL_LOCK
-    if (screen->allowScrollLock && screen->scroll_lock) {
+	if ((screen->allowScrollLock && screen->scroll_lock)
+	    || (screen->autoScrollLock && screen->topline < 0)) {
 	refreshheight = 0;
 	screen->scroll_amt = 0;
 	screen->refresh_amt = 0;
