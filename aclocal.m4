@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.487 2021/03/23 00:37:21 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.488 2021/06/07 21:41:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -266,7 +266,7 @@ ifelse([$3],,[    :]dnl
 ])dnl
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_C11_NORETURN version: 2 updated: 2021/03/22 20:37:21
+dnl CF_C11_NORETURN version: 3 updated: 2021/03/28 11:36:23
 dnl ---------------
 AC_DEFUN([CF_C11_NORETURN],
 [
@@ -283,7 +283,7 @@ AC_CACHE_CHECK([for C11 _Noreturn feature], cf_cv_c11_noreturn,
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdnoreturn.h>
-static void giveup(void) { exit(0); }
+static _Noreturn void giveup(void) { exit(0); }
 	],
 	[if (feof(stdin)) giveup()],
 	cf_cv_c11_noreturn=yes,
@@ -294,7 +294,7 @@ else
 fi
 
 if test "$cf_cv_c11_noreturn" = yes; then
-	AC_DEFINE(HAVE_STDNORETURN_H, 1)
+	AC_DEFINE(HAVE_STDNORETURN_H, 1,[Define if <stdnoreturn.h> header is available and working])
 	AC_DEFINE_UNQUOTED(STDC_NORETURN,_Noreturn,[Define if C11 _Noreturn keyword is supported])
 	HAVE_STDNORETURN_H=1
 else
@@ -302,6 +302,7 @@ else
 fi
 
 AC_SUBST(HAVE_STDNORETURN_H)
+AC_SUBST(STDC_NORETURN)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_CC_ENV_FLAGS version: 10 updated: 2020/12/31 18:40:20
@@ -550,7 +551,7 @@ if test "x$ifelse([$2],,CLANG_COMPILER,[$2])" = "xyes" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_CONST_X_STRING version: 6 updated: 2021/01/01 13:31:04
+dnl CF_CONST_X_STRING version: 7 updated: 2021/06/07 17:39:17
 dnl -----------------
 dnl The X11R4-X11R6 Xt specification uses an ambiguous String type for most
 dnl character-strings.
@@ -580,7 +581,7 @@ AC_TRY_COMPILE(
 #include <stdlib.h>
 #include <X11/Intrinsic.h>
 ],
-[String foo = malloc(1); (void)foo],[
+[String foo = malloc(1); free((void*)foo)],[
 
 AC_CACHE_CHECK(for X11/Xt const-feature,cf_cv_const_x_string,[
 	AC_TRY_COMPILE(
@@ -677,7 +678,7 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_LEAKS version: 8 updated: 2021/01/05 20:05:09
+dnl CF_DISABLE_LEAKS version: 9 updated: 2021/04/03 16:41:50
 dnl ----------------
 dnl Combine no-leak checks with the libraries or tools that are used for the
 dnl checks.
@@ -690,9 +691,9 @@ AC_REQUIRE([CF_WITH_VALGRIND])
 AC_MSG_CHECKING(if you want to perform memory-leak testing)
 AC_ARG_ENABLE(leaks,
 	[  --disable-leaks         test: free permanent memory, analyze leaks],
-	[enable_leaks=no],
+	[enable_leaks=$enableval],
 	[enable_leaks=yes])
-dnl TODO - drop with_no_leaks
+dnl with_no_leaks is more readable...
 if test "x$enable_leaks" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi
 AC_MSG_RESULT($with_no_leaks)
 
@@ -1637,7 +1638,7 @@ AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INPUT_METHOD version: 4 updated: 2020/03/10 18:53:47
+dnl CF_INPUT_METHOD version: 5 updated: 2021/06/07 17:39:17
 dnl ---------------
 dnl Check if the X libraries support input-method
 AC_DEFUN([CF_INPUT_METHOD],
@@ -1655,7 +1656,7 @@ AC_TRY_LINK([
 	XIM xim;
 	XIMStyles *xim_styles = 0;
 	XIMStyle input_style;
-	Widget w = 0;
+	Widget w = XtCreateWidget("none", (WidgetClass)0, None, (ArgList)0, 0);
 
 	XSetLocaleModifiers("@im=none");
 	xim = XOpenIM(XtDisplay(w), NULL, NULL, NULL);
@@ -3396,7 +3397,7 @@ esac
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP_UT_SESSION version: 8 updated: 2021/01/02 09:31:20
+dnl CF_UTMP_UT_SESSION version: 9 updated: 2021/06/07 17:39:17
 dnl ------------------
 dnl Check if UTMP/UTMPX struct defines ut_session member
 AC_DEFUN([CF_UTMP_UT_SESSION],
@@ -3406,7 +3407,7 @@ AC_CACHE_CHECK(if ${cf_cv_have_utmp}.ut_session is declared, cf_cv_have_utmp_ut_
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],
-	[struct $cf_cv_have_utmp x;
+	[static struct $cf_cv_have_utmp x;
 	 long y = x.ut_session;
 	 (void)x;
 	 (void)y],
@@ -4595,7 +4596,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 57 updated: 2021/01/01 16:53:59
+dnl CF_XOPEN_SOURCE version: 58 updated: 2021/05/01 17:49:36
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -4660,7 +4661,15 @@ case "$host_os" in
 (netbsd*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
 	;;
-(openbsd[[4-9]]*)
+(openbsd[[6-9]]*)
+	# OpenBSD 6.x has broken locale support, both compile-time and runtime.
+	# see https://www.mail-archive.com/bugs@openbsd.org/msg13200.html
+	# Abusing the conformance level is a workaround.
+	AC_MSG_WARN(this system does not provide usable locale support)
+	cf_xopen_source="-D_BSD_SOURCE"
+	cf_XOPEN_SOURCE=700
+	;;
+(openbsd[[4-5]]*)
 	# setting _XOPEN_SOURCE lower than 500 breaks g++ compile with wchar.h, needed for ncursesw
 	cf_xopen_source="-D_BSD_SOURCE"
 	cf_XOPEN_SOURCE=600
@@ -5257,12 +5266,11 @@ to makefile.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_BODY version: 5 updated: 2020/03/10 18:53:47
+dnl CF__GRANTPT_BODY version: 6 updated: 2021/06/07 17:39:17
 dnl ----------------
 dnl Body for workability check of grantpt.
 define([CF__GRANTPT_BODY],[
 	int code = 0;
-	int rc;
 	int pty;
 	int tty;
 	char *slave;
@@ -5275,9 +5283,9 @@ define([CF__GRANTPT_BODY],[
 		failed(9);
 	else if ((pty = posix_openpt(O_RDWR)) < 0)
 		failed(1);
-	else if ((rc = grantpt(pty)) < 0)
+	else if (grantpt(pty) < 0)
 		failed(2);
-	else if ((rc = unlockpt(pty)) < 0)
+	else if (unlockpt(pty) < 0)
 		failed(3);
 	else if ((slave = ptsname(pty)) == 0)
 		failed(4);
@@ -5286,9 +5294,9 @@ define([CF__GRANTPT_BODY],[
 		failed(4);
 #endif
 #if CONFTEST >= 4
-    else if ((rc = tcgetattr(pty, &tio)) < 0)
+    else if (tcgetattr(pty, &tio) < 0)
 		failed(20);
-    else if ((rc = tcsetattr(pty, TCSAFLUSH, &tio)) < 0)
+    else if (tcsetattr(pty, TCSAFLUSH, &tio) < 0)
 		failed(21);
 #endif
 	/* BSD posix_openpt does not treat pty as a terminal until slave is opened.
@@ -5299,26 +5307,26 @@ define([CF__GRANTPT_BODY],[
 #ifdef CONFTEST
 #ifdef I_PUSH
 #if (CONFTEST == 0) || defined(CONFTEST_ptem)
-    else if ((rc = ioctl(tty, I_PUSH, "ptem")) < 0)
+    else if (ioctl(tty, I_PUSH, "ptem") < 0)
 		failed(10);
 #endif
 #if (CONFTEST == 1) || defined(CONFTEST_ldterm)
-    else if ((rc = ioctl(tty, I_PUSH, "ldterm")) < 0)
+    else if (ioctl(tty, I_PUSH, "ldterm") < 0)
 		failed(11);
 #endif
 #if (CONFTEST == 2) || defined(CONFTEST_ttcompat)
-    else if ((rc = ioctl(tty, I_PUSH, "ttcompat")) < 0)
+    else if (ioctl(tty, I_PUSH, "ttcompat") < 0)
 		failed(12);
 #endif
 #endif /* I_PUSH */
 #if CONFTEST >= 5
-    else if ((rc = tcgetattr(tty, &tio)) < 0)
+    else if (tcgetattr(tty, &tio) < 0)
 		failed(30);
-    else if ((rc = tcsetattr(tty, TCSAFLUSH, &tio)) < 0)
+    else if (tcsetattr(tty, TCSAFLUSH, &tio) < 0)
 		failed(31);
 #endif
 #endif /* CONFTEST */
-
+    (void) tty;
 	${cf_cv_main_return:-return}(code);
 ])
 dnl ---------------------------------------------------------------------------
