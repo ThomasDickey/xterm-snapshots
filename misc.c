@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.984 2021/06/06 22:00:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.987 2021/06/07 20:47:46 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -7149,7 +7149,7 @@ static const FontParams fontParams[] = {
 #if OPT_RENDERFONT
     Darg(XtNfaceSize,        misc.face_size[0]),	/* "-fs" */
     Sarg(XtNfaceName,        misc.default_xft.f_n),	/* "-fa" */
-    Barg(XtNrenderFont,      work.render_font),		/* (resource) */
+    Sarg(XtNrenderFont,      misc.render_font_s),	/* (resource) */
 #endif
 };
 /* *INDENT-ON* */
@@ -7180,6 +7180,17 @@ formatFontParam(char *result, XtermWidget xw, const FontParams * parameter)
 	    break;
 	case S_ARG:
 	    strcpy(next, TypedPtr(char *));
+	    if (!strcmp(parameter->name, XtNfaceName)) {
+		if (IsEmpty(next)
+		    && xw->work.render_font) {
+		    strcpy(next, DEFFACENAME_AUTO);
+		}
+	    } else if (!strcmp(parameter->name, XtNrenderFont)) {
+		if (xw->work.render_font == erDefault
+		    && IsEmpty(xw->misc.default_xft.f_n)) {
+		    strcpy(next, "DefaultOff");
+		}
+	    }
 	    break;
 	}
     }

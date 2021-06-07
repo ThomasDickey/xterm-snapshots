@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1031 2021/06/06 23:14:40 Stelios.Bounanos Exp $ */
+/* $XTermId: ptyx.h,v 1.1032 2021/06/07 19:29:11 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1946,6 +1946,7 @@ typedef enum {
 	erFalse = 0
 	, erTrue
 	, erDefault
+	, erDefaultOff
 	, erLast
 } RenderFont;
 

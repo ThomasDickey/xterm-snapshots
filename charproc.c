@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1831 2021/06/06 23:14:40 Stelios.Bounanos Exp $ */
+/* $XTermId: charproc.c,v 1.1832 2021/06/07 19:51:06 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -9070,6 +9070,7 @@ VTInitialize(Widget wrequest,
     static const FlagList tblRenderFont[] =
     {
 	DATA(Default)
+	,DATA(DefaultOff)
 	,DATA_END
     };
 #undef DATA
@@ -9839,6 +9840,8 @@ VTInitialize(Widget wrequest,
 	    wnew->work.render_font = erTrue;
 	    TRACE(("initially using TrueType font\n"));
 	}
+    } else if (wnew->work.render_font == erDefaultOff) {
+	wnew->work.render_font = erFalse;
     }
     /* minor tweak to make debug traces consistent: */
     if (wnew->work.render_font) {
