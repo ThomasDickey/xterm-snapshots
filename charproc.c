@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1830 2021/03/21 22:45:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1831 2021/06/06 23:14:40 Stelios.Bounanos Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -801,6 +801,7 @@ static XtResource xterm_resources[] =
 
 #if OPT_SCROLL_LOCK
     Bres(XtNallowScrollLock, XtCAllowScrollLock, screen.allowScrollLock0, False),
+    Bres(XtNautoScrollLock, XtCAutoScrollLock, screen.autoScrollLock, False),
 #endif
 
     /* these are used only for testing ncurses, not in the manual page */
@@ -9441,6 +9442,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_SCROLL_LOCK
     init_Bres(screen.allowScrollLock0);
+    init_Bres(screen.autoScrollLock);
 #endif
 
     init_Sres(screen.disallowedColorOps);
