@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.846 2021/06/06 23:14:40 Stelios.Bounanos Exp $
+.\" $XTermId: xterm.man,v 1.848 2021/06/07 21:00:31 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -1628,7 +1628,8 @@ The default is
 and is limited to the range 1 through 100.
 .TP 8
 .B "cursorTheme\fP (class\fB CursorTheme\fP)"
-The Xcursor(__miscmansuffix__) library provides a way to change the pointer shape and size.
+The Xcursor(__miscmansuffix__) library
+provides a way to change the pointer shape and size.
 The X11 library uses this library to extend the font- and glyph-cursor
 calls used by applications such as \fI\*n\fP  to substitute external
 files for the built-in \*(``core\*('' cursors provided by X.
@@ -2460,7 +2461,8 @@ which have incorrect font-metrics.
 .B "autoScrollLock\fP (class\fB AutoScrollLock\fP)"
 If \*(``true\*('', \fI\*n\fR will maintain its viewport of displayed lines
 whenever displaying scrollback, as if \fBallowScrollLock\fP were enabled
-and the Scroll Lock key had been pressed.  The default is \*(``false\*(''.
+and the Scroll Lock key had been pressed.
+The default is \*(``false\*(''.
 This feature is only useful if the \fBscrollTtyOutput\fP resource is set to
 \*(``false\*(''.
 .TP 8
@@ -4820,6 +4822,12 @@ That is normally \*(``mono\*(''.
 If the \fBfaceName\fP resource is set,
 then start by using the TrueType font rather than the bitmap font.
 .RE
+.TP 5
+defaultOff
+.br
+Enable the \*(``TrueType Fonts\*(''
+menu entry to allow runtime switching to/from TrueType fonts,
+but allow it to be initially unselected if no \fBfaceName\fP resource was given.
 .RE
 .TP 8
 .B "resizeByPixel\fP (class\fB ResizeByPixel\fP)"
