@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.988 2021/06/07 23:19:42 tom Exp $ */
+/* $XTermId: misc.c,v 1.990 2021/06/10 08:22:25 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3247,7 +3247,7 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 
     if (have == 0 || have > MAX_U_STRING) {
 	if (resource.reportColors) {
-	    printf("color  (ignored, length %lu)\n", have);
+	    printf("color  (ignored, length %lu)\n", (unsigned long) have);
 	}
     } else if (XParseColor(screen->display, cmap, spec, def)) {
 	XColor save_def = *def;
@@ -7264,7 +7264,7 @@ findFontParams(int argc, char **argv)
 }
 
 static int
-insertFontParams(XtermWidget xw, int *targetp, Boolean first)
+insertFontParams(XtermWidget xw, int *targetp, Bool first)
 {
     int changed = 0;
     int n;
