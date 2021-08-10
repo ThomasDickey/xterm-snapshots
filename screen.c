@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.598 2021/03/01 08:54:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.599 2021/08/10 19:13:01 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2791,7 +2791,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		    (exact
 		     ? ((target->right - target->left) + 1)
 		     : (getMaxCol(screen) - getMinCol(screen) + 1)),
-		    False);
+		    True);
     }
 }
 
