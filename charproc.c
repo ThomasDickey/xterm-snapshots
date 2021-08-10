@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1832 2021/06/07 19:51:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1834 2021/08/10 17:44:14 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3914,8 +3914,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       screen->cursor_shape, BtoS(blinks)));
 		if (change) {
 		    xtermSetCursorBox(screen);
-		    screen->cursor_blink_esc = blinks;
-		    UpdateCursorBlink(xw);
+		    if (SettableCursorBlink(screen)) {
+			screen->cursor_blink_esc = blinks;
+			UpdateCursorBlink(xw);
+		    }
 		}
 	    }
 	    ResetState(sp);
@@ -12539,6 +12541,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     /* make cursor visible */
     screen->cursor_set = ON;
     InitCursorShape(screen, screen);
+    xtermSetCursorBox(screen);
 #if OPT_BLINK_CURS
     screen->cursor_blink = screen->cursor_blink_i;
     screen->cursor_blink_esc = 0;
