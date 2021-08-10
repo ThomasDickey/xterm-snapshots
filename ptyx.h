@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1032 2021/06/07 19:29:11 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1033 2021/08/10 00:32:55 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3434,6 +3434,11 @@ typedef struct _TekWidgetRec {
 #else
 #define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
+
+/*
+ * Sixel-scrolling is backwards, perhaps from an error in the hardware design.
+ */
+#define SixelScrolling(xw) (!((xw)->keyboard.flags & MODE_DECSDM))
 
 /*
  * Per-line flags

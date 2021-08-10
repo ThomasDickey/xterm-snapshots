@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2336 2021/06/12 13:42:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.2339 2021/08/10 16:34:41 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1019,6 +1019,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>invert the sense of DECSDM, to correspond with VT382
+    manuals (lsix #41).</li>
+
     <li>update tables in wcwidth.c based on Unicode 14.0.0</li>
   </ul>
 
@@ -1030,7 +1033,7 @@
     <code>RenderFont</code> resource, as part of the
     session-management feature.</li>
 
-    <li>add auto-scroll-lock feature (patch by add Stelios
+    <li>add auto-scroll-lock feature (patch by Stelios
     Bounanos).</li>
 
     <li>update the window-size information returned via
@@ -11362,9 +11365,10 @@ Klanderman).
     rather than individually ascent and descent, and allows the
     bold font to be one pixel smaller than the normal font
     (addresses a report by Alan Citterman &lt;alan@mticket.com&gt;,
-    who says that something in patches #146 to #148 made xterm more
-    likely to overstrike bold fonts, and indirectly Debian bug
-    report #76404, which reports the opposite).</li>
+    who says that something in patches <a href=
+    "#xterm_146">#146</a> to <a href="#xterm_148">#148</a> made
+    xterm more likely to overstrike bold fonts, and indirectly
+    Debian bug report #76404, which reports the opposite).</li>
 
     <li>make configure script use $CFLAGS and $CPPFLAGS
     consistently, including removing a chunk from configure.in
@@ -11993,9 +11997,9 @@ Klanderman).
 
     <li>modified <code>creat_as()</code> a little more, retaining
     the ability to append to a logfile If the user specifies the
-    name. Also, check if the opened file (which patch #130 ensures
-    is owned by the effective user) is not writable by other
-    users.</li>
+    name. Also, check if the opened file (which <a href=
+    "#xterm_130">patch #130</a> ensures is owned by the effective
+    user) is not writable by other users.</li>
 
     <li>use <code>creat_as()</code> logic to make tek4014
     screen-copy more secure (noted by Branden Robinson).</li>
@@ -12965,9 +12969,10 @@ Klanderman).
   <ul>
     <li>correct selection logic: I omitted an offset that accounts
     for the distance into the scrollback buffer when rewriting this
-    for patch #101. Also fixed a similar problem for selecting
-    double size characters from the scrollback buffer (first was
-    reported by D Roland Walker &lt;walker@pobox.com&gt;).</li>
+    for <a href="#xterm_101">patch #101</a>. Also fixed a similar
+    problem for selecting double size characters from the
+    scrollback buffer (first was reported by D Roland Walker
+    &lt;walker@pobox.com&gt;).</li>
 
     <li>improved support for Unix98 PTY's, using patch in Debian
     bug report #35650, by J.H.M. Dassen
@@ -13001,9 +13006,9 @@ Klanderman).
   XFree86 3.9Pm</a></h1>
 
   <ul>
-    <li>revert change to openpty call in patch #101; this causes
-    xterm to fail on DEC-Alpha OSF/1 4.0B (reported by H Merijn
-    Brand).</li>
+    <li>revert change to openpty call in <a href="#xterm_101">patch
+    #101</a>; this causes xterm to fail on DEC-Alpha OSF/1 4.0B
+    (reported by H Merijn Brand).</li>
 
     <li>modify print.c to move include of stdio.h after the
     autoconf'd xtermcfg.h since HP's ANSI C compiler otherwise sees
@@ -13622,13 +13627,14 @@ Klanderman).
   <h1><a name="xterm_88" id="xterm_88">Patch #88 - 1998/10/31 -
   XFree86 3.9Nk and 3.3.2h</a></h1>
 
-  <p>This refines my #85 patch by checking for a case where the
-  font server returns a bold font that does not quite correspond to
-  the normal font. When I asked for a bold version of the 6x12
-  font, the font server returned a near equivalent where the ascent
-  and descent values did not match, causing xterm to leave lines
-  across the display. This patch makes xterm reject that type of
-  mismatch, falling back to the old font behavior.</p>
+  <p>This refines my <a href="#xterm_85">patch #85</a> by checking
+  for a case where the font server returns a bold font that does
+  not quite correspond to the normal font. When I asked for a bold
+  version of the 6x12 font, the font server returned a near
+  equivalent where the ascent and descent values did not match,
+  causing xterm to leave lines across the display. This patch makes
+  xterm reject that type of mismatch, falling back to the old font
+  behavior.</p>
 
   <h1><a name="xterm_87" id="xterm_87">Patch #87 - 1998/10/21 -
   XFree86 3.9Nj and 3.3.2f</a></h1>
@@ -13731,7 +13737,8 @@ Klanderman).
   <h1><a name="sync_83" id="sync_83">Resync #83 - 1998/10/7 -
   XFree86 3.3.2e</a></h1>
 
-  <p>Merge changes through patch #83 with the 3.3.2e version.</p>
+  <p>Merge changes through <a href="#xterm_83">patch #83</a> with
+  the 3.3.2e version.</p>
 
   <p>This follows a change from XFree86 CVS which adds checks for
   non-null return from malloc (patch by Matthieu Herrb).</p>
@@ -13771,7 +13778,7 @@ Klanderman).
   <h1><a name="xterm_82" id="xterm_82">Patch #82 - 1998/7/15 -
   XFree86 3.9Aj</a></h1>
 
-  <p>Bug fix for patch #81:</p>
+  <p>Bug fix for <a href="#xterm_81">patch #81</a>:</p>
 
   <ul>
     <li>remove an #undef for NBBY, which caused compile problem on
@@ -14211,8 +14218,8 @@ Klanderman).
   Olivier Calle &lt;olivier@tc.fluke.com&gt; as well as some other
   people after the XFree86 3.3.2 release.</p>
 
-  <p>The error was introduced by my patch #53 in XFree86 3.9r
-  (October 1997).</p>
+  <p>The error was introduced by my <a href="#xterm_53">patch
+  #53</a> in XFree86 3.9r (October 1997).</p>
 
   <p>The correction removes the reset of setuid/setgid before the
   main event loop, and solves the problem which I had worked around
@@ -14677,7 +14684,8 @@ Klanderman).
     ANSI colors, where exposure events would occasionally pick up
     the former (e.g., colorBD) rather than ANSI colors. Testing the
     colorAttrMode made this apparent, though it has been in the
-    code since 3.2A (patch #35 in Jan 1997).</li>
+    code since 3.2A (<a href="#xterm_35">patch #35</a> in Jan
+    1997).</li>
 
     <li>correct two problems with the optional logging support. On
     Linux at least, the waitpid call in creat_as hangs when the
@@ -15042,8 +15050,8 @@ Klanderman).
     entries).</li>
 
     <li>some minor tidying up (e.g., signed/unsigned use bitcpy,
-    MODE_DECCKM, resetColor, resetCharsets). More is done in patch
-    #35.</li>
+    MODE_DECCKM, resetColor, resetCharsets). More is done in
+    <a href="#xterm_35">patch #35</a>.</li>
   </ul>
 
   <p>I got the description of DECSTR from a vt420 user's manual.

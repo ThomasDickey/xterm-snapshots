@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.612 2021/03/24 00:41:44 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.614 2021/08/10 00:24:17 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #367
-.ds RF 2021/03/23
+.ds LF Patch #369
+.ds RF 2021/08/09
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1320,7 +1320,7 @@ This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
-  \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
 (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
@@ -1455,7 +1455,7 @@ This is normally disabled by a compile-time option.
 This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
-  \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
   \*(Ps = \*9\*5 \(-> Clear screen when DECCOLM is set/reset (DECNCSM),
 VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Don't send Mouse X & Y on button press and
@@ -3816,7 +3816,7 @@ EK-VT420-RM-002,
 EK-VT520-RM A01,
 EK-VT100-TM-003, and
 EK-VT102-UG-003.
-The remaining documents were found on the bitsavers site.
+In addition, several documents were found on the bitsavers site.
 .bP
 .\" http://www.bitsavers.org/pdf/dec/terminal/vt52/EK-VT5X-OP-001_DECscope_Users_Manual_Mar77.pdf
 \fIDECscope User's Manual\fP.
@@ -3868,13 +3868,37 @@ Digital Equipment Corporation
 Digital Equipment Corporation
 (EK-VT3XX-TP-001, March 1987).
 .bP
-.\" https://vt100.net/docs/vt3xx-gp/
+.\" http://www.bitsavers.org/pdf/dec/terminal/vt340/EK-VT3XX-GP-001_VT330_VT340_Graphics_Programming_Mar87.pdf
 \fIVT330/VT340 Programmer Reference Manual\fP
 .br
 \fIVolume 2: Graphics Programming\fP.
 .br
 Digital Equipment Corporation
 (EK-VT3XX-GP-001, March 1987).
+.bP
+.\" https://vt100.net/docs/vt3xx-gp/
+\fIVT330/VT340 Programmer Reference Manual\fP
+.br
+\fIVolume 2: Graphics Programming\fP.
+.br
+Digital Equipment Corporation
+(EK-VT3XX-GP-002, May 1988).
+.bP
+.\" https://vt100.net/dec/ek-vt382-rm-001.pdf
+\fIVT382 Kanji Display Terminal\fP
+.br
+\fIProgrammer Reference Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT382-RM-001).
+.bP
+.\" https://vt100.net/dec/ek-vt38t-ug-001.pdf
+\fIVT382 Thai Display Terminal\fP
+.br
+\fIInstalling and Using Manual\fP.
+.br
+Digital Equipment Corporation
+(EK-VT38T-UG-001, August 1989).
 .bP
 .\" http://www.bitsavers.org/pdf/dec/terminal/vt420/EK-VT420-UG-001_Installing_and_Using_The_VT420_Video_Terminal_Nov89.pdf
 \fIInstalling and Using\fP
@@ -3948,6 +3972,38 @@ hard reset (RIS).
 .IP
 Both the VT220 manual and DEC STD 070 (which documents
 levels 1-4 in detail) state that it is a soft reset, e.g., DECSTR.
+.bP
+The VT330/VT340 reference manual for graphics programming
+documents sixel scrolling in some detail in chapter 14.
+The VT382 Kanji and Thai manuals provide less information,
+but differ in their comment about the private mode
+DECSDM (\*(Cs\*?\*8\*0\*h),
+which each manual agrees should \fIset\fP the Sixel Scrolling feature.
+However, the VT330/VT340 manual says
+.RS
+.IP
+When sixel display mode is set, the Sixel Scrolling feature is enabled. 
+.RE
+.IP
+while the VT382 Kanji manual (page 6-6) says
+.RS
+.IP
+Disable sixel scroll
+.RE
+.IP
+and the VT382 Thai manual (page C-30) says
+.RS
+.IP
+No Sixel scrolling
+.RE
+.IP
+The standard (DEC STD 070) in chapter 9 (August 3, 1990)
+states on page 17 that video devices will scroll
+when advancing the Sixel active position past the bottom margin,
+but on page 19, in the section on deviations,
+states that VT125 and VT240 did not scroll in this situation.
+The standard does not mention VT330/VT340 or VT382.
+Nor does it document DECSDM.
 .LP
 Here are the relevant standards:
 .bP
