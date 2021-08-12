@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.221 2021/03/21 19:51:33 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.222 2021/08/12 00:36:18 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -88,6 +88,7 @@
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PCRE2POSIX_H	/* CF_WITH_PCRE2 */
+#undef HAVE_PCRE2REGCOMP	/* CF_WITH_PCRE2 */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
 #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
 #undef HAVE_POSIX_SAVED_IDS	/* CF_POSIX_SAVED_IDS */
