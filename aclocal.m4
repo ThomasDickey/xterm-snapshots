@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.489 2021/06/13 23:45:41 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.490 2021/08/12 00:35:34 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4332,7 +4332,7 @@ if test "$with_pcre" != no ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PCRE2 version: 5 updated: 2021/01/26 18:45:12
+dnl CF_WITH_PCRE2 version: 6 updated: 2021/08/11 20:35:34
 dnl -------------
 dnl Add PCRE2 (Perl-compatible regular expressions v2) to the build if it is
 dnl available and the user requests it.  Assume the application will otherwise
@@ -4374,6 +4374,7 @@ if test "x$with_pcre2" != xno ; then
 
 	# either way, check for the library header files
 	AC_CHECK_HEADERS(pcre2posix.h pcreposix.h)
+	AC_CHECK_FUNCS(PCRE2regcomp)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------

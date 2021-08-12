@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2342 2021/08/10 19:20:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.2343 2021/08/12 00:33:06 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1019,6 +1019,8 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add workaround for broken pcre2 package in Debian 10.</li>
+
     <li>change screen-refresh call used for <code>DECCARA</code>
     and <code>DECRARA</code> to ensure that trailing blanks which
     are part of the rectangle are repainted (report/analysis by
