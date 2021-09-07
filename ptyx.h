@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1033 2021/08/10 00:32:55 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1038 2021/08/24 10:16:04 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -616,10 +616,6 @@ typedef enum {
 #define OPT_EXTRA_PASTE 1
 #endif
 
-#ifndef OPT_FIFO_LINES
-#define OPT_FIFO_LINES 1 /* optimize save-lines feature using FIFO */
-#endif
-
 #ifndef OPT_FOCUS_EVENT
 #define OPT_FOCUS_EVENT	1 /* focus in/out events */
 #endif
@@ -750,10 +746,6 @@ typedef enum {
 
 #ifndef OPT_SAME_NAME
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
-#endif
-
-#ifndef OPT_SAVE_LINES
-#define OPT_SAVE_LINES OPT_FIFO_LINES /* optimize save-lines feature */
 #endif
 
 #ifndef OPT_SCO_FUNC_KEYS
@@ -3021,6 +3013,13 @@ typedef enum {			/* legal values for screen.eight_bit_meta */
     , ebLast
 } ebMetaModeTypes;
 
+typedef enum {			/* legal values for misc.cdXtraScroll */
+    edFalse = 0
+    , edTrue = 1
+    , edTrim = 2
+    , edLast
+} edXtraScrollTypes;
+
 #define NAME_OLD_KT " legacy"
 
 #if OPT_HP_FUNC_KEYS
@@ -3139,10 +3138,12 @@ typedef struct _Misc {
     Boolean useRight;
 #endif
     Boolean titeInhibit;
-    Boolean tiXtraScroll;	/* scroll on ti/te */
-    Boolean cdXtraScroll;	/* scroll on cd (clear-display) */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
+    int cdXtraScroll;		/* scroll on cd (clear-display) */
+    char *cdXtraScroll_s;
+    int tiXtraScroll;		/* scroll on ti/te (init/end-cup) */
+    char *tiXtraScroll_s;
 #if OPT_INPUT_METHOD
     char* f_x;			/* font for XIM */
     char* input_method;

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.848 2021/06/07 21:00:31 tom Exp $
+.\" $XTermId: xterm.man,v 1.851 2021/09/07 00:02:12 tom Exp $
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
 .\"
@@ -2661,6 +2661,22 @@ the whole screen.
 Like \fBtiXtraScroll\fP,
 the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback before wiping out the text.
+.IP
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+nothing is added to the scrollback.
+.TP
+true (1)
+the current screen is added to the scrollback.
+.TP
+trim (2)
+the current screen is added to the scrollback,
+but repeated blank lines are trimmed (reduced to a single blank line).
+.RE
+.IP
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "charClass\fP (class\fB CharClass\fP)"
@@ -5112,11 +5128,28 @@ The default is \*(``false\*(''.
 .TP 8
 .B "tiXtraScroll\fP (class\fB TiXtraScroll\fP)"
 Specifies whether \fI\*n\fP should scroll to a new page when processing
-the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
+the \fIti\fP or \fIte\fP termcap strings,
+i.e., the private modes 47, 1047 or 1049.
 This is only in effect if \fBtiteInhibit\fP is \*(``true\*('',
 because the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback without wiping out the text that
 would be shown before the application was initialized.
+.IP
+\fI\*N\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+nothing is added to the scrollback.
+.TP
+true (1)
+the current screen is added to the scrollback.
+.TP
+trim (2)
+the current screen is added to the scrollback,
+but repeated blank lines are trimmed (reduced to a single blank line).
+.RE
+.IP
 The default for this resource is \*(``false\*(''.
 .TP 8
 .B "titeInhibit\fP (class\fB TiteInhibit\fP)"
@@ -8867,7 +8900,7 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 228 in September 2020.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 234 in August 2021.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,

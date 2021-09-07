@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.187 2021/03/24 00:39:41 tom Exp $
+-- $XTermId: INSTALL,v 1.188 2021/08/22 20:00:36 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2020,2021 by Thomas E. Dickey
 --
@@ -165,9 +165,7 @@ The options (in alphabetic order):
 
   --disable-fifo-lines    enable FIFO-storage for saved-lines
 
-	With patch #244, xterm by default stores saved-lines in a FIFO
-	(circular buffer), which improves performance when the number of saved
-	lines is large.  Disable this option to revert to the pre-244 layout.
+	(this option is deprecrated)
 
   --disable-freetype      disable freetype library-support
 
