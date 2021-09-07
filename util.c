@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.878 2021/06/06 23:14:52 Stelios.Bounanos Exp $ */
+/* $XTermId: util.c,v 1.882 2021/09/07 00:03:00 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -79,6 +79,13 @@
 #endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
 
 #include <graphics.h>
+
+#define IncrementSavedLines(amount) \
+	    if (screen->savedlines < screen->savelines) { \
+		if ((screen->savedlines += amount) > screen->savelines) \
+		    screen->savedlines = screen->savelines; \
+		ScrollBarDrawThumb(xw, 1); \
+	    }
 
 static int handle_translated_exposure(XtermWidget xw,
 				      int rect_x,
@@ -228,15 +235,7 @@ FlushScroll(XtermWidget xw)
 		    refreshheight = screen->scroll_amt;
 		}
 	    }
-	    i = screen->savedlines;
-	    if (i < screen->savelines) {
-		i += screen->scroll_amt;
-		if (i > screen->savelines) {
-		    i = screen->savelines;
-		}
-		screen->savedlines = i;
-		ScrollBarDrawThumb(xw, 1);
-	    }
+	    IncrementSavedLines(screen->scroll_amt);
 	} else {
 	    scrolltop = screen->top_marg + shift;
 	    i = bot - (screen->bot_marg - screen->refresh_amt + screen->scroll_amt);
@@ -611,7 +610,8 @@ xtermScroll(XtermWidget xw, int amount)
 					  && screen->top_marg == 0);
     Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
-    TRACE(("xtermScroll count=%d\n", amount));
+    TRACE(("xtermScroll count=%d (top %d, saved %d)\n", amount,
+	   screen->topline, screen->savelines));
 
     screen->cursor_busy += 1;
     screen->cursor_moved = True;
@@ -687,12 +687,7 @@ xtermScroll(XtermWidget xw, int amount)
 		scrolltop = 0;
 		if ((scrollheight += shift) > i)
 		    scrollheight = i;
-		if ((i = screen->savedlines) < screen->savelines) {
-		    if ((i += amount) > screen->savelines)
-			i = screen->savelines;
-		    screen->savedlines = i;
-		    ScrollBarDrawThumb(xw, 1);
-		}
+		IncrementSavedLines(amount);
 	    } else {
 		scrolltop = screen->top_marg + shift;
 		if ((i = screen->bot_marg - bot) > 0) {
@@ -770,6 +765,8 @@ xtermScroll(XtermWidget xw, int amount)
   done:
     screen->do_wrap = save_wrap;
     screen->cursor_busy -= 1;
+    TRACE(("...xtermScroll count=%d (top %d, saved %d)\n", amount,
+	   screen->topline, screen->savelines));
     return;
 }
 
@@ -1305,7 +1302,7 @@ InsertLine(XtermWidget xw, int n)
  * at the cursor's position, lines added at bottom margin are blank.
  */
 void
-DeleteLine(XtermWidget xw, int n)
+DeleteLine(XtermWidget xw, int n, Bool canSave)
 {
     TScreen *screen = TScreenOf(xw);
     int i;
@@ -1341,8 +1338,10 @@ DeleteLine(XtermWidget xw, int n)
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
 		FlushScroll(xw);
-	    screen->scroll_amt += n;
-	    screen->refresh_amt += n;
+	    if (canSave) {
+		screen->scroll_amt += n;
+		screen->refresh_amt += n;
+	    }
 	} else {
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
@@ -1353,7 +1352,7 @@ DeleteLine(XtermWidget xw, int n)
     if (n > 0) {
 	if (left > 0 || right < screen->max_col) {
 	    scrollInMargins(xw, n, screen->cur_row);
-	} else if (scroll_all_lines) {
+	} else if (canSave && scroll_all_lines) {
 	    ScrnDeleteLine(xw,
 			   screen->saveBuf_index,
 			   screen->bot_marg + screen->savelines,
@@ -1387,16 +1386,11 @@ DeleteLine(XtermWidget xw, int n)
 	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
 	    (i = screen->max_row - refreshheight + 1))
 	    refreshtop = i;
-	if (scroll_all_lines) {
+	if (canSave && scroll_all_lines) {
 	    scrolltop = 0;
 	    if ((scrollheight += shift) > i)
 		scrollheight = i;
-	    if ((i = screen->savedlines) < screen->savelines) {
-		if ((i += n) > screen->savelines)
-		    i = screen->savelines;
-		screen->savedlines = i;
-		ScrollBarDrawThumb(xw, 1);
-	    }
+	    IncrementSavedLines(n);
 	} else {
 	    scrolltop = screen->cur_row + shift;
 	    if ((i = screen->bot_marg - bot) > 0) {
@@ -2014,6 +2008,25 @@ do_erase_display(XtermWidget xw, int param, int mode)
 }
 
 static Boolean
+row_has_data(TScreen *screen, int row)
+{
+    Boolean result = False;
+    CLineData *ld;
+
+    if ((ld = getLineData(screen, row)) != 0) {
+	int col;
+
+	for (col = 0; col < screen->max_col; ++col) {
+	    if (ld->attribs[col] & CHARDRAWN && ld->charData[col] != ' ') {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static Boolean
 screen_has_data(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2021,39 +2034,69 @@ screen_has_data(XtermWidget xw)
     int row;
 
     for (row = 0; row < screen->max_row; ++row) {
-	CLineData *ld;
-
-	if ((ld = getLineData(screen, row)) != 0) {
-	    int col;
-
-	    for (col = 0; col < screen->max_col; ++col) {
-		if (ld->attribs[col] & CHARDRAWN) {
-		    result = True;
-		    break;
-		}
-	    }
-	}
-	if (result)
+	if (row_has_data(screen, row)) {
+	    result = True;
 	    break;
+	}
     }
     return result;
 }
 
+static void
+do_extra_scroll(XtermWidget xw, Bool trimmed)
+{
+    TScreen *screen = TScreenOf(xw);
+    int row;
+
+    if (screen_has_data(xw)) {
+	TRACE(("do_extra_scroll buffer=%d, trimmed=%s\n", screen->whichBuf,
+	       BtoS(trimmed)));
+	if (trimmed) {
+	    Boolean hadData = ((screen->saved_fifo > 0)
+			       ? row_has_data(screen, -1)
+			       : False);
+
+	    for (row = 0; row < screen->max_row; ++row) {
+		Boolean hasData = row_has_data(screen, row);
+		if (hasData || hadData) {
+		    LineData *dst = addScrollback(screen);
+		    LineData *src = getLineData(screen, row);
+		    copyLineData(dst, src);
+		    IncrementSavedLines(1);
+		}
+		hadData = hasData;
+	    }
+	} else {
+	    xtermScroll(xw, screen->max_row);
+	    FlushScroll(xw);
+	}
+	xtermRepaint(xw);
+    }
+}
+
 /*
- * Like tiXtraScroll, perform a scroll up of the page contents.  In this case,
- * it happens for the special case when erasing the whole display starting from
- * the upper-left corner of the screen.
+ * Like tiXtraScroll, perform a scroll up of the page contents.
+ *
+ * In this case, it happens for the special case when erasing the whole
+ * display, e.g., an erase-below starting from the upper-left corner of the
+ * screen, or if the erasure applies to the whole screen.
  */
 void
-do_cd_xtra_scroll(XtermWidget xw)
+do_cd_xtra_scroll(XtermWidget xw, int param)
 {
     TScreen *screen = TScreenOf(xw);
 
+    TRACE(("do_cd_xtra_scroll param %d, @%d,%d vs %d,%d\n", param,
+	   screen->cur_row,
+	   screen->cur_col,
+	   ScrnTopMargin(xw),
+	   ScrnLeftMargin(xw)));
     if (xw->misc.cdXtraScroll
-	&& screen->cur_col == 0
-	&& screen->cur_row == 0
-	&& screen_has_data(xw)) {
-	xtermScroll(xw, screen->max_row);
+	&& (param == 2 ||
+	    (param == 0
+	     && screen->cur_col <= ScrnLeftMargin(xw)
+	     && screen->cur_row <= ScrnTopMargin(xw)))) {
+	do_extra_scroll(xw, (xw->misc.cdXtraScroll == edTrim));
     }
 }
 
@@ -2064,10 +2107,8 @@ do_cd_xtra_scroll(XtermWidget xw)
 void
 do_ti_xtra_scroll(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
-
     if (xw->misc.tiXtraScroll) {
-	xtermScroll(xw, screen->max_row);
+	do_extra_scroll(xw, False);
     }
 }
 

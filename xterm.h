@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.893 2021/06/06 23:14:40 Stelios.Bounanos Exp $ */
+/* $XTermId: xterm.h,v 1.895 2021/08/22 22:39:44 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1562,7 +1562,7 @@ extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
 extern void DeleteChar (XtermWidget /* xw */, unsigned /* n */);
-extern void DeleteLine (XtermWidget /* xw */, int /* n */);
+extern void DeleteLine (XtermWidget /* xw */, int /* n */, Bool /* canSave */);
 extern void FlushScroll (XtermWidget /* xw */);
 extern void GetColors (XtermWidget  /* xw */, ScrnColors * /* pColors */);
 extern void InsertChar (XtermWidget /* xw */, unsigned /* n */);
@@ -1572,7 +1572,7 @@ extern void ReverseVideo (XtermWidget /* xw */);
 extern void WriteText (XtermWidget /* xw */, IChar * /* str */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
 extern void decode_wcwidth (XtermWidget  /* xw */);
-extern void do_cd_xtra_scroll (XtermWidget /* xw */);
+extern void do_cd_xtra_scroll (XtermWidget /* xw */, int /* param */);
 extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_erase_char (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_erase_line (XtermWidget /* xw */, int  /* param */, int  /* mode */);

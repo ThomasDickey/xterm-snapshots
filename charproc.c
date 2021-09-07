@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1834 2021/08/10 17:44:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1841 2021/09/07 00:13:38 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -448,7 +448,7 @@ static XtResource xterm_resources[] =
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
-    Bres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll, False),
+    Sres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll_s, DEF_CD_XTRA_SCROLL),
     Bres(XtNcolorInnerBorder, XtCColorInnerBorder, misc.color_inner_border, False),
     Bres(XtNcurses, XtCCurses, screen.curses, False),
     Bres(XtNcutNewline, XtCCutNewline, screen.cutNewline, True),
@@ -490,7 +490,7 @@ static XtResource xterm_resources[] =
 	 screen.selectToClipboard, False),
     Bres(XtNsignalInhibit, XtCSignalInhibit, misc.signalInhibit, False),
     Bres(XtNtiteInhibit, XtCTiteInhibit, misc.titeInhibit, False),
-    Bres(XtNtiXtraScroll, XtCTiXtraScroll, misc.tiXtraScroll, False),
+    Sres(XtNtiXtraScroll, XtCTiXtraScroll, misc.tiXtraScroll_s, DEF_TI_XTRA_SCROLL),
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
     Bres(XtNunderLine, XtCUnderLine, screen.underline, True),
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
@@ -2969,7 +2969,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ED:
 	    TRACE(("CASE_ED - erase display\n"));
-	    do_cd_xtra_scroll(xw);
+	    do_cd_xtra_scroll(xw, zero_if_default(0));
 	    do_erase_display(xw, zero_if_default(0), OFF_PROTECT);
 	    ResetState(sp);
 	    break;
@@ -2995,7 +2995,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DL:
 	    TRACE(("CASE_DL - delete line\n"));
-	    DeleteLine(xw, one_if_default(0));
+	    DeleteLine(xw, one_if_default(0), True);
 	    ResetState(sp);
 	    break;
 
@@ -7996,15 +7996,14 @@ ToAlternate(XtermWidget xw, Bool clearFirst)
 
     if (screen->whichBuf == 0) {
 	TRACE(("ToAlternate\n"));
-	if (!screen->editBuf_index[1])
+	if (!screen->editBuf_index[1]) {
 	    screen->editBuf_index[1] = allocScrnBuf(xw,
 						    (unsigned) MaxRows(screen),
 						    (unsigned) MaxCols(screen),
 						    &screen->editBuf_data[1]);
+	}
 	SwitchBufs(xw, 1, clearFirst);
-#if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
-#endif
 	update_altscreen();
     }
 }
@@ -8016,12 +8015,11 @@ FromAlternate(XtermWidget xw)
 
     if (screen->whichBuf != 0) {
 	TRACE(("FromAlternate\n"));
-	if (screen->scroll_amt)
+	if (screen->scroll_amt) {
 	    FlushScroll(xw);
+	}
 	SwitchBufs(xw, 0, False);
-#if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
-#endif
 	update_altscreen();
     }
 }
@@ -8059,9 +8057,7 @@ Bool
 CheckBufPtrs(TScreen *screen)
 {
     return (screen->visbuf != 0
-#if OPT_SAVE_LINES
 	    && screen->editBuf_index[0] != 0
-#endif
 	    && screen->editBuf_index[1] != 0);
 }
 
@@ -8072,16 +8068,7 @@ void
 SwitchBufPtrs(TScreen *screen, int toBuf)
 {
     if (CheckBufPtrs(screen)) {
-#if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[toBuf];
-#else
-	size_t len = ScrnPointers(screen, (size_t) MaxRows(screen));
-
-	(void) toBuf;
-	memcpy(screen->save_ptr, screen->visbuf, len);
-	memcpy(screen->visbuf, screen->editBuf_index[1], len);
-	memcpy(screen->editBuf_index[1], screen->save_ptr, len);
-#endif
     }
 }
 
@@ -9117,6 +9104,14 @@ VTInitialize(Widget wrequest,
     };
 #undef DATA
 
+#define DATA(name) { #name, ed##name }
+    static const FlagList tblCdXtraScroll[] =
+    {
+	DATA(Trim)
+	,DATA_END
+    };
+#undef DATA
+
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
@@ -9523,11 +9518,17 @@ VTInitialize(Widget wrequest,
 
     init_Bres(misc.signalInhibit);
     init_Bres(misc.titeInhibit);
-    init_Bres(misc.tiXtraScroll);
-    init_Bres(misc.cdXtraScroll);
     init_Bres(misc.color_inner_border);
     init_Bres(misc.dynamicColors);
     init_Bres(misc.resizeByPixel);
+
+    init_Sres(misc.cdXtraScroll_s);
+    wnew->misc.cdXtraScroll =
+	extendedBoolean(request->misc.cdXtraScroll_s, tblCdXtraScroll, edLast);
+
+    init_Sres(misc.tiXtraScroll_s);
+    wnew->misc.tiXtraScroll =
+	extendedBoolean(request->misc.tiXtraScroll_s, tblCdXtraScroll, edLast);
 
 #if OPT_DEC_CHRSET
     for (i = 0; i < NUM_CHRSET; i++) {
@@ -10323,6 +10324,7 @@ cleanupInputMethod(XtermWidget xw)
 static void
 freeVTwin(Display *dpy, const char *whichWin, VTwin *win)
 {
+    (void) whichWin;
     TRACE_FREE_GC(whichWin, win->filler_gc);
     TRACE_FREE_GC(whichWin, win->border_gc);
     TRACE_FREE_GC(whichWin, win->marker_gc[0]);
@@ -10345,11 +10347,11 @@ VTDestroy(Widget w GCC_UNUSED)
 	XtUninstallTranslations(screen->scrollWidget);
 	XtDestroyWidget(screen->scrollWidget);
     }
-#if OPT_FIFO_LINES
+
     while (screen->saved_fifo > 0) {
 	deleteScrollback(screen);
     }
-#endif
+
     while (screen->save_title != 0) {
 	SaveTitle *last = screen->save_title;
 	screen->save_title = last->next;

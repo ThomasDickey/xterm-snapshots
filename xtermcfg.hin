@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.222 2021/08/12 00:36:18 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.223 2021/08/22 20:00:07 tom Exp $ */
 
 /*
  * Copyright 1997-2020,2021 by Thomas E. Dickey
@@ -158,7 +158,6 @@
 #undef OPT_DIRECT_COLOR		/* CF_ARG_ENABLE(direct-color) */
 #undef OPT_DOUBLE_BUFFER	/* CF_ARG_ENABLE(double-buffer) */
 #undef OPT_EXEC_XTERM		/* CF_ARG_ENABLE(exec-xterm) */
-#undef OPT_FIFO_LINES		/* CF_ARG_ENABLE(fifo-lines) */
 #undef OPT_GRAPHICS		/* CF_ARG_ENABLE(graphics) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS		/* CF_ARG_ENABLE(hp-fkeys) */
