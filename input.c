@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.365 2020/10/12 19:21:53 tom Exp $ */
+/* $XTermId: input.c,v 1.367 2021/09/11 22:03:52 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2021 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1511,6 +1511,9 @@ hpfuncvalue(ANSI *reply, KEY_DATA * kd)
 #ifdef DXK_Remove
 	    MAP(DXK_Remove, 'P');
 #endif
+#ifdef XK_ISO_Left_Tab
+	    MAP(XK_ISO_Left_Tab, 'Z');
+#endif
 	    MAP(XK_Select, 'F');
 	    MAP(XK_Find, 'h');
 	default:
@@ -1603,6 +1606,9 @@ scofuncvalue(ANSI *reply, KEY_DATA * kd)
 #ifdef XK_KP_Insert
 	    MAP(XK_KP_Insert, 'L');
 #endif
+#ifdef XK_ISO_Left_Tab
+	    MAP(XK_ISO_Left_Tab, 'Z');
+#endif
 	default:
 	    result = -1;
 	    break;
@@ -1686,6 +1692,9 @@ sunfuncvalue(ANSI *reply, KEY_DATA * kd)
 #endif
 #ifdef DXK_Remove
 	    MAP(DXK_Remove, 3);
+#endif
+#ifdef XK_ISO_Left_Tab
+	    MAP(XK_ISO_Left_Tab, 'Z');
 #endif
 	    MAP(XK_Select, 4);
 

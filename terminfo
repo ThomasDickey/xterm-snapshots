@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.197 2021/02/28 12:02:56 tom Exp $
+# $XTermId: terminfo,v 1.198 2021/09/11 22:09:29 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -1348,7 +1348,25 @@ xterm-sun|xterm with sun function keys,
 	kpp=\E[216z,
 	kund=\E[195z,
 	use=xterm+nofkeys,
+
+# Note: normally xterm supports modified function-keys as described in
+#	XTerm - "Other" modified keys
+#	https://invisible-island.net/xterm/modified-keys.html
 #
+# However, xterm-hp, xterm-sco and xterm-sun assume no modifiers.  Here is
+# a simple script which demonstrates these descriptions:
+#	#!/bin/sh
+#	export TERM=xterm-$1
+#	xterm \
+#		-kt $1 \
+#		-fs 16 -fa mono \
+#		-title $TERM \
+#		-tn $TERM \
+#		-xrm '*modifyCursorKeys:-1' \
+#		-xrm '*modifyFunctionKeys:-1' \
+#		-e tack
+# e.g., "foo sun" if the script is named "foo" -TD
+
 xterm-hp|xterm with hpterm function keys,
 	kclr=\EJ,
 	kcub1=\ED,
