@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.367 2021/09/11 22:03:52 tom Exp $ */
+/* $XTermId: input.c,v 1.368 2021/09/12 18:20:03 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -999,10 +999,14 @@ Input(XtermWidget xw,
 	}
     }
 #ifdef XK_ISO_Left_Tab
-    else if (IsTabKey(kd.keysym)
-	     && kd.nbytes <= 1
-	     && modify_parm == (MOD_NONE + MOD_SHIFT)) {
-	kd.keysym = XK_ISO_Left_Tab;
+    else if (IsTabKey(kd.keysym) && kd.nbytes <= 1) {
+	if (allowModifierParm(xw, &kd)) {
+	    if (modify_parm == (MOD_NONE + MOD_SHIFT)) {
+		kd.keysym = XK_ISO_Left_Tab;
+	    }
+	} else if (evt_state & ShiftMask) {
+	    kd.keysym = XK_ISO_Left_Tab;
+	}
     }
 #endif
 #endif /* OPT_MOD_FKEYS */
@@ -1458,9 +1462,6 @@ decfuncvalue(KEY_DATA * kd)
 	    MAP(XK_Select, 4);
 	    MAP(XK_Prior, 5);
 	    MAP(XK_Next, 6);
-#ifdef XK_ISO_Left_Tab
-	    MAP(XK_ISO_Left_Tab, 'Z');
-#endif
 	    MAP(XK_Help, 28);
 	    MAP(XK_Menu, 29);
 	default:
@@ -1510,9 +1511,6 @@ hpfuncvalue(ANSI *reply, KEY_DATA * kd)
 #endif
 #ifdef DXK_Remove
 	    MAP(DXK_Remove, 'P');
-#endif
-#ifdef XK_ISO_Left_Tab
-	    MAP(XK_ISO_Left_Tab, 'Z');
 #endif
 	    MAP(XK_Select, 'F');
 	    MAP(XK_Find, 'h');
@@ -1606,9 +1604,6 @@ scofuncvalue(ANSI *reply, KEY_DATA * kd)
 #ifdef XK_KP_Insert
 	    MAP(XK_KP_Insert, 'L');
 #endif
-#ifdef XK_ISO_Left_Tab
-	    MAP(XK_ISO_Left_Tab, 'Z');
-#endif
 	default:
 	    result = -1;
 	    break;
@@ -1692,9 +1687,6 @@ sunfuncvalue(ANSI *reply, KEY_DATA * kd)
 #endif
 #ifdef DXK_Remove
 	    MAP(DXK_Remove, 3);
-#endif
-#ifdef XK_ISO_Left_Tab
-	    MAP(XK_ISO_Left_Tab, 'Z');
 #endif
 	    MAP(XK_Select, 4);
 
