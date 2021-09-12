@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.198 2021/09/11 22:09:29 tom Exp $
+# $XTermId: terminfo,v 1.199 2021/09/12 10:35:13 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -1347,6 +1347,7 @@ xterm-sun|xterm with sun function keys,
 	knp=\E[222z,
 	kpp=\E[216z,
 	kund=\E[195z,
+	use=xterm+nopcfkeys,
 	use=xterm+nofkeys,
 
 # Note: normally xterm supports modified function-keys as described in
@@ -1388,6 +1389,7 @@ xterm-hp|xterm with hpterm function keys,
 	knp=\ES,
 	kpp=\ET,
 	use=xterm+nofkeys,
+	use=xterm+nopcfkeys,
 #
 # scoterm implements 48 function-keys using shift- and control-modifiers to
 # multiple 12 function-keys.  X has a hard-coded limit of 35 function-keys,
@@ -1596,6 +1598,58 @@ xterm+titlestack|xterm 251 feature,
 xterm+alt+title|xterm 90 and 251 features combined,
 	rmcup=\E[?1049l\E[23;0;0t,
 	smcup=\E[?1049h\E[22;0;0t,
+
+# The xterm ctrlFKeys resource defaults to 10, so without the "pc-style"
+# feature, e.g., setting the modifyCursorKeys and modifyFunctionKeys resources
+# to -1 to disable them, one gets 42 function-keys on a 12-function-key
+# keyboard, e.g.,
+# kf1                   = \E[11~
+# kf11 shift f1         = \E[23~
+# kf21 control f1       = \E[42~
+# kf31 shift control f1 = \E[52~
+xterm+nopcfkeys|fragment without PC-style fkeys,
+	kf1=\E[11~,
+	kf10=\E[21~,
+	kf11=\E[23~,
+	kf12=\E[24~,
+	kf13=\E[25~,
+	kf14=\E[26~,
+	kf15=\E[28~,
+	kf16=\E[29~,
+	kf17=\E[31~,
+	kf18=\E[32~,
+	kf19=\E[33~,
+	kf2=\E[12~,
+	kf20=\E[34~,
+	kf21=\E[42~,
+	kf22=\E[43~,
+	kf23=\E[44~,
+	kf24=\E[45~,
+	kf25=\E[46~,
+	kf26=\E[47~,
+	kf27=\E[48~,
+	kf28=\E[49~,
+	kf29=\E[50~,
+	kf3=\E[13~,
+	kf30=\E[51~,
+	kf31=\E[52~,
+	kf32=\E[53~,
+	kf33=\E[54~,
+	kf34=\E[55~,
+	kf35=\E[56~,
+	kf36=\E[57~,
+	kf37=\E[58~,
+	kf38=\E[59~,
+	kf39=\E[60~,
+	kf4=\E[14~,
+	kf40=\E[61~,
+	kf41=\E[62~,
+	kf42=\E[63~,
+	kf5=\E[15~,
+	kf6=\E[17~,
+	kf7=\E[18~,
+	kf8=\E[19~,
+	kf9=\E[20~,
 
 # from development after ncurses 6.1:
 # Xterm's emulation of the VT100 numeric keypad on a PC-keyboard runs into the
@@ -1902,7 +1956,7 @@ xterm+256color|original xterm 256-color feature,
 	colors#0x100,
 	pairs#0x10000,
 	initc=\E]4;
-		%p1%d;rgb:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
+		%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
 	oc=\E]104\007,
 	setab=\E[
 		%?
@@ -1936,7 +1990,7 @@ xterm+256color2|xterm 256-color feature,
 		%e
 			%p1%{16}%<
 			%t10%p1%{8}%-%d
-		%e48:5:
+		%e48\:5\:
 			%p1%d
 		%;
 		m,
@@ -1947,7 +2001,7 @@ xterm+256color2|xterm 256-color feature,
 		%e
 			%p1%{16}%<
 			%t9%p1%{8}%-%d
-		%e38:5:
+		%e38\:5\:
 			%p1%d
 		%;
 		m,
@@ -1986,16 +2040,16 @@ xterm+direct|xterm with direct-color indexing,
 		%?
 			%p1%{8}%<
 			%t4%p1%d
-		%e48:2::
-			%p1%{65536}%/%d:%p1%{256}%/%{255}%&%d:%p1%{255}%&%d
+		%e48\:2\:\:
+			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
 		%;
 		m,
 	setaf=\E[
 		%?
 			%p1%{8}%<
 			%t3%p1%d
-		%e38:2::
-			%p1%{65536}%/%d:%p1%{256}%/%{255}%&%d:%p1%{255}%&%d
+		%e38\:2\:\:
+			%p1%{65536}%/%d\:%p1%{256}%/%{255}%&%d\:%p1%{255}%&%d
 		%;
 		m,
 	setb@,
