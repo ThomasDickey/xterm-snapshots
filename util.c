@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.882 2021/09/07 00:03:00 tom Exp $ */
+/* $XTermId: util.c,v 1.883 2021/09/12 18:38:50 Martijn.van.Duren Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2979,14 +2979,14 @@ getXftColor(XtermWidget xw, Pixel pixel)
 	      ? (((ch) >= 128 && (ch) < 160) \
 		  ? (TScreenOf(xw)->c1_printable ? 1 : 0) \
 		  : 1) \
-	      : CharWidth(ch)))
+	      : CharWidth(TScreenOf(xw), ch)))
 #else
 #define XtermCellWidth(xw, ch) \
 	(((ch) == 0 || (ch) == 127) \
 	  ? 0 \
 	  : (((ch) < 256) \
 	      ? 1 \
-	      : CharWidth(ch)))
+	      : CharWidth(TScreenOf(xw), ch)))
 #endif
 
 #endif /* OPT_RENDERWIDE */
@@ -3289,7 +3289,7 @@ ucs_workaround(XTermDraw * params,
 	IChar eqv = (IChar) AsciiEquivs(ch);
 
 	if (eqv != (IChar) ch) {
-	    int width = CharWidth(ch);
+	    int width = CharWidth(screen, ch);
 
 	    do {
 		drawXtermText(params,
@@ -3981,7 +3981,7 @@ drawXtermText(XTermDraw * params,
 		unsigned ch = (unsigned) text[last];
 		int filler = 0;
 #if OPT_WIDE_CHARS
-		int needed = forceDbl ? 2 : CharWidth(ch);
+		int needed = forceDbl ? 2 : CharWidth(screen, ch);
 		XftFont *currFont = pickXftFont(needed, font, wfont);
 		XftFont *tempFont = 0;
 #define CURR_TEMP (tempFont ? tempFont : currFont)
@@ -4252,7 +4252,7 @@ drawXtermText(XTermDraw * params,
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = CharWidth(ch);
+	    ch_width = CharWidth(screen, ch);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4377,7 +4377,7 @@ drawXtermText(XTermDraw * params,
 
 	    if (!needWide
 		&& !IsIcon(screen)
-		&& ((recur.on_wide || CharWidth(ch) > 1)
+		&& ((recur.on_wide || CharWidth(screen, ch) > 1)
 		    && okFont(NormalWFont(screen)))) {
 		needWide = True;
 	    }
@@ -5101,7 +5101,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 	size_t off;
 
 	TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
-	       row, col, ch, CharWidth(ch)));
+	       row, col, ch, CharWidth(screen, ch)));
 
 	for_each_combData(off, ld) {
 	    if (!ld->combData[off][col]) {

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.895 2021/08/22 22:39:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.897 2021/09/12 21:13:21 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -963,10 +963,12 @@ extern void report_char_class(XtermWidget);
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
-#define CharWidth(n) (((n) < 256) ? (IsLatin1(n) ? 1 : 0) : my_wcwidth((wchar_t) (n)))
+#define CharWidth(screen, n) ((!((screen)->utf8_mode) && ((n) < 256)) \
+			      ? (IsLatin1(n) ? 1 : 0) \
+			      : my_wcwidth((wchar_t) (n)))
 #else
 #define WideCells(n) 1
-#define CharWidth(n) (IsLatin1(n) ? 1 : 0)
+#define CharWidth(screen, n) (IsLatin1(n) ? 1 : 0)
 #endif
 
 /* cachedCgs.c */

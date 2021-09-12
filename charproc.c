@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1841 2021/09/07 00:13:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1843 2021/09/12 22:51:12 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2306,7 +2306,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (c >= 0x300
 	    && screen->wide_chars
-	    && CharWidth(c) == 0
+	    && CharWidth(screen, c) == 0
 	    && !isWideControl(c)) {
 	    int prev, test;
 	    Boolean used = True;
@@ -2331,9 +2331,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		prev = (int) XTERM_CELL(use_row, use_col);
 		test = do_precomposition(prev, (int) c);
 		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-		       prev, CharWidth(prev),
-		       (int) c, CharWidth(c),
-		       test, CharWidth(test)));
+		       prev, CharWidth(screen, prev),
+		       (int) c, CharWidth(screen, c),
+		       test, CharWidth(screen, test)));
 	    } else {
 		prev = -1;
 		test = -1;
@@ -2343,7 +2343,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * only if it does not change the width of the base character
 	     */
 	    if (test != -1
-		&& CharWidth(test) == CharWidth(prev)) {
+		&& CharWidth(screen, test) == CharWidth(screen, prev)) {
 		putXtermCell(screen, use_row, use_col, test);
 	    } else if (screen->char_was_written
 		       || getXtermCell(screen, use_row, use_col) >= ' ') {
@@ -4554,7 +4554,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		value = zero_if_default(0);
 
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-		if (nparam > 0 && CharWidth(value) > 0) {
+		if (nparam > 0 && CharWidth(screen, value) > 0) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}
@@ -4863,7 +4863,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_REP:
 	    TRACE(("CASE_REP\n"));
-	    if (CharWidth(sp->lastchar) > 0) {
+	    if (CharWidth(screen, sp->lastchar) > 0) {
 		IChar repeated[2];
 		count = one_if_default(0);
 		repeated[0] = (IChar) sp->lastchar;
@@ -5795,7 +5795,7 @@ dotext(XtermWidget xw,
 			   buf[n] <= 0xa0) {
 		    last_chomp = 1;
 		} else {
-		    last_chomp = CharWidth(buf[n]);
+		    last_chomp = CharWidth(screen, buf[n]);
 		    if (last_chomp <= 0) {
 			IChar ch = buf[n];
 			Bool eat_it = !screen->utf8_mode && (ch > 127);
@@ -7017,6 +7017,7 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    DoRM(DP_CRS_VISIBLE, screen->cursor_set);
+	    updateCursor(xw);
 	    break;
 	case srm_RXVT_SCROLLBAR:
 	    if ((screen->fullVwin.sb_info.width != 0) !=
