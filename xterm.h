@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.897 2021/09/12 21:13:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.898 2021/09/15 00:00:55 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1167,6 +1167,7 @@ extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
+extern XVisualInfo *getVisualInfo (XtermWidget /* xw */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);
@@ -1177,7 +1178,6 @@ extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t /* uid */, gid_t /* gid */, Bool /* append */, char * /* pathname */, unsigned /* mode */);
 extern int getVisualDepth (XtermWidget /* xw */);
-extern int getVisualInfo (XtermWidget /* xw */);
 extern int ignore_x11_error(Display * /* dpy */, XErrorEvent * /* event */);
 extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
 extern int update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
