@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1038 2021/08/24 10:16:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1040 2021/09/16 20:43:29 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -552,10 +552,6 @@ typedef enum {
 #define OPT_COLOR_CLASS 1 /* true if xterm uses separate color-resource classes */
 #endif
 
-#ifndef OPT_COLOR_RES
-#define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
-#endif
-
 #ifndef OPT_DABBREV
 #define OPT_DABBREV 0	/* dynamic abbreviations */
 #endif
@@ -850,21 +846,6 @@ typedef enum {
 /* You must have ANSI/ISO colors to support AIX colors */
 #undef  OPT_AIX_COLORS
 #define OPT_AIX_COLORS 0
-#endif
-
-#if OPT_COLOR_RES && !OPT_ISO_COLORS
-/* You must have ANSI/ISO colors to support ColorRes logic */
-#undef  OPT_COLOR_RES
-#define OPT_COLOR_RES 0
-#endif
-
-#if OPT_256_COLORS && (OPT_WIDE_CHARS || OPT_RENDERFONT || OPT_XMC_GLITCH)
-/* It's actually more complicated than that - but by trimming options you can
- * have 256 color resources though.
- */
-#define OPT_COLOR_RES2 1
-#else
-#define OPT_COLOR_RES2 0
 #endif
 
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
@@ -1524,13 +1505,8 @@ typedef enum {
 #define COLOR_RES_CLASS(root) XtCForeground
 #endif
 
-#if OPT_COLOR_RES
 #define COLOR_RES(root,offset,value) Sres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset.resource, value)
 #define COLOR_RES2(name,class,offset,value) Sres(name, class, offset.resource, value)
-#else
-#define COLOR_RES(root,offset,value) Cres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset, value)
-#define COLOR_RES2(name,class,offset,value) Cres(name, class, offset, value)
-#endif
 
 #define CLICK_RES_NAME(count)  "on" count "Clicks"
 #define CLICK_RES_CLASS(count) "On" count "Clicks"
@@ -2088,16 +2064,12 @@ typedef enum {
 
 #define NUM_POPUP_MENUS 4
 
-#if OPT_COLOR_RES
 typedef struct {
 	String		resource;
 	Pixel		value;
 	unsigned short red, green, blue;
 	int		mode;		/* -1=invalid, 0=unset, 1=set   */
 } ColorRes;
-#else
-#define ColorRes Pixel
-#endif
 
 /* these are set in getPrinterFlags */
 typedef struct {
@@ -3409,7 +3381,6 @@ typedef struct _TekWidgetRec {
 
 /* The following attribute is used in the argument of xtermSpecialFont etc */
 #define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
-
 
 /*
  * Groups of attributes

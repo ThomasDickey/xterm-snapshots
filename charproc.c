@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1843 2021/09/12 22:51:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1846 2021/09/18 00:04:08 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -682,14 +682,6 @@ static XtResource xterm_resources[] =
 #if OPT_WIDE_ATTRS
     COLOR_RES("IT", screen.Acolors[COLOR_IT], DFT_COLOR(XtDefaultForeground)),
 #endif
-
-#if !OPT_COLOR_RES2
-#if OPT_256_COLORS
-# include <256colres.h>
-#elif OPT_88_COLORS
-# include <88colres.h>
-#endif
-#endif				/* !OPT_COLOR_RES2 */
 
 #endif				/* OPT_ISO_COLORS */
 
@@ -8388,7 +8380,6 @@ VTClassInit(void)
 		   (XtConvertArgList) NULL, (Cardinal) 0);
 }
 
-#if OPT_COLOR_RES
 /*
  * Override the use of XtDefaultForeground/XtDefaultBackground to make some
  * colors, such as cursor color, use the actual foreground/background value
@@ -8455,11 +8446,6 @@ repairColors(XtermWidget target)
 	screen->Tcolors[TEXT_BG].value = target->dft_background;
     }
 }
-#else
-#define fill_Tres(target, source, offset) \
-	TScreenOf(target)->Tcolors[offset] = TScreenOf(source)->Tcolors[offset]
-#define repairColors(target)	/* nothing */
-#endif
 
 #if OPT_WIDE_CHARS
 static void
@@ -9122,7 +9108,7 @@ VTInitialize(Widget wrequest,
     Bool color_ok;
 #endif
 
-#if OPT_ISO_COLORS && OPT_COLOR_RES2
+#if OPT_ISO_COLORS
     static XtResource fake_resources[] =
     {
 #if OPT_256_COLORS
@@ -9131,7 +9117,8 @@ VTInitialize(Widget wrequest,
 # include <88colres.h>
 #endif
     };
-#endif /* OPT_COLOR_RES2 */
+#endif
+
     TScreen *screen = TScreenOf(wnew);
     char *saveLocale = xtermSetLocale(LC_NUMERIC, "C");
 #if OPT_BLINK_CURS
@@ -9673,37 +9660,31 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.direct_color);
 #endif
 
-#if OPT_COLOR_RES2
     TRACE(("...will fake resources for color%d to color%d\n",
 	   MIN_ANSI_COLORS,
 	   NUM_ANSI_COLORS - 1));
-#endif
-    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
 
-#if OPT_COLOR_RES2
+    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
 	/*
 	 * Xt has a hardcoded limit on the maximum number of resources that can
-	 * be used in a widget.  If we configure both luit (which implies
+	 * be used in a widget.  If we configured both luit (which implies
 	 * wide-characters) and 256-colors, it goes over that limit.  Most
 	 * people would not need a resource-file with 256-colors; the default
-	 * values in our table are sufficient.  In that case, fake the resource
-	 * setting by copying the default value from the table.  The #define's
-	 * can be overridden to make these true resources.
+	 * values in our table are sufficient.  Fake the resource setting by
+	 * copying the default value from the table.  The #define's can be
+	 * overridden to make these true resources.
 	 */
 	if (i >= MIN_ANSI_COLORS && i < NUM_ANSI_COLORS) {
 	    screen->Acolors[i].resource =
 		x_strtrim(fake_resources[i - MIN_ANSI_COLORS].default_addr);
 	    if (screen->Acolors[i].resource == 0)
 		screen->Acolors[i].resource = XtDefaultForeground;
-	} else
-#endif /* OPT_COLOR_RES2 */
-	{
+	} else {
 	    screen->Acolors[i] = TScreenOf(request)->Acolors[i];
 	    screen->Acolors[i].resource =
 		x_strtrim(screen->Acolors[i].resource);
 	}
 
-#if OPT_COLOR_RES
 	TRACE(("Acolors[%d] = %s\n", i, screen->Acolors[i].resource));
 	screen->Acolors[i].mode = False;
 	if (DftFg(Acolors[i])) {
@@ -9715,13 +9696,6 @@ VTInitialize(Widget wrequest,
 	} else {
 	    color_ok = True;
 	}
-#else
-	TRACE(("Acolors[%d] = %#lx\n", i, TScreenOf(request)->Acolors[i]));
-	if (screen->Acolors[i] != wnew->dft_foreground &&
-	    screen->Acolors[i] != T_COLOR(screen, TEXT_FG) &&
-	    screen->Acolors[i] != T_COLOR(screen, TEXT_BG))
-	    color_ok = True;
-#endif
     }
 
     /*
@@ -9790,7 +9764,6 @@ VTInitialize(Widget wrequest,
     init_Mres(screen.hilite_color);
     if (screen->hilite_color == Maybe) {
 	screen->hilite_color = False;
-#if OPT_COLOR_RES
 	/*
 	 * If the highlight text/background are both set, and if they are
 	 * not equal to either the text/background or background/text, then
@@ -9805,7 +9778,6 @@ VTInitialize(Widget wrequest,
 	    TRACE(("...setting hilite_color automatically\n"));
 	    screen->hilite_color = True;
 	}
-#endif
     }
 #endif
 
@@ -10372,7 +10344,6 @@ VTDestroy(Widget w GCC_UNUSED)
 	TRACE_FREE_LEAK(xw->saved_colors.palettes[n]);
     }
 #endif
-#if OPT_COLOR_RES
     for (n = 0; n < NCOLORS; n++) {
 	switch (n) {
 #if OPT_TEK4014
@@ -10388,7 +10359,6 @@ VTDestroy(Widget w GCC_UNUSED)
 	    break;
 	}
     }
-#endif
     FreeMarkGCs(xw);
     TRACE_FREE_LEAK(screen->unparse_bfr);
     TRACE_FREE_LEAK(screen->save_ptr);

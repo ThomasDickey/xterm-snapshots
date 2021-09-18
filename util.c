@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.883 2021/09/12 18:38:50 Martijn.van.Duren Exp $ */
+/* $XTermId: util.c,v 1.885 2021/09/17 23:30:01 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2750,13 +2750,8 @@ swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg hc_param)
     ColorRes tmp;
     Boolean found = False;
 
-#if OPT_COLOR_RES
     Pixel fg_color = fg->value;
     Pixel bg_color = bg->value;
-#else
-    Pixel fg_color = *fg;
-    Pixel bg_color = *bg;
-#endif
 
 #if OPT_HIGHLIGHT_COLOR
     if ((fg_color != bg_color) || !hilite_color)
@@ -5038,9 +5033,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 	    && ((color >= 0)
 		|| (result != (Pixel) color))) {
 	    XColor work;
-	    work.pixel = result;
 	    last_in = result;
-	    if (XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &work)) {
+	    work.pixel = result;
+	    if (QueryOneColor(xw, &work)) {
 		DIM_IT(red);
 		DIM_IT(green);
 		DIM_IT(blue);
