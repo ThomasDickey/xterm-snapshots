@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.898 2021/09/15 00:00:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.901 2021/09/18 00:07:33 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1265,6 +1265,14 @@ extern char *ProcGetCWD(pid_t /* pid */);
 #define ProcGetCWD(pid) NULL
 #endif
 
+#if OPT_ISO_COLORS
+extern Boolean AllocOneColor(XtermWidget /* xw */, XColor * /* def */);
+extern Boolean QueryOneColor(XtermWidget /* xw */, XColor * /* def */);
+#else
+#define AllocOneColor(xw, def) 0
+#define QueryOneColor(xw, def) 0
+#endif
+
 #if OPT_MAXIMIZE
 extern int QueryMaximize (XtermWidget  /* xw */, unsigned * /* width */, unsigned * /* height */);
 extern void HandleDeIconify            PROTO_XT_ACTIONS_ARGS;
@@ -1617,18 +1625,11 @@ extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* le
 
 #define xtermColorPair(xw) makeColorPair(xw)
 
-#if OPT_COLOR_RES
 #define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
 #define SET_COLOR_RES(res,color) (res)->value = color
 #define EQL_COLOR_RES(res,color) (res)->value == color
 #define T_COLOR(v,n) (v)->Tcolors[n].value
 extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
-#else
-#define GET_COLOR_RES(xw, res) res
-#define SET_COLOR_RES(res,color) *res = color
-#define EQL_COLOR_RES(res,color) *res == color
-#define T_COLOR(v,n) (v)->Tcolors[n]
-#endif
 
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
@@ -1695,7 +1696,7 @@ extern void discardRenderDraw(TScreen * /* screen */);
 #define extract_bg(xw, color, flags) (unsigned) (xw)->cur_background
 
 		/* FIXME: Reverse-Video? */
-#define T_COLOR(v,n) (v)->Tcolors[n]
+#define T_COLOR(v,n) (v)->Tcolors[n].value
 #define xtermColorPair(xw) 0
 
 #define checkVeryBoldColors(flags, fg) /* nothing */

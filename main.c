@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.881 2021/06/03 21:23:20 tom Exp $ */
+/* $XTermId: main.c,v 1.882 2021/09/16 19:49:13 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2021 by Thomas E. Dickey
@@ -2876,7 +2876,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
     xtermEmbedWindow(winToEmbedInto);
-#if OPT_COLOR_RES
+
     TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
 	   term->misc.re_verse0 ? "reverse" : "normal",
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
@@ -2897,7 +2897,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
     }
-#endif /* OPT_COLOR_RES */
 
 #if OPT_MAXIMIZE
     if (resource.maximized)

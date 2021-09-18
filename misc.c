@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.991 2021/09/16 00:38:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.994 2021/09/18 00:09:32 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2733,7 +2733,7 @@ loadColorTable(XtermWidget xw, unsigned length)
 
 /***====================================================================***/
 
-static Boolean
+Boolean
 AllocOneColor(XtermWidget xw, XColor *def)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2764,6 +2764,33 @@ AllocOneColor(XtermWidget xw, XColor *def)
     }
     return result;
 }
+
+/***====================================================================***/
+
+Boolean
+QueryOneColor(XtermWidget xw, XColor *def)
+{
+    XVisualInfo *visInfo;
+    Boolean result = True;
+
+#define UnMaskIt(name,nn) \
+	((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn])
+#define UnMaskIt2(name,nn) \
+	((UnMaskIt(name,nn) << (16 - xw->rgb_shifts[nn])) \
+	 |UnMaskIt(name,nn))
+
+    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+	/* *INDENT-EQLS* */
+	def->red   = UnMaskIt2(red, 0);
+	def->green = UnMaskIt2(green, 1);
+	def->blue  = UnMaskIt2(blue, 2);
+    } else if (!XQueryColor(TScreenOf(xw)->display, xw->core.colormap, def)) {
+	result     = False;
+    }
+    return result;
+}
+
+/***====================================================================***/
 
 /*
  * Find closest color for "def" in "cmap".
@@ -2873,11 +2900,8 @@ AllocateAnsiColor(XtermWidget xw,
     XColor def;
 
     if (xtermAllocColor(xw, &def, spec)) {
-	if (
-#if OPT_COLOR_RES
-	       res->mode == True &&
-#endif
-	       EQL_COLOR_RES(res, def.pixel)) {
+	if (res->mode == True &&
+	    EQL_COLOR_RES(res, def.pixel)) {
 	    result = 0;
 	} else {
 	    result = 1;
@@ -2891,11 +2915,9 @@ AllocateAnsiColor(XtermWidget xw,
 		   def.green,
 		   def.blue,
 		   def.pixel));
-#if OPT_COLOR_RES
 	    if (!res->mode)
 		result = 0;
 	    res->mode = True;
-#endif
 	}
     } else {
 	TRACE(("AllocateAnsiColor %s (failed)\n", spec));
@@ -2904,7 +2926,6 @@ AllocateAnsiColor(XtermWidget xw,
     return (result);
 }
 
-#if OPT_COLOR_RES
 Pixel
 xtermGetColorRes(XtermWidget xw, ColorRes * res)
 {
@@ -2932,7 +2953,6 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
     }
     return result;
 }
-#endif
 
 static int
 ChangeOneAnsiColor(XtermWidget xw, int color, const char *name)
@@ -3077,6 +3097,8 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 Boolean
 allocateBestRGB(XtermWidget xw, XColor *def)
 {
+    (void) xw;
+    (void) def;
     return AllocOneColor(xw, def) || allocateClosestRGB(xw, def);
 }
 
@@ -3127,7 +3149,7 @@ int
 xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 {
     int result = -1;
-#if OPT_COLOR_RES && OPT_ISO_COLORS
+#if OPT_ISO_COLORS
     int n;
     int best_index = -1;
     unsigned long best_value = 0;
@@ -3162,6 +3184,7 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
     }
     TRACE(("...best match at %d with diff %lx\n", best_index, best_value));
     result = best_index;
+
 #else
     (void) xw;
     (void) find_red;
@@ -3684,8 +3707,6 @@ ResetColorsRequest(XtermWidget xw,
     (void) code;
 
     TRACE(("ResetColorsRequest code=%d\n", code));
-
-#if OPT_COLOR_RES
     if (GetOldColors(xw)) {
 	ScrnColors newColors;
 	const char *thisName;
@@ -3711,7 +3732,6 @@ ResetColorsRequest(XtermWidget xw,
 	}
 	result = True;
     }
-#endif
     return result;
 }
 
