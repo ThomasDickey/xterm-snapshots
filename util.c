@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.885 2021/09/17 23:30:01 tom Exp $ */
+/* $XTermId: util.c,v 1.887 2021/09/19 18:22:57 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2948,7 +2948,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
     if (!found) {
 	i = oldest;
 	color.pixel = pixel;
-	XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &color);
+	(void) QueryOneColor(xw, &color);
 	cache[i].color.color.red = color.red;
 	cache[i].color.color.green = color.green;
 	cache[i].color.color.blue = color.blue;

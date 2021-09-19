@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.994 2021/09/18 00:09:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.1001 2021/09/19 19:49:40 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2659,12 +2659,11 @@ ReportAnsiColorRequest(XtermWidget xw, int opcode, int colornum, int final)
 
     if (AllowColorOps(xw, ecGetAnsiColor)) {
 	XColor color;
-	Colormap cmap = xw->core.colormap;
 	char buffer[80];
 
 	TRACE(("ReportAnsiColorRequest %d\n", colornum));
 	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
-	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	(void) QueryOneColor(xw, &color);
 	sprintf(buffer, "%d;%d;rgb:%04x/%04x/%04x",
 		opcode,
 		(opcode == 5) ? (colornum - NUM_ANSI_COLORS) : colornum,
@@ -2733,6 +2732,10 @@ loadColorTable(XtermWidget xw, unsigned length)
 
 /***====================================================================***/
 
+/*
+ * Call this function with def->{red,green,blue} initialized, to obtain a pixel
+ * value.
+ */
 Boolean
 AllocOneColor(XtermWidget xw, XColor *def)
 {
@@ -2767,6 +2770,10 @@ AllocOneColor(XtermWidget xw, XColor *def)
 
 /***====================================================================***/
 
+/*
+ * Call this function with def->pixel set to the color that we want to convert
+ * to separate red/green/blue.
+ */
 Boolean
 QueryOneColor(XtermWidget xw, XColor *def)
 {
@@ -2774,10 +2781,10 @@ QueryOneColor(XtermWidget xw, XColor *def)
     Boolean result = True;
 
 #define UnMaskIt(name,nn) \
-	((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn])
+	((unsigned short)((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn]))
 #define UnMaskIt2(name,nn) \
-	((UnMaskIt(name,nn) << (16 - xw->rgb_shifts[nn])) \
-	 |UnMaskIt(name,nn))
+	((unsigned short)((UnMaskIt(name,nn) << 8) \
+			  |UnMaskIt(name,nn)))
 
     if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
 	/* *INDENT-EQLS* */
@@ -3554,7 +3561,6 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 
     if (AllowColorOps(xw, ecGetColor)) {
 	XColor color;
-	Colormap cmap = xw->core.colormap;
 	char buffer[80];
 
 	/*
@@ -3566,7 +3572,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 
 	GetOldColors(xw);
 	color.pixel = xw->work.oldColors->colors[ndx];
-	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	(void) QueryOneColor(xw, &color);
 	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 		color.red,
 		color.green,
@@ -6917,7 +6923,9 @@ die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
 	     XtPointer call_data GCC_UNUSED)
 {
-    TRACE(("die_callback %p\n", die_callback));
+    TRACE(("die_callback client=%p, call=%p\n",
+	   (void *) client_data,
+	   (void *) call_data));
     TRACE_SM_PROPS();
     NormalExit();
 }
