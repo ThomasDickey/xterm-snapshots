@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.901 2021/09/18 00:07:33 tom Exp $ */
+/* $XTermId: xterm.h,v 1.902 2021/09/19 18:27:35 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1269,8 +1269,8 @@ extern char *ProcGetCWD(pid_t /* pid */);
 extern Boolean AllocOneColor(XtermWidget /* xw */, XColor * /* def */);
 extern Boolean QueryOneColor(XtermWidget /* xw */, XColor * /* def */);
 #else
-#define AllocOneColor(xw, def) 0
-#define QueryOneColor(xw, def) 0
+#define AllocOneColor(xw, def) ((def)->pixel = 0)
+#define QueryOneColor(xw, def) ((def)->red = (def)->green = (def)->blue = 0)
 #endif
 
 #if OPT_MAXIMIZE
