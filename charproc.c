@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1846 2021/09/18 00:04:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1847 2021/09/22 22:24:30 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -736,7 +736,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_SIXEL_GRAPHICS
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, True),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
     Bres(XtNsixelScrollsRight, XtCSixelScrollsRight,
 	 screen.sixel_scrolls_right, False),
 #endif
