@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1847 2021/09/22 22:24:30 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1848 2021/10/28 22:38:49 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -5737,15 +5737,24 @@ dotext(XtermWidget xw,
     for (offset = 0;
 	 offset < len && (chars_chomped > 0 || screen->do_wrap);
 	 offset += chars_chomped) {
+#if OPT_DEC_CHRSET
+	CLineData *ld = getLineData(screen, screen->cur_row);
+	int real_rmargin = (CSET_DOUBLE(GetLineDblCS(ld))
+			    ? (rmargin / 2)
+			    : rmargin);
+#else
+	int real_rmargin = rmargin;
+#endif
+	int last_col = LineMaxCol(screen, ld);
 	int width_here = 0;
 	int last_chomp = 0;
 	Boolean force_wrap;
 
 	chars_chomped = 0;
 	do {
-	    int right = ((screen->cur_col > rmargin)
-			 ? screen->max_col
-			 : rmargin);
+	    int right = ((screen->cur_col > real_rmargin)
+			 ? last_col
+			 : real_rmargin);
 	    int width_available = right + 1 - screen->cur_col;
 	    Boolean need_wrap = False;
 	    Boolean did_wrap = False;
@@ -5756,9 +5765,9 @@ dotext(XtermWidget xw,
 		screen->do_wrap = False;
 		if ((xw->flags & WRAPAROUND)) {
 		    WrapLine(xw);
-		    right = ((screen->cur_col > rmargin)
-			     ? screen->max_col
-			     : rmargin);
+		    right = ((screen->cur_col > real_rmargin)
+			     ? last_col
+			     : real_rmargin);
 		    width_available = right + 1 - screen->cur_col;
 		    next_col = screen->cur_col;
 		    did_wrap = True;
@@ -5850,7 +5859,7 @@ dotext(XtermWidget xw,
 		need_wrap = True;
 	    }
 
-	    if (chars_chomped != 0 && next_col <= screen->max_col) {
+	    if (chars_chomped != 0 && next_col <= last_col) {
 		WriteText(xw, buf + offset, chars_chomped);
 	    } else if (!did_wrap
 		       && len > 0
