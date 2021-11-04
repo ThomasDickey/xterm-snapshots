@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1001 2021/09/19 19:49:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.1004 2021/11/04 07:59:58 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2634,7 +2634,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   (vi->blue_mask != 0) &&
 			   ((vi->red_mask & vi->green_mask) == 0) &&
 			   ((vi->green_mask & vi->blue_mask) == 0) &&
-			   ((vi->blue_mask & vi->red_mask) == 0));
+			   ((vi->blue_mask & vi->red_mask) == 0) &&
+			   (vi->class == TrueColor
+			    || vi->class == DirectColor));
 
 	    if (resource.reportColors) {
 		printf(MYFMT, MYARG);
@@ -2644,6 +2646,10 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 		   xw->rgb_shifts[0],
 		   xw->rgb_shifts[1],
 		   xw->rgb_shifts[2]));
+	    TRACE(("...widths %u/%u/%u\n",
+		   xw->rgb_widths[0],
+		   xw->rgb_widths[1],
+		   xw->rgb_widths[2]));
 	}
     }
     return (xw->visInfo != 0) && (xw->numVisuals > 0) ? xw->visInfo : NULL;
@@ -2748,7 +2754,7 @@ AllocOneColor(XtermWidget xw, XColor *def)
 	             << xw->rgb_shifts[nn]) \
 	 & xw->visInfo->name ##_mask)
 
-    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+    if ((visInfo = getVisualInfo(xw)) != NULL && xw->has_rgb) {
 	def->pixel = MaskIt(red, 0) | MaskIt(green, 1) | MaskIt(blue, 2);
     } else {
 	Display *dpy = screen->display;
@@ -2783,10 +2789,10 @@ QueryOneColor(XtermWidget xw, XColor *def)
 #define UnMaskIt(name,nn) \
 	((unsigned short)((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn]))
 #define UnMaskIt2(name,nn) \
-	((unsigned short)((UnMaskIt(name,nn) << 8) \
-			  |UnMaskIt(name,nn)))
+	(((unsigned short)((UnMaskIt(name,nn) << 8) \
+			  |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
 
-    if ((visInfo = getVisualInfo(xw)) != NULL && visInfo->class == TrueColor) {
+    if ((visInfo = getVisualInfo(xw)) != NULL && xw->has_rgb) {
 	/* *INDENT-EQLS* */
 	def->red   = UnMaskIt2(red, 0);
 	def->green = UnMaskIt2(green, 1);
@@ -3205,16 +3211,33 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 int
 getDirectColor(XtermWidget xw, int red, int green, int blue)
 {
-#define nRGB(name,shift) \
-	((unsigned long)(name << xw->rgb_shifts[shift]) \
-		         & xw->visInfo->name ##_mask)
-    MyPixel result = (MyPixel) (nRGB(red, 0) | nRGB(green, 1) | nRGB(blue, 2));
+    Pixel result = 0;
+
+#define getRGB(name,shift) \
+    do { \
+	Pixel value = (Pixel) name; \
+	if (xw->rgb_widths[shift] < 8) { \
+	    int skip = (int) (8 - xw->rgb_widths[shift]); \
+	    Pixel bump = (value >> (skip - 1)) & 1; \
+	    value >>= skip; \
+	    value += bump; \
+	} \
+	value <<= xw->rgb_shifts[shift]; \
+	value &= xw->visInfo->name ##_mask; \
+	result |= value; \
+    } while (0)
+
+    getRGB(red, 0);
+    getRGB(green, 1);
+    getRGB(blue, 2);
+
     return (int) result;
 }
 
 static void
 formatDirectColor(char *target, XtermWidget xw, unsigned value)
 {
+    /*FIXME: the mask has to be scaled here, too */
 #define fRGB(name, shift) \
 	(value & xw->visInfo->name ## _mask) >> xw->rgb_shifts[shift]
     sprintf(target, "%lu:%lu:%lu", fRGB(red, 0), fRGB(green, 1), fRGB(blue, 2));
