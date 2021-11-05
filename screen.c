@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.602 2021/08/22 20:30:10 tom Exp $ */
+/* $XTermId: screen.c,v 1.604 2021/11/05 08:00:28 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2341,6 +2341,10 @@ ScrnFillRectangle(XtermWidget xw,
 		}
 	    })
 	}
+	chararea_clear_displayed_graphics(screen,
+					  left,
+					  top,
+					  numcols, numrows);
 	ScrnUpdate(xw,
 		   top,
 		   left - b_left,
@@ -2643,6 +2647,10 @@ ScrnWipeRectangle(XtermWidget xw,
 		}
 	    }
 	}
+	chararea_clear_displayed_graphics(screen,
+					  left,
+					  top,
+					  numcols, numrows);
 	ScrnUpdate(xw,
 		   top,
 		   left - b_left,

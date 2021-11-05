@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1004 2021/11/04 07:59:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.1005 2021/11/05 23:52:45 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2789,8 +2789,8 @@ QueryOneColor(XtermWidget xw, XColor *def)
 #define UnMaskIt(name,nn) \
 	((unsigned short)((def->pixel & xw->visInfo->name ##_mask) >> xw->rgb_shifts[nn]))
 #define UnMaskIt2(name,nn) \
-	(((unsigned short)((UnMaskIt(name,nn) << 8) \
-			  |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
+	(unsigned short)((((UnMaskIt(name,nn) << 8) \
+			   |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
 
     if ((visInfo = getVisualInfo(xw)) != NULL && xw->has_rgb) {
 	/* *INDENT-EQLS* */

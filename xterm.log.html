@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2362 2021/11/02 08:13:36 tom Exp $
+  $XTermId: xterm.log.html,v 1.2365 2021/11/05 23:20:37 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1021,6 +1021,16 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify <code>XTSMGRAPHICS</code> to return failure status
+    if the terminal is not configured to support the corresponding
+    ReGIS or SIXEL feature (report by Nick Black, notcurses #2252,
+    notcurses #2257).</li>
+
+    <li>modify <code>DECERA</code> and <code>DECFRA</code> to erase
+    corresponding area in SIXEL graphics (patch by Nick Black,
+    notcurses #1740, vt340test #16). Also modify
+    <code>DECSERA</code>.</li>
+
     <li>equate visuals for TrueColor and DirectColor (patch by
     Denis Kaganovich).</li>
 

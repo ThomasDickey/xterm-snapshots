@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1848 2021/10/28 22:38:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1849 2021/11/05 23:16:15 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -4113,7 +4113,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			    status = 2;		/* error in Pa */
 			    break;
 			}
+			if (status == 0 && !(optSixelGraphics(screen)
+					     || optRegisGraphics(screen)))
+			    status = 3;
 			break;
+# if OPT_SIXEL_GRAPHICS
 		    case 2:	/* graphics geometry */
 			switch (GetParam(1)) {
 			case 1:	/* read */
@@ -4137,7 +4141,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			    status = 2;		/* error in Pa */
 			    break;
 			}
+			if (status == 0 && !optSixelGraphics(screen))
+			    status = 3;
 			break;
+#endif
 # if OPT_REGIS_GRAPHICS
 		    case 3:	/* ReGIS geometry */
 			switch (GetParam(1)) {
@@ -4159,6 +4166,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			    status = 2;		/* error in Pa */
 			    break;
 			}
+			if (status == 0 && !optRegisGraphics(screen))
+			    status = 3;
 			break;
 #endif
 		    default:
@@ -4173,9 +4182,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    count = 0;
 		    reply.a_param[count++] = (ParmType) GetParam(0);
 		    reply.a_param[count++] = (ParmType) status;
-		    reply.a_param[count++] = (ParmType) result;
-		    if (GetParam(0) >= 2)
-			reply.a_param[count++] = (ParmType) result2;
+		    if (status == 0) {
+			reply.a_param[count++] = (ParmType) result;
+			if (GetParam(0) >= 2)
+			    reply.a_param[count++] = (ParmType) result2;
+		    }
 		    reply.a_nparam = (ParmType) count;
 		    reply.a_inters = 0;
 		    reply.a_final = 'S';
