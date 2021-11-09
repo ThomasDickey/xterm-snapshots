@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.888 2021/10/28 23:05:09 tom Exp $ */
+/* $XTermId: util.c,v 1.889 2021/11/08 23:56:52 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -4218,6 +4218,7 @@ drawXtermText(XTermDraw * params,
 	&& !(recur.draw_flags & NOTRANSLATION)
 	&& (!screen->fnt_boxes
 	    || (FontIsIncomplete(curFont) && !screen->assume_all_chars)
+	    || recur.xw->work.force_wideFont
 	    || screen->force_box_chars)) {
 	/*
 	 * Fill in missing box-characters.  Find regions without missing
@@ -4299,6 +4300,22 @@ drawXtermText(XTermDraw * params,
 #else
 		xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width, False);
 #endif
+		x += (ch_width * FontWidth(screen));
+		first = last + 1;
+		drewBoxes = True;
+	    } else if (ch_width == 2
+		       && recur.xw->work.force_wideFont
+		       && !(recur.draw_flags & NOTRANSLATION)) {
+		XTermDraw param2 = recur;
+		param2.draw_flags |= NOTRANSLATION;
+		/*
+		 * Not a "box" character, but a special case treated similarly.
+		 */
+		(void) drawXtermText(&param2,
+				     gc,
+				     x, y,
+				     text + first,
+				     (unsigned) (1 + last - first));
 		x += (ch_width * FontWidth(screen));
 		first = last + 1;
 		drewBoxes = True;

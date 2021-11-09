@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.706 2021/09/12 18:38:50 Martijn.van.Duren Exp $ */
+/* $XTermId: fontutils.c,v 1.708 2021/11/08 23:09:32 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -1282,11 +1282,15 @@ xtermUpdateFontGCs(XtermWidget xw, MyGetFont myfunc)
 unsigned
 xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 {
-    if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
-	xtermLoadItalics(xw);
-	xtermUpdateFontGCs(xw, getItalicFont);
-    } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
-	xtermUpdateFontGCs(xw, getNormalFont);
+    TScreen *screen = TScreenOf(xw);
+
+    if (UseItalicFont(screen)) {
+	if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
+	    xtermLoadItalics(xw);
+	    xtermUpdateFontGCs(xw, getItalicFont);
+	} else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
+	    xtermUpdateFontGCs(xw, getNormalFont);
+	}
     }
     return new_attrs;
 }
@@ -1448,6 +1452,15 @@ loadWideFP(XtermWidget xw,
 	}
     } else {
 	xtermCopyFontInfo(infoOut, infoRef);
+    }
+#define MinWidthOf(fs) fs->min_bounds.width
+#define MaxWidthOf(fs) fs->max_bounds.width
+    xw->work.force_wideFont = False;
+    if (MaxWidthOf(infoOut->fs) != (2 * MaxWidthOf(infoRef->fs))) {
+	TRACE(("...reference width %d\n", MaxWidthOf(infoRef->fs)));
+	TRACE(("...?? double-width %d\n", 2 * MaxWidthOf(infoRef->fs)));
+	TRACE(("...actual width    %d\n", MaxWidthOf(infoOut->fs)));
+	xw->work.force_wideFont = True;
     }
     return status;
 }
@@ -1842,7 +1855,7 @@ xtermLoadItalics(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (!screen->ifnts_ok) {
+    if (UseItalicFont(screen) && !screen->ifnts_ok) {
 	int n;
 	FontNameProperties *fp;
 	XTermFonts *data;
