@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1040 2021/09/16 20:43:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1041 2021/11/08 22:23:28 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3189,6 +3189,7 @@ typedef struct _Work {
     unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
 #endif
     XtermFontNames fonts;
+    Boolean force_wideFont;	/* true to single-step wideFont	*/
 #if OPT_RENDERFONT
     Boolean render_font;
     unsigned max_fontsets;
