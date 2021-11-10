@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1849 2021/11/05 23:16:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1851 2021/11/09 22:58:50 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1325,7 +1325,6 @@ resetMargins(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    UIntClr(xw->flags, LEFT_RIGHT);
     reset_tb_margins(screen);
     reset_lr_margins(screen);
 }
@@ -3760,11 +3759,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->cursor_state)
 		HideCursor(xw);
 	    /*
-	     * DEC STD 070 does not mention left/right margins.  Likely the
-	     * text was for VT100, and not updated for VT420.
+	     * DEC STD 070 (see pages D-19 to D-20) does not mention left/right
+	     * margins.  The section is dated March 1985, not updated for the
+	     * VT420 (introduced in 1990).
 	     */
+	    UIntClr(xw->flags, ORIGIN);
+	    screen->do_wrap = False;
 	    resetRendition(xw);
 	    resetMargins(xw);
+	    xterm_ResetDouble(xw);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
@@ -6158,6 +6161,37 @@ really_set_mousemode(XtermWidget xw,
 #endif
 
 /*
+ * DEC 070, pp 5-71 to 5-72.
+ */
+static void
+set_column_mode(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    xterm_ResetDouble(xw);
+    resetMargins(xw);
+    UIntSet(xw->flags, LEFT_RIGHT);
+    CursorSet(screen, 0, 0, xw->flags);
+}
+
+/*
+ * DEC 070, pp 5-29 to 5-30.
+ */
+static void
+set_left_right_margin_mode(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->vtXX_level >= 4) {
+	if (IsLeftRightMode(xw)) {
+	    xterm_ResetDouble(xw);
+	} else {
+	    reset_lr_margins(screen);
+	}
+    }
+}
+
+/*
  * process DEC private modes set, reset
  */
 static void
@@ -6229,8 +6263,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		if (willResize)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
-		resetMargins(xw);
-		CursorSet(screen, 0, 0, xw->flags);
+		set_column_mode(xw);
 	    }
 	    break;
 	case srm_DECSCLM:	/* (slow scroll)        */
@@ -6428,11 +6461,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECLRMM:
 	    if (screen->vtXX_level >= 4) {	/* VT420 */
 		(*func) (&xw->flags, LEFT_RIGHT);
-		if (IsLeftRightMode(xw)) {
-		    xterm_ResetDouble(xw);
-		} else {
-		    reset_lr_margins(screen);
-		}
+		set_left_right_margin_mode(xw);
 	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
