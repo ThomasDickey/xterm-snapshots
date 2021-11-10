@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.708 2021/11/08 23:09:32 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.709 2021/11/10 00:36:27 Rajeev.V.Pillai Exp $ */
 
 /*
  * Copyright 1998-2020,2021 by Thomas E. Dickey
@@ -180,7 +180,7 @@ set_font_width(TScreen *screen, VTwin *win, int width)
     SetFontWidth(screen, win, width);
     TRACE(("SetFontWidth  %d\n", win->f_width));
 #undef  SetFontWidth
-#define SetFontWidth(screen, win, height) set_font_width(screen, win, height)
+#define SetFontWidth(screen, win, width) set_font_width(screen, win, width)
 }
 #endif
 
