@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1005 2021/11/05 23:52:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.1006 2021/11/11 23:55:10 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3215,12 +3215,9 @@ getDirectColor(XtermWidget xw, int red, int green, int blue)
 
 #define getRGB(name,shift) \
     do { \
-	Pixel value = (Pixel) name; \
+	Pixel value = (Pixel) name & 0xff; \
 	if (xw->rgb_widths[shift] < 8) { \
-	    int skip = (int) (8 - xw->rgb_widths[shift]); \
-	    Pixel bump = (value >> (skip - 1)) & 1; \
-	    value >>= skip; \
-	    value += bump; \
+	    value >>= (int) (8 - xw->rgb_widths[shift]); \
 	} \
 	value <<= xw->rgb_shifts[shift]; \
 	value &= xw->visInfo->name ##_mask; \
@@ -3231,16 +3228,31 @@ getDirectColor(XtermWidget xw, int red, int green, int blue)
     getRGB(green, 1);
     getRGB(blue, 2);
 
+#undef getRGB
+
     return (int) result;
 }
 
 static void
 formatDirectColor(char *target, XtermWidget xw, unsigned value)
 {
-    /*FIXME: the mask has to be scaled here, too */
-#define fRGB(name, shift) \
-	(value & xw->visInfo->name ## _mask) >> xw->rgb_shifts[shift]
-    sprintf(target, "%lu:%lu:%lu", fRGB(red, 0), fRGB(green, 1), fRGB(blue, 2));
+    unsigned result[3];
+
+#define getRGB(name, shift) \
+    do { \
+	result[shift] = value & xw->visInfo->name ## _mask; \
+	result[shift] >>= xw->rgb_shifts[shift]; \
+	if (xw->rgb_widths[shift] < 8) \
+	    result[shift] <<= (int) (8 - xw->rgb_widths[shift]); \
+    } while(0)
+
+    getRGB(red, 0);
+    getRGB(green, 1);
+    getRGB(blue, 2);
+
+#undef getRGB
+
+    sprintf(target, "%u:%u:%u", result[0], result[1], result[2]);
 }
 #endif /* OPT_DIRECT_COLOR */
 
