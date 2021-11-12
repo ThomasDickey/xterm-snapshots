@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1006 2021/11/11 23:55:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.1007 2021/11/12 09:28:19 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -3236,7 +3236,7 @@ getDirectColor(XtermWidget xw, int red, int green, int blue)
 static void
 formatDirectColor(char *target, XtermWidget xw, unsigned value)
 {
-    unsigned result[3];
+    Pixel result[3];
 
 #define getRGB(name, shift) \
     do { \
@@ -3252,7 +3252,7 @@ formatDirectColor(char *target, XtermWidget xw, unsigned value)
 
 #undef getRGB
 
-    sprintf(target, "%u:%u:%u", result[0], result[1], result[2]);
+    sprintf(target, "%lu:%lu:%lu", result[0], result[1], result[2]);
 }
 #endif /* OPT_DIRECT_COLOR */
 

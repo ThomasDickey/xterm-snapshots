@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1851 2021/11/09 22:58:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1852 2021/11/12 22:10:53 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1327,6 +1327,13 @@ resetMargins(XtermWidget xw)
 
     reset_tb_margins(screen);
     reset_lr_margins(screen);
+}
+
+static void
+resetMarginMode(XtermWidget xw)
+{
+    UIntClr(xw->flags, LEFT_RIGHT);
+    resetMargins(xw);
 }
 
 static void
@@ -11249,7 +11256,7 @@ VTRealize(Widget w,
     set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
-    resetMargins(xw);
+    resetMarginMode(xw);
 
     memset(screen->sc, 0, sizeof(screen->sc));
 
@@ -12573,7 +12580,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #endif
 
     /* reset scrolling region */
-    resetMargins(xw);
+    resetMarginMode(xw);
 
     bitclr(&xw->flags, ORIGIN);
 
