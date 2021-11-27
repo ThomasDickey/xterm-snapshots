@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1007 2021/11/12 09:28:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.1009 2021/11/26 01:02:16 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1844,18 +1844,20 @@ xtermIsIconified(XtermWidget xw)
 			    &actual_format_return,
 			    &nitems_return,
 			    &bytes_after_return,
-			    &prop_return)
-	    && prop_return != 0
-	    && actual_return_type == requested_type
-	    && actual_format_return == 32) {
-	    unsigned long n;
-	    for (n = 0; n < nitems_return; ++n) {
-		unsigned long check = (((unsigned long *)
-					(void *) prop_return)[n]);
-		if (check == is_hidden) {
-		    result = True;
-		    break;
+			    &prop_return)) {
+	    if (prop_return != 0
+		&& actual_return_type == requested_type
+		&& actual_format_return == 32) {
+		unsigned long n;
+		for (n = 0; n < nitems_return; ++n) {
+		    unsigned long check = (((unsigned long *)
+					    (void *) prop_return)[n]);
+		    if (check == is_hidden) {
+			result = True;
+			break;
+		    }
 		}
+		XFree(prop_return);
 	    }
 	}
     }
@@ -5854,13 +5856,15 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 					&actual_format,
 					&nitems,
 					&bytes_after,
-					&prop)
-			&& actual_type == requested_type
-			&& actual_format == 8
-			&& prop != 0
-			&& nitems == strlen(value)
-			&& memcmp(value, prop, nitems) == 0) {
-			changed = False;
+					&prop)) {
+			if (actual_type == requested_type
+			    && actual_format == 8
+			    && prop != 0
+			    && nitems == strlen(value)
+			    && memcmp(value, prop, nitems) == 0) {
+			    changed = False;
+			}
+			XFree(prop);
 		    }
 		}
 #endif /* OPT_SAME_NAME */
