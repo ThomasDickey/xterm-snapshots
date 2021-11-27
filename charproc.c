@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1852 2021/11/12 22:10:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1855 2021/11/27 12:46:17 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2227,6 +2227,9 @@ init_parser(XtermWidget xw, struct ParseState *sp)
 {
     TScreen *screen = TScreenOf(xw);
 
+    free(sp->defer_area);
+    free(sp->print_area);
+    free(sp->string_area);
     memset(sp, 0, sizeof(*sp));
     sp->scssize = 94;		/* number of printable/nonspace ASCII */
     sp->lastchar = -1;		/* not a legal IChar */
@@ -3099,7 +3102,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    default:	/* VT100 */
 			reply.a_param[count++] = 1;	/* VT100 */
-			reply.a_param[count++] = 0 | 2 | 0;	/* no STP, AVO, no GPO (ReGIS) */
+			reply.a_param[count++] = 2;	/* no STP, AVO, no GPO (ReGIS) */
 			break;
 		    }
 		} else {
@@ -6168,16 +6171,25 @@ really_set_mousemode(XtermWidget xw,
 #endif
 
 /*
- * DEC 070, pp 5-71 to 5-72.
+ * DEC 070, pp 5-29 to 5-30 (DECLRMM).
+ * DEC 070, pp 5-71 to 5-72 (DECCOLM).
+ *
+ * The descriptions for DECLRMM and DECCOLM agree that setting DECLRMM resets
+ * double-sized mode to single-size, and that if DECLRMM is being set, then
+ * double-sized mode is disabled.  Resetting DECLRMM has no effect on the
+ * double-sized mode.  The description of DECCOLM has an apparent error in its
+ * pseudo-code (because it is inconsistent with the description of DECLRMM),
+ * indicating that left_right_margins_mode is changed to SETABLE no matter
+ * which way DECCOLM is set.
  */
 static void
 set_column_mode(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
+    /* switch 80/132 columns clears the screen and sets to single-width */
     xterm_ResetDouble(xw);
     resetMargins(xw);
-    UIntSet(xw->flags, LEFT_RIGHT);
     CursorSet(screen, 0, 0, xw->flags);
 }
 
@@ -10810,6 +10822,7 @@ discount_frame_extents(XtermWidget xw, int *high, int *wide)
 	    TRACE(("...ignoring extents\n"));
 	    rc = False;
 	}
+	XFree(args);
     } else {
 	rc = False;
     }

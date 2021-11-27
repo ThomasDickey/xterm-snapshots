@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.889 2021/11/08 23:56:52 tom Exp $ */
+/* $XTermId: util.c,v 1.890 2021/11/26 01:26:30 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2046,12 +2046,12 @@ static void
 do_extra_scroll(XtermWidget xw, Bool trimmed)
 {
     TScreen *screen = TScreenOf(xw);
-    int row;
 
     if (screen_has_data(xw)) {
 	TRACE(("do_extra_scroll buffer=%d, trimmed=%s\n", screen->whichBuf,
 	       BtoS(trimmed)));
 	if (trimmed) {
+	    int row;
 	    Boolean hadData = (Boolean) ((screen->saved_fifo > 0)
 					 ? row_has_data(screen, -1)
 					 : False);

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.491 2021/09/07 00:26:55 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.492 2021/10/11 00:18:09 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2049,9 +2049,11 @@ case ".[$]$1" in
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 11 updated: 2021/01/01 13:31:04
+dnl CF_PKG_CONFIG version: 12 updated: 2021/10/10 20:18:09
 dnl -------------
 dnl Check for the package-config program, unless disabled by command-line.
+dnl
+dnl Sets $PKG_CONFIG to the pathname of the pkg-config program.
 AC_DEFUN([CF_PKG_CONFIG],
 [
 AC_MSG_CHECKING(if you want to use pkg-config)

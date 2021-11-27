@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.95 2021/09/19 18:57:09 tom Exp $ */
+/* $XTermId: graphics.c,v 1.96 2021/11/26 01:29:54 tom Exp $ */
 
 /*
  * Copyright 2013-2020,2021 by Ross Combs
@@ -962,8 +962,9 @@ refresh_graphic(TScreen const *screen,
 	if (pmy > draw_y + draw_h - 1)
 	    break;
 
-	if (pmy < draw_y || pmy > draw_y + draw_h - 1 ||
-	    pmy < refresh_y || pmy > refresh_y + refresh_h - 1) {
+	if (pmy < draw_y ||
+	    pmy < refresh_y ||
+	    pmy > refresh_y + refresh_h - 1) {
 	    out_of_range++;
 	    continue;
 	}
@@ -976,8 +977,9 @@ refresh_graphic(TScreen const *screen,
 	    if (pmx > draw_x + draw_w - 1)
 		break;
 
-	    if (pmx < draw_x || pmx > draw_x + draw_w - 1 ||
-		pmx < refresh_x || pmx > refresh_x + refresh_w - 1) {
+	    if (pmx < draw_x ||
+		pmx < refresh_x ||
+		pmx > refresh_x + refresh_w - 1) {
 		out_of_range++;
 		continue;
 	    }

@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.212 2021/06/06 23:14:52 Stelios.Bounanos Exp $ */
+/* $XTermId: scrollbar.c,v 1.213 2021/11/25 22:54:35 Luis.Javier.Merino Exp $ */
 
 /*
  * Copyright 2000-2020,2021 by Thomas E. Dickey
@@ -839,6 +839,7 @@ have_xkb(Display *dpy)
 						     (unsigned) (1 << n),
 						     &mask);
 				TRACE(("  name[%d] %s (%#x)\n", n, modStr, mask));
+				XFree(modStr);
 			    }
 			}
 		    }
