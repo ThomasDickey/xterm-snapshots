@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.77 2019/07/12 01:11:59 tom Exp $ */
+/* $XTermId: cursor.c,v 1.79 2021/12/31 23:33:49 tom Exp $ */
 
 /*
- * Copyright 2002-2018,2019 by Thomas E. Dickey
+ * Copyright 2002-2019,2021 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -316,10 +316,9 @@ AdjustSavedCursor(XtermWidget xw, int adjust)
  * Save Cursor and Attributes
  */
 void
-CursorSave(XtermWidget xw)
+CursorSave2(XtermWidget xw, SavedCursor * sc)
 {
     TScreen *screen = TScreenOf(xw);
-    SavedCursor *sc = &screen->sc[screen->whichBuf];
 
     sc->saved = True;
     sc->row = screen->cur_row;
@@ -337,20 +336,26 @@ CursorSave(XtermWidget xw)
     saveCharsets(screen, sc->gsets);
 }
 
+void
+CursorSave(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    CursorSave2(xw, &screen->sc[screen->whichBuf]);
+}
+
 /*
  * We save/restore all visible attributes, plus wrapping, origin mode, and the
  * selective erase attribute.
  */
-#define DECSC_FLAGS (ATTRIBUTES|ORIGIN|PROTECTED)
+#define DECSC_FLAGS (WRAPAROUND|ATTRIBUTES|ORIGIN|PROTECTED)
 
 /*
  * Restore Cursor and Attributes
  */
 void
-CursorRestore(XtermWidget xw)
+CursorRestore2(XtermWidget xw, SavedCursor * sc)
 {
     TScreen *screen = TScreenOf(xw);
-    SavedCursor *sc = &screen->sc[screen->whichBuf];
 
     /* Restore the character sets, unless we never did a save-cursor op.
      * In that case, we'll reset the character sets.
@@ -383,6 +388,13 @@ CursorRestore(XtermWidget xw)
     SGR_Foreground(xw, (xw->flags & FG_COLOR) ? sc->cur_foreground : -1);
     SGR_Background(xw, (xw->flags & BG_COLOR) ? sc->cur_background : -1);
 #endif
+}
+
+void
+CursorRestore(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    CursorRestore2(xw, &screen->sc[screen->whichBuf]);
 }
 
 /*
@@ -445,11 +457,11 @@ CursorRow(XtermWidget xw)
 int
 set_cur_row(TScreen *screen, int value)
 {
-    TRACE(("set_cur_row %d vs %d\n", value, screen ? screen->max_row : -1));
+    TRACE(("set_cur_row %d vs %d\n", value, screen ? LastRowNumber(screen) : -1));
 
     assert(screen != 0);
     assert(value >= 0);
-    assert(value <= screen->max_row);
+    assert(value <= LastRowNumber(screen));
     screen->cur_row = value;
     return value;
 }

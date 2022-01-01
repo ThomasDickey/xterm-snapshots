@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.492 2021/10/11 00:18:09 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.493 2021/12/16 23:22:31 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -809,7 +809,7 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FIX_WARNINGS version: 3 updated: 2020/12/31 18:40:20
+dnl CF_FIX_WARNINGS version: 4 updated: 2021/12/16 18:22:31
 dnl ---------------
 dnl Warning flags do not belong in CFLAGS, CPPFLAGS, etc.  Any of gcc's
 dnl "-Werror" flags can interfere with configure-checks.  Those go into
@@ -821,11 +821,13 @@ if test "$GCC" = yes || test "$GXX" = yes
 then
 	case [$]$1 in
 	(*-Werror=*)
-		CF_VERBOSE(repairing $1: [$]$1)
 		cf_temp_flags=
 		for cf_temp_scan in [$]$1
 		do
 			case "x$cf_temp_scan" in
+			(x-Werror=format*)
+				CF_APPEND_TEXT(cf_temp_flags,$cf_temp_scan)
+				;;
 			(x-Werror=*)
 				CF_APPEND_TEXT(EXTRA_CFLAGS,$cf_temp_scan)
 				;;
@@ -834,9 +836,13 @@ then
 				;;
 			esac
 		done
-		$1="$cf_temp_flags"
-		CF_VERBOSE(... fixed [$]$1)
-		CF_VERBOSE(... extra $EXTRA_CFLAGS)
+		if test "x[$]$1" != "x$cf_temp_flags"
+		then
+			CF_VERBOSE(repairing $1: [$]$1)
+			$1="$cf_temp_flags"
+			CF_VERBOSE(... fixed [$]$1)
+			CF_VERBOSE(... extra $EXTRA_CFLAGS)
+		fi
 		;;
 	esac
 fi

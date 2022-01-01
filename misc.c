@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1009 2021/11/26 01:02:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.1012 2021/12/27 18:41:38 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -4766,7 +4766,21 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s",
 			((xw->flags & IN132COLUMNS) ? 132 : 80),
 			cp);
-	    } else if (!strcmp(cp, "*|")) {	/* DECSNLS */
+	    } else
+#if OPT_STATUS_LINE
+	    if (!strcmp(cp, "$}")) {	/* DECSASD */
+		TRACE(("reply DECSASD\n"));
+		sprintf(reply, "%d%s",
+			screen->status_active,
+			cp);
+	    } else if (!strcmp(cp, "$~")) {	/* DECSSDT */
+		TRACE(("reply DECSASD\n"));
+		sprintf(reply, "%d%s",
+			screen->status_type,
+			cp);
+	    } else
+#endif
+	    if (!strcmp(cp, "*|")) {	/* DECSNLS */
 		TRACE(("reply DECSNLS\n"));
 		sprintf(reply, "%d%s",
 			screen->max_row + 1,
@@ -7446,7 +7460,7 @@ free_string(String value)
 
 /* Set tty's idea of window size, using the given file descriptor 'fd'. */
 int
-update_winsize(int fd, int rows, int cols, int height, int width)
+update_winsize(TScreen *screen, int rows, int cols, int height, int width)
 {
     int code = -1;
 #ifdef TTYSIZE_STRUCT
@@ -7469,8 +7483,16 @@ update_winsize(int fd, int rows, int cols, int height, int width)
 	last_cols = cols;
 	last_high = height;
 	last_wide = width;
+#if OPT_STATUS_LINE
+	if (IsStatusShown(screen)) {
+	    ++rows;
+	    height += FontHeight(screen);
+	    TRACE(("... account for status-line -> %dx%d (%dx%d)\n",
+		   rows, cols, height, width));
+	}
+#endif
 	setup_winsize(ts, rows, cols, height, width);
-	TRACE_RC(code, SET_TTYSIZE(fd, ts));
+	TRACE_RC(code, SET_TTYSIZE(screen->respond, ts));
 	trace_winsize(ts, "from SET_TTYSIZE");
     }
 #endif
@@ -7497,7 +7519,7 @@ xtermSetWinSize(XtermWidget xw)
 	    TScreen *screen = TScreenOf(xw);
 
 	    TRACE(("xtermSetWinSize\n"));
-	    update_winsize(screen->respond,
+	    update_winsize(screen,
 			   MaxRows(screen),
 			   MaxCols(screen),
 			   Height(screen),

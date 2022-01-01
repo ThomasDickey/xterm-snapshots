@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.890 2021/11/26 01:26:30 tom Exp $ */
+/* $XTermId: util.c,v 1.892 2022/01/01 00:09:51 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1114,7 +1114,8 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 	cells = (unsigned) (MaxCols(screen) - screen->cur_col);
     }
 
-    if (ScrnHaveSelection(screen)
+    if (screen->cur_row <= screen->max_row
+	&& ScrnHaveSelection(screen)
 	&& ScrnIsRowInSelection(screen, INX2ROW(screen, screen->cur_row))) {
 	ScrnDisownSelection(xw);
     }
@@ -1201,7 +1202,10 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 
     ScrnWriteText(xw, str, attr_flags, fg_bg, len);
     CursorForward(xw, (int) cells);
-    setZIconBeep(xw);
+
+    if (screen->cur_row <= screen->max_row) {
+	setZIconBeep(xw);
+    }
     return;
 }
 
@@ -2679,7 +2683,7 @@ xtermRepaint(XtermWidget xw)
 
     TRACE(("xtermRepaint\n"));
     xtermClear(xw);
-    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), True);
+    ScrnRefresh(xw, 0, 0, LastRowNumber(screen) + 1, MaxCols(screen), True);
 }
 
 /***====================================================================***/

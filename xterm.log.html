@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2377 2021/11/27 12:49:23 tom Exp $
+  $XTermId: xterm.log.html,v 1.2381 2021/12/31 23:36:00 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1023,6 +1023,23 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>begin DECSASD/DECSSDT:
+      <ul>
+        <li>decode controls, set state</li>
+
+        <li>implement DECRQSS responses</li>
+
+        <li>implement indicator-style status-line</li>
+      </ul>
+    </li>
+
+    <li>add autowrap (<code>DECAWM</code>) to data saved/restored
+    with save/restore cursor-operations.</li>
+
+    <li>modify configure-script fixup for <code>-Werror</code>
+    options to exclude fixup for <code>-Werror=format</code>, e.g.,
+    <code>-Werror=format-security</code>.</li>
+
     <li>amend change from <a href="#xterm_370">patch #370</a>; DEC
     070's pseudo-code for DECCOLM incorrectly suggests that it
     enables DECLRMM as a side-effect.</li>
