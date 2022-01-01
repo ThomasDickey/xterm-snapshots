@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1041 2021/11/08 22:23:28 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1045 2021/12/31 17:31:27 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -774,6 +774,10 @@ typedef enum {
 
 #ifndef OPT_SHIFT_FONTS
 #define OPT_SHIFT_FONTS 1 /* true if xterm interprets fontsize-shifting */
+#endif
+
+#ifndef OPT_STATUS_LINE
+#define OPT_STATUS_LINE	1 /* true if xterm supports status-line controls */
 #endif
 
 #ifndef OPT_SUNPC_KBD
@@ -2719,6 +2723,31 @@ typedef struct {
 	Boolean		graphics_print_color_syntax;
 	Boolean		graphics_print_background_mode;
 	Boolean		graphics_rotated_print_mode;
+#endif
+
+#define StatusLineRows	1		/* number of rows in status-line */
+
+#if OPT_STATUS_LINE
+#define LastRowNumber(screen) \
+	( (screen)->max_row \
+	 + (IsStatusShown(screen) ? 1 : 0) )
+#define FirstRowNumber(screen) \
+	( (screen)->status_active \
+	   ? LastRowNumber(screen) \
+	   : 0 )
+#define IsStatusShown(screen) \
+	(  ((screen)->status_active && \
+	    (screen)->status_type >= 2) \
+	 || ((screen)->status_type == 1) )
+	Boolean		status_active;	/* DECSASD */
+	int		status_type;	/* DECSSDT */
+	int		status_shown;	/* last-displayed type */
+	SavedCursor	status_data[2];
+#define AddStatusLineRows(nrow) nrow += StatusLineRows
+#else
+#define LastRowNumber(screen)  (screen)->max_row
+#define FirstRowNumber(screen) 0
+#define AddStatusLineRows(nrow) /* nothing */
 #endif
 
 #if OPT_VT52_MODE

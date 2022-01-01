@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2021)
-               updated for XTerm Patch #370 (2021/11/11)
+               updated for XTerm Patch #371 (2021/12/26)
 
 
 
@@ -424,6 +424,8 @@ DCS $ q Pt ST
             s       -> DECSLRM
             t       -> DECSLPP
             $ |     -> DECSCPP
+            $ }     -> DECSASD
+            $ ~     -> DECSSDT
             * |     -> DECSNLS
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
@@ -1679,8 +1681,19 @@ CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
 CSI Ps ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
 
+CSI Ps $ }
+          Select active status display (DECSASD), VT320 and up.
+            Ps = 0  -> main (default)
+            Ps = 1  -> status line
+
 CSI Ps ' ~
           Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
+
+CSI Ps $ ~
+          Select status line type (DECSSDT), VT320 and up.
+            Ps = 0  -> none
+            Ps = 1  -> indicator (default)
+            Ps = 2  -> host-writable.
 
 
 Operating System Commands

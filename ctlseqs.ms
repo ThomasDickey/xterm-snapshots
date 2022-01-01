@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.635 2021/11/11 20:31:02 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.636 2021/12/26 21:57:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2020,2021 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #370
-.ds RF 2021/11/11
+.ds LF Patch #371
+.ds RF 2021/12/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -877,6 +877,8 @@ The string following the \*(``q\*('' is one of the following:
   \*(cs		\(-> DECSLRM
   \*t		\(-> DECSLPP
   \*$\*|	\(-> DECSCPP
+  \*$\*}	\(-> DECSASD
+  \*$\*~	\(-> DECSSDT
   \**\*|	\(-> DECSNLS
 .br
 \fI\*(xt\fP responds with
@@ -2377,8 +2379,21 @@ to their previous state.
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
 .
 .iP
+.IP \\*(Cs\\*(Ps\\*s\\*$\\*}
+Select active status display (DECSASD), VT320 and up.
+  \*(Ps = \*0 \(-> main (default)
+  \*(Ps = \*1 \(-> status line
+.
+.iP
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*~
 Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
+.
+.iP
+.IP \\*(Cs\\*(Ps\\*s\\*$\\*~
+Select status line type (DECSSDT), VT320 and up.
+  \*(Ps = \*0 \(-> none
+  \*(Ps = \*1 \(-> indicator (default)
+  \*(Ps = \*2 \(-> host-writable.
 .
 .Ed
 .

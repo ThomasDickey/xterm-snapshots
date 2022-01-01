@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.902 2021/09/19 18:27:35 tom Exp $ */
+/* $XTermId: xterm.h,v 1.904 2021/12/28 00:31:19 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -1064,7 +1064,9 @@ extern void CursorDown (TScreen * /* screen */, int /* n */);
 extern void CursorForward (XtermWidget /* xw */, int /* n */);
 extern void CursorNextLine (XtermWidget /* xw */, int /* count */);
 extern void CursorPrevLine (XtermWidget /* xw */, int /* count */);
+extern void CursorRestore2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorRestore (XtermWidget  /* xw */);
+extern void CursorSave2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorSave (XtermWidget  /* xw */);
 extern void CursorSet (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* flags */);
 extern void CursorUp (TScreen * /* screen */, int   /* n */);
@@ -1180,7 +1182,7 @@ extern int creat_as (uid_t /* uid */, gid_t /* gid */, Bool /* append */, char *
 extern int getVisualDepth (XtermWidget /* xw */);
 extern int ignore_x11_error(Display * /* dpy */, XErrorEvent * /* event */);
 extern int open_userfile (uid_t /* uid */, gid_t /* gid */, char * /* path */, Bool /* append */);
-extern int update_winsize(int /* fd */, int /* rows */, int /* cols */, int /* height */, int /* width */);
+extern int update_winsize (TScreen * /* screen */, int /* rows */, int /* cols */, int /* height */, int /* width */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermClosestColor (XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);

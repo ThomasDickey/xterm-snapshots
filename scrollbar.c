@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.213 2021/11/25 22:54:35 Luis.Javier.Merino Exp $ */
+/* $XTermId: scrollbar.c,v 1.214 2021/12/31 23:35:02 tom Exp $ */
 
 /*
  * Copyright 2000-2020,2021 by Thomas E. Dickey
@@ -384,7 +384,9 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 	&& !always) {
 	if (screen->scroll_dirty) {
 	    screen->scroll_dirty = False;
-	    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), False);
+	    ScrnRefresh(xw, 0, 0,
+			LastRowNumber(screen) + 1,
+			MaxCols(screen), False);
 	}
     } else
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1855 2021/11/27 12:46:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1860 2022/01/01 00:08:58 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -2258,6 +2258,211 @@ deferparsing(unsigned c, struct ParseState *sp)
     SafeFree(sp->defer_area, sp->defer_size);
     sp->defer_area[(sp->defer_used)++] = CharOf(c);
 }
+
+#if OPT_STATUS_LINE
+/* save the status-line position, switch back to main display */
+static void
+StatusSave(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    CursorSave2(xw, &screen->status_data[1]);
+    CursorRestore2(xw, &screen->status_data[0]);
+}
+
+/* save the main-display position, switch to status-line */
+static void
+StatusRestore(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    CursorSave2(xw, &screen->status_data[0]);
+    CursorRestore2(xw, &screen->status_data[1]);
+    screen->cur_row = FirstRowNumber(screen);
+}
+
+static void
+StatusPutChars(XtermWidget xw, const char *value, int length)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (length < 0)
+	length = (int) strlen(value);
+
+    while (length > 0) {
+	IChar buffer[81];
+	Cardinal n;
+	for (n = 0; n < 80 && length > 0 && *value != '\0'; ++n) {
+	    buffer[n] = CharOf(*value++);
+	    --length;
+	}
+	buffer[n] = 0;
+	dotext(xw,
+	       screen->gsets[(int) (screen->curgl)],
+	       buffer, n);
+    }
+}
+
+static const char *indicatorFormat = "%{version%}  %{position%}  %{unixtime%} -- %D %T";
+
+static void
+show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
+{
+    XtermWidget xw = (XtermWidget) closure;
+    TScreen *screen = TScreenOf(xw);
+
+    unsigned long interval;
+    time_t now;
+    const char *parse;
+    char buffer[81];
+
+    if (screen->status_type != 1 || screen->status_active)
+	return;
+
+    screen->status_active = True;
+
+    CursorSave2(xw, &screen->status_data[0]);
+    screen->cur_row = FirstRowNumber(screen);
+    screen->cur_col = 0;
+
+    xw->flags |= INVERSE;
+    xw->flags &= (IFlags) (~WRAPAROUND);
+
+    interval = 0;
+    now = time((time_t *) 0);
+
+    for (parse = indicatorFormat; *parse != '\0'; ++parse) {
+	const char *found = parse;
+	if (*parse == '%') {
+	    if (*++parse == L_CURL) {
+		const char *check = strchr(parse, '%');
+		size_t length = 0;
+
+		if (check != NULL && check[1] == R_CURL) {
+		    length = (size_t) (2 + check - found);
+		} else {
+		    length = strlen(found);
+		}
+
+		if (!strncmp(found, "%{version%}", length)) {
+		    StatusPutChars(xw, xtermVersion(), -1);
+		} else if (!strncmp(found, "%{unixtime%}", length)) {
+		    char *s = strcpy(buffer, ctime(&now));
+		    s += strlen(s);
+		    while (s != buffer && isspace(CharOf(s[-1]))) {
+			*--s = '\0';
+		    }
+		    StatusPutChars(xw, buffer, -1);
+		    interval = 1000;
+		} else if (!strncmp(found, "%{position%}", length)) {
+		    sprintf(buffer, "(%02d,%03d)",
+			    screen->status_data[0].row + 1,
+			    screen->status_data[0].col + 1);
+		    StatusPutChars(xw, buffer, -1);
+		    if (interval == 0)
+			interval = 80;
+		} else {
+		    StatusPutChars(xw, found, (int) length);
+		}
+		parse = found + length - 1;
+	    } else {
+		char format[3];
+		struct tm *tm = localtime(&now);
+
+		format[0] = '%';
+		format[1] = *parse;
+		format[2] = '\0';
+		if (strftime(buffer, sizeof(buffer) - 1, format, tm) != 0) {
+		    StatusPutChars(xw, buffer, -1);
+		    interval = 1000;
+		} else {
+		    StatusPutChars(xw, "?", 1);
+		    StatusPutChars(xw, parse - 1, 2);
+		}
+	    }
+	} else {
+	    StatusPutChars(xw, parse, 1);
+	}
+    }
+    while (screen->cur_col < screen->max_col)
+	StatusPutChars(xw, " ", 1);
+
+    ScrnRefresh(xw, FirstRowNumber(screen), 0, 1, screen->max_col, True);
+    screen->status_active = False;
+
+    CursorRestore2(xw, &screen->status_data[0]);
+
+    /* if we processed a position or date/time, repeat */
+    if (interval != 0) {
+	(void) XtAppAddTimeOut(app_con, interval, show_indicator_status, xw);
+    }
+}
+
+static void
+show_writable_status(XtermWidget xw)
+{
+    (void) xw;
+    TRACE(("FIXME - show_writable_status\n"));
+    TRACE(("FIXME - paint the current text on the window\n"));
+}
+
+/*
+ * DEC STD 070, chapter 14 "VSRM - Status Display Extension"
+ */
+static void
+update_status_line(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("FIXME update_status_line (%s:%d) vs %d\n",
+	   BtoS(screen->status_active),
+	   screen->status_type,
+	   screen->status_shown));
+
+    if (screen->status_type == 1) {
+	if (screen->status_type != screen->status_shown) {
+	    if (screen->status_shown == 0) {
+		RequestResize(xw, MaxRows(screen), MaxCols(screen), True);
+	    }
+	    screen->status_shown = screen->status_type;
+	}
+	show_indicator_status(xw, NULL);
+    } else if (screen->status_active) {
+	if (screen->status_type != screen->status_shown) {
+	    Boolean do_resize = False;
+
+	    if (screen->status_type == 0) {
+		TRACE(("FIXME - save status contents for redisplay\n"));
+		if (screen->status_shown >= 2) {
+		    StatusSave(xw);
+		}
+		TRACE(("...resize to hide status-line\n"));
+		do_resize = True;
+	    } else if (screen->status_shown == 0) {
+		if (screen->status_type >= 2) {
+		    StatusRestore(xw);
+		}
+		TRACE(("...resize to show status-line\n"));
+		do_resize = True;
+	    } else {
+		TRACE(("FIXME - save status contents for redisplay\n"));
+	    }
+	    screen->status_shown = screen->status_type;
+	    if (do_resize)
+		RequestResize(xw, MaxRows(screen), MaxCols(screen), True);
+	}
+	show_writable_status(xw);
+    } else {
+	if (screen->status_shown) {
+	    TRACE(("FIXME - save status contents for redisplay\n"));
+	    if (screen->status_shown >= 2) {
+		StatusSave(xw);
+	    }
+	    screen->status_shown = 0;
+	    TRACE(("...resize to hide status-line\n"));
+	    RequestResize(xw, MaxRows(screen), MaxCols(screen), True);
+	}
+    }
+}
+#endif
 
 #if OPT_VT52_MODE
 static void
@@ -4758,6 +4963,33 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = eigtable;
 	    break;
 #endif /* OPT_DEC_RECTOPS */
+
+	case CASE_DECSASD:
+#if OPT_STATUS_LINE
+	    if (screen->vtXX_level >= 2) {
+		TRACE(("CASE_DECSASD - select active status display\n"));
+		if (screen->status_type != 1) {
+		    screen->status_active = zero_if_default(0) ? True : False;
+		    update_status_line(xw);
+		}
+	    }
+#endif
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECSSDT:
+#if OPT_STATUS_LINE
+	    if (screen->vtXX_level >= 2) {
+		TRACE(("CASE_DECSSDT - select type of status display\n"));
+		value = zero_if_default(0);
+		if (value <= 2) {
+		    screen->status_type = value;
+		    update_status_line(xw);
+		}
+	    }
+#endif
+	    ResetState(sp);
+	    break;
 
 #if OPT_XTERM_SGR
 	case CASE_CSI_HASH_STATE:
@@ -8256,6 +8488,12 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 #endif
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
+#if OPT_STATUS_LINE
+    if (IsStatusShown(screen) && (rows > 0)) {
+	TRACE(("FIXME reserve a row for status-line\n"));
+	++rows;
+    }
+#endif
 
     /* check first if the row/column values fit into a Dimension */
     if (cols > 0) {
@@ -8363,7 +8601,10 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     getXtermSizeHints(xw);
 #endif
 
-    TRACE(("...requesting resize %dx%d\n", askedHeight, askedWidth));
+    TRACE(("...requesting resize %dx%d (%dx%d)\n",
+	   askedHeight, askedWidth,
+	   askedHeight / FontHeight(screen),
+	   askedWidth / FontWidth(screen)));
     status = REQ_RESIZE((Widget) xw,
 			askedWidth, askedHeight,
 			&replyWidth, &replyHeight);

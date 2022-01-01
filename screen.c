@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.604 2021/11/05 08:00:28 tom Exp $ */
+/* $XTermId: screen.c,v 1.607 2021/12/31 23:20:50 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2021 by Thomas E. Dickey
@@ -194,6 +194,7 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
 
     (void) screen;
     AlignValue(ncol);
+    AddStatusLineRows(nrow);
 
     skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
     skipNcolCharData = (ncol * SizeofScrnPtr(charData));
@@ -266,6 +267,7 @@ allocScrnHead(TScreen *screen, unsigned nrow)
     unsigned size = scrnHeadSize(screen, 1);
 
     (void) screen;
+    AddStatusLineRows(nrow);
     result = (ScrnPtr *) calloc((size_t) nrow, (size_t) size);
     if (result == 0)
 	SysError(ERROR_SCALLOC);
@@ -319,7 +321,8 @@ allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol)
     size_t length;
 
     AlignValue(ncol);
-    length = ((nrow + 1) * sizeofScrnRow(screen, ncol));
+    AddStatusLineRows(nrow);
+    length = ((nrow + StatusLineRows) * sizeofScrnRow(screen, ncol));
     if (length == 0
 	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
 	  SysError(ERROR_SCALLOC2);
@@ -1292,7 +1295,7 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j <= last - (int) n; ++j) \
+    	for (j = col; j < last - (int) n; ++j) \
 	    data[j] = data[j + (int) n]
 
     TScreen *screen = TScreenOf(xw);
@@ -1395,7 +1398,7 @@ void
 ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
-    if (screen->show_wrap_marks) {
+    if (screen->show_wrap_marks && row >= 0 && row <= screen->max_row) {
 	Bool set = (Bool) LineTstWrapped(ld);
 	int y = row * FontHeight(screen) + screen->border;
 	int x = LineCursorX(screen, ld, screen->max_col + 1);
@@ -1489,7 +1492,7 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
-	if (lastind < 0 || lastind > screen->max_row)
+	if (lastind < FirstRowNumber(screen) || lastind > LastRowNumber(screen))
 	    continue;
 
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
@@ -1801,7 +1804,7 @@ ScrnRefresh(XtermWidget xw,
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
 	first_time = 0;
-	update_winsize(screen->respond, nrows, ncols, xw->core.height, xw->core.width);
+	update_winsize(screen, nrows, ncols, xw->core.height, xw->core.width);
     }
 #endif
     recurse--;
@@ -1886,6 +1889,7 @@ ScreenResize(XtermWidget xw,
     int rows, cols;
     const int border = 2 * screen->border;
     int move_down_by = 0;
+    Boolean forced = False;
 
     TRACE(("ScreenResize %dx%d border 2*%d font %dx%d\n",
 	   height, width, screen->border,
@@ -1920,8 +1924,19 @@ ScreenResize(XtermWidget xw,
     if (cols < 1)
 	cols = 1;
 
+#if OPT_STATUS_LINE
+    if (IsStatusShown(screen)) {
+	TRACE(("FIXME discount a row for status-line\n"));
+	rows--;
+	height -= FontHeight(screen);
+	forced = True;
+    }
+#endif
+
     /* update buffers if the screen has changed size */
-    if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+    if (forced) {
+	;
+    } else if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -2120,7 +2135,7 @@ ScreenResize(XtermWidget xw,
 #endif /* NO_ACTIVE_ICON */
 
 #ifdef TTYSIZE_STRUCT
-    if (update_winsize(screen->respond, rows, cols, height, width) == 0) {
+    if (update_winsize(screen, rows, cols, height, width) == 0) {
 #if defined(SIGWINCH) && defined(TIOCGPGRP)
 	if (screen->pid > 1) {
 	    int pgrp;
