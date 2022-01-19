@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.493 2021/12/16 23:22:31 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.494 2022/01/19 09:08:12 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2020,2021 by Thomas E. Dickey
+dnl Copyright 1997-2021,2022 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -4086,7 +4086,7 @@ AC_SUBST(ICON_LIST)
 AC_SUBST(ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 10 updated: 2015/04/12 15:39:00
+dnl CF_WITH_IMAKE_CFLAGS version: 11 updated: 2022/01/19 04:07:26
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
@@ -4152,6 +4152,23 @@ else
 	(irix[[56]].*)
 		# these are needed to make SIGWINCH work in xterm
 		IMAKE_CFLAGS="-DSYSV -DSVR4 $IMAKE_CFLAGS"
+		;;
+	esac
+
+	# "modern" systems install X applications in /usr/bin.  Other systems may
+	# use one of the X release-based directories.
+	case "$CFLAGS $CPPFLAGS $IMAKE_CFLAGS" in
+	(*-DPROJECTROOT*)
+		;;
+	(*)
+		for cf_dir in /usr/X11R7 /usr/X11R6 /usr/X11R5
+		do
+			if test -d "$cf_dir/bin"
+			then
+				IMAKE_CFLAGS="$IMAKE_CFLAGS -DPROJECTROOT=\"$cf_dir\""
+				break
+			fi
+		done
 		;;
 	esac
 

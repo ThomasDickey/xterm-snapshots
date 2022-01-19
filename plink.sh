@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.14 2021/12/05 23:38:00 tom Exp $
+# $XTermId: plink.sh,v 1.15 2021/12/12 18:11:32 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -52,7 +52,7 @@ do
 		OPT=-Wl,-as-needed
 		warned=`mktemp`
 		trap "rm -f $warned" EXIT INT QUIT TERM HUP
-		if ( eval $LINKIT $OPT $NO_LTO "$@" >/dev/null 2>&1 )
+		if ( eval $LINKIT $OPT $NO_LTO "$@" >"$warned" 2>&1 )
 		then
 			WARNED=`cat "$warned"`
 			rm -f "$warned"
