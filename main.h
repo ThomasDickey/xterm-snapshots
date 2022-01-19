@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.77 2021/08/24 09:45:41 tom Exp $ */
+/* $XTermId: main.h,v 1.78 2022/01/19 08:57:52 tom Exp $ */
 
 /*
- * Copyright 2000-2020,2021 by Thomas E. Dickey
+ * Copyright 2000-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -240,7 +240,7 @@
 #endif
 
 #ifndef PROJECTROOT
-#define PROJECTROOT		"/usr/X11R6"
+#define PROJECTROOT		"/usr"
 #endif
 
 /*
