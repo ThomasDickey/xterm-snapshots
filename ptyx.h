@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1045 2021/12/31 17:31:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1047 2022/01/30 19:29:37 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -777,7 +777,7 @@ typedef enum {
 #endif
 
 #ifndef OPT_STATUS_LINE
-#define OPT_STATUS_LINE	1 /* true if xterm supports status-line controls */
+#define OPT_STATUS_LINE	0 /* true if xterm supports status-line controls */
 #endif
 
 #ifndef OPT_SUNPC_KBD

@@ -1,8 +1,8 @@
-/* $XTermId: graphics_sixel.c,v 1.29 2021/08/10 00:39:26 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.30 2022/01/30 19:25:32 tom Exp $ */
 
 /*
- * Copyright 2014-2020,2021 by Ross Combs
- * Copyright 2014-2020,2021 by Thomas E. Dickey
+ * Copyright 2014-2021,2022 by Ross Combs
+ * Copyright 2014-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -149,7 +149,7 @@ init_sixel_background(Graphic *graphic, SixelContext const *context)
     graphic->color_registers_used[context->background] = 1;
 }
 
-static void
+static Boolean
 set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 {
     const int mh = graphic->max_height;
@@ -183,8 +183,10 @@ set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 	    }
 	} else {
 	    TRACE(("sixel pixel %d out of bounds\n", pix));
+	    return False;
 	}
     }
+    return True;
 }
 
 static void
@@ -462,8 +464,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		init_sixel_background(graphic, &context);
 		graphic->valid = 1;
 	    }
-	    if (sixel)
-		set_sixel(graphic, &context, sixel);
+	    if (sixel) {
+		if (!set_sixel(graphic, &context, sixel)) {
+		    context.col = 0;
+		    break;
+		}
+	    }
 	    context.col++;
 	} else if (ch == '$') {	/* DECGCR */
 	    /* ignore DECCRNLM in sixel mode */
@@ -531,8 +537,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    if (sixel) {
 		int i;
 		for (i = 0; i < Pcount; i++) {
-		    set_sixel(graphic, &context, sixel);
-		    context.col++;
+		    if (set_sixel(graphic, &context, sixel)) {
+			context.col++;
+		    } else {
+			context.col = 0;
+			break;
+		    }
 		}
 	    } else {
 		context.col += Pcount;
