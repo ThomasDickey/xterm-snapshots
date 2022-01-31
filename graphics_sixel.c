@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.30 2022/01/30 19:25:32 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.31 2022/01/31 08:53:42 tom Exp $ */
 
 /*
  * Copyright 2014-2021,2022 by Ross Combs
@@ -170,7 +170,10 @@ set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 	   ((color != COLOR_HOLE)
 	    ? (unsigned) graphic->color_registers[color].b : 0U)));
     for (pix = 0; pix < 6; pix++) {
-	if (context->col < mw && context->row + pix < mh) {
+	if (context->col >= 0 &&
+	    context->col < mw &&
+	    context->row + pix >= 0 &&
+	    context->row + pix < mh) {
 	    if (sixel & (1 << pix)) {
 		if (context->col + 1 > graphic->actual_width) {
 		    graphic->actual_width = context->col + 1;
