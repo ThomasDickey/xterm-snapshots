@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.78 2022/01/19 08:57:52 tom Exp $ */
+/* $XTermId: main.h,v 1.80 2022/01/31 00:42:27 tom Exp $ */
 
 /*
  * Copyright 2000-2021,2022 by Thomas E. Dickey
@@ -225,6 +225,10 @@
 
 #ifndef DEF_SCROLL_LINES
 #define DEF_SCROLL_LINES	1
+#endif
+
+#ifndef DEF_SL_FORMAT
+#define DEF_SL_FORMAT           "%{version%}  %{position%}  %{unixtime%}"
 #endif
 
 #ifndef DEF_TITLE_MODES

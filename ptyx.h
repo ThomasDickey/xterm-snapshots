@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1047 2022/01/30 19:29:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1049 2022/01/30 23:58:16 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2736,13 +2736,14 @@ typedef struct {
 	   ? LastRowNumber(screen) \
 	   : 0 )
 #define IsStatusShown(screen) \
-	(  ((screen)->status_active && \
-	    (screen)->status_type >= 2) \
-	 || ((screen)->status_type == 1) )
+	( ( (screen)->status_type == 2) || \
+	  ( (screen)->status_type == 1) )
+	Boolean		status_repaint;	/* status line needs repaint	*/
 	Boolean		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */
 	int		status_shown;	/* last-displayed type */
 	SavedCursor	status_data[2];
+	char *		status_fmt;	/* format for indicator-status	*/
 #define AddStatusLineRows(nrow) nrow += StatusLineRows
 #else
 #define LastRowNumber(screen)  (screen)->max_row
