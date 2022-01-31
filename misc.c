@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1012 2021/12/27 18:41:38 tom Exp $ */
+/* $XTermId: misc.c,v 1.1013 2022/01/31 09:24:28 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3968,7 +3968,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     Char *cp;
     int state = 0;
     char *buf = 0;
-    char temp[2];
+    char temp[20];
 #if OPT_ISO_COLORS
     int ansi_colors = 0;
 #endif
@@ -4103,11 +4103,20 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (IsEmpty(buf)) {
 	if (need_data) {
-	    TRACE(("do_osc found no data\n"));
-	    return;
+	    switch (mode) {
+	    case 0:
+	    case 1:
+	    case 2:
+		buf = strcpy(temp, "xterm");
+		break;
+	    default:
+		TRACE(("do_osc found no data\n"));
+		return;
+	    }
+	} else {
+	    temp[0] = '\0';
+	    buf = temp;
 	}
-	temp[0] = '\0';
-	buf = temp;
     } else if (!need_data && !optional_data) {
 	TRACE(("do_osc found unwanted data\n"));
 	return;
