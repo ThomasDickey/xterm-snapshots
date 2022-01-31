@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.380 2021/08/22 19:49:13 tom Exp $
+dnl $XTermId: configure.in,v 1.381 2022/01/30 22:54:41 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2020,2021 by Thomas E. Dickey
+dnl Copyright 1997-2021,2022 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20210105)
+AC_PREREQ(2.52.20210509)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -890,6 +890,14 @@ CF_ARG_DISABLE(session-mgt,
 	[enable_session_mgt=yes])
 AC_MSG_RESULT($enable_session_mgt)
 test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0,[Define to 0 to disable support for session management])
+
+AC_MSG_CHECKING(if you want support for status-line)
+CF_ARG_ENABLE(status-line,
+	[  --enable-status-line    enable support for status-line],
+	[enable_status_line=yes],
+	[enable_status_line=no])
+AC_MSG_RESULT($enable_status_line)
+test "$enable_status_line" = yes && AC_DEFINE(OPT_STATUS_LINE,1,[Define to 1 to enable support for status-line])
 
 AC_MSG_CHECKING(if you want to use termcap function-keys)
 CF_ARG_DISABLE(tcap-fkeys,

@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.904 2021/12/28 00:31:19 tom Exp $ */
+/* $XTermId: xterm.h,v 1.905 2022/01/30 23:50:34 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -538,6 +538,7 @@ extern char **environ;
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
 #define XtNi18nSelections	"i18nSelections"
 #define XtNiconHint		"iconHint"
+#define XtNindicatorFormat	"indicatorFormat"
 #define XtNinitialFont		"initialFont"
 #define XtNinternalBorder	"internalBorder"
 #define XtNitalicULMode		"italicULMode"
@@ -745,6 +746,7 @@ extern char **environ;
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCI18nSelections	"I18nSelections"
 #define XtCIconHint		"IconHint"
+#define XtCIndicatorFormat	"IndicatorFormat"
 #define XtCInitialFont		"InitialFont"
 #define XtCJumpScroll		"JumpScroll"
 #define XtCKeepClipboard	"KeepClipboard"

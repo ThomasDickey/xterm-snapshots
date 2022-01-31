@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1860 2022/01/01 00:08:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1865 2022/01/31 01:29:43 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -339,12 +339,11 @@ static XtActionsRec actionsList[] = {
 #if OPT_DEC_SOFTFONT
     { "set-font-loading",	HandleFontLoading },
 #endif
-#if OPT_SCREEN_DUMPS
-    { "dump-html",	        HandleDumpHtml },
-    { "dump-svg",	        HandleDumpSvg },
-#endif
 #if OPT_EXEC_XTERM
     { "spawn-new-terminal",	HandleSpawnTerminal },
+#endif
+#if OPT_GRAPHICS
+    { "set-private-colors",	HandleSetPrivateColorRegisters },
 #endif
 #if OPT_HP_FUNC_KEYS
     { "set-hp-function-keys",	HandleHpFunctionKeys },
@@ -377,6 +376,10 @@ static XtActionsRec actionsList[] = {
 #if OPT_SCO_FUNC_KEYS
     { "set-sco-function-keys",	HandleScoFunctionKeys },
 #endif
+#if OPT_SCREEN_DUMPS
+    { "dump-html",	        HandleDumpHtml },
+    { "dump-svg",	        HandleDumpSvg },
+#endif
 #if OPT_SCROLL_LOCK
     { "scroll-lock",		HandleScrollLock },
 #endif
@@ -392,9 +395,6 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_SIXEL_GRAPHICS
     { "set-sixel-scrolling",	HandleSixelScrolling },
-#endif
-#if OPT_GRAPHICS
-    { "set-private-colors",	HandleSetPrivateColorRegisters },
 #endif
 #if OPT_SUN_FUNC_KEYS
     { "set-sun-function-keys",	HandleSunFunctionKeys },
@@ -746,6 +746,10 @@ static XtResource xterm_resources[] =
 	 screen.numcolorregisters, 0),
     Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters,
 	 screen.privatecolorregisters, True),
+#endif
+
+#if OPT_STATUS_LINE
+    Sres(XtNindicatorFormat, XtCIndicatorFormat, screen.status_fmt, DEF_SL_FORMAT),
 #endif
 
 #if OPT_SUNPC_KBD
@@ -2260,6 +2264,71 @@ deferparsing(unsigned c, struct ParseState *sp)
 }
 
 #if OPT_STATUS_LINE
+typedef enum {
+    SLnone = 0,			/* no status-line timer needed */
+    SLclock = 1,		/* status-line updates once/second */
+    SLcoords = 2,		/* status-line shows cursor-position */
+    SLwritten = 3		/* status-line may need asynchonous repainting */
+} SL_MODE;
+
+static SL_MODE
+find_SL_MODE(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    SL_MODE result = SLnone;
+    const char *parse;
+
+    for (parse = screen->status_fmt; *parse != '\0'; ++parse) {
+	const char *found = parse;
+	if (*parse == '%') {
+	    if (*++parse == L_CURL) {
+		const char *check = strchr(parse, '%');
+		size_t length = 0;
+
+		if (check != NULL && check[1] == R_CURL) {
+		    length = (size_t) (2 + check - found);
+		} else {
+		    length = strlen(found);
+		}
+
+		if (!strncmp(found, "%{unixtime%}", length)) {
+		    if (result == SLnone)
+			result = SLclock;
+		} else if (!strncmp(found, "%{position%}", length)) {
+		    result = SLcoords;
+		}
+		parse = found + length - 1;
+	    }
+#if defined(HAVE_STRFTIME)
+	    else if (*parse != '\0') {
+		if (result == SLnone && strchr("cEgOrsSTX+", *parse) != NULL) {
+		    result = SLclock;
+		}
+	    }
+#endif
+	}
+    }
+    return result;
+}
+
+static long
+find_SL_Timeout(XtermWidget xw)
+{
+    long result = 0;
+    switch (find_SL_MODE(xw)) {
+    case SLnone:
+    case SLwritten:
+	break;
+    case SLclock:
+	result = 1000;
+	break;
+    case SLcoords:
+	result = 80;
+	break;
+    }
+    return result;
+}
+
 /* save the status-line position, switch back to main display */
 static void
 StatusSave(XtermWidget xw)
@@ -2301,18 +2370,16 @@ StatusPutChars(XtermWidget xw, const char *value, int length)
     }
 }
 
-static const char *indicatorFormat = "%{version%}  %{position%}  %{unixtime%} -- %D %T";
-
 static void
 show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 {
     XtermWidget xw = (XtermWidget) closure;
     TScreen *screen = TScreenOf(xw);
 
-    unsigned long interval;
     time_t now;
     const char *parse;
     char buffer[81];
+    long interval;
 
     if (screen->status_type != 1 || screen->status_active)
 	return;
@@ -2326,10 +2393,9 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     xw->flags |= INVERSE;
     xw->flags &= (IFlags) (~WRAPAROUND);
 
-    interval = 0;
     now = time((time_t *) 0);
 
-    for (parse = indicatorFormat; *parse != '\0'; ++parse) {
+    for (parse = screen->status_fmt; *parse != '\0'; ++parse) {
 	const char *found = parse;
 	if (*parse == '%') {
 	    if (*++parse == L_CURL) {
@@ -2351,19 +2417,18 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 			*--s = '\0';
 		    }
 		    StatusPutChars(xw, buffer, -1);
-		    interval = 1000;
 		} else if (!strncmp(found, "%{position%}", length)) {
 		    sprintf(buffer, "(%02d,%03d)",
 			    screen->status_data[0].row + 1,
 			    screen->status_data[0].col + 1);
 		    StatusPutChars(xw, buffer, -1);
-		    if (interval == 0)
-			interval = 80;
 		} else {
 		    StatusPutChars(xw, found, (int) length);
 		}
 		parse = found + length - 1;
-	    } else {
+	    }
+#if defined(HAVE_STRFTIME)
+	    else if (*parse != '\0') {
 		char format[3];
 		struct tm *tm = localtime(&now);
 
@@ -2372,12 +2437,12 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 		format[2] = '\0';
 		if (strftime(buffer, sizeof(buffer) - 1, format, tm) != 0) {
 		    StatusPutChars(xw, buffer, -1);
-		    interval = 1000;
 		} else {
 		    StatusPutChars(xw, "?", 1);
 		    StatusPutChars(xw, parse - 1, 2);
 		}
 	    }
+#endif
 	} else {
 	    StatusPutChars(xw, parse, 1);
 	}
@@ -2391,17 +2456,28 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     CursorRestore2(xw, &screen->status_data[0]);
 
     /* if we processed a position or date/time, repeat */
-    if (interval != 0) {
-	(void) XtAppAddTimeOut(app_con, interval, show_indicator_status, xw);
+    interval = find_SL_Timeout(xw);
+    if (interval > 0) {
+	(void) XtAppAddTimeOut(app_con,
+			       (unsigned long) interval,
+			       show_indicator_status, xw);
     }
+    screen->status_repaint = True;
 }
 
 static void
 show_writable_status(XtermWidget xw)
 {
-    (void) xw;
-    TRACE(("FIXME - show_writable_status\n"));
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("FIXME - show_writable_status (%d:%d) max=%d\n",
+	   FirstRowNumber(screen),
+	   LastRowNumber(screen),
+	   MaxRows(screen)));
     TRACE(("FIXME - paint the current text on the window\n"));
+    screen->cur_row = FirstRowNumber(screen);
+    StatusPutChars(xw, "OK!", -1);
+    ScrnRefresh(xw, FirstRowNumber(screen), 0, 1, screen->max_col, True);
 }
 
 /*
@@ -2412,7 +2488,7 @@ update_status_line(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("FIXME update_status_line (%s:%d) vs %d\n",
+    TRACE(("update_status_line (%s:%d) vs %d\n",
 	   BtoS(screen->status_active),
 	   screen->status_type,
 	   screen->status_shown));
@@ -4967,9 +5043,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSASD:
 #if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
-		TRACE(("CASE_DECSASD - select active status display\n"));
+		value = zero_if_default(0);
+		TRACE(("CASE_DECSASD - select active status display: %d\n", value));
 		if (screen->status_type != 1) {
-		    screen->status_active = zero_if_default(0) ? True : False;
+		    screen->status_active = value ? True : False;
 		    update_status_line(xw);
 		}
 	    }
@@ -4980,8 +5057,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSSDT:
 #if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
-		TRACE(("CASE_DECSSDT - select type of status display\n"));
 		value = zero_if_default(0);
+		TRACE(("CASE_DECSSDT - select type of status display: %d\n", value));
 		if (value <= 2) {
 		    screen->status_type = value;
 		    update_status_line(xw);
@@ -5741,6 +5818,45 @@ in_put(XtermWidget xw)
 #else /* VMS */
 
 static void
+init_timeval(struct timeval *target, long usecs)
+{
+    target->tv_sec = 0;
+    target->tv_usec = usecs;
+    while (target->tv_usec > 1000000) {
+	target->tv_usec -= 1000000;
+	target->tv_sec++;
+    }
+}
+
+static Boolean
+better_timeout(struct timeval *check, struct timeval *against)
+{
+    Boolean result = False;
+    if (against->tv_sec == 0 && against->tv_usec == 0) {
+	result = True;
+    } else if (check->tv_sec == against->tv_sec) {
+	if (check->tv_usec < against->tv_usec) {
+	    result = True;
+	}
+    } else if (check->tv_sec < against->tv_sec) {
+	result = True;
+    }
+    return result;
+}
+
+#if OPT_BLINK_CURS
+static long
+smaller_timeout(long value)
+{
+    /* 1000 for msec/usec, 8 for "much" smaller */
+    value *= (1000 / 8);
+    if (value < 1)
+	value = 1;
+    return value;
+}
+#endif
+
+static void
 in_put(XtermWidget xw)
 {
     static PtySelect select_mask;
@@ -5752,21 +5868,7 @@ in_put(XtermWidget xw)
 #if USE_DOUBLE_BUFFER
     int should_wait = 1;
 #endif
-
-    static struct timeval select_timeout;
-
-#if OPT_BLINK_CURS
-    /*
-     * Compute the timeout for the blinking cursor to be much smaller than
-     * the "on" or "off" interval.
-     */
-    int tick = ((screen->blink_on < screen->blink_off)
-		? screen->blink_on
-		: screen->blink_off);
-    tick *= (1000 / 8);		/* 1000 for msec/usec, 8 for "much" smaller */
-    if (tick < 1)
-	tick = 1;
-#endif
+    struct timeval my_timeout;
 
     for (;;) {
 	int size;
@@ -5802,9 +5904,8 @@ in_put(XtermWidget xw)
 	     * of output.
 	     */
 	    if (size == FRG_SIZE) {
-		select_timeout.tv_sec = 0;
-		i = Select(max_plus1, &select_mask, &write_mask, 0,
-			   &select_timeout);
+		init_timeval(&my_timeout, 0);
+		i = Select(max_plus1, &select_mask, &write_mask, 0, &my_timeout);
 		if (i > 0 && FD_ISSET(screen->respond, &select_mask)) {
 		    sched_yield();
 		} else
@@ -5832,7 +5933,7 @@ in_put(XtermWidget xw)
 	    XFD_COPYSET(&pty_mask, &write_mask);
 	} else
 	    FD_ZERO(&write_mask);
-	select_timeout.tv_sec = 0;
+	init_timeval(&my_timeout, 0);
 	time_select = 0;
 
 	/*
@@ -5844,33 +5945,50 @@ in_put(XtermWidget xw)
 	 * on the host.
 	 */
 	if (xtermAppPending()) {
-	    select_timeout.tv_usec = 0;
 	    time_select = 1;
-	} else if (screen->awaitInput) {
-	    select_timeout.tv_usec = 50000;
-	    time_select = 1;
-#if OPT_BLINK_CURS
-	} else if ((screen->blink_timer != 0 &&
-		    ((screen->select & FOCUS) || screen->always_highlight)) ||
-		   (screen->cursor_state == BLINKED_OFF)) {
-	    select_timeout.tv_usec = tick;
-	    while (select_timeout.tv_usec > 1000000) {
-		select_timeout.tv_usec -= 1000000;
-		select_timeout.tv_sec++;
+	} else {
+#define ImproveTimeout(usecs) \
+		struct timeval try_timeout; \
+		init_timeval(&try_timeout, usecs); \
+		if (better_timeout(&try_timeout, &my_timeout)) { \
+		    my_timeout = try_timeout; \
+		}
+#if OPT_STATUS_LINE
+	    if (IsStatusShown(screen) && screen->status_repaint) {
+		ImproveTimeout(find_SL_Timeout(xw) * 1000);
+		time_select = 1;
 	    }
-	    time_select = 1;
 #endif
-#if OPT_SESSION_MGT
-	} else if (resource.sessionMgt) {
-	    if (ice_fd >= 0)
-		FD_SET(ice_fd, &select_mask);
+	    if (screen->awaitInput) {
+		ImproveTimeout(50000);
+		time_select = 1;
+	    }
+#if OPT_BLINK_CURS
+	    if ((screen->blink_timer != 0 &&
+		 ((screen->select & FOCUS) || screen->always_highlight)) ||
+		(screen->cursor_state == BLINKED_OFF)) {
+		/*
+		 * Compute the timeout for the blinking cursor to be much
+		 * smaller than the "on" or "off" interval.
+		 */
+		long tick = smaller_timeout((screen->blink_on < screen->blink_off)
+					    ? screen->blink_on
+					    : screen->blink_off);
+		ImproveTimeout(tick);
+		time_select = 1;
+	    }
 #endif
 	}
+#if OPT_SESSION_MGT
+	if (resource.sessionMgt && (ice_fd >= 0)) {
+	    FD_SET(ice_fd, &select_mask);
+	}
+#endif
 	if (need_cleanup)
 	    NormalExit();
 	xtermFlushDbe(xw);
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
-		   (time_select ? &select_timeout : 0));
+		   (time_select ? &my_timeout : 0));
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -10426,6 +10544,10 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.graphics_print_color_syntax);
     init_Bres(screen.graphics_print_background_mode);
     init_Bres(screen.graphics_rotated_print_mode);
+#endif
+
+#if OPT_STATUS_LINE
+    init_Sres(screen.status_fmt);
 #endif
 
     /* look for focus related events on the shell, because we need
