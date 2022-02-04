@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.202 2022/01/30 19:29:59 tom Exp $
+# $XTermId: terminfo,v 1.203 2022/02/01 00:35:15 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -135,6 +135,7 @@ xterm-new|modern xterm terminal emulator,
 	kcbt=\E[Z,
 	kent=\EOM,
 	nel=\EE,
+	use=dec+sl,
 	use=ecma+index,
 	use=xterm+keypad,
 	use=vt420+lrmm,
@@ -2766,6 +2767,14 @@ xterm-r5|xterm R5 version,
 	u8=\E[?1;2c,
 	u9=\E[c,
 	use=xterm+kbs,
+
+# DEC status-line is an extension for VT220, and standard with VT320 and up.
+dec+sl|DEC VTxx status line,
+	eslok,
+	hs,
+	dsl=\E[1$~,
+	fsl=\E[0$},
+	tsl=\E[2$~\E[1$}\E[%i%p1%d`,
 #
 #
 # Customization begins here.

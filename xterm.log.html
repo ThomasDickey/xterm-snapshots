@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2387 2022/01/31 09:25:59 tom Exp $
+  $XTermId: xterm.log.html,v 1.2388 2022/02/01 00:21:45 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1045,6 +1045,11 @@
         <code>--enable-status-line</code></li>
 
         <li>add resource <code>indicatorFormat</code></li>
+
+        <li>implement host-writable status-line, able to handle
+        video-attributes and simple left/right cursor movement.
+        This disallows all of the DEC/xterm private modes such as
+        switching to/from the alternate screen.</li>
       </ul>
     </li>
 

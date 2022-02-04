@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.892 2022/01/01 00:09:51 tom Exp $ */
+/* $XTermId: util.c,v 1.893 2022/01/31 22:55:49 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -356,7 +356,7 @@ AddToVisible(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     Bool result = False;
 
-    if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
+    if (INX2ROW(screen, screen->cur_row) <= LastRowNumber(screen)) {
 	if (!AddToRefresh(xw)) {
 	    result = True;
 	}
