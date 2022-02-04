@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1049 2022/01/30 23:58:16 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1052 2022/02/04 00:09:37 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2728,16 +2728,19 @@ typedef struct {
 #define StatusLineRows	1		/* number of rows in status-line */
 
 #if OPT_STATUS_LINE
+#define if_STATUS_LINE(screen,stmt) \
+	if (IsStatusShown(screen) && (screen)->status_active) stmt
 #define LastRowNumber(screen) \
 	( (screen)->max_row \
-	 + (IsStatusShown(screen) ? 1 : 0) )
+	 + (IsStatusShown(screen) ? StatusLineRows : 0) )
 #define FirstRowNumber(screen) \
-	( (screen)->status_active \
+	( ( (screen)->status_active && !(screen)->status_resize ) \
 	   ? LastRowNumber(screen) \
 	   : 0 )
 #define IsStatusShown(screen) \
 	( ( (screen)->status_type == 2) || \
 	  ( (screen)->status_type == 1) )
+	Boolean		status_resize;	/* repaint screen on resize	*/
 	Boolean		status_repaint;	/* status line needs repaint	*/
 	Boolean		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */
@@ -2746,9 +2749,10 @@ typedef struct {
 	char *		status_fmt;	/* format for indicator-status	*/
 #define AddStatusLineRows(nrow) nrow += StatusLineRows
 #else
+#define if_STATUS_LINE(screen,stmt)	/* nothing */
 #define LastRowNumber(screen)  (screen)->max_row
 #define FirstRowNumber(screen) 0
-#define AddStatusLineRows(nrow) /* nothing */
+#define AddStatusLineRows(nrow)		/* nothing */
 #endif
 
 #if OPT_VT52_MODE

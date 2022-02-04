@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.234 2021/09/14 20:09:56 tom Exp $ */
+/* $XTermId: trace.c,v 1.235 2022/02/03 01:22:31 tom Exp $ */
 
 /*
- * Copyright 1997-2020,2021 by Thomas E. Dickey
+ * Copyright 1997-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -656,7 +656,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 	int row;
 
 	TRACE(("TraceScreen %d:\n", whichBuf));
-	for (row = 0; row <= screen->max_row; ++row) {
+	for (row = 0; row <= LastRowNumber(screen); ++row) {
 	    LineData *ld = getLineData(screen, row);
 
 	    TRACE((" %3d:", row));

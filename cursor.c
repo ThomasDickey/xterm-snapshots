@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.79 2021/12/31 23:33:49 tom Exp $ */
+/* $XTermId: cursor.c,v 1.81 2022/01/31 23:48:42 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2021 by Thomas E. Dickey
+ * Copyright 2002-2021,2022 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -462,6 +462,9 @@ set_cur_row(TScreen *screen, int value)
     assert(screen != 0);
     assert(value >= 0);
     assert(value <= LastRowNumber(screen));
+    if_STATUS_LINE(screen, {
+	value = LastRowNumber(screen);
+    });
     screen->cur_row = value;
     return value;
 }

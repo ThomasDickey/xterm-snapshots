@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.607 2021/12/31 23:20:50 tom Exp $ */
+/* $XTermId: screen.c,v 1.609 2022/02/04 00:33:46 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1926,9 +1926,9 @@ ScreenResize(XtermWidget xw,
 
 #if OPT_STATUS_LINE
     if (IsStatusShown(screen)) {
-	TRACE(("FIXME discount a row for status-line\n"));
-	rows--;
-	height -= FontHeight(screen);
+	TRACE(("...discount a row for status-line\n"));
+	rows -= StatusLineRows;
+	height -= FontHeight(screen) * StatusLineRows;
 	forced = True;
     }
 #endif
