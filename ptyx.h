@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1052 2022/02/04 00:09:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1057 2022/02/07 00:32:24 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2734,13 +2734,12 @@ typedef struct {
 	( (screen)->max_row \
 	 + (IsStatusShown(screen) ? StatusLineRows : 0) )
 #define FirstRowNumber(screen) \
-	( ( (screen)->status_active && !(screen)->status_resize ) \
+	( (screen)->status_active \
 	   ? LastRowNumber(screen) \
 	   : 0 )
 #define IsStatusShown(screen) \
 	( ( (screen)->status_type == 2) || \
 	  ( (screen)->status_type == 1) )
-	Boolean		status_resize;	/* repaint screen on resize	*/
 	Boolean		status_repaint;	/* status line needs repaint	*/
 	Boolean		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */

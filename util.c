@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.893 2022/01/31 22:55:49 tom Exp $ */
+/* $XTermId: util.c,v 1.894 2022/02/06 15:07:48 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1853,7 +1853,7 @@ ClearLeft(XtermWidget xw)
 /*
  * Erase the cursor's line.
  */
-static void
+void
 ClearLine(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);

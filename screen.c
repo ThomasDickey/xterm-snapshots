@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.609 2022/02/04 00:33:46 tom Exp $ */
+/* $XTermId: screen.c,v 1.611 2022/02/06 18:05:46 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -979,10 +979,6 @@ ScrnWriteText(XtermWidget xw,
     screen->last_written_row = screen->cur_row;
 #endif
 
-    TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n",
-	   screen->cur_col,
-	   screen->cur_row,
-	   real_width));
     chararea_clear_displayed_graphics(screen,
 				      screen->cur_col,
 				      screen->cur_row,
@@ -1059,11 +1055,6 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	base = ScrnBufAddr(base, jump);
     }
 
-    TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n",
-	   where,
-	   screen->savelines,
-	   n,
-	   screen->max_col));
     /* FIXME: this looks wrong -- rcombs */
     chararea_clear_displayed_graphics(screen,
 				      where + screen->savelines,
@@ -1492,7 +1483,7 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
-	if (lastind < FirstRowNumber(screen) || lastind > LastRowNumber(screen))
+	if (lastind < 0 || lastind > LastRowNumber(screen))
 	    continue;
 
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",

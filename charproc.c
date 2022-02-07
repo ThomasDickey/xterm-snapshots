@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1871 2022/02/04 01:04:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1880 2022/02/07 09:07:35 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2274,17 +2274,40 @@ typedef enum {
 #define SL_BUFSIZ 80
 
 #if OPT_TRACE
+static const char *
+visibleStatusType(int code)
+{
+    const char *result = "?";
+    switch (code) {
+    case 0:
+	result = "none";
+	break;
+    case 1:
+	result = "indicator";
+	break;
+    case 2:
+	result = "writable";
+	break;
+    }
+    return result;
+}
+
 static void
 trace_status_line(XtermWidget xw, int lineno, const char *tag)
 {
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("@%d, %s (active %s, type %d) vs shown %d @ (%d,%d) vs %d\n",
+    TRACE(("@%d, %s (%s, %s)%s%s @ (%d,%d) vs %d\n",
 	   lineno,
 	   tag,
-	   BtoS(screen->status_active),
-	   screen->status_type,
-	   screen->status_shown,
+	   screen->status_active ? "active" : "inactive",
+	   visibleStatusType(screen->status_type),
+	   ((screen->status_type != screen->status_shown)
+	    ? " vs "
+	    : ""),
+	   ((screen->status_type != screen->status_shown)
+	    ? visibleStatusType(screen->status_shown)
+	    : ""),
 	   screen->cur_row,
 	   screen->cur_col,
 	   LastRowNumber(screen)));
@@ -2353,23 +2376,37 @@ find_SL_Timeout(XtermWidget xw)
     return result;
 }
 
-/* save the status-line position, switch back to main display */
+/* save the status-line position, restore main display */
 static void
 StatusSave(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
+
     CursorSave2(xw, &screen->status_data[1]);
     CursorRestore2(xw, &screen->status_data[0]);
+
+    TRACE(("...StatusSave %d,%d -> %d,%d (main)\n",
+	   screen->status_data[1].row,
+	   screen->status_data[1].col,
+	   screen->cur_row,
+	   screen->cur_col));
 }
 
-/* save the main-display position, switch to status-line */
+/* save the main-display position, restore status-line */
 static void
 StatusRestore(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
+
     CursorSave2(xw, &screen->status_data[0]);
     CursorRestore2(xw, &screen->status_data[1]);
     screen->cur_row = FirstRowNumber(screen);
+
+    TRACE(("...StatusRestore %d,%d -> %d,%d (status)\n",
+	   screen->status_data[0].row,
+	   screen->status_data[0].col,
+	   screen->cur_row,
+	   screen->cur_col));
 }
 
 static void
@@ -2493,8 +2530,6 @@ static void
 clear_status_line(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    int n;
-    char buffer[SL_BUFSIZ + 1];
     SavedCursor save_me;
     SavedCursor clearit;
 
@@ -2503,14 +2538,8 @@ clear_status_line(XtermWidget xw)
     CursorSave2(xw, &save_me);
     CursorRestore2(xw, &clearit);
 
-    /* FIXME Once this StatusPutChars works, replace with an erase */
-
     set_cur_row(screen, LastRowNumber(screen));
-    set_cur_col(screen, 0);
-    memset(buffer, '#', SL_BUFSIZ);
-    for (n = 0; n < screen->max_col; n += SL_BUFSIZ) {
-	StatusPutChars(xw, buffer, screen->max_col - n);
-    }
+    ClearLine(xw);
     CursorRestore2(xw, &save_me);
     TRACE_SL("clear_status_line (done)");
 }
@@ -2543,11 +2572,9 @@ resize_status_line(XtermWidget xw)
 	     : "...resize to hide status-line");
 
     xw->misc.resizeGravity = NorthWestGravity;
-    screen->status_resize = True;
 
     RequestResize(xw, MaxRows(screen), MaxCols(screen), True);
 
-    screen->status_resize = False;
     xw->misc.resizeGravity = savedGravity;
 }
 
@@ -2565,6 +2592,8 @@ update_status_line(XtermWidget xw)
 	if (screen->status_type != screen->status_shown) {
 	    if (screen->status_shown == 0) {
 		resize_status_line(xw);
+	    } else {
+		clear_status_line(xw);
 	    }
 	    screen->status_shown = screen->status_type;
 	    TRACE_SL("...updating shown");
@@ -2575,7 +2604,6 @@ update_status_line(XtermWidget xw)
 	    Boolean do_resize = False;
 
 	    if (screen->status_type == 0) {
-		TRACE_SL("...saving status content for redisplay");
 		if (screen->status_shown >= 2) {
 		    StatusSave(xw);
 		}
@@ -2586,7 +2614,7 @@ update_status_line(XtermWidget xw)
 		}
 		do_resize = True;
 	    } else {
-		TRACE_SL("...save status contents for redisplay");
+		clear_status_line(xw);
 	    }
 	    screen->status_shown = screen->status_type;
 	    TRACE_SL("...updating shown");
@@ -2597,11 +2625,10 @@ update_status_line(XtermWidget xw)
 	show_writable_status(xw);
     } else {
 	if (screen->status_shown) {
-	    TRACE_SL("...save status contents for redisplay");
+	    if (screen->status_type != 0 &&
+		screen->status_type != screen->status_shown)
+		clear_status_line(xw);
 	    if (screen->status_shown >= 2) {
-		if (screen->status_type != 0 &&
-		    screen->status_type != screen->status_shown)
-		    clear_status_line(xw);
 		StatusSave(xw);
 	    }
 	    if (screen->status_type == 0) {
@@ -2612,6 +2639,65 @@ update_status_line(XtermWidget xw)
 	}
     }
     TRACE_SL("update_status_line (done)");
+}
+
+/*
+ * If the status-type is "2", we can switch the active status display back and
+ * forth between the main-display and the status-line without clearing the
+ * status-line (unless the status-line was not shown before).
+ *
+ * This has no effect if the status-line displays an indicator (type==1).
+ */
+static void
+handle_DECSASD(XtermWidget xw, int value)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean updates = value ? True : False;
+
+    TRACE(("CASE_DECSASD - select active status display: %s (currently %s)\n",
+	   BtoS(value),
+	   BtoS(screen->status_active)));
+
+    if (screen->status_active != updates) {
+	screen->status_active = updates;
+	if (screen->status_type != 1) {
+	    if (updates) {
+		TRACE(("...@%d, saving main position %d,%d\n",
+		       __LINE__, screen->cur_row, screen->cur_col));
+		CursorSave2(xw, &screen->status_data[0]);
+	    }
+	    update_status_line(xw);
+	}
+    }
+}
+
+/*
+ * If the status-line is inactive (i.e., only the main-display is used),
+ * changing the status-type between none/writable has no immediate effect.
+ *
+ * But if the status-line is active, setting the status-type reinitializes the
+ * status-line.
+ *
+ * Setting the status-type to indicator overrides the DECSASD active-display
+ * mode.
+ */
+static void
+handle_DECSSDT(XtermWidget xw, int value)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("CASE_DECSSDT - select type of status display: %d (currently %d)\n",
+	   value,
+	   screen->status_type));
+    if (value <= 2) {
+	screen->status_type = value;
+	if (!screen->status_active) {
+	    TRACE(("...@%d, saving main position %d,%d\n",
+		   __LINE__, screen->cur_row, screen->cur_col));
+	    CursorSave2(xw, &screen->status_data[0]);
+	}
+	update_status_line(xw);
+    }
 }
 #endif
 
@@ -5122,12 +5208,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSASD:
 #if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
-		value = zero_if_default(0);
-		TRACE(("CASE_DECSASD - select active status display: %d\n", value));
-		if (screen->status_type != 1) {
-		    screen->status_active = value ? True : False;
-		    update_status_line(xw);
-		}
+		handle_DECSASD(xw, zero_if_default(0));
 	    }
 #endif
 	    ResetState(sp);
@@ -5136,12 +5217,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSSDT:
 #if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
-		value = zero_if_default(0);
-		TRACE(("CASE_DECSSDT - select type of status display: %d\n", value));
-		if (value <= 2) {
-		    screen->status_type = value;
-		    update_status_line(xw);
-		}
+		handle_DECSSDT(xw, zero_if_default(0));
 	    }
 #endif
 	    ResetState(sp);
@@ -6033,7 +6109,7 @@ in_put(XtermWidget xw)
 		    my_timeout = try_timeout; \
 		}
 #if OPT_STATUS_LINE
-	    if (IsStatusShown(screen) && screen->status_repaint) {
+	    if ((screen->status_type == 1) && screen->status_repaint) {
 		ImproveTimeout(find_SL_Timeout(xw) * 1000);
 		time_select = 1;
 	    }

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.905 2022/01/30 23:50:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.906 2022/02/06 15:09:14 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1573,6 +1573,7 @@ extern int dimRound (double /* value */);
 extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
+extern void ClearLine (XtermWidget /* xw */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
 extern void DeleteChar (XtermWidget /* xw */, unsigned /* n */);
