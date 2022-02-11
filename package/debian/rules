@@ -75,6 +75,7 @@ configure-stamp:
 		--enable-mini-luit \
 		--enable-regis-graphics \
 		--enable-sco-fkeys \
+		--enable-status-line \
 		--enable-toolbar \
 		--enable-xmc-glitch \
 		--with-app-defaults=$(PKG_APPDEFAULTS) \

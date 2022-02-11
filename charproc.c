@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1880 2022/02/07 09:07:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1882 2022/02/11 01:11:41 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2376,6 +2376,14 @@ find_SL_Timeout(XtermWidget xw)
     return result;
 }
 
+static void
+StatusInit(SavedCursor * data)
+{
+    memset(data, 0, sizeof(*data));
+    data->sgr_foreground = -1;
+    data->sgr_background = -1;
+}
+
 /* save the status-line position, restore main display */
 static void
 StatusSave(XtermWidget xw)
@@ -2534,7 +2542,7 @@ clear_status_line(XtermWidget xw)
     SavedCursor clearit;
 
     TRACE_SL("clear_status_line");
-    memset(&clearit, 0, sizeof(clearit));
+    StatusInit(&clearit);
     CursorSave2(xw, &save_me);
     CursorRestore2(xw, &clearit);
 
@@ -2616,11 +2624,11 @@ update_status_line(XtermWidget xw)
 	    } else {
 		clear_status_line(xw);
 	    }
-	    screen->status_shown = screen->status_type;
-	    TRACE_SL("...updating shown");
 	    if (do_resize) {
 		resize_status_line(xw);
 	    }
+	    screen->status_shown = screen->status_type;
+	    TRACE_SL("...updating shown");
 	}
 	show_writable_status(xw);
     } else {
@@ -9759,6 +9767,11 @@ VTInitialize(Widget wrequest,
     wnew->visInfo = 0;
     wnew->numVisuals = 0;
     (void) getVisualInfo(wnew);
+
+#if OPT_STATUS_LINE
+    StatusInit(&screen->status_data[0]);
+    StatusInit(&screen->status_data[1]);
+#endif
 
     /*
      * We use the default foreground/background colors to compare/check if a

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.894 2022/02/06 15:07:48 tom Exp $ */
+/* $XTermId: util.c,v 1.895 2022/02/08 00:17:30 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2480,10 +2480,10 @@ handle_translated_exposure(XtermWidget xw,
     y0 = (rect_y - OriginY(screen));
     y1 = (y0 + rect_height);
 
-    if ((x0 < 0 ||
-	 y0 < 0 ||
-	 x1 > Width(screen) ||
-	 y1 > Height(screen))) {
+    if (x0 < 0 ||
+	y0 < 0 ||
+	x1 > Width(screen) ||
+	y1 > PlusStatusLine(screen, Height(screen))) {
 	set_background(xw, -1);
 	xtermClear2(xw,
 		    rect_x,
@@ -2506,8 +2506,8 @@ handle_translated_exposure(XtermWidget xw,
 	nrows += toprow;
 	toprow = 0;
     }
-    if (toprow + nrows > MaxRows(screen))
-	nrows = MaxRows(screen) - toprow;
+    if (toprow + nrows > PlusStatusLine(screen, MaxRows(screen)))
+	nrows = PlusStatusLine(screen, MaxRows(screen)) - toprow;
     if (leftcol + ncols > MaxCols(screen))
 	ncols = MaxCols(screen) - leftcol;
 

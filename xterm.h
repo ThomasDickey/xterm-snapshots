@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.906 2022/02/06 15:09:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.908 2022/02/11 09:18:53 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1080,7 +1080,14 @@ extern int set_cur_col(TScreen * /* screen */, int  /* value */);
 extern int set_cur_row(TScreen * /* screen */, int  /* value */);
 #else
 #define set_cur_col(screen, value) screen->cur_col = value
-#define set_cur_row(screen, value) screen->cur_row = value
+#define set_cur_row(screen, value) \
+	do { \
+	    int row_value = value; \
+	    if_STATUS_LINE(screen, { \
+		row_value = LastRowNumber(screen); \
+	    }); \
+	    screen->cur_row = row_value; \
+	} while (0)
 #endif
 
 /* cursorfont.c */
@@ -1427,13 +1434,13 @@ extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col *
 extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
 extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
-extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
 extern void CopyCells (TScreen * /* screen */, LineData * /* src */, LineData * /* dst */, int /* col */, int /* len */, Bool /* down */);
 extern void FullScreen (XtermWidget /* xw */, int /* mode */);
 extern void FreeMarkGCs (XtermWidget /* xw */);
+extern void ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
