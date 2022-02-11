@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1013 2022/01/31 09:24:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.1014 2022/02/09 00:18:02 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -6791,19 +6791,6 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			    mesg = "turn on/off";
 			} else {
 			    mesg = "turn off/on";
-			}
-			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
-			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
-				char *s = malloc(strlen(mesg)
-						 + strlen(opt_array[j].desc)
-						 + 2);
-				if (s != 0) {
-				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
-				    opt_array[j].desc = s;
-				}
-			    } else {
-				TRACE(("OOPS "));
-			    }
 			}
 			TRACE(("%s: %s %s: %s (%s)\n",
 			       mesg,
