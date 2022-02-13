@@ -1,10 +1,10 @@
-/* $XTermId: cursor.c,v 1.81 2022/01/31 23:48:42 tom Exp $ */
+/* $XTermId: cursor.c,v 1.82 2022/02/13 18:20:53 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -12,10 +12,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -23,12 +23,12 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * 
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -346,8 +346,39 @@ CursorSave(XtermWidget xw)
 /*
  * We save/restore all visible attributes, plus wrapping, origin mode, and the
  * selective erase attribute.
+ *
+ * This is documented, but some of the documentation is incorrect.
+ *
+ * Page 270 of the VT420 manual (2nd edition) says that DECSC saves these
+ * items:
+ *
+ * Cursor position
+ * * Character attributes set by the SGR command
+ * * Character sets (G0, G1, G2, or G3) currently in GL and GR
+ * * Wrap flag (autowrap or no autowrap)
+ * * State of origin mode (DECOM)
+ * * Selective erase attribute
+ * * Any single shift 2 (SS2) or single shift 3 (SS3) functions sent
+ *
+ * The VT520 manual has the same information (page 5-120).
+ *
+ * However, DEC 070 (29-June-1990), pages 5-186 to 5-191, describes
+ * save/restore operations, but makes no mention of "wrap".
+ *
+ * Mattias Engdegård, who has investigated wrapping behavior of different
+ * terminals,
+ *
+ *	https://github.com/mattiase/wraptest
+ *
+ * states
+ *	The LCF is saved/restored by the Save/Restore Cursor (DECSC/DECRC)      
+ *	control sequences.  The DECAWM flag is not included in the state        
+ *	managed by these operations.
+ *
+ * DEC 070 does mention the ANSI color text extension saying that it, too, is
+ * saved/restored.
  */
-#define DECSC_FLAGS (WRAPAROUND|ATTRIBUTES|ORIGIN|PROTECTED)
+#define DECSC_FLAGS (ATTRIBUTES|ORIGIN|PROTECTED)
 
 /*
  * Restore Cursor and Attributes
@@ -481,3 +512,6 @@ set_cur_col(TScreen *screen, int value)
     return value;
 }
 #endif /* OPT_TRACE */
+/*
+ * vile:cmode fk=utf-8
+ */
