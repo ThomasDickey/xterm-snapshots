@@ -22686,10 +22686,10 @@ else
 fi;
 echo "$as_me:22687: result: $enable_rectangles" >&5
 echo "${ECHO_T}$enable_rectangles" >&6
-if test "$enable_rectangles" = yes ; then
+if test "$enable_rectangles" = no ; then
 
 cat >>confdefs.h <<\EOF
-#define OPT_DEC_RECTOPS 1
+#define OPT_DEC_RECTOPS 0
 EOF
 
 fi

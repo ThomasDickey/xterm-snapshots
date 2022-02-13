@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.895 2022/02/08 00:17:30 tom Exp $ */
+/* $XTermId: util.c,v 1.896 2022/02/13 13:40:41 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2926,6 +2926,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
     XColor color;
     Boolean found = False;
 
+    (void) xw;
     oldest_use = XFT_CACHE_LIMIT;
     oldest = 0;
     if (latest_use == XFT_CACHE_LIMIT) {
@@ -3945,6 +3946,8 @@ drawXtermText(XTermDraw * params,
 #if OPT_RENDERWIDE
 	wfont = getWideXftFont(&recur, recur.attr_flags);
 	wfont0 = IS_BOLD ? getWideXftFont(&recur, NOT_BOLD) : wfont;
+
+	(void) wfont0;
 #endif
 
 #define GET_XFT_FG() getXftColor(recur.xw, values.foreground)
@@ -4452,6 +4455,7 @@ drawXtermText(XTermDraw * params,
 	    XTermFonts *bold = 0;
 	    Bool noBold, noNorm;
 
+	    (void) norm;
 	    if (needWide && okFont(BoldWFont(screen))) {
 		norm = WhichVFontData(screen, fWide);
 		bold = WhichVFontData(screen, fWBold);

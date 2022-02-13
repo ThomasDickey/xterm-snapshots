@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.709 2021/11/10 00:36:27 Rajeev.V.Pillai Exp $ */
+/* $XTermId: fontutils.c,v 1.711 2022/02/13 13:41:17 tom Exp $ */
 
 /*
- * Copyright 1998-2020,2021 by Thomas E. Dickey
+ * Copyright 1998-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1284,6 +1284,7 @@ xtermUpdateItalics(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 {
     TScreen *screen = TScreenOf(xw);
 
+    (void) screen;
     if (UseItalicFont(screen)) {
 	if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
 	    xtermLoadItalics(xw);
