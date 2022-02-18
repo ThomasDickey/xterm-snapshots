@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.617 2022/02/09 23:58:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.620 2022/02/18 21:15:37 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -231,8 +231,7 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
 #define ExtractScrnData(name) \
 		memcpy(dstPtrs->name, \
 		       ((LineData *) srcPtrs)->name,\
-		       dstCols * sizeof(dstPtrs->name[0])); \
-		nextPtr += (srcCols * sizeof(dstPtrs->name[0]))
+		       dstCols * sizeof(dstPtrs->name[0]))
 
 /*
  * As part of reallocating the screen buffer when resizing, extract from
@@ -514,12 +513,9 @@ ReallocateBufOffsets(XtermWidget xw,
 
     unsigned old_jump = scrnHeadSize(screen, 1);
     unsigned new_jump;
-    unsigned new_ptrs = 1 + (unsigned) (screen->max_combining);
     unsigned dstCols = ncol;
-    unsigned srcCols = ncol;
     LineData *dstPtrs;
     LineData *srcPtrs;
-    Char *nextPtr;
 
     assert(nrow != 0);
     assert(ncol != 0);
@@ -544,8 +540,6 @@ ReallocateBufOffsets(XtermWidget xw,
 
     screen->wide_chars = False;
 
-    nextPtr = *sbufaddr;
-
     srcPtrs = (LineData *) oldBufHead;
     dstPtrs = (LineData *) newBufHead;
     for (i = 0; i < nrow; i++) {
@@ -556,7 +550,6 @@ ReallocateBufOffsets(XtermWidget xw,
 #endif
 	ExtractScrnData(charData);
 
-	nextPtr += ncol * new_ptrs;
 	srcPtrs = LineDataAddr(srcPtrs, old_jump);
 	dstPtrs = LineDataAddr(dstPtrs, new_jump);
     }
@@ -1799,6 +1792,7 @@ ScrnRefresh(XtermWidget xw,
 	if (gc_changes & BG_COLOR)
 	    SGR_Background(xw, xw->cur_background);
     });
+    (void) gc_changes;
 
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
@@ -1978,7 +1972,7 @@ ScreenResize(XtermWidget xw,
 	cols = 1;
 
 #if OPT_STATUS_LINE
-    TRACE(("FIXME: StatusShown %d/%d\n", IsStatusShown(screen), screen->status_shown));
+    TRACE(("...StatusShown %d/%d\n", IsStatusShown(screen), screen->status_shown));
     if (IsStatusShown(screen)) {
 	int oldRow = MaxRows(screen);
 	TRACE(("...status line is currently on row %d(%d-%d) vs %d\n",
@@ -2188,7 +2182,7 @@ ScreenResize(XtermWidget xw,
     } else if (FullHeight(screen) == height && FullWidth(screen) == width) {
 #if OPT_STATUS_LINE
 	if (savedStatus != NULL) {
-	    TRACE(("FIXME ...status line is currently saved!\n"));
+	    TRACE(("...status line is currently saved!\n"));
 	    freeLineData(screen, savedStatus);
 	}
 #endif

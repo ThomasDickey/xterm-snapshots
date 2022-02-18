@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.853 2022/01/31 00:46:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.854 2022/02/14 00:14:58 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -8243,9 +8243,9 @@ Instead, use \fBprintf\fP (POSIX).
 For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
 you could use one of these commands in a script:
 .NS
-printf \*(AQ\\033]2;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]2;Hello world!\\033\\\\\*(AQ
 printf \*(AQ\\033]2;Hello world!\\007\*(AQ
-printf \*(AQ\\033]2;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]2;%s\\033\\\\\*(AQ "Hello world!"
 printf \*(AQ\\033]2;%s\\007\*(AQ "Hello world!"
 .NE
 .PP
@@ -8256,9 +8256,9 @@ newline from the output.
 Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
 at the same time, using a slightly different control sequence:
 .NS
-printf \*(AQ\\033]0;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]0;Hello world!\\033\\\\\*(AQ
 printf \*(AQ\\033]0;Hello world!\\007\*(AQ
-printf \*(AQ\\033]0;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]0;%s\\033\\\\\*(AQ "Hello world!"
 printf \*(AQ\\033]0;%s\\007\*(AQ "Hello world!"
 .NE
 .PP
@@ -8268,9 +8268,9 @@ Some will make a distinction and allow you to set just the icon title.
 You can tell \fI\*n\fP to ask for this with a different parameter
 in the control sequence:
 .NS
-printf \*(AQ\\033]1;Hello world!\\033\\\*(AQ
+printf \*(AQ\\033]1;Hello world!\\033\\\\\*(AQ
 printf \*(AQ\\033]1;Hello world!\\007\*(AQ
-printf \*(AQ\\033]1;%s\\033\\\*(AQ "Hello world!"
+printf \*(AQ\\033]1;%s\\033\\\\\*(AQ "Hello world!"
 printf \*(AQ\\033]1;%s\\007\*(AQ "Hello world!"
 .NE
 .
