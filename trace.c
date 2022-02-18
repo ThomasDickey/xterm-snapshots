@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.235 2022/02/03 01:22:31 tom Exp $ */
+/* $XTermId: trace.c,v 1.236 2022/02/18 08:48:47 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -91,38 +91,44 @@ TraceOpen(void)
     if (!trace_fp) {
 	static char dot[] = ".";
 	mode_t oldmask = umask(077);
+	char *home;
+	char *name;
 	/*
 	 * Put the trace-file in user's home-directory if the current
 	 * directory is not writable.
 	 */
-	char *home = (access(dot, R_OK | W_OK) == 0) ? dot : getenv("HOME");
-	char *name = malloc(strlen(home) + strlen(trace_who) + 50);
+	home = ((access(dot, R_OK | W_OK) == 0)
+		? dot
+		: getenv("HOME"));
+	if (home != NULL &&
+	    (name = malloc(strlen(home) + strlen(trace_who) + 50)) != NULL) {
 #if OPT_TRACE_UNIQUE		/* usually I do not want unique names */
-	int unique;
-	for (unique = 0;; ++unique) {
-	    if (unique)
-		sprintf(name, "%s/Trace-%s.out-%d", home, trace_who, unique);
-	    else
-		sprintf(name, "%s/Trace-%s.out", home, trace_who);
-	    if ((trace_fp = fopen(name, "r")) == 0) {
-		break;
+	    int unique;
+	    for (unique = 0;; ++unique) {
+		if (unique)
+		    sprintf(name, "%s/Trace-%s.out-%d", home, trace_who, unique);
+		else
+		    sprintf(name, "%s/Trace-%s.out", home, trace_who);
+		if ((trace_fp = fopen(name, "r")) == 0) {
+		    break;
+		}
+		fclose(trace_fp);
 	    }
-	    fclose(trace_fp);
-	}
 #else
-	sprintf(name, "%s/Trace-%s.out", home, trace_who);
+	    sprintf(name, "%s/Trace-%s.out", home, trace_who);
 #endif
-	trace_fp = fopen(name, "w");
-	if (trace_fp != 0) {
-	    fprintf(trace_fp, "%s\n", xtermVersion());
-	    TraceIds(NULL, 0);
+	    trace_fp = fopen(name, "w");
+	    if (trace_fp != 0) {
+		fprintf(trace_fp, "%s\n", xtermVersion());
+		TraceIds(NULL, 0);
+	    }
+	    if (!trace_fp) {
+		xtermWarning("Cannot open \"%s\"\n", name);
+		exit(EXIT_FAILURE);
+	    }
+	    (void) umask(oldmask);
+	    free(name);
 	}
-	if (!trace_fp) {
-	    xtermWarning("Cannot open \"%s\"\n", name);
-	    exit(EXIT_FAILURE);
-	}
-	(void) umask(oldmask);
-	free(name);
     }
     return trace_fp;
 }

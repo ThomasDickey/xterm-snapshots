@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1882 2022/02/11 01:11:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1887 2022/02/18 20:34:20 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2450,8 +2450,13 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     char buffer[SL_BUFSIZ + 1];
     long interval;
 
-    if (screen->status_type != 1 || screen->status_active)
+    if (screen->status_type != 1) {
+	screen->status_timeout = False;
 	return;
+    }
+    if (screen->status_active) {
+	return;
+    }
 
     screen->status_active = True;
 
@@ -2480,12 +2485,11 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 		if (!strncmp(found, "%{version%}", length)) {
 		    StatusPutChars(xw, xtermVersion(), -1);
 		} else if (!strncmp(found, "%{unixtime%}", length)) {
-		    char *s = strcpy(buffer, ctime(&now));
-		    s += strlen(s);
-		    while (s != buffer && isspace(CharOf(s[-1]))) {
-			*--s = '\0';
+		    char *t = x_strtrim(ctime(&now));
+		    if (t != 0) {
+			StatusPutChars(xw, t, -1);
+			free(t);
 		    }
-		    StatusPutChars(xw, buffer, -1);
 		} else if (!strncmp(found, "%{position%}", length)) {
 		    sprintf(buffer, "(%02d,%03d)",
 			    screen->status_data[0].row + 1,
@@ -2531,7 +2535,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 			       (unsigned long) interval,
 			       show_indicator_status, xw);
     }
-    screen->status_repaint = True;
+    screen->status_timeout = True;
 }
 
 static void
@@ -2540,15 +2544,36 @@ clear_status_line(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     SavedCursor save_me;
     SavedCursor clearit;
+    int save_type = screen->status_type;
 
     TRACE_SL("clear_status_line");
     StatusInit(&clearit);
     CursorSave2(xw, &save_me);
     CursorRestore2(xw, &clearit);
 
+    screen->status_type = 2;
     set_cur_row(screen, LastRowNumber(screen));
+#if 1
     ClearLine(xw);
+#else
+    if (getLineData(screen, screen->cur_row) != NULL) {
+	int n;
+	char buffer[SL_BUFSIZ + 1];
+	CLineData *ld = getLineData(screen, screen->cur_row);
+
+	TRACE(("...text[%d:%d]:%s\n",
+	       screen->cur_row,
+	       LastRowNumber(screen),
+	       visibleIChars(ld->charData, ld->lineSize)));
+
+	memset(buffer, '#', SL_BUFSIZ);
+	for (n = 0; n < screen->max_col; n += SL_BUFSIZ) {
+	    StatusPutChars(xw, buffer, screen->max_col - n);
+	}
+    }
+#endif
     CursorRestore2(xw, &save_me);
+    screen->status_type = save_type;
     TRACE_SL("clear_status_line (done)");
 }
 
@@ -2615,12 +2640,14 @@ update_status_line(XtermWidget xw)
 		if (screen->status_shown >= 2) {
 		    StatusSave(xw);
 		}
-		do_resize = True;
+		do_resize = True;	/* shrink... */
+		clear_status_line(xw);
+		StatusInit(&screen->status_data[1]);
 	    } else if (screen->status_shown == 0) {
 		if (screen->status_type >= 2) {
 		    StatusRestore(xw);
 		}
-		do_resize = True;
+		do_resize = True;	/* grow... */
 	    } else {
 		clear_status_line(xw);
 	    }
@@ -2634,13 +2661,17 @@ update_status_line(XtermWidget xw)
     } else {
 	if (screen->status_shown) {
 	    if (screen->status_type != 0 &&
-		screen->status_type != screen->status_shown)
+		screen->status_type != screen->status_shown) {
 		clear_status_line(xw);
+	    }
 	    if (screen->status_shown >= 2) {
 		StatusSave(xw);
 	    }
 	    if (screen->status_type == 0) {
-		resize_status_line(xw);
+		screen->status_timeout = False;
+		clear_status_line(xw);
+		StatusInit(&screen->status_data[1]);
+		resize_status_line(xw);		/* shrink... */
 	    }
 	    screen->status_shown = screen->status_type;
 	    TRACE_SL("...updating shown");
@@ -6117,7 +6148,7 @@ in_put(XtermWidget xw)
 		    my_timeout = try_timeout; \
 		}
 #if OPT_STATUS_LINE
-	    if ((screen->status_type == 1) && screen->status_repaint) {
+	    if ((screen->status_type == 1) && screen->status_timeout) {
 		ImproveTimeout(find_SL_Timeout(xw) * 1000);
 		time_select = 1;
 	    }

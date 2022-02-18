@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1058 2022/02/08 00:14:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1059 2022/02/14 01:08:54 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2746,7 +2746,7 @@ typedef struct {
 #define if_STATUS_LINE(screen,stmt) \
 	if (IsStatusShown(screen) && (screen)->status_active) stmt
 
-	Boolean		status_repaint;	/* status line needs repaint	*/
+	Boolean		status_timeout;	/* status timeout needs service	*/
 	Boolean		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */
 	int		status_shown;	/* last-displayed type */
