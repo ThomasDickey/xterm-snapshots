@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2396 2022/02/17 23:56:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.2398 2022/02/22 01:22:24 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1023,6 +1023,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve performance for initializing/reusing graphic
+    objects in the SIXEL feature.</li>
+
     <li>improve error-checking for <code>resize</code>.</li>
 
     <li>fix errata in manual page (Debian #988221).</li>
@@ -1043,7 +1046,10 @@
     <li>simplify/improve portability of <code>trap</code> commands
     in shell-scripts.</li>
 
-    <li>update configure option <code>--disable-rectangles</code>
+    <li>update configure options<br>
+    <code>--disable-rectangles</code>,<br>
+    <code>--disable-tcap-fkeys</code> and<br>
+    <code>--disable-tcap-query</code><br>
     to account for changed default settings.</li>
 
     <li>rather than ignore empty parameter for setting title, use

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.382 2022/02/13 13:51:20 tom Exp $
+dnl $XTermId: configure.in,v 1.383 2022/02/20 14:18:05 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -905,7 +905,7 @@ CF_ARG_DISABLE(tcap-fkeys,
 	[enable_tcap_fkeys=no],
 	[enable_tcap_fkeys=yes])
 AC_MSG_RESULT($enable_tcap_fkeys)
-test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1,[Define to 1 to disable termcap function-keys support])
+test "$enable_tcap_fkeys" = no && AC_DEFINE(OPT_TCAP_FKEYS,0,[Define to 0 to disable termcap function-keys support])
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_DISABLE(tcap-query,
@@ -913,7 +913,7 @@ CF_ARG_DISABLE(tcap-query,
 	[enable_tcap_query=no],
 	[enable_tcap_query=yes])
 AC_MSG_RESULT($enable_tcap_query)
-test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1,[Define to 1 to disable compiled-in termcap-query support])
+test "$enable_tcap_query" = no && AC_DEFINE(OPT_TCAP_QUERY,0,[Define to 0 to disable compiled-in termcap-query support])
 
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,

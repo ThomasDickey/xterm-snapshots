@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.259 2020/12/23 09:20:01 tom Exp $
+## $XTermId: Makefile.in,v 1.260 2022/02/21 18:30:44 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2019,2020 by Thomas E. Dickey
+# Copyright 1997-2020,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -64,7 +64,7 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-PIXMAPDIR_DEF	= @no_pixmapdir@-DPIXMAP_ROOTDIR=\"@PIXMAPDIR@/\" 
+PIXMAPDIR_DEF	= @no_pixmapdir@-DPIXMAP_ROOTDIR=\"@PIXMAPDIR@/\"
 CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(PIXMAPDIR_DEF) $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@ @EXTRA_LDFLAGS@
@@ -208,10 +208,19 @@ resize$x : $(OBJS2)
 	perl $(srcdir)/88colres.pl > $@
 
 charproc$o : $(VTPARSE_H) main.h @CHARPROC_DEPS@
-graphics_regis$o : $(VTPARSE_H) 
-graphics_sixel$o : $(VTPARSE_H) 
-misc$o : $(VTPARSE_H) 
-VTPrsTbl$o : $(VTPARSE_H) 
+graphics_regis$o : $(VTPARSE_H)
+graphics_sixel$o : $(VTPARSE_H)
+misc$o : $(VTPARSE_H)
+VTPrsTbl$o : $(VTPARSE_H)
+
+charproc$o \
+graphics$o \
+graphics_regis$o \
+graphics_sixel$o \
+main$o \
+misc$o \
+screen$o \
+util$o : graphics.h
 
 TekPrsTbl$o : $(TEKPARSE_H)
 Tekproc$o : $(TEKPARSE_H)
@@ -220,7 +229,7 @@ misc$o : builtin_icons.h
 
 trace$o : VTparse.cin Tekparse.cin
 
-# do this to quiet gcc -Wcast-qual warnings 
+# do this to quiet gcc -Wcast-qual warnings
 builtin_icons.h :
 	@echo "#if OPT_BUILTIN_XPMS" >$@
 	@echo "#include <icons/mini.xterm.xpms>" >>$@
