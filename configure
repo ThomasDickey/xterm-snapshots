@@ -22056,9 +22056,9 @@ else
 fi;
 echo "$as_me:22057: result: $enable_tcap_fkeys" >&5
 echo "${ECHO_T}$enable_tcap_fkeys" >&6
-test "$enable_tcap_fkeys" = yes &&
+test "$enable_tcap_fkeys" = no &&
 cat >>confdefs.h <<\EOF
-#define OPT_TCAP_FKEYS 1
+#define OPT_TCAP_FKEYS 0
 EOF
 
 echo "$as_me:22064: checking if you want to use termcap-query/report" >&5
@@ -22080,9 +22080,9 @@ else
 fi;
 echo "$as_me:22081: result: $enable_tcap_query" >&5
 echo "${ECHO_T}$enable_tcap_query" >&6
-test "$enable_tcap_query" = yes &&
+test "$enable_tcap_query" = no &&
 cat >>confdefs.h <<\EOF
-#define OPT_TCAP_QUERY 1
+#define OPT_TCAP_QUERY 0
 EOF
 
 echo "$as_me:22088: checking if you want support for tek4014" >&5
