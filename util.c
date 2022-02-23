@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.896 2022/02/13 13:40:41 tom Exp $ */
+/* $XTermId: util.c,v 1.897 2022/02/22 09:30:14 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -3770,8 +3770,13 @@ drawXtermText(XTermDraw * params,
 		      * screen->fnt_wide);
     Bool did_ul = False;
     XTermFonts *curFont;
+
 #if OPT_WIDE_ATTRS
     int need_clipping = 0;
+#endif
+
+#if OPT_WIDE_CHARS
+    Bool need_wide;
 #endif
 
 #if OPT_WIDE_CHARS
@@ -4370,7 +4375,19 @@ drawXtermText(XTermDraw * params,
 
 #if OPT_WIDE_CHARS
 
+    need_wide = False;
     if (screen->wide_chars || screen->unicode_font) {
+	int src;
+	for (src = 0; src < (int) len; src++) {
+	    IChar ch = text[src];
+	    if (ch > 0xff) {
+		need_wide = True;
+		break;
+	    }
+	}
+    }
+
+    if (need_wide) {
 	XChar2b *buffer;
 	Bool needWide = False;
 	int src, dst;

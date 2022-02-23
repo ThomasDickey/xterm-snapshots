@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.885 2022/02/18 20:33:16 tom Exp $ */
+/* $XTermId: main.c,v 1.886 2022/02/22 23:35:41 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -5495,7 +5495,7 @@ Exit(int n)
 	noleaks_charproc();
 	noleaks_ptydata();
 #if OPT_GRAPHICS
-	noleaks_graphics();
+	noleaks_graphics(dpy);
 #endif
 #if OPT_WIDE_CHARS
 	noleaks_CharacterClass();

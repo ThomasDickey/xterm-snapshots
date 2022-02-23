@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.113 2022/02/22 01:01:08 tom Exp $ */
+/* $XTermId: graphics.c,v 1.115 2022/02/23 01:18:14 tom Exp $ */
 
 /*
  * Copyright 2013-2021,2022 by Ross Combs
@@ -150,6 +150,12 @@ static ColorRegister *shared_color_registers;
 static Graphic *displayed_graphics[MAX_GRAPHICS];
 static unsigned next_graphic_id = 0U;
 static unsigned used_graphics;	/* 0 to MAX_GRAPHICS */
+
+static int valid_graphics;
+static GC graphics_gc;
+static XGCValues xgcv;
+static ColorRegister last_color;
+static ColorRegister gc_color;
 
 #define DiffColor(this,that) \
 	(this.r != that.r || \
@@ -938,81 +944,6 @@ refresh_graphic(TScreen const *screen,
 	   holes, total, out_of_range));
 }
 
-#ifdef DEBUG_REFRESH
-
-#define BASEX(X) ( (draw_x - base_x) + (X) )
-#define BASEY(Y) ( (draw_y - base_y) + (Y) )
-
-static void
-outline_refresh(TScreen const *screen,
-		Graphic const *graphic,
-		Pixmap output_pm,
-		GC graphics_gc,
-		int base_x,
-		int base_y,
-		int draw_x,
-		int draw_y,
-		int draw_w,
-		int draw_h)
-{
-    Display *const display = screen->display;
-    int const pw = graphic->pixw;
-    int const ph = graphic->pixh;
-    XGCValues xgcv;
-    XColor def;
-
-    def.red = (unsigned short) ((1.0 - 0.1 * (rand() / (double)
-					      RAND_MAX) * 65535.0));
-    def.green = (unsigned short) ((0.7 + 0.2 * (rand() / (double)
-						RAND_MAX)) * 65535.0);
-    def.blue = (unsigned short) ((0.1 + 0.1 * (rand() / (double)
-					       RAND_MAX)) * 65535.0);
-    def.flags = DoRed | DoGreen | DoBlue;
-    if (allocateBestRGB(graphic->xw, &def)) {
-	xgcv.foreground = def.pixel;
-	XChangeGC(display, graphics_gc, GCForeground, &xgcv);
-    }
-
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(0), BASEY(0),
-	      BASEX(draw_w - 1), BASEY(0));
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(0), BASEY(draw_h - 1),
-	      BASEX(draw_w - 1), BASEY(draw_h - 1));
-
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(0), BASEY(0),
-	      BASEX(0), BASEY(draw_h - 1));
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(draw_w - 1), BASEY(0),
-	      BASEX(draw_w - 1), BASEY(draw_h - 1));
-
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(draw_w - 1), BASEY(0),
-	      BASEX(0), BASEY(draw_h - 1));
-    XDrawLine(display, output_pm, graphics_gc,
-	      BASEX(draw_w - 1), BASEY(draw_h - 1),
-	      BASEX(0), BASEY(0));
-
-    def.red = (short) (0.7 * MAX_U_COLOR);
-    def.green = (short) (0.1 * MAX_U_COLOR);
-    def.blue = (short) (1.0 * MAX_U_COLOR);
-    def.flags = DoRed | DoGreen | DoBlue;
-    if (allocateBestRGB(graphic->xw, &def)) {
-	xgcv.foreground = def.pixel;
-	XChangeGC(display, graphics_gc, GCForeground, &xgcv);
-    }
-    XFillRectangle(display, output_pm, graphics_gc,
-		   BASEX(0),
-		   BASEY(0),
-		   (unsigned) pw, (unsigned) ph);
-    XFillRectangle(display, output_pm, graphics_gc,
-		   BASEX(draw_w - 1 - pw),
-		   BASEY(draw_h - 1 - ph),
-		   (unsigned) pw, (unsigned) ph);
-}
-#endif
-
 /*
  * Primary color hues:
  *  blue:    0 degrees
@@ -1321,7 +1252,7 @@ AllocGraphicsBuffer(TScreen *screen,
     int const refresh_h = nrows * FontHeight(screen);
     ColorRegister *buffer;
 
-    if (!(buffer = malloc(sizeof(*buffer) *
+    if (!(buffer = malloc(sizeof(ColorRegister) *
 			  (unsigned) refresh_w * (unsigned) refresh_h))) {
 	TRACE(("unable to allocate %dx%d buffer for graphics refresh\n",
 	       refresh_w, refresh_h));
@@ -1329,7 +1260,7 @@ AllocGraphicsBuffer(TScreen *screen,
 	/* assuming two's complement, the memset will be much faster than loop */
 	if ((unsigned short) null_color.r == 0xffff) {
 	    memset(buffer, 0xff,
-		   sizeof(unsigned short) * (size_t) (refresh_h * refresh_w));
+		   sizeof(ColorRegister) * (size_t) (refresh_h * refresh_w));
 	} else {
 	    for (yy = 0; yy < refresh_h; yy++) {
 		for (xx = 0; xx < refresh_w; xx++) {
@@ -1511,12 +1442,25 @@ refresh_graphics(XtermWidget xw,
     ColorRegister *buffer;
     ClipLimits clip_limits;
 
-    XGCValues xgcv;
-    GC graphics_gc;
-
     if_TRACE(int const refresh_h = nrows * FontHeight(screen));
 
     if (!GetGraphicsOrder(screen, skip_clean, ordered_graphics, &active_count))
+	return;
+
+    if (!valid_graphics) {
+	memset(&xgcv, 0, sizeof(xgcv));
+	xgcv.graphics_exposures = False;
+	graphics_gc = XCreateGC(display, drawable, GCGraphicsExposures, &xgcv);
+	last_color = null_color;
+	gc_color = null_color;
+	if (graphics_gc == None) {
+	    TRACE(("unable to allocate GC for graphics refresh\n"));
+	    valid_graphics = -1;
+	} else {
+	    valid_graphics = 1;
+	}
+    }
+    if (valid_graphics < 0)
 	return;
 
     if ((buffer = AllocGraphicsBuffer(screen, ncols, nrows)) == NULL)
@@ -1549,15 +1493,6 @@ refresh_graphics(XtermWidget xw,
 	return;
     }
 
-    memset(&xgcv, 0, sizeof(xgcv));
-    xgcv.graphics_exposures = False;
-    graphics_gc = XCreateGC(display, drawable, GCGraphicsExposures, &xgcv);
-    if (graphics_gc == None) {
-	TRACE(("unable to allocate GC for graphics refresh\n"));
-	free(buffer);
-	return;
-    }
-
     /*
      * If we have any holes we can't just copy an image rectangle, and masking
      * with bitmaps is very expensive.  This fallback is surprisingly faster
@@ -1567,12 +1502,8 @@ refresh_graphics(XtermWidget xw,
      * once.)
      */
     if (holes > 0U) {
-	ColorRegister last_color;
-	ColorRegister gc_color;
 	int run;
 
-	last_color = null_color;
-	gc_color = null_color;
 	run = 0;
 	for (yy = clip_limits.y_min - refresh_y;
 	     yy <= clip_limits.y_max - refresh_y;
@@ -1625,8 +1556,6 @@ refresh_graphics(XtermWidget xw,
 		run = 0;
 	    }
 	}
-
-	XFreeGC(display, graphics_gc);
     } else {
 	ColorRegister old_colors[2];
 	Pixel fg, old_result[2];
@@ -1645,7 +1574,6 @@ refresh_graphics(XtermWidget xw,
 			     (int) (sizeof(int) * 8U), 0);
 	if (!image) {
 	    TRACE(("unable to allocate XImage for graphics refresh\n"));
-	    XFreeGC(display, graphics_gc);
 	    free(buffer);
 	    return;
 	}
@@ -1653,7 +1581,6 @@ refresh_graphics(XtermWidget xw,
 	if (!imgdata) {
 	    TRACE(("unable to allocate XImage for graphics refresh\n"));
 	    XDestroyImage(image);
-	    XFreeGC(display, graphics_gc);
 	    free(buffer);
 	    return;
 	}
@@ -1702,7 +1629,6 @@ refresh_graphics(XtermWidget xw,
 	free(imgdata);
 	image->data = NULL;
 	XDestroyImage(image);
-	XFreeGC(display, graphics_gc);
     }
 
     free(buffer);
@@ -1833,12 +1759,13 @@ reset_displayed_graphics(TScreen const *screen)
 
 #ifdef NO_LEAKS
 void
-noleaks_graphics(void)
+noleaks_graphics(Display *dpy)
 {
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {
 	deactivateSlot(ii);
     }
+    XFreeGC(dpy, graphics_gc);
 }
 #endif
