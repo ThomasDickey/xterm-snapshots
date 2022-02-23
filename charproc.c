@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1887 2022/02/18 20:34:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1888 2022/02/22 09:00:26 Vladimir.A.Pavlov Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -821,6 +821,7 @@ static XtResource xterm_resources[] =
     RES_FACESIZE(4),
     RES_FACESIZE(5),
     RES_FACESIZE(6),
+    RES_FACESIZE(7),
     Dres(XtNfaceSize, XtCFaceSize, misc.face_size[0], DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.default_xft.f_n, DEFFACENAME),
     Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
