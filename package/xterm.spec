@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.146 2021/11/25 22:42:23 tom Exp $
+# $XTermId: xterm.spec,v 1.148 2022/02/24 09:13:45 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -10,7 +10,7 @@ Release: 1
 License: X11
 Group: User Interface/X
 Source: xterm-%{version}.tgz
-URL: ftp://ftp.invisible-island.net/xterm/
+URL: https://invisible-island.net/xterm/
 Provides: x-terminal-emulator >= %{version}
 
 # This part (the build-requires) would be useful if the various distributions
@@ -114,7 +114,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
         --disable-imake \
         --enable-dabbrev \
         --enable-dec-locator \
-        --enable-double-buffer \
         --enable-exec-xterm \
         --enable-hp-fkeys \
         --enable-load-vt-fonts \
@@ -245,6 +244,9 @@ exit 0
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Thu Feb 24 2022 Thomas E. Dickey
+- double-buffer is not enabled by default
 
 * Sat Jul 25 2020 Thomas E. Dickey
 - sixels are enabled by default

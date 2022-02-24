@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.494 2022/01/19 09:08:12 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.496 2022/02/24 22:10:29 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4086,7 +4086,7 @@ AC_SUBST(ICON_LIST)
 AC_SUBST(ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 11 updated: 2022/01/19 04:07:26
+dnl CF_WITH_IMAKE_CFLAGS version: 12 updated: 2022/02/24 17:10:03
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
@@ -4165,7 +4165,7 @@ else
 		do
 			if test -d "$cf_dir/bin"
 			then
-				IMAKE_CFLAGS="$IMAKE_CFLAGS -DPROJECTROOT=\"$cf_dir\""
+				IMAKE_CFLAGS="$IMAKE_CFLAGS -DPROJECTROOT=\\\"$cf_dir\\\""
 				break
 			fi
 		done

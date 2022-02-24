@@ -17153,7 +17153,7 @@ echo "${as_me:-configure}:17101: testing make fallback definitions ..." 1>&5
 		do
 			if test -d "$cf_dir/bin"
 			then
-				IMAKE_CFLAGS="$IMAKE_CFLAGS -DPROJECTROOT=\"$cf_dir\""
+				IMAKE_CFLAGS="$IMAKE_CFLAGS -DPROJECTROOT=\\\"$cf_dir\\\""
 				break
 			fi
 		done
