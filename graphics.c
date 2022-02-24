@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.116 2022/02/23 09:02:09 tom Exp $ */
+/* $XTermId: graphics.c,v 1.117 2022/02/24 09:28:54 tom Exp $ */
 
 /*
  * Copyright 2013-2021,2022 by Ross Combs
@@ -247,7 +247,7 @@ read_pixel(Graphic *graphic, int x, int y)
 	     (y) >= 0 &&
 	     (y) < (graphic)->actual_height)
 	    ? (graphic)->pixels[(y) * (graphic)->max_width + (x)]
-	    : COLOR_HOLE);
+	    : (RegisterNum) COLOR_HOLE);
 }
 
 #define _draw_pixel(G, X, Y, C) \
