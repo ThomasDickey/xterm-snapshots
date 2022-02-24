@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2400 2022/02/23 00:36:41 tom Exp $
+  $XTermId: xterm.log.html,v 1.2401 2022/02/24 01:28:12 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1089,6 +1089,11 @@
         switching to/from the alternate screen.</li>
 
         <li>move the status-line if the window is resized.</li>
+
+        <li><em>Note:</em> the associated screen-resizing does not
+        work for the special case of TrueType fonts with
+        double-buffering (see note in <a href=
+        "#xterm_349_xft_bug">patch #349</a>).</li>
       </ul>
     </li>
 
@@ -2094,11 +2099,11 @@
       </ul>
     </li>
 
-    <li>reorganize text-drawing to make it possible to investigate
-    using Xft to implement VT100-style double-sized characters.
-    While doing this, made a workaround for apparent Xft bug which
-    loses its drawable state when switching from 132 to 80
-    columns.</li>
+    <li id="xterm_349_xft_bug">reorganize text-drawing to make it
+    possible to investigate using Xft to implement VT100-style
+    double-sized characters. While doing this, made a workaround
+    for apparent Xft bug which loses its drawable state when
+    switching from 132 to 80 columns.</li>
 
     <li>improve font-warning messages by showing which are
     <em>derived</em> rather than directly from resource settings
