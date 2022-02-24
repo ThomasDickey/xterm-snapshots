@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.115 2022/02/23 01:18:14 tom Exp $ */
+/* $XTermId: graphics.c,v 1.116 2022/02/23 09:02:09 tom Exp $ */
 
 /*
  * Copyright 2013-2021,2022 by Ross Combs
@@ -1766,6 +1766,7 @@ noleaks_graphics(Display *dpy)
     FOR_EACH_SLOT(ii) {
 	deactivateSlot(ii);
     }
-    XFreeGC(dpy, graphics_gc);
+    if (valid_graphics > 0)
+	XFreeGC(dpy, graphics_gc);
 }
 #endif
