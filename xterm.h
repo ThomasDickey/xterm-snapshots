@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.908 2022/02/11 09:18:53 tom Exp $ */
+/* $XTermId: xterm.h,v 1.910 2022/03/09 00:39:01 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1431,7 +1431,7 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 #define _NET_WM_STATE_TOGGLE	2	/* toggle property */
 
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
+extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
 extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
@@ -1455,7 +1455,7 @@ extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftco
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
-extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
+extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #if OPT_TRACE && OPT_TRACE_FLAGS

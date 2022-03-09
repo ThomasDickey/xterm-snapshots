@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.897 2022/02/22 09:30:14 tom Exp $ */
+/* $XTermId: util.c,v 1.898 2022/03/08 00:48:22 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5012,7 +5012,7 @@ ClearCurBackground(XtermWidget xw,
 
     assert((int) width > 0);
     assert((left + (int) width) <= screen->max_col + 1);
-    assert((int) height <= screen->max_row + 1);
+    assert((int) (height + top) <= screen->max_row + 1);
 
     if (VWindow(screen)) {
 	set_background(xw, xw->cur_background);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.620 2022/02/18 21:15:37 tom Exp $ */
+/* $XTermId: screen.c,v 1.623 2022/03/09 01:20:09 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -176,7 +176,12 @@ scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
  * Given a block of data, build index to it in the 'base' parameter.
  */
 void
-setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned ncol)
+setupLineData(TScreen *screen,
+	      ScrnBuf base,
+	      Char *data,
+	      unsigned nrow,
+	      unsigned ncol,
+	      Bool bottom)
 {
     unsigned i;
     unsigned offset = 0;
@@ -194,7 +199,13 @@ setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned
 
     (void) screen;
     AlignValue(ncol);
-    AddStatusLineRows(nrow);
+
+    (void) bottom;
+#if OPT_STATUS_LINE
+    if (bottom) {
+	AddStatusLineRows(nrow);
+    }
+#endif
 
     skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
     skipNcolCharData = (ncol * SizeofScrnPtr(charData));
@@ -314,14 +325,16 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 }
 
 Char *
-allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol)
+allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol, Bool bottom)
 {
     Char *result = 0;
     size_t length;
 
     AlignValue(ncol);
-    AddStatusLineRows(nrow);
-    length = ((nrow + StatusLineRows) * sizeofScrnRow(screen, ncol));
+    if (bottom) {
+	AddStatusLineRows(nrow);
+    }
+    length = (nrow * sizeofScrnRow(screen, ncol));
     if (length == 0
 	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
 	  SysError(ERROR_SCALLOC2);
@@ -352,9 +365,9 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
 
     if (nrow != 0) {
 	base = allocScrnHead(screen, nrow);
-	*addr = allocScrnData(screen, nrow, ncol);
+	*addr = allocScrnData(screen, nrow, ncol, True);
 
-	setupLineData(screen, base, *addr, nrow, ncol);
+	setupLineData(screen, base, *addr, nrow, ncol, True);
     }
 
     TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, (void *) base));
@@ -471,7 +484,7 @@ Reallocate(XtermWidget xw,
      * Create the new buffer space and copy old buffer contents there, line by
      * line.
      */
-    newBufData = allocScrnData(screen, nrow, ncol);
+    newBufData = allocScrnData(screen, nrow, ncol, True);
     *sbufaddr = newBufData;
 
     minrows = (oldrow < nrow) ? oldrow : nrow;
@@ -482,7 +495,7 @@ Reallocate(XtermWidget xw,
 	}
     }
 
-    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol, True);
     extractScrnData(screen, newBufHead, oldBufHead, minrows, 0);
 
     /* Now free the old data */
@@ -535,8 +548,8 @@ ReallocateBufOffsets(XtermWidget xw,
 
     new_jump = scrnHeadSize(screen, 1);
     newBufHead = allocScrnHead(screen, nrow);
-    *sbufaddr = allocScrnData(screen, nrow, ncol);
-    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+    *sbufaddr = allocScrnData(screen, nrow, ncol, True);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol, True);
 
     screen->wide_chars = False;
 

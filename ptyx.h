@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1059 2022/02/14 01:08:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1060 2022/03/08 23:31:40 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -3360,11 +3360,12 @@ typedef struct _TekWidgetRec {
 
 /*
  * terminal flags
- * There are actually two namespaces mixed together here.
- * One is the set of flags that can go in screen->visbuf attributes
- * and which must fit in a char (see OFF_ATTRS).
- * The other is the global setting stored in
- * term->flags and screen->save_modes.  This need only fit in an unsigned.
+ * There are actually two namespaces mixed together here:
+ * a) One is the set of flags that can go in screen->visbuf attributes and
+ *    which must fit in an IAttr (either a char or short, depending on whether
+ *    wide-attributes are used).
+ * b) The other is the global setting stored in term->flags and
+ *    screen->save_modes, which fits in an unsigned (IFlags).
  */
 
 #define AttrBIT(n)	xBIT(n)		/* text-attributes */
