@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.886 2022/02/22 23:35:41 tom Exp $ */
+/* $XTermId: main.c,v 1.887 2022/03/11 21:42:56 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -3666,24 +3666,38 @@ static void
 xtermTrimEnv(void)
 {
 #define DATA(wild,name) { wild, #name }
+    /* *INDENT-OFF* */
     static struct {
 	int wild;
 	const char *name;
     } table[] = {
+	DATA(0, COLUMNS),
 	DATA(0, DEFAULT_COLORS),
-	    DATA(0, DESKTOP_STARTUP_ID),
-	    DATA(0, WCWIDTH_CJK_LEGACY),
-	    DATA(0, XCURSOR_PATH),
-	    DATA(1, COLORFGBG),
-	    DATA(1, COLORTERM),
-	    DATA(1, ITERM2_),
-	    DATA(1, MC_),
-	    DATA(1, PUTTY),
-	    DATA(1, RXVT_),
-	    DATA(1, URXVT_),
-	    DATA(1, VTE_),
+	DATA(0, DESKTOP_STARTUP_ID),
+	DATA(0, LINES),
+	DATA(0, SHLVL),		/* ksh, bash */
+	DATA(0, STY),		/* screen */
+	DATA(0, TERMCAP),
+	DATA(0, TMUX),
+	DATA(0, TMUX_PANE),
+	DATA(0, WCWIDTH_CJK_LEGACY),
+	DATA(0, WINDOW),	/* screen */
+	DATA(0, XCURSOR_PATH),
+	DATA(1, COLORFGBG),
+	DATA(1, COLORTERM),
+	DATA(1, GIO_LAUNCHED_),
+	DATA(1, ITERM2_),
+	DATA(1, MC_),
+	DATA(1, MINTTY_),
+	DATA(1, PUTTY),
+	DATA(1, RXVT_),
+	DATA(1, TERM_),
+	DATA(1, URXVT_),
+	DATA(1, VTE_),
+	DATA(1, XTERM_),
     };
 #undef DATA
+    /* *INDENT-ON* */
     Cardinal n;
 
     for (n = 0; n < XtNumber(table); ++n) {

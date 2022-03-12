@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.636 2021/12/26 21:57:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.640 2022/03/12 20:29:38 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2020,2021 by Thomas E. Dickey
+.\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #371
-.ds RF 2021/12/26
+.ds LF Patch #373
+.ds RF 2022/03/12
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2021)
+invisible-island.net (2006-2022)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -3218,6 +3218,12 @@ the program will receive:
 .br
 followed by the pasted text, followed by
    \*(Es\*([[\*2\*0\*1\*~.
+.br
+For background and discussion, see the FAQ:
+.ID 2
+.\" https://invisible-island.net/xterm/xterm-paste64.html
+\fIXTerm - bracketed-paste\fP
+.DE
 .
 .Sh "Title Modes"
 .LP
