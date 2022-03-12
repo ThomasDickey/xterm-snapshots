@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2021)
-               updated for XTerm Patch #371 (2021/12/26)
+                    invisible-island.net (2006-2022)
+               updated for XTerm Patch #373 (2022/03/12)
 
 
 
@@ -2387,6 +2387,10 @@ in text.  When bracketed paste mode is set, the program will receive:
    ESC [ 2 0 0 ~ ,
 followed by the pasted text, followed by
    ESC [ 2 0 1 ~ .
+For background and discussion, see the FAQ:
+
+  XTerm - bracketed-paste
+
 
 
 Title Modes

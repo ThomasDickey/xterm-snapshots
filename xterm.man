@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.856 2022/02/22 09:11:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.857 2022/03/12 01:20:20 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -2260,11 +2260,14 @@ The default is \*(``true\*(''.
 .TP 8
 .B "allowPasteControls\fP (class\fB AllowPasteControls\fP)"
 If true, allow control characters such as BEL and CAN to be pasted.
-Formatting characters (tab, newline) are always allowed.
+Formatting characters (tab, newline) are normally allowed,
+unless suppressed via the \fBdisallowedPasteControls\fP resource.
 Other C0 control characters are suppressed unless this resource is enabled.
 The exact set of control characters (C0 and C1)
 depends upon whether UTF-8 encoding is used,
-as well as the \fBallowC1Printable\fP resource.
+as well as
+the \fBallowC1Printable\fP
+and \fBdisallowedPasteControls\fP resources.
 The default is \*(``false\*(''.
 .TP 8
 .B "allowScrollLock\fP (class\fB AllowScrollLock\fP)"
@@ -3195,12 +3198,11 @@ This overrides the \fBalternateScroll\fP resource.
 .RE
 .TP 8
 .B "disallowedPasteControls\fP (class\fB DisallowedPasteControls\fP)"
-The \fBallowPasteControls\fP resource is normally used to prevent
-pasting C1 controls, as well as non-formatting C0 controls such
-as the ASCII escape character.
-Those characters are simply ignored.
-This resource further extends the set of control characters
+Use this resource to disallow pasting specific C0 control characters
+when the \fBallowPasteControls\fP resource is false (i.e., the default).
+This resource defines the set of control characters
 which cannot be pasted, converting each into a space.
+Other C0 controls are pasted without change.
 .IP
 The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
