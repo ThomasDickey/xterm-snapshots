@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: fonts.sh,v 1.17 2022/02/13 14:35:50 tom Exp $
+# $XTermId: fonts.sh,v 1.18 2022/03/13 18:27:29 Ryan.Schmidt Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -38,7 +38,8 @@ CSI="${ESC}["
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
+: "${TMPDIR=/tmp}"
+TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
 { test ! -f $TMP || test -s $TMP; } &&
 for verb in "printf" "print" ; do
