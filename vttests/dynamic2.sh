@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: dynamic2.sh,v 1.8 2022/02/13 14:35:30 tom Exp $
+# $XTermId: dynamic2.sh,v 1.9 2022/03/13 18:27:29 Ryan.Schmidt Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -39,7 +39,8 @@ OSC="${ESC}]"
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
+: "${TMPDIR=/tmp}"
+TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
 { test ! -f $TMP || test -s $TMP; } &&
 for verb in "printf" "print" ; do
