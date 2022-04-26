@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2411 2022/03/16 23:55:29 tom Exp $
+  $XTermId: xterm.log.html,v 1.2414 2022/04/26 08:06:05 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1027,6 +1027,18 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve rendering of TrueType fonts:
+      <ul>
+        <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
+      </ul>
+    </li>
+
+    <li>repair test/demo scripts still using "vxt-" prefix, some
+    cleanup with shellcheck.</li>
+
+    <li>enable page-number for <tt>DECXCPR</tt> response in
+    VT330.</li>
+
     <li>amend change for combining characters in <a href=
     "#xterm_371">patch #371</a> to limit it to the
     currently-defined codes (report by Thomas Wolff).</li>

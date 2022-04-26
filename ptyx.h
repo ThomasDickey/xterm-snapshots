@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1060 2022/03/08 23:31:40 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1061 2022/04/22 08:04:58 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -422,7 +422,7 @@ typedef struct {
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 
 #define MAX_XLFD_FONTS	1
-#define MAX_XFT_FONTS	1
+#define MAX_XFT_FONTS	2
 #define NMENUFONTS	10		/* font entries in fontMenu */
 
 #define	NBOX	5			/* Number of Points in box	*/
@@ -1893,7 +1893,21 @@ typedef struct {
 	Bool		mixed;
 	Dimension	min_width;	/* nominal cell width for 0..255 */
 	Dimension	max_width;	/* maximum cell width */
-} FontMap;
+} XtermFontInfo;
+
+	/*
+	 * Map of characters to simplify/speed-up the checks for missing glyphs
+	 * at runtime.
+	 *
+	 * FIXME: initially implement for Xft, but replace known_missing[] in
+	 * X11 fonts as well.
+	 */
+typedef struct {
+	size_t		limit;		/* allocated size of per_font, etc */
+	size_t		first_char;	/* merged first-character index */
+	size_t		last_char;	/* merged last-character index */
+	Char *		per_font;	/* index 1-n of first font with char */
+} XtermFontMap;
 
 #define KNOWN_MISSING	256
 
@@ -1909,7 +1923,7 @@ typedef struct {
 	fontWarningTypes warn;
 	XFontStruct *	fs;
 	char *		fn;
-	FontMap		map;
+	XtermFontInfo	font_info;
 	Char		known_missing[KNOWN_MISSING];
 } XTermFonts;
 
@@ -1942,10 +1956,11 @@ typedef struct {
 	XftFont *	font;		/* main font */
 	XftPattern *	pattern;	/* pattern for main font */
 	XftFontSet *	fontset;	/* ordered list of fallback patterns */
-	XTermXftCache * cache;
+	XTermXftCache * cache;		/* list of open font pointers */
 	unsigned	limit;		/* allocated size of cache[] */
-	unsigned	opened;		/* number of slots with xcOpened */
-	FontMap		map;
+	unsigned	opened;		/* number in cache[] with xcOpened */
+	XtermFontInfo	font_info;	/* summary of font metrics */
+	XtermFontMap	font_map;	/* map of glyphs provided in fontset */
 } XTermXftFonts;
 
 typedef	struct _ListXftFonts {
@@ -2338,7 +2353,7 @@ typedef struct {
 	int		fonts_used;	/* count items in double_fonts	*/
 	XTermFonts	double_fonts[NUM_CHRSET];
 #if OPT_RENDERFONT
-	XftFont *	double_xft_fonts[NUM_CHRSET];
+	XTermXftFonts	double_xft_fonts[NUM_CHRSET];
 #endif
 #endif /* OPT_DEC_CHRSET */
 #if OPT_DEC_RECTOPS

@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.137 2021/02/25 23:03:24 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.138 2022/04/24 21:48:49 tom Exp $ */
 
 /*
- * Copyright 1998-2020,2021 by Thomas E. Dickey
+ * Copyright 1998-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -148,7 +148,7 @@ extern void xtermSaveVTFonts (XtermWidget /* xw */);
 extern Boolean maybeXftCache(XtermWidget /* xw */, XftFont * /* font */);
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
 extern XTermXftFonts *getMyXftFont (XtermWidget /* xw */, int /* which */, int /* fontnum */);
-extern XftFont *findXftGlyph (XtermWidget /* xw */, XftFont * /* given */, unsigned /* wc */);
+extern XftFont *findXftGlyph (XtermWidget /* xw */, XTermXftFonts * /* fontData */, unsigned /* wc */);
 extern XftFont *getXftFont (XtermWidget /* xw */, VTFontEnum /* which */, int /* fontnum */);
 extern void closeCachedXft (TScreen * /* screen */, XftFont * /* font */);
 extern void xtermCloseXft (TScreen * /* screen */, XTermXftFonts * /* pub */);

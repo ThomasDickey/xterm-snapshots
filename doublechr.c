@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.104 2020/12/10 19:43:26 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.105 2022/04/24 21:55:54 tom Exp $ */
 
 /*
- * Copyright 1997-2019,2020 by Thomas E. Dickey
+ * Copyright 1997-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -342,19 +342,19 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 /*
  * Like xterm_DoubleGC(), but returning an Xft font.
  */
-XftFont *
+XTermXftFonts *
 xterm_DoubleFT(XTermDraw * params, unsigned chrset, unsigned attr_flags)
 {
-    XftFont *result;
+    XTermXftFonts *result;
     TScreen *screen = TScreenOf(params->xw);
     unsigned num = (chrset & CSET_DWL);
 
     if ((attr_flags &= BOLD) != 0)
 	num |= 4;
 
-    if ((result = screen->double_xft_fonts[num]) == 0) {
-	result = getDoubleXftFont(params, chrset, attr_flags);
-	screen->double_xft_fonts[num] = result;
+    result = &screen->double_xft_fonts[num];
+    if (result->font == 0) {
+	result->font = getDoubleXftFont(params, chrset, attr_flags);
     }
     return result;
 }
@@ -366,8 +366,8 @@ freeall_DoubleFT(XtermWidget xw)
     unsigned num;
 
     for (num = 0; num < XtNumber(screen->double_xft_fonts); ++num) {
-	closeCachedXft(screen, screen->double_xft_fonts[num]);
-	screen->double_xft_fonts[num] = 0;
+	closeCachedXft(screen, screen->double_xft_fonts[num].font);
+	screen->double_xft_fonts[num].font = 0;
     }
 }
 #endif /* OPT_RENDERFONT */

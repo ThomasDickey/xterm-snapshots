@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.898 2022/03/08 00:48:22 tom Exp $ */
+/* $XTermId: util.c,v 1.900 2022/04/24 22:34:56 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2991,7 +2991,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
 
 #endif /* OPT_RENDERWIDE */
 
-#define XFT_FONT(which) getXftFont(params->xw, which, fontnum)
+#define XFT_DATA(which) getMyXftFont(params->xw, which, fontnum)
 
 #if OPT_ISO_COLORS
 #define UseBoldFont(screen) (!(screen)->colorBDMode || ((screen)->veryBoldColors & BOLD))
@@ -3003,13 +3003,13 @@ getXftColor(XtermWidget xw, Pixel pixel)
 /*
  * Find Xft (truetype) double-width font for the given normal/bold attributes.
  */
-static XftFont *
+static XTermXftFonts *
 getWideXftFont(XTermDraw * params,
 	       unsigned attr_flags)
 {
     TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
-    XftFont *wfont = 0;
+    XTermXftFonts *result = 0;
 
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
@@ -3019,13 +3019,13 @@ getWideXftFont(XTermDraw * params,
 	) {
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(fWBtal)) {
-	    wfont = XFT_FONT(fWBtal);
-	} else if (XFT_FONT(fWItal)) {
-	    wfont = XFT_FONT(fWItal);
+	    && XFT_DATA(fWBtal)) {
+	    result = XFT_DATA(fWBtal);
+	} else if (XFT_DATA(fWItal)) {
+	    result = XFT_DATA(fWItal);
 	}
     }
-    if (wfont != 0) {
+    if (result != 0) {
 	;			/* skip the other tests */
     } else
 #endif
@@ -3033,39 +3033,39 @@ getWideXftFont(XTermDraw * params,
 	if ((attr_flags & UNDERLINE)
 	    && !screen->colorULMode
 	    && screen->italicULMode
-	    && XFT_FONT(fWItal)) {
-	wfont = XFT_FONT(fWItal);
+	    && XFT_DATA(fWItal)) {
+	result = XFT_DATA(fWItal);
     } else
 #endif
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(fWBold)) {
-	wfont = XFT_FONT(fWBold);
+	    && XFT_DATA(fWBold)) {
+	result = XFT_DATA(fWBold);
     } else {
-	wfont = XFT_FONT(fWide);
+	result = XFT_DATA(fWide);
     }
-    return wfont;
+    return result;
 }
 #endif /* OPT_RENDERWIDE */
 
 /*
  * Find Xft (truetype) single-width font for the given normal/bold attributes.
  */
-static XftFont *
+static XTermXftFonts *
 getNormXftFont(XTermDraw * params,
 	       unsigned attr_flags,
 	       Bool *did_ul)
 {
     TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
-    XftFont *font = 0;
+    XTermXftFonts *result = NULL;
 
     (void) did_ul;
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(params->real_chrset)) {
-	font = xterm_DoubleFT(params, params->real_chrset, attr_flags);
+	result = xterm_DoubleFT(params, params->real_chrset, attr_flags);
     }
-    if (font != 0) {
+    if (result != 0) {
 	;			/* found a usable double-sized font */
     } else
 #endif
@@ -3077,13 +3077,13 @@ getNormXftFont(XTermDraw * params,
 	) {
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(fBtal)) {
-	    font = XFT_FONT(fBtal);
-	} else if (XFT_FONT(fItal)) {
-	    font = XFT_FONT(fItal);
+	    && XFT_DATA(fBtal)) {
+	    result = XFT_DATA(fBtal);
+	} else if (XFT_DATA(fItal)) {
+	    result = XFT_DATA(fItal);
 	}
     }
-    if (font != 0) {
+    if (result != NULL) {
 	;			/* skip the other tests */
     } else
 #endif
@@ -3091,19 +3091,19 @@ getNormXftFont(XTermDraw * params,
 	if ((attr_flags & UNDERLINE)
 	    && !screen->colorULMode
 	    && screen->italicULMode
-	    && XFT_FONT(fItal)) {
-	font = XFT_FONT(fItal);
+	    && XFT_DATA(fItal)) {
+	result = XFT_DATA(fItal);
 	*did_ul = True;
     } else
 #endif
 	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
-	    && XFT_FONT(fBold)) {
-	font = XFT_FONT(fBold);
+	    && XFT_DATA(fBold)) {
+	result = XFT_DATA(fBold);
     } else {
-	font = XFT_FONT(fNorm);
+	result = XFT_DATA(fNorm);
     }
-    return font;
+    return result;
 }
 
 #if OPT_RENDERWIDE
@@ -3140,7 +3140,8 @@ xtermXftDrawString(XTermDraw * params,
     if (len != 0) {
 #if OPT_RENDERWIDE
 	XftCharSpec *sbuf;
-	XftFont *wfont = getWideXftFont(params, attr_flags);
+	XTermXftFonts *wdata = getWideXftFont(params, attr_flags);
+	XftFont *wfont = wdata->font;
 	Cardinal src, dst;
 	XftFont *lastFont = 0;
 	XftFont *currFont = 0;
@@ -3906,12 +3907,14 @@ drawXtermText(XTermDraw * params,
     if (UsingRenderFont(recur.xw)) {
 	VTwin *currentWin = WhichVWin(screen);
 	Display *dpy = screen->display;
-	XftFont *font;
-	XftFont *font0;
+	XTermXftFonts *ndata;
 	XGCValues values;
+#if OPT_WIDE_CHARS
+	XTermXftFonts *ndata0;
+#endif
 #if OPT_RENDERWIDE
-	XftFont *wfont;
-	XftFont *wfont0;
+	XTermXftFonts *wdata;
+	XTermXftFonts *wdata0;
 #endif
 
 #if OPT_DEC_CHRSET
@@ -3940,19 +3943,18 @@ drawXtermText(XTermDraw * params,
 	}
 
 	/*
-	 * font0/wfont0 provide fallback to non-bolded Xft font if a glyph is
+	 * ndata0/wdata0 provide fallback to non-bolded Xft font if a glyph is
 	 * not found in the bold version.
 	 */
 #define IS_BOLD  (recur.attr_flags & BOLDATTR(screen))
 #define NOT_BOLD (recur.attr_flags & ~BOLDATTR(screen))
-	font = getNormXftFont(&recur, recur.attr_flags, &did_ul);
-	font0 = IS_BOLD ? getNormXftFont(&recur, NOT_BOLD, &did_ul) : font;
-	(void) font0;
+	ndata = getNormXftFont(&recur, recur.attr_flags, &did_ul);
+#if OPT_WIDE_CHARS
+	ndata0 = IS_BOLD ? getNormXftFont(&recur, NOT_BOLD, &did_ul) : ndata;
+#endif
 #if OPT_RENDERWIDE
-	wfont = getWideXftFont(&recur, recur.attr_flags);
-	wfont0 = IS_BOLD ? getWideXftFont(&recur, NOT_BOLD) : wfont;
-
-	(void) wfont0;
+	wdata = getWideXftFont(&recur, recur.attr_flags);
+	wdata0 = IS_BOLD ? getWideXftFont(&recur, NOT_BOLD) : wdata;
 #endif
 
 #define GET_XFT_FG() getXftColor(recur.xw, values.foreground)
@@ -3965,7 +3967,7 @@ drawXtermText(XTermDraw * params,
 	    XftColor *bg_color = GET_XFT_BG();
 	    int ncells = xtermXftWidth(&recur, recur.attr_flags,
 				       bg_color,
-				       font, x, y,
+				       ndata->font, x, y,
 				       text,
 				       len);
 	    XftDrawRect(screen->renderDraw,
@@ -3975,7 +3977,7 @@ drawXtermText(XTermDraw * params,
 			(unsigned) FontHeight(screen));
 	}
 
-	y += font->ascent;
+	y += ndata->font->ascent;
 #if OPT_BOX_CHARS
 	{
 	    /* adding code to substitute simulated line-drawing characters */
@@ -3989,9 +3991,9 @@ drawXtermText(XTermDraw * params,
 		int filler = 0;
 #if OPT_WIDE_CHARS
 		int needed = forceDbl ? 2 : CharWidth(screen, ch);
-		XftFont *currFont = pickXftFont(needed, font, wfont);
+		XTermXftFonts *currData = pickXftFont(needed, ndata, wdata);
 		XftFont *tempFont = 0;
-#define CURR_TEMP (tempFont ? tempFont : currFont)
+#define CURR_TEMP (tempFont ? tempFont : currData->font)
 
 		if (xtermIsDecGraphic(ch) || ch == 0) {
 		    /*
@@ -4004,7 +4006,7 @@ drawXtermText(XTermDraw * params,
 		    if (screen->force_box_chars
 			|| screen->broken_box_chars
 			|| xtermXftMissing(recur.xw,
-					   currFont,
+					   currData->font,
 					   dec2ucs(screen, ch))) {
 			SetMissing("case 1");
 		    } else {
@@ -4026,10 +4028,11 @@ drawXtermText(XTermDraw * params,
 				ch = part;
 			    }
 			}
-			if (!missing && xtermXftMissing(recur.xw, currFont, ch)) {
-			    XftFont *test = findXftGlyph(recur.xw, currFont, ch);
+			if (!missing && xtermXftMissing(recur.xw,
+							currData->font, ch)) {
+			    XftFont *test = findXftGlyph(recur.xw, currData, ch);
 			    if (test == 0)
-				test = pickXftFont(needed, font0, wfont0);
+				test = pickXftFont(needed, ndata0->font, wdata0->font);
 			    if (!xtermXftMissing(recur.xw, test, ch)) {
 				tempFont = test;
 				replace = True;
@@ -4045,8 +4048,8 @@ drawXtermText(XTermDraw * params,
 		    });
 		}
 #else
-		XftFont *currFont = font;
-#define CURR_TEMP (currFont)
+		XTermXftFonts *currData = ndata;
+#define CURR_TEMP (currData->font)
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
@@ -4055,7 +4058,7 @@ drawXtermText(XTermDraw * params,
 		     * Unicode position.  Failing that, use our own
 		     * box-characters.
 		     */
-		    if (xtermXftMissing(recur.xw, currFont, ch)) {
+		    if (xtermXftMissing(recur.xw, currData->font, ch)) {
 			SetMissing("case 4");
 		    }
 		}
@@ -4069,7 +4072,7 @@ drawXtermText(XTermDraw * params,
 		    if (last > first) {
 			int nc = drawClippedXftString(&recur,
 						      recur.attr_flags,
-						      currFont,
+						      currData->font,
 						      GET_XFT_FG(),
 						      curX,
 						      y,
@@ -4127,7 +4130,7 @@ drawXtermText(XTermDraw * params,
 		underline_len += (Cardinal)
 		    drawClippedXftString(&recur,
 					 recur.attr_flags,
-					 font,
+					 ndata->font,
 					 GET_XFT_FG(),
 					 curX,
 					 y,
@@ -4140,7 +4143,7 @@ drawXtermText(XTermDraw * params,
 	    underline_len += (Cardinal)
 		drawClippedXftString(&recur,
 				     recur.attr_flags,
-				     font,
+				     ndata->font,
 				     GET_XFT_FG(),
 				     x,
 				     y,
@@ -5012,7 +5015,7 @@ ClearCurBackground(XtermWidget xw,
 
     assert((int) width > 0);
     assert((left + (int) width) <= screen->max_col + 1);
-    assert((int) (height + top) <= screen->max_row + 1);
+    assert(((int) height + top) <= screen->max_row + 1);
 
     if (VWindow(screen)) {
 	set_background(xw, xw->cur_background);
