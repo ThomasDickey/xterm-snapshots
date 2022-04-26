@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.910 2022/03/09 00:39:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.911 2022/04/22 08:22:56 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1102,7 +1102,7 @@ extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
 extern GC xterm_DoubleGC(XTermDraw * /* params */, GC /* old_gc */, int * /* inxp */);
 #if OPT_RENDERFONT
-extern XftFont * xterm_DoubleFT(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
+extern XTermXftFonts * xterm_DoubleFT(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
 extern void freeall_DoubleFT(XtermWidget /* xw */);
 #endif
 #endif

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: 8colors.sh,v 1.22 2022/03/13 18:27:29 Ryan.Schmidt Exp $
+# $XTermId: 8colors.sh,v 1.23 2022/04/24 23:36:20 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -41,12 +41,12 @@ SUF=''
 : "${TMPDIR=/tmp}"
 TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-{ test ! -f $TMP || test -s $TMP; } &&
+{ test ! -f "$TMP" || test -s "$TMP"; } &&
 for verb in "printf" "print" ; do
-    rm -f $TMP
+    rm -f "$TMP"
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
-    if test -f $TMP ; then
-	if test ! -s $TMP ; then
+    if test -f "$TMP" ; then
+	if test ! -s "$TMP" ; then
 	    CMD="$verb"
 	    OPT=
 	    SUF='\c'
@@ -54,7 +54,7 @@ for verb in "printf" "print" ; do
 	fi
     fi
 done
-rm -f $TMP
+rm -f "$TMP"
 
 trap '$CMD $OPT "${CSI}0m"; exit 1' 1 2 3 15
 trap '$CMD $OPT "${CSI}0m"' 0

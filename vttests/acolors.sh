@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: acolors.sh,v 1.14 2022/03/13 18:27:29 Ryan.Schmidt Exp $
+# $XTermId: acolors.sh,v 1.16 2022/04/25 08:19:38 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -41,12 +41,12 @@ SUF=''
 : "${TMPDIR=/tmp}"
 TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-{ test ! -f $TMP || test -s $TMP; } &&
+{ test ! -f "$TMP" || test -s "$TMP"; } &&
 for verb in "printf" "print" ; do
-    rm -f $TMP
+    rm -f "$TMP"
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
-    if test -f $TMP ; then
-	if test ! -s $TMP ; then
+    if test -f "$TMP" ; then
+	if test ! -s "$TMP" ; then
 	    CMD="$verb"
 	    OPT=
 	    SUF='\c'
@@ -54,7 +54,7 @@ for verb in "printf" "print" ; do
 	fi
     fi
 done
-rm -f $TMP
+rm -f "$TMP"
 
 LIST="00 30 80 d0 ff"
 
@@ -63,7 +63,7 @@ old=`stty -g`
 stty raw -echo min 0  time 5
 
 $CMD $OPT "${ESC}]4;4;?${SUF}" > /dev/tty
-read original
+read -r original
 stty $old
 original=${original}${SUF}
 

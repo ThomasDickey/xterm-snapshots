@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1888 2022/02/22 09:00:26 Vladimir.A.Pavlov Exp $ */
+/* $XTermId: charproc.c,v 1.1889 2022/04/17 21:08:45 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -4049,8 +4049,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		}
 		reply.a_param[count++] = (ParmType) value;
 
-		if (sp->private_function
-		    && screen->vtXX_level >= 4) {	/* VT420 */
+		if (sp->private_function &&
+		    (screen->vtXX_level >= 4 ||
+		     (screen->terminal_id >= 330 &&
+		      screen->vtXX_level >= 3))) {
+		    /* VT330 (not VT320) and VT420 */
 		    reply.a_param[count++] = 1;
 		}
 		reply.a_final = 'R';
