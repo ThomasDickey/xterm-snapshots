@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.857 2022/03/12 01:20:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.858 2022/05/03 07:58:07 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -3964,8 +3964,9 @@ which change character sets.
 The default is \*(``B\*('', which corresponds to US ASCII.
 .TP 8
 .B "limitFontsets\fP (class\fB LimitFontsets\fP)"
-Limits the number of TrueType fallback fonts (i.e., fontset) which can be used.
+Limits the number of TrueType fallback fonts (i.e., fontset) which can be tested.
 The default is \*(``50\*(''.
+No more than \*(``255\*('' will be scanned.
 .IP
 This limits the number of fallback fonts
 which \fI\*n\fP uses to display characters.

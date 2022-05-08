@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.105 2022/04/24 21:55:54 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.107 2022/05/05 22:23:43 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -353,8 +353,8 @@ xterm_DoubleFT(XTermDraw * params, unsigned chrset, unsigned attr_flags)
 	num |= 4;
 
     result = &screen->double_xft_fonts[num];
-    if (result->font == 0) {
-	result->font = getDoubleXftFont(params, chrset, attr_flags);
+    if (XftFp(result) == NULL) {
+	getDoubleXftFont(params, result, chrset, attr_flags);
     }
     return result;
 }
@@ -366,8 +366,9 @@ freeall_DoubleFT(XtermWidget xw)
     unsigned num;
 
     for (num = 0; num < XtNumber(screen->double_xft_fonts); ++num) {
-	closeCachedXft(screen, screen->double_xft_fonts[num].font);
-	screen->double_xft_fonts[num].font = 0;
+	closeCachedXft(screen, XftFp(&screen->double_xft_fonts[num]));
+	XftFp(&screen->double_xft_fonts[num]) = NULL;
+	XftIs(&screen->double_xft_fonts[num]) = xcEmpty;
     }
 }
 #endif /* OPT_RENDERFONT */

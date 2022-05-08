@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1889 2022/04/17 21:08:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1890 2022/05/03 07:58:25 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -10440,6 +10440,11 @@ VTInitialize(Widget wrequest,
 #if OPT_RENDERFONT
     init_Ires(misc.limit_fontsets);
     wnew->work.max_fontsets = (unsigned) wnew->misc.limit_fontsets;
+    if (wnew->work.max_fontsets > 255) {
+	xtermWarning("limiting number of fontsets to 255 (was %u)\n",
+		     wnew->work.max_fontsets);
+	wnew->work.max_fontsets = 255;
+    }
 
     init_Sres(misc.render_font_s);
     wnew->work.render_font =
