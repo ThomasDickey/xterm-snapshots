@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2414 2022/04/26 08:06:05 tom Exp $
+  $XTermId: xterm.log.html,v 1.2415 2022/05/03 08:00:33 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1029,6 +1029,9 @@
   <ul>
     <li>improve rendering of TrueType fonts:
       <ul>
+        <li>allow no more than 255 fonts to be scanned for a
+        fontset.</li>
+
         <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
       </ul>
     </li>

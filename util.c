@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.900 2022/04/24 22:34:56 tom Exp $ */
+/* $XTermId: util.c,v 1.904 2022/05/08 20:35:22 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -3107,8 +3107,10 @@ getNormXftFont(XTermDraw * params,
 }
 
 #if OPT_RENDERWIDE
-#define pickXftFont(width, nf, wf) ((width == 2 && wf != 0) ? wf : nf)
+#define pickXftData(width, nf, wf) (((width == 2) && ((wf) != NULL) && XftFp(wf) != NULL) ? (wf) : (nf))
+#define pickXftFont(width, nf, wf) (((width == 2) && ((wf) != NULL)) ? (wf) : (nf))
 #else
+#define pickXftData(width, nf, wf) (nf)
 #define pickXftFont(width, nf, wf) (nf)
 #endif
 
@@ -3141,7 +3143,7 @@ xtermXftDrawString(XTermDraw * params,
 #if OPT_RENDERWIDE
 	XftCharSpec *sbuf;
 	XTermXftFonts *wdata = getWideXftFont(params, attr_flags);
-	XftFont *wfont = wdata->font;
+	XftFont *wfont = XftFp(wdata);
 	Cardinal src, dst;
 	XftFont *lastFont = 0;
 	XftFont *currFont = 0;
@@ -3967,7 +3969,7 @@ drawXtermText(XTermDraw * params,
 	    XftColor *bg_color = GET_XFT_BG();
 	    int ncells = xtermXftWidth(&recur, recur.attr_flags,
 				       bg_color,
-				       ndata->font, x, y,
+				       XftFp(ndata), x, y,
 				       text,
 				       len);
 	    XftDrawRect(screen->renderDraw,
@@ -3977,7 +3979,7 @@ drawXtermText(XTermDraw * params,
 			(unsigned) FontHeight(screen));
 	}
 
-	y += ndata->font->ascent;
+	y += XftFp(ndata)->ascent;
 #if OPT_BOX_CHARS
 	{
 	    /* adding code to substitute simulated line-drawing characters */
@@ -3991,9 +3993,9 @@ drawXtermText(XTermDraw * params,
 		int filler = 0;
 #if OPT_WIDE_CHARS
 		int needed = forceDbl ? 2 : CharWidth(screen, ch);
-		XTermXftFonts *currData = pickXftFont(needed, ndata, wdata);
+		XTermXftFonts *currData = pickXftData(needed, ndata, wdata);
 		XftFont *tempFont = 0;
-#define CURR_TEMP (tempFont ? tempFont : currData->font)
+#define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
 		if (xtermIsDecGraphic(ch) || ch == 0) {
 		    /*
@@ -4006,7 +4008,8 @@ drawXtermText(XTermDraw * params,
 		    if (screen->force_box_chars
 			|| screen->broken_box_chars
 			|| xtermXftMissing(recur.xw,
-					   currData->font,
+					   currData, 0,
+					   XftFp(currData),
 					   dec2ucs(screen, ch))) {
 			SetMissing("case 1");
 		    } else {
@@ -4029,11 +4032,20 @@ drawXtermText(XTermDraw * params,
 			    }
 			}
 			if (!missing && xtermXftMissing(recur.xw,
-							currData->font, ch)) {
-			    XftFont *test = findXftGlyph(recur.xw, currData, ch);
-			    if (test == 0)
-				test = pickXftFont(needed, ndata0->font, wdata0->font);
-			    if (!xtermXftMissing(recur.xw, test, ch)) {
+							currData, 0,
+							XftFp(currData), ch)) {
+			    int found = findXftGlyph(recur.xw, currData, ch);
+			    XftFont *test;
+			    if (found >= 0) {
+				test = XftFpN(currData, found);
+			    } else {
+				test = pickXftFont(needed,
+						   XftFp(ndata0),
+						   XftFp(wdata0));
+			    }
+			    if (!xtermXftMissing(recur.xw,
+						 currData, found,
+						 test, ch)) {
 				tempFont = test;
 				replace = True;
 				filler = 0;
@@ -4049,7 +4061,7 @@ drawXtermText(XTermDraw * params,
 		}
 #else
 		XTermXftFonts *currData = ndata;
-#define CURR_TEMP (currData->font)
+#define CURR_TEMP XftFp(currData)
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
@@ -4058,7 +4070,9 @@ drawXtermText(XTermDraw * params,
 		     * Unicode position.  Failing that, use our own
 		     * box-characters.
 		     */
-		    if (xtermXftMissing(recur.xw, currData->font, ch)) {
+		    if (xtermXftMissing(recur.xw,
+					currData, 0,
+					XftFp(currData), ch)) {
 			SetMissing("case 4");
 		    }
 		}
@@ -4072,7 +4086,7 @@ drawXtermText(XTermDraw * params,
 		    if (last > first) {
 			int nc = drawClippedXftString(&recur,
 						      recur.attr_flags,
-						      currData->font,
+						      XftFp(currData),
 						      GET_XFT_FG(),
 						      curX,
 						      y,
@@ -4130,7 +4144,7 @@ drawXtermText(XTermDraw * params,
 		underline_len += (Cardinal)
 		    drawClippedXftString(&recur,
 					 recur.attr_flags,
-					 ndata->font,
+					 XftFp(ndata),
 					 GET_XFT_FG(),
 					 curX,
 					 y,

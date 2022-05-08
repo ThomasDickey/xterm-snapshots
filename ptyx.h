@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1061 2022/04/22 08:04:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1062 2022/05/08 20:06:14 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -313,6 +313,7 @@ typedef enum {
 #define MaxCols(screen)		((screen)->max_col + 1)
 #define MaxRows(screen)		((screen)->max_row + 1)
 
+#define MaxUChar 255
 typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char *ScrnPtr;
 typedef ScrnPtr *ScrnBuf;
@@ -1893,7 +1894,7 @@ typedef struct {
 	Bool		mixed;
 	Dimension	min_width;	/* nominal cell width for 0..255 */
 	Dimension	max_width;	/* maximum cell width */
-} XtermFontInfo;
+} XTermFontInfo;
 
 	/*
 	 * Map of characters to simplify/speed-up the checks for missing glyphs
@@ -1903,13 +1904,12 @@ typedef struct {
 	 * X11 fonts as well.
 	 */
 typedef struct {
+	int		depth;		/* number of fonts merged for map */
 	size_t		limit;		/* allocated size of per_font, etc */
 	size_t		first_char;	/* merged first-character index */
 	size_t		last_char;	/* merged last-character index */
 	Char *		per_font;	/* index 1-n of first font with char */
-} XtermFontMap;
-
-#define KNOWN_MISSING	256
+} XTermFontMap;
 
 typedef enum {
 	fwNever = 0,
@@ -1923,8 +1923,8 @@ typedef struct {
 	fontWarningTypes warn;
 	XFontStruct *	fs;
 	char *		fn;
-	XtermFontInfo	font_info;
-	Char		known_missing[KNOWN_MISSING];
+	XTermFontInfo	font_info;
+	Char		known_missing[MaxUChar + 1];
 } XTermFonts;
 
 #if OPT_RENDERFONT
@@ -1953,15 +1953,21 @@ typedef struct {
 } XTermXftCache;
 
 typedef struct {
-	XftFont *	font;		/* main font */
 	XftPattern *	pattern;	/* pattern for main font */
 	XftFontSet *	fontset;	/* ordered list of fallback patterns */
-	XTermXftCache * cache;		/* list of open font pointers */
-	unsigned	limit;		/* allocated size of cache[] */
+	XTermXftCache	cache[MaxUChar + 1]; /* list of open font pointers */
+	unsigned	fs_base;	/* index to fontset results */
+	unsigned	fs_size;	/* allocated size of cache[] */
 	unsigned	opened;		/* number in cache[] with xcOpened */
-	XtermFontInfo	font_info;	/* summary of font metrics */
-	XtermFontMap	font_map;	/* map of glyphs provided in fontset */
+	XTermFontInfo	font_info;	/* summary of font metrics */
+	XTermFontMap	font_map;	/* map of glyphs provided in fontset */
 } XTermXftFonts;
+
+#define XftFpN(p,n)	(p)->cache[(n)].font
+#define XftIsN(p,n)	(p)->cache[(n)].usage
+
+#define XftFp(p)	XftFpN(p,0)
+#define XftIs(p)	XftIsN(p,0)
 
 typedef	struct _ListXftFonts {
 	struct _ListXftFonts *next;
