@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1062 2022/05/08 20:06:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1063 2022/05/16 23:03:35 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -92,8 +92,8 @@
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
     ((size) <= sizeof(stack_cache_array)	  \
-    ?  (XtPointer)(stack_cache_array)		  \
-    :  (XtPointer)malloc((size_t)(size)))
+    ?  (stack_cache_array)			  \
+    :  (char*)malloc((size_t)(size)))
 
 #define MyStackFree(pointer, stack_cache_array) \
     if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
@@ -1945,20 +1945,20 @@ typedef enum {
 	, xcBogus			/* ignore this pattern */
 	, xcOpened			/* slot has open font descriptor */
 	, xcUnused			/* opened, but unused so far */
-} XftCache;
+} XTermXftState;
 
 typedef struct {
 	XftFont *	font;
-	XftCache	usage;
+	XTermXftState	usage;
 } XTermXftCache;
 
 typedef struct {
 	XftPattern *	pattern;	/* pattern for main font */
 	XftFontSet *	fontset;	/* ordered list of fallback patterns */
 	XTermXftCache	cache[MaxUChar + 1]; /* list of open font pointers */
-	unsigned	fs_base;	/* index to fontset results */
 	unsigned	fs_size;	/* allocated size of cache[] */
-	unsigned	opened;		/* number in cache[] with xcOpened */
+	Char		fs_base;	/* index to fontset results */
+	Char		opened;		/* number in cache[] with xcOpened */
 	XTermFontInfo	font_info;	/* summary of font metrics */
 	XTermFontMap	font_map;	/* map of glyphs provided in fontset */
 } XTermXftFonts;

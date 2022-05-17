@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.723 2022/05/09 00:22:44 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.730 2022/05/17 00:18:00 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -2416,12 +2416,12 @@ xtermXftFirstChar(XftFont *xft)
 static FcChar32
 xtermXftLastChar(XftFont *xft)
 {
-    FcChar32 this, last, next;
+    FcChar32 temp, last, next;
     FcChar32 map[FC_CHARSET_MAP_SIZE];
     int i;
     last = FcCharSetFirstPage(xft->charset, map, &next);
-    while ((this = FcCharSetNextPage(xft->charset, map, &next)) != FC_CHARSET_DONE)
-	last = this;
+    while ((temp = FcCharSetNextPage(xft->charset, map, &next)) != FC_CHARSET_DONE)
+	last = temp;
     last &= (FcChar32) ~ 0xff;
     for (i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--) {
 	if (map[i]) {
@@ -2672,6 +2672,7 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *data)
 static void
 reportXftFonts(XtermWidget xw,
 	       XTermXftFonts *fontData,
+	       int fontNum,
 	       XftFont *fp,
 	       const char *name,
 	       const char *tag,
@@ -2687,7 +2688,7 @@ reportXftFonts(XtermWidget xw,
 	ReportFonts("Loaded XftFonts(%s[%s])\n", name, tag);
 
 	for (ch = first_char; ch <= last_char; ++ch) {
-	    if (xtermXftMissing(xw, fontData, 0, fp, ch)) {
+	    if (xtermXftMissing(xw, fontData, fontNum, fp, ch)) {
 		++missing;
 	    }
 	}
@@ -2709,7 +2710,7 @@ reportXftFonts(XtermWidget xw,
     }
 }
 #else
-#define reportXftFonts(xw, fontData, result, name, tag, match)	/* empty */
+#define reportXftFonts(xw, fontData, fontNum, result, name, tag, match)		/* empty */
 #endif /* OPT_REPORT_FONTS */
 
 /*
@@ -2725,10 +2726,10 @@ Boolean
 maybeXftCache(XtermWidget xw, XftFont *font)
 {
     Boolean result = False;
-    if (font != 0) {
+    if (font != NULL) {
 	TScreen *screen = TScreenOf(xw);
 	ListXftFonts *p;
-	for (p = screen->list_xft_fonts; p != 0; p = p->next) {
+	for (p = screen->list_xft_fonts; p != NULL; p = p->next) {
 	    if (p->font == font) {
 		result = True;
 		break;
@@ -2736,7 +2737,7 @@ maybeXftCache(XtermWidget xw, XftFont *font)
 	}
 	if (!result) {
 	    p = TypeXtMalloc(ListXftFonts);
-	    if (p != 0) {
+	    if (p != NULL) {
 		p->font = font;
 		p->next = screen->list_xft_fonts;
 		screen->list_xft_fonts = p;
@@ -2808,7 +2809,7 @@ xtermOpenXft(XtermWidget xw,
 		XftFpN(fontData, fontNum) = result;
 		XftIsN(fontData, fontNum) = xcOpened;
 		if (!maybeXftCache(xw, result)) {
-		    reportXftFonts(xw, fontData, result, name, tag, match);
+		    reportXftFonts(xw, fontData, fontNum, result, name, tag, match);
 		}
 	    } else {
 		TRACE(("...could not open %s font\n", tag));
@@ -3176,20 +3177,20 @@ checkFontInfo(int value, const char *tag, int failed)
 void
 xtermCloseXft(TScreen *screen, XTermXftFonts *pub)
 {
-    if (XftFp(pub) != 0) {
+    if (XftFp(pub) != NULL) {
 	Cardinal n;
 
 	if (pub->pattern) {
 	    XftPatternDestroy(pub->pattern);
-	    pub->pattern = 0;
+	    pub->pattern = NULL;
 	}
 	if (pub->fontset) {
 	    XftFontSetDestroy(pub->fontset);
-	    pub->fontset = 0;
+	    pub->fontset = NULL;
 	}
 
 	for (n = 0; n < pub->fs_size; ++n) {
-	    if (XftFpN(pub, n)) {
+	    if (XftFpN(pub, n) != NULL) {
 		closeCachedXft(screen, XftFpN(pub, n));
 		XftFpN(pub, n) = NULL;
 		XftIsN(pub, n) = xcEmpty;
@@ -4093,28 +4094,35 @@ foundXftGlyph(XtermWidget xw, XTermXftFonts *data, int fontNum, unsigned wc)
     TScreen *screen = TScreenOf(xw);
     Boolean result = False;
 
-    if (font != 0 && !xtermXftMissing(xw, data, fontNum, font, wc)) {
-	int expect;
+    if (font != 0) {
+	if (!xtermXftMissing(xw, data, fontNum, font, wc)) {
+	    int expect;
 
-	if ((expect = CharWidth(screen, wc)) > 0) {
-	    XGlyphInfo gi;
-	    int actual;
-
-	    XftTextExtents32(screen->display, font, &wc, 1, &gi);
-	    /*
-	     * Some (more than a few) fonts are sloppy; allow 10% outside
-	     * the bounding box to accommodate them.
-	     */
-	    actual = ((gi.xOff * 10) >= (11 * FontWidth(screen))) ? 2 : 1;
-	    if (actual <= expect) {
-		/* allow double-cell if wcwidth agrees */
+	    if (XftIsN(data, fontNum) == xcBogus) {
+		;
+	    } else if (XftIsN(data, fontNum) == xcOpened) {
 		result = True;
+	    } else if ((expect = CharWidth(screen, wc)) > 0) {
+		XGlyphInfo gi;
+		int actual;
+
+		XftTextExtents32(screen->display, font, &wc, 1, &gi);
+		/*
+		 * Some (more than a few) fonts are sloppy; allow 10% outside
+		 * the bounding box to accommodate them.
+		 */
+		actual = ((gi.xOff * 10) >= (11 * FontWidth(screen))) ? 2 : 1;
+		if (actual <= expect) {
+		    /* allow double-cell if wcwidth agrees */
+		    result = True;
+		} else {
+		    XftIsN(data, fontNum) = xcBogus;
+		    TRACE(("SKIP U+%04X %d vs %d (%d vs %d)\n",
+			   wc, gi.xOff, FontWidth(screen), actual, expect));
+		}
 	    } else {
-		TRACE(("SKIP U+%04X %d vs %d (%d vs %d)\n",
-		       wc, gi.xOff, FontWidth(screen), actual, expect));
+		result = True;
 	    }
-	} else {
-	    result = True;
 	}
     }
     return result;
@@ -4151,7 +4159,6 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
     XftFont *actual = NULL;
     Cardinal n;
     FcResult status;
-    const char *tag = NULL;
     int result = -1;
 
     /* sanity-check */
@@ -4216,7 +4223,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	Cardinal empty = fontData->fs_size;
 
 	for (n = fontData->fs_base; n < fontData->fs_size; ++n) {
-	    XftCache usage = XftIsN(fontData, n);
+	    XTermXftState usage = XftIsN(fontData, n);
 	    if (usage == xcEmpty) {
 		if (empty > n)
 		    empty = n;
@@ -4230,8 +4237,6 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 		    result = (int) n;
 		    TRACE_FALLBACK(xw, "old", wc, result, actual);
 		    break;
-		} else {
-		    TRACE_FALLBACK(xw, "XXX", wc, n, check);
 		}
 	    }
 	}
@@ -4243,46 +4248,51 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	    FcPattern *myReport = NULL;
 
 	    for (n = empty; n < fontData->fs_size; ++n) {
-		if (XftIsN(fontData, n) >= xcBogus) {
-		    TRACE(("FALLBACK #%d skipped @%d\n", n, __LINE__));
+		if (XftIsN(fontData, n) != xcEmpty) {
 		    continue;
 		}
 		if (resource.reportFonts) {
+		    if (myReport != NULL)
+			FcPatternDestroy(myReport);
 		    myReport = FcPatternDuplicate(fontData->fontset->fonts[n]);
 		}
 		myPattern = FcPatternDuplicate(fontData->fontset->fonts[n]);
 		check = XftFontOpenPattern(screen->display, myPattern);
-		closeCachedXft(screen, XftFpN(fontData, n));
 		(void) maybeXftCache(xw, check);
 		XftFpN(fontData, n) = check;
-		XftIsN(fontData, n) = xcBogus;
-		if (check == 0) {
-		    TRACE(("FALLBACK #%d skipped @%d\n", n, __LINE__));
-		    FcPatternDestroy(myReport);
-		    continue;	/* shouldn't happen... */
-		}
+		if (check == NULL) {
+		    ;		/* shouldn't happen... */
+		} else
 #ifdef FC_COLOR
 		if (isBogusXft(check)) {
-		    TRACE_FALLBACK(xw, "ZZZ", wc, n, check);
-		    FcPatternDestroy(myReport);
-		    continue;
-		}
+		    XftIsN(fontData, n) = xcBogus;
+		} else
 #endif
 		if (foundXftGlyph(xw, fontData, (int) n, wc)) {
+		    char tag[80];
+		    if (resource.reportFonts) {
+			sprintf(tag, "%s#%d",
+				whichXftFonts(xw, fontData),
+				n + 1);
+		    } else {
+			tag[0] = '\0';
+		    }
 		    markXftOpened(xw, fontData, n, wc);
-		    reportXftFonts(xw, fontData, check, "fallback", tag, myReport);
-		    FcPatternDestroy(myReport);
+		    reportXftFonts(xw, fontData, (int) n, check,
+				   "fallback", tag, myReport);
 		    actual = check;
 		    result = (int) n;
 		    TRACE_FALLBACK(xw, "new", wc, result, actual);
 		    break;
+		} else {
+		    /*
+		     * The slot is opened, but we are not using it yet.
+		     */
+		    XftIsN(fontData, n) = xcUnused;
 		}
-		/*
-		 * The slot is opened, but we are not using it.
-		 */
-		XftIsN(fontData, n) = xcUnused;
-		FcPatternDestroy(myReport);
 	    }
+	    if (myReport != NULL)
+		FcPatternDestroy(myReport);
 	}
     }
     return result;
@@ -4302,11 +4312,9 @@ xtermXftMissing(XtermWidget xw,
 		unsigned wc)
 {
     Bool result = False;
-
-#ifdef DEBUG_XFT_MISSING
     int mapped = -1;
-    Bool check = False;
-    (void) check;
+
+    (void) xw;
     if (data != NULL && font != NULL) {
 	XTermFontMap *font_map = &(data->font_map);
 	/*
@@ -4320,15 +4328,11 @@ xtermXftMissing(XtermWidget xw,
 	    FcChar32 nextPage;
 	    FcChar32 map[FC_CHARSET_MAP_SIZE];
 	    unsigned added = 0;
+	    unsigned actual = 0;
 
 	    font_map->depth = (fontNum + 1);
-	    TRACE(("FIXME-SCANNING #%d(%s) for U+%04X\n",
-		   font_map->depth,
-		   whichXftFonts(xw, data),
-		   wc));
 	    /* allocate space */
 	    if (last > font_map->last_char) {
-		TRACE(("...extending %ld to %d\n", font_map->last_char, last));
 		font_map->per_font = realloc(font_map->per_font, last);
 		memset(font_map->per_font + font_map->last_char, 0, (last - font_map->last_char));
 		font_map->last_char = last;
@@ -4343,9 +4347,12 @@ xtermXftMissing(XtermWidget xw,
 		for (row = 0; row < FC_CHARSET_MAP_SIZE; ++row) {
 		    bits = map[row];
 		    for (col = 0; col < 32; ++col) {
-			if ((bits & 1) && !font_map->per_font[base]) {
-			    font_map->per_font[base] = (Char) font_map->depth;
-			    ++added;
+			if ((bits & 1) != 0) {
+			    actual++;
+			    if (!font_map->per_font[base]) {
+				font_map->per_font[base] = (Char) font_map->depth;
+				++added;
+			    }
 			}
 			bits >>= 1;
 			++base;
@@ -4353,41 +4360,18 @@ xtermXftMissing(XtermWidget xw,
 		}
 	    } while ((base = FcCharSetNextPage(font->charset, map,
 					       &nextPage)) != FC_CHARSET_DONE);
-	    TRACE(("%5u added\n", added));
+	    TRACE(("xtermXftMissing U+%04X #%-3d %6u added vs %6u of %6ld %s\n",
+		   wc,
+		   font_map->depth,
+		   added, actual,
+		   font_map->last_char + 1,
+		   whichXftFonts(xw, data)));
 	}
 	if (wc < font_map->last_char) {
 	    mapped = font_map->per_font[wc];
-	    check = (mapped != (fontNum + 1));
+	    result = (mapped != (fontNum + 1));
 	}
     }
-#else
-    (void) data;
-    (void) fontNum;
-#endif
-    if (font != 0) {
-	TScreen *screen = TScreenOf(xw);
-	if (!XftGlyphExists(screen->display, font, wc)) {
-#if OPT_WIDE_CHARS
-	    TRACE2(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
-		    wc, ucs2dec(screen, wc), dec2ucs(screen, wc)));
-#else
-	    TRACE2(("xtermXftMissing %d\n", wc));
-#endif
-	    result = True;
-	}
-    }
-#if defined(DEBUG_XFT_MISSING) && OPT_TRACE
-    if ((wc < 256) || (wc >= 0x3200 && wc < 0x3300)) {
-	TRACE(("FIXME U+%04X %s(%d) #%d:%d\told %s,\tnew %s%s\n",
-	       wc,
-	       whichXftFonts(xw, data),
-	       data->fs_size,
-	       fontNum + 1, mapped,
-	       result ? "missing" : "present",
-	       check ? "missing" : "present",
-	       result != check ? " DIFF" : ""));
-    }
-#endif
     return result;
 }
 #endif /* OPT_RENDERFONT */
@@ -5218,7 +5202,7 @@ save2FontList(XtermWidget xw,
 		}
 	    }
 	    if (success) {
-		next = realloc(*list, sizeof(char *) * (count + 2));
+		next = (char **) realloc(*list, sizeof(char *) * (count + 2));
 		if (next != 0) {
 #if OPT_RENDERFONT
 		    if (use_ttf) {
