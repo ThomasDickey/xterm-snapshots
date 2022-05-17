@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.887 2022/03/11 21:42:56 tom Exp $ */
+/* $XTermId: main.c,v 1.888 2022/05/16 23:10:29 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -1188,8 +1188,8 @@ DATA("-sm",		"*sessionMgt",	XrmoptionNoArg,		"on"),
 DATA("+sm",		"*sessionMgt",	XrmoptionNoArg,		"off"),
 #endif
 #if OPT_TOOLBAR
-DATA("-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		"on"),
-DATA("+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		"off"),
+DATA("-tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"on"),
+DATA("+tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"off"),
 #endif
 #if OPT_MAXIMIZE
 DATA("-maximized",	"*maximized",	XrmoptionNoArg,		"on"),
@@ -1536,7 +1536,7 @@ parseArg(int *num, char **argv, char **valuep)
 {
     /* table adapted from XtInitialize, used here to improve abbreviations */
     /* *INDENT-OFF* */
-#define DATA(option,kind) { (char *) option, NULL, kind, (XtPointer) NULL }
+#define DATA(option,kind) { (char *) option, NULL, kind, (XPointer) 0 }
     static XrmOptionDescRec opTable[] = {
 	DATA("+synchronous",	   XrmoptionNoArg),
 	DATA("-background",	   XrmoptionSepArg),
@@ -3528,7 +3528,7 @@ findValidShell(const char *haystack, const char *needle)
 	have = (size_t) (t - s);
 
 	if ((have >= want) && (*s != '#')) {
-	    char *p = malloc(have + 1);
+	    char *p = (char *) malloc(have + 1);
 
 	    if (p != 0) {
 		char *q;
@@ -5147,7 +5147,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = malloc(strlen(shname) + 2)) != 0) {
+	    if ((shname_minus = (char *) malloc(strlen(shname) + 2)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {
