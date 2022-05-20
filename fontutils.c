@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.730 2022/05/17 00:18:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.733 2022/05/20 23:39:39 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -50,6 +50,8 @@
 
 #include <stdio.h>
 #include <ctype.h>
+
+#define FcOK(func) (func == FcResultMatch)
 
 #define NoFontWarning(data) (data)->warn = fwAlways
 
@@ -2522,7 +2524,7 @@ dumpXft(XtermWidget xw, XTermXftFonts *data)
  */
 #ifdef FC_COLOR
 #define GetFcBool(pattern, what) \
-    (FcPatternGetBool(pattern, what, 0, &fcbogus) == FcResultMatch)
+    FcOK(FcPatternGetBool(pattern, what, 0, &fcbogus))
 
 static Boolean
 isBogusXft(XftFont *font)
@@ -4145,6 +4147,71 @@ markXftOpened(XtermWidget xw, XTermXftFonts *which, Cardinal n, unsigned wc)
     }
 }
 
+static char **
+xftData2List(XtermWidget xw, XTermXftFonts *fontData)
+{
+    TScreen *screen = TScreenOf(xw);
+    VTFontList *lists = &xw->work.fonts.xft;
+    char **result = NULL;
+    int n = screen->menu_font_number;
+
+    if (fontData == &screen->renderFontNorm[n])
+	result = lists->list_n;
+    else if (fontData == &screen->renderFontBold[n])
+	result = lists->list_b;
+    else if (fontData == &screen->renderFontItal[n])
+	result = lists->list_i;
+    else if (fontData == &screen->renderFontBtal[n])
+	result = lists->list_bi;
+#if OPT_RENDERWIDE
+    if (fontData == &screen->renderWideNorm[n])
+	result = lists->list_w;
+    else if (fontData == &screen->renderWideBold[n])
+	result = lists->list_wb;
+    else if (fontData == &screen->renderWideItal[n])
+	result = lists->list_wi;
+    else if (fontData == &screen->renderWideBtal[n])
+	result = lists->list_wbi;
+#endif
+    return result;
+}
+
+static FcPattern *
+mergeXftStyle(XtermWidget xw, FcPattern * myPattern, XTermXftFonts *fontData)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    XftFont *given = XftFp(fontData);
+    XftResult mStatus;
+    int iValue;
+    double dValue;
+
+    if (FcOK(FcPatternGetInteger(fontData->pattern, XFT_WEIGHT, 0, &iValue))) {
+	FcPatternAddInteger(myPattern, XFT_WEIGHT, iValue);
+    }
+    if (FcOK(FcPatternGetInteger(fontData->pattern, XFT_SLANT, 0, &iValue))) {
+	FcPatternAddInteger(myPattern, XFT_SLANT, iValue);
+    }
+    if (FcOK(FcPatternGetDouble(fontData->pattern, FC_ASPECT, 0, &dValue))) {
+	FcPatternAddDouble(myPattern, FC_ASPECT, dValue);
+    }
+    if (FcOK(FcPatternGetDouble(fontData->pattern, XFT_SIZE, 0, &dValue))) {
+	FcPatternAddDouble(myPattern, XFT_SIZE, dValue);
+    }
+    FcPatternAddBool(myPattern, FC_SCALABLE, FcTrue);
+    FcPatternAddInteger(myPattern, XFT_SPACING, XFT_MONO);
+    FcPatternAddInteger(myPattern, FC_CHAR_WIDTH, given->max_advance_width);
+#ifdef FC_COLOR
+    FcPatternAddBool(myPattern, FC_COLOR, FcFalse);
+    FcPatternAddBool(myPattern, FC_OUTLINE, FcTrue);
+#endif
+
+    FcConfigSubstitute(NULL, myPattern, FcMatchPattern);
+    XftDefaultSubstitute(dpy, DefaultScreen(dpy), myPattern);
+
+    return FcFontMatch(NULL, myPattern, &mStatus);
+}
+
 /*
  * Check if the given character has a glyph known to Xft.  If it is missing,
  * try first to replace the font with a fallback that provides the glyph.
@@ -4181,10 +4248,12 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	return result;
     }
 
+    /* initialize on the first call */
     if (fontData->fontset == NULL) {
 	FcFontSet *sortedFonts;
 	FcPattern *myPattern;
 	int j;
+	char **my_list;
 
 	myPattern = FcPatternDuplicate(fontData->pattern);
 
@@ -4204,25 +4273,49 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	    xtermWarning("did not find any usable TrueType font\n");
 	    return 0;
 	}
-	fontData->fs_size = fontData->fs_base + (unsigned) sortedFonts->nfont;
+
+	/*
+	 * Check if there are additional fonts in the XtermFontNames.xft for
+	 * this font-data.
+	 */
+	if ((my_list = xftData2List(xw, fontData)) != NULL
+	    && *++my_list != NULL) {
+	    FcPattern *extraPattern;
+	    for (j = 0; my_list[j] != NULL; ++j) {
+		if ((extraPattern = XftNameParse(my_list[j])) != 0) {
+		    FcPattern *match;
+
+		    match = mergeXftStyle(xw, extraPattern, fontData);
+
+		    if (match != NULL) {
+			FcFontSetAdd(fontData->fontset, match);
+		    }
+		}
+	    }
+	}
+
 	for (j = 0; j < sortedFonts->nfont; j++) {
 	    FcPattern *font_pattern;
 
 	    font_pattern = FcFontRenderPrepare(FcConfigGetCurrent(),
 					       myPattern,
 					       sortedFonts->fonts[j]);
-	    if (font_pattern)
+	    if (font_pattern) {
 		FcFontSetAdd(fontData->fontset, font_pattern);
+	    }
 	}
 
 	FcFontSetSortDestroy(sortedFonts);
 	FcPatternDestroy(myPattern);
+
+	fontData->fs_size = (unsigned) fontData->fontset->nfont;
     }
+
     if (fontData->fontset != NULL) {
 	XftFont *check;
 	Cardinal empty = fontData->fs_size;
 
-	for (n = fontData->fs_base; n < fontData->fs_size; ++n) {
+	for (n = 1; n <= fontData->fs_size; ++n) {
 	    XTermXftState usage = XftIsN(fontData, n);
 	    if (usage == xcEmpty) {
 		if (empty > n)
@@ -4242,21 +4335,24 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	}
 
 	if ((actual == NULL)
-	    && (empty < fontData->fs_size)
+	    && (empty <= fontData->fs_size)
 	    && (fontData->opened < xw->work.max_fontsets)) {
 	    FcPattern *myPattern = NULL;
 	    FcPattern *myReport = NULL;
 
+	    if (empty == 0)	/* should not happen */
+		empty++;
 	    for (n = empty; n < fontData->fs_size; ++n) {
+		unsigned nn = n - 1;
 		if (XftIsN(fontData, n) != xcEmpty) {
 		    continue;
 		}
 		if (resource.reportFonts) {
 		    if (myReport != NULL)
 			FcPatternDestroy(myReport);
-		    myReport = FcPatternDuplicate(fontData->fontset->fonts[n]);
+		    myReport = FcPatternDuplicate(fontData->fontset->fonts[nn]);
 		}
-		myPattern = FcPatternDuplicate(fontData->fontset->fonts[n]);
+		myPattern = FcPatternDuplicate(fontData->fontset->fonts[nn]);
 		check = XftFontOpenPattern(screen->display, myPattern);
 		(void) maybeXftCache(xw, check);
 		XftFpN(fontData, n) = check;

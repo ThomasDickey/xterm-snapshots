@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.904 2022/05/08 20:35:22 tom Exp $ */
+/* $XTermId: util.c,v 1.905 2022/05/20 23:39:39 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -4157,7 +4157,7 @@ drawXtermText(XTermDraw * params,
 	    underline_len += (Cardinal)
 		drawClippedXftString(&recur,
 				     recur.attr_flags,
-				     ndata->font,
+				     XftFp(ndata),
 				     GET_XFT_FG(),
 				     x,
 				     y,
