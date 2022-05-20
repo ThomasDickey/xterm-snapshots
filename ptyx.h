@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1063 2022/05/16 23:03:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1064 2022/05/20 22:21:44 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1957,7 +1957,6 @@ typedef struct {
 	XftFontSet *	fontset;	/* ordered list of fallback patterns */
 	XTermXftCache	cache[MaxUChar + 1]; /* list of open font pointers */
 	unsigned	fs_size;	/* allocated size of cache[] */
-	Char		fs_base;	/* index to fontset results */
 	Char		opened;		/* number in cache[] with xcOpened */
 	XTermFontInfo	font_info;	/* summary of font metrics */
 	XTermFontMap	font_map;	/* map of glyphs provided in fontset */

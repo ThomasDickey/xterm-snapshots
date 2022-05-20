@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.858 2022/05/03 07:58:07 tom Exp $
+.\" $XTermId: xterm.man,v 1.859 2022/05/20 23:39:39 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -3477,6 +3477,10 @@ For example,
 .NS
 XTerm*faceName: x:fixed,xft:Bitstream Vera Sans Mono
 .NE
+.IP
+Two TrueType fonts can be specified in this way.
+The first is the primary font;
+the second acts as a manual override to the fontconfig fontset.
 .IP
 If no \fBfaceName\fP resource is specified,
 or if there is no match for both TrueType normal and bold fonts,
