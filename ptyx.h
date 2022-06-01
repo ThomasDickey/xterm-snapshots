@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1064 2022/05/20 22:21:44 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1065 2022/06/01 19:43:37 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2916,8 +2916,10 @@ typedef struct {
 	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
 	XTermXftFonts	renderFontBold[NMENUFONTS];
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
 	XTermXftFonts	renderFontItal[NMENUFONTS];
 	XTermXftFonts	renderFontBtal[NMENUFONTS];
+#endif
 #if OPT_RENDERWIDE
 	XTermXftFonts	renderWideNorm[NMENUFONTS];
 	XTermXftFonts	renderWideBold[NMENUFONTS];

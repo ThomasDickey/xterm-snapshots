@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.733 2022/05/20 23:39:39 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.736 2022/06/01 23:10:10 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -50,6 +50,14 @@
 
 #include <stdio.h>
 #include <ctype.h>
+
+#define USE_FC_COLOR 0
+#if OPT_RENDERFONT
+#if XftVersion > 20304
+#undef USE_FC_COLOR
+#define USE_FC_COLOR 1
+#endif
+#endif
 
 #define FcOK(func) (func == FcResultMatch)
 
@@ -2534,7 +2542,9 @@ isBogusXft(XftFont *font)
 	FcBool fcbogus;
 	if (GetFcBool(font->pattern, FC_COLOR) && fcbogus) {
 	    TRACE(("...matched color-bitmap font\n"));
+#if !USE_FC_COLOR
 	    result = True;
+#endif
 	} else if (GetFcBool(font->pattern, FC_OUTLINE) && !fcbogus) {
 	    TRACE(("...matched non-outline font\n"));
 	    /* This is legal for regular bitmap fonts - fontconfig attempts to
@@ -2808,6 +2818,8 @@ xtermOpenXft(XtermWidget xw,
 #endif
 	    if (result != NULL) {
 		TRACE(("...matched %s font\n", tag));
+		if (fontData->fs_size <= (unsigned) fontNum)
+		    fontData->fs_size = (unsigned) (fontNum + 1);
 		XftFpN(fontData, fontNum) = result;
 		XftIsN(fontData, fontNum) = xcOpened;
 		if (!maybeXftCache(xw, result)) {
@@ -3304,11 +3316,18 @@ xtermComputeFontInfo(XtermWidget xw,
 	     * normal pattern.
 	     */
 #ifdef FC_COLOR
+#if USE_FC_COLOR
+#define NormXftPattern \
+	    XFT_FAMILY,     XftTypeString, "mono", \
+	    FC_OUTLINE,     XftTypeBool,   FcTrue, \
+	    XFT_SIZE,       XftTypeDouble, face_size
+#else
 #define NormXftPattern \
 	    XFT_FAMILY,     XftTypeString, "mono", \
 	    FC_COLOR,       XftTypeBool,   FcFalse, \
 	    FC_OUTLINE,     XftTypeBool,   FcTrue, \
 	    XFT_SIZE,       XftTypeDouble, face_size
+#endif
 #else
 #define NormXftPattern \
 	    XFT_FAMILY,     XftTypeString, "mono", \
@@ -4202,7 +4221,9 @@ mergeXftStyle(XtermWidget xw, FcPattern * myPattern, XTermXftFonts *fontData)
     FcPatternAddInteger(myPattern, XFT_SPACING, XFT_MONO);
     FcPatternAddInteger(myPattern, FC_CHAR_WIDTH, given->max_advance_width);
 #ifdef FC_COLOR
+#if !USE_FC_COLOR
     FcPatternAddBool(myPattern, FC_COLOR, FcFalse);
+#endif
     FcPatternAddBool(myPattern, FC_OUTLINE, FcTrue);
 #endif
 
@@ -4290,6 +4311,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 		    if (match != NULL) {
 			FcFontSetAdd(fontData->fontset, match);
 		    }
+		    FcPatternDestroy(extraPattern);
 		}
 	    }
 	}
@@ -4355,6 +4377,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 		myPattern = FcPatternDuplicate(fontData->fontset->fonts[nn]);
 		check = XftFontOpenPattern(screen->display, myPattern);
 		(void) maybeXftCache(xw, check);
+		if (fontData->fs_size <= n)
+		    fontData->fs_size = (n + 1);
 		XftFpN(fontData, n) = check;
 		if (check == NULL) {
 		    ;		/* shouldn't happen... */
@@ -4407,7 +4431,7 @@ xtermXftMissing(XtermWidget xw,
 		XftFont *font,	/* actual font if no data */
 		unsigned wc)
 {
-    Bool result = False;
+    Bool result = True;
     int mapped = -1;
 
     (void) xw;
