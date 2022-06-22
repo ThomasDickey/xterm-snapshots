@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1065 2022/06/01 19:43:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1066 2022/06/21 08:24:47 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2912,6 +2912,8 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
+	int		xft_max_glyph_memory;
+	int		xft_max_unref_fonts;
 	Boolean		force_xft_height;
 	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];
@@ -3256,6 +3258,7 @@ typedef struct _Work {
     Boolean force_wideFont;	/* true to single-step wideFont	*/
 #if OPT_RENDERFONT
     Boolean render_font;
+    FcPattern *xft_defaults;
     unsigned max_fontsets;
 #endif
 #if OPT_DABBREV

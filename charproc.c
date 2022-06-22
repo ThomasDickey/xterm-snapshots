@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1890 2022/05/03 07:58:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1891 2022/06/22 19:52:14 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -814,6 +814,8 @@ static XtResource xterm_resources[] =
 
 #if OPT_RENDERFONT
     Bres(XtNforceXftHeight, XtCForceXftHeight, screen.force_xft_height, False),
+    Ires(XtNxftMaxGlyphMemory, XtCXftMaxGlyphMemory, screen.xft_max_glyph_memory, 0),
+    Ires(XtNxftMaxUnrefFonts, XtCXftMaxUnrefFonts, screen.xft_max_unref_fonts, 0),
 #define RES_FACESIZE(n) Dres(XtNfaceSize #n, XtCFaceSize #n, misc.face_size[n], "0.0")
     RES_FACESIZE(1),
     RES_FACESIZE(2),
@@ -10190,6 +10192,8 @@ VTInitialize(Widget wrequest,
     for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
 	init_Dres2(misc.face_size, i);
     }
+    init_Ires(screen.xft_max_glyph_memory);
+    init_Ires(screen.xft_max_unref_fonts);
 
 #define ALLOC_FONTLIST(name,which,field) \
     init_Sres(misc.default_xft.field);\
@@ -11126,6 +11130,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.locale_str);
     TRACE_FREE_LEAK(xw->misc.localefilter);
 #endif
+
+    TRACE_FREE_LEAK(xw->misc.cdXtraScroll_s);
+    TRACE_FREE_LEAK(xw->misc.tiXtraScroll_s);
 
 #if OPT_RENDERFONT
     TRACE_FREE_LEAK(xw->misc.default_xft.f_n);

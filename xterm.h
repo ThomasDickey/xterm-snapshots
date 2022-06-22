@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.911 2022/04/22 08:22:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.912 2022/06/21 21:18:26 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -643,6 +643,8 @@ extern char **environ;
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
+#define XtNxftMaxGlyphMemory	"xftMaxGlyphMemory"
+#define XtNxftMaxUnrefFonts	"xftMaxUnrefFonts"
 #define XtNximFont		"ximFont"
 #define XtNxmcAttributes	"xmcAttributes"	/* ncurses-testing */
 #define XtNxmcGlitch		"xmcGlitch"	/* ncurses-testing */
@@ -843,6 +845,8 @@ extern char **environ;
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
+#define XtCXftMaxGlyphMemory	"XftMaxGlyphMemory"
+#define XtCXftMaxUnrefFonts	"XftMaxUnrefFonts"
 #define XtCXimFont		"XimFont"
 #define XtCXmcAttributes	"XmcAttributes"	/* ncurses-testing */
 #define XtCXmcGlitch		"XmcGlitch"	/* ncurses-testing */

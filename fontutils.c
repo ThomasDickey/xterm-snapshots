@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.736 2022/06/01 23:10:10 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.737 2022/06/22 08:09:13 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -3297,6 +3297,7 @@ xtermComputeFontInfo(XtermWidget xw,
 #endif
 
 	if (XftFp(norm) == 0 && !IsEmpty(face_name)) {
+	    Work *work = &(xw->work);
 	    XftPattern *pat;
 	    double face_size;
 
@@ -3306,6 +3307,22 @@ xtermComputeFontInfo(XtermWidget xw,
 
 	    TRACE(("Using Xft %d\n", XftVersion));
 	    TRACE(("Using FontConfig %d\n", FC_VERSION));
+
+	    if (work->xft_defaults == NULL) {
+		FcInit();
+		work->xft_defaults = FcPatternCreate();
+		if (screen->xft_max_glyph_memory > 0) {
+		    FcPatternAddInteger(work->xft_defaults,
+					XFT_MAX_GLYPH_MEMORY,
+					screen->xft_max_glyph_memory);
+		}
+		if (screen->xft_max_unref_fonts > 0) {
+		    FcPatternAddInteger(work->xft_defaults,
+					XFT_MAX_UNREF_FONTS,
+					screen->xft_max_unref_fonts);
+		}
+		XftDefaultSet(screen->display, work->xft_defaults);
+	    }
 
 	    fillInFaceSize(xw, fontnum);
 	    face_size = (double) xw->misc.face_size[fontnum];

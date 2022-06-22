@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.859 2022/05/20 23:39:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.861 2022/06/22 23:47:45 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -5484,6 +5484,18 @@ draw normal text.
 If no double-width font is found, it will improvise, by stretching
 the normal font.
 .TP 8
+.B "xftMaxGlyphMemory\fP (class\fB XftMaxGlyphMemory\fP)"
+Set the Xft library's limit on glyph memory (typically 4Mb).
+When it reaches this limit, it discards \*(``randomly chosen\*(''
+glyphs to make room for new ones.
+The default is \*(``0\*('' to use Xft's default value.
+.TP 8
+.B "xftMaxUnrefFonts\fP (class\fB XftMaxUnrefFonts\fP)"
+Set the Xft library's limit on fonts which have been loaded (typically 16),
+e.g., matching patterns for fallback searches,
+but are not actually used.
+The default is \*(``0\*('' to use Xft's default value.
+.TP 8
 .B "ximFont\fP (class\fB XimFont\fP)"
 This option specifies the font to be used for displaying the preedit string
 in the \*(``OverTheSpot\*('' input method.
@@ -8925,7 +8937,7 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 234 in August 2021.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 243 in June 2022.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,
