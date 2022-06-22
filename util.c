@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.905 2022/05/20 23:39:39 tom Exp $ */
+/* $XTermId: util.c,v 1.906 2022/06/22 22:35:45 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5619,11 +5619,7 @@ VDrawable(TScreen *screen)
 void
 discardRenderDraw(TScreen *screen)
 {
-    if (
-#if USE_DOUBLE_BUFFER
-	   resource.buffered &&
-#endif
-	   screen->renderDraw) {
+    if (screen->renderDraw) {
 	XftDrawDestroy(screen->renderDraw);
 	screen->renderDraw = NULL;
     }
