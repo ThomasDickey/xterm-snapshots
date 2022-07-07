@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1891 2022/06/22 19:52:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1893 2022/07/07 09:44:00 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -814,8 +814,12 @@ static XtResource xterm_resources[] =
 
 #if OPT_RENDERFONT
     Bres(XtNforceXftHeight, XtCForceXftHeight, screen.force_xft_height, False),
-    Ires(XtNxftMaxGlyphMemory, XtCXftMaxGlyphMemory, screen.xft_max_glyph_memory, 0),
-    Ires(XtNxftMaxUnrefFonts, XtCXftMaxUnrefFonts, screen.xft_max_unref_fonts, 0),
+    Ires(XtNxftMaxGlyphMemory, XtCXftMaxGlyphMemory,
+	 screen.xft_max_glyph_memory, 0),
+    Ires(XtNxftMaxUnrefFonts, XtCXftMaxUnrefFonts,
+	 screen.xft_max_unref_fonts, 0),
+    Bres(XtNxftTrackMemUsage, XtCXftTrackMemUsage,
+	 screen.xft_track_mem_usage, DEF_TRACK_USAGE),
 #define RES_FACESIZE(n) Dres(XtNfaceSize #n, XtCFaceSize #n, misc.face_size[n], "0.0")
     RES_FACESIZE(1),
     RES_FACESIZE(2),
@@ -10194,6 +10198,7 @@ VTInitialize(Widget wrequest,
     }
     init_Ires(screen.xft_max_glyph_memory);
     init_Ires(screen.xft_max_unref_fonts);
+    init_Bres(screen.xft_track_mem_usage);
 
 #define ALLOC_FONTLIST(name,which,field) \
     init_Sres(misc.default_xft.field);\
