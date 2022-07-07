@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.737 2022/06/22 08:09:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.738 2022/06/26 20:15:33 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -3305,7 +3305,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		   fontnum, face_name,
 		   xw->misc.face_size[fontnum]));
 
-	    TRACE(("Using Xft %d\n", XftVersion));
+	    TRACE(("Using Xft %d\n", XftGetVersion()));
 	    TRACE(("Using FontConfig %d\n", FC_VERSION));
 
 	    if (work->xft_defaults == NULL) {
@@ -3321,6 +3321,11 @@ xtermComputeFontInfo(XtermWidget xw,
 					XFT_MAX_UNREF_FONTS,
 					screen->xft_max_unref_fonts);
 		}
+#ifdef XFT_TRACK_MEM_USAGE
+		FcPatternAddBool(work->xft_defaults,
+				 XFT_TRACK_MEM_USAGE,
+				 screen->xft_track_mem_usage);
+#endif
 		XftDefaultSet(screen->display, work->xft_defaults);
 	    }
 

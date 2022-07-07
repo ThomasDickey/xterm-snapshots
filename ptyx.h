@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1066 2022/06/21 08:24:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1067 2022/06/26 18:33:34 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2914,6 +2914,7 @@ typedef struct {
 #if OPT_RENDERFONT
 	int		xft_max_glyph_memory;
 	int		xft_max_unref_fonts;
+	Boolean		xft_track_mem_usage;
 	Boolean		force_xft_height;
 	ListXftFonts	*list_xft_fonts;
 	XTermXftFonts	renderFontNorm[NMENUFONTS];

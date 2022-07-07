@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.861 2022/06/22 23:47:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.862 2022/07/07 09:40:41 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -5495,6 +5495,12 @@ Set the Xft library's limit on fonts which have been loaded (typically 16),
 e.g., matching patterns for fallback searches,
 but are not actually used.
 The default is \*(``0\*('' to use Xft's default value.
+.TP 8
+.B "xftTrackMemUsage\fP (class\fB XftTrackMemUsage\fP)"
+Enables glyph memory tracking (introduced in Xft 2.3.5),
+which allows Xft to efficiently discard obsolete data when running
+short of memory.
+The default is \*(``true\*(''.
 .TP 8
 .B "ximFont\fP (class\fB XimFont\fP)"
 This option specifies the font to be used for displaying the preedit string
