@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2421 2022/07/07 09:42:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2423 2022/07/13 08:02:03 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1053,8 +1053,13 @@
       </ul>
     </li>
 
+    <li>correct comparison-length for environment variable cleanup
+    (patch by Brendan O' Dea).</li>
+
     <li>correct <tt>dsl</tt> capability for <tt>dec+sl</tt> block
     in terminfo (report by Rajeev V. Pillai).</li>
+
+    <li>improve output formatting by <tt>vttests/utf8.pl</tt></li>
 
     <li>repair test/demo scripts still using "vxt-" prefix, some
     cleanup with shellcheck.</li>

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.888 2022/05/16 23:10:29 tom Exp $ */
+/* $XTermId: main.c,v 1.889 2022/07/13 07:57:08 Brendan.O.Dea Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -3711,7 +3711,7 @@ xtermTrimEnv(void)
 		    char *my_var;
 		    if (dstend != NULL &&
 			(dstlen = (size_t) (dstend - environ[s])) >= srclen &&
-			!strncmp(table[n].name, environ[s], dstlen) &&
+			!strncmp(table[n].name, environ[s], srclen) &&
 			(my_var = x_strdup(environ[s])) != NULL) {
 			my_var[dstlen] = '\0';
 			xtermUnsetenv(my_var);

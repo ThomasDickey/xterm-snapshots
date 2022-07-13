@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: utf8.pl,v 1.8 2022/03/05 14:39:26 tom Exp $
+# $XTermId: utf8.pl,v 1.12 2022/07/08 18:32:43 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -33,11 +33,41 @@
 # -----------------------------------------------------------------------------
 # display the given Unicode characters, given their hex or decimal values.
 
-use warnings;
+use warnings FATAL => "overflow";
+no warnings "portable";
 use strict;
 use Encode 'encode_utf8';
+use Text::CharWidth qw(mbswidth);
 
-$|=1;
+$| = 1;
+
+sub num_bytes($) {
+    my $char  = shift;
+    my $value = length( Encode::encode_utf8($char) );
+    my $result =
+      ( $value <= 0
+        ? "no bytes"
+        : ( $value > 1 ? sprintf( "%d bytes", $value ) : "1 bytes" ) );
+    return $result;
+}
+
+sub num_cells($) {
+    my $char  = shift;
+    my $value = mbswidth($char);
+    my $result =
+      ( $value <= 0
+        ? "no cells"
+        : ( $value > 1 ? sprintf( "%d cells", $value ) : "1 cell" ) );
+    return $result;
+}
+
+sub pad_column($) {
+    my $char  = shift;
+    my $value = mbswidth($char);
+    $value = 0 if ( $value < 0);
+    my $result = sprintf( "%.*s", 3 - $value, "    ");
+    return $result;
+}
 
 sub vxt_utf8($) {
     my $arg = $_[0];
@@ -79,12 +109,16 @@ sub vxt_utf8($) {
             : "nonprinting"
         )
     );
-    printf "%d ->%#x ->{%s} (%d bytes, %s)\n", $dec, $dec, $chr,
-      length( Encode::encode_utf8($dec) ), $type;
+    printf "%d ->%#x ->{%s}%s(%s %s %s)\n", $dec, $dec, $chr,
+    &pad_column($chr),
+      &num_bytes($chr),
+      &num_cells($chr),
+      $type;
 }
 
 binmode( STDOUT, ":utf8" );
 while ( $#ARGV >= 0 ) {
     vxt_utf8( shift @ARGV );
 }
-exit;
+
+1;
