@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1067 2022/06/26 18:33:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1068 2022/07/19 23:43:50 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -81,6 +81,7 @@
 #endif
 
 #include <stdio.h>
+#include <limits.h>
 
 #if defined(HAVE_STDINT_H) || !defined(HAVE_CONFIG_H)
 #include <stdint.h>

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.738 2022/06/26 20:15:33 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.740 2022/07/20 00:21:20 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -4323,8 +4323,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	 */
 	if ((my_list = xftData2List(xw, fontData)) != NULL
 	    && *++my_list != NULL) {
-	    FcPattern *extraPattern;
 	    for (j = 0; my_list[j] != NULL; ++j) {
+		FcPattern *extraPattern;
 		if ((extraPattern = XftNameParse(my_list[j])) != 0) {
 		    FcPattern *match;
 
@@ -4454,7 +4454,6 @@ xtermXftMissing(XtermWidget xw,
 		unsigned wc)
 {
     Bool result = True;
-    int mapped = -1;
 
     (void) xw;
     if (data != NULL && font != NULL) {
@@ -4510,8 +4509,7 @@ xtermXftMissing(XtermWidget xw,
 		   whichXftFonts(xw, data)));
 	}
 	if (wc < font_map->last_char) {
-	    mapped = font_map->per_font[wc];
-	    result = (mapped != (fontNum + 1));
+	    result = (font_map->per_font[wc] != (fontNum + 1));
 	}
     }
     return result;
@@ -4972,6 +4970,9 @@ xtermGetFont(const char *param)
 {
     int fontnum;
 
+    if (param == NULL)
+	param = "";
+
     switch (param[0]) {
     case 'd':
     case 'D':
@@ -5011,7 +5012,7 @@ xtermGetFont(const char *param)
 	fontnum = -1;
 	break;
     }
-    TRACE(("xtermGetFont(%s) ->%d\n", NonNull(param), fontnum));
+    TRACE(("xtermGetFont(%s) ->%d\n", param, fontnum));
     return fontnum;
 }
 

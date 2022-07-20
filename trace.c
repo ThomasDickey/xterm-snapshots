@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.236 2022/02/18 08:48:47 tom Exp $ */
+/* $XTermId: trace.c,v 1.237 2022/07/19 23:48:31 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -902,9 +902,9 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	    for (j = 0; j < XtNumber(ev->xkeymap.key_vector); ++j) {
 		if (ev->xkeymap.key_vector[j] != 0) {
 		    Cardinal k;
-		    for (k = 0; k < 8; ++k) {
+		    for (k = 0; k < CHAR_BIT; ++k) {
 			if (ev->xkeymap.key_vector[j] & (1 << k)) {
-			    TRACE((" key%u", (j * 8) + k));
+			    TRACE((" key%u", (j * CHAR_BIT) + k));
 			}
 		    }
 		}

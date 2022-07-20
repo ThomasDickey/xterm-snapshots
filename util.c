@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.906 2022/06/22 22:35:45 tom Exp $ */
+/* $XTermId: util.c,v 1.907 2022/07/20 00:19:25 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5065,6 +5065,33 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
     return result;
 }
 
+#if OPT_WIDE_ATTRS
+#define OPT_SGR2_HASH 1
+#if OPT_SGR2_HASH
+typedef struct _DimColorHT {
+    Pixel org;
+    Pixel dim;
+} DimColorHT;
+
+static unsigned
+jhash1(unsigned char *key, size_t len)
+{
+    unsigned hash;
+    size_t i;
+
+    for (hash = 0, i = 0; i < len; ++i) {
+	hash += key[i];
+	hash += (hash << 10);
+	hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+#endif /* OPT_SGR2_HASH */
+#endif /* OPT_WIDE_ATTRS */
+
 Pixel
 getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 {
@@ -5084,8 +5111,54 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 #endif
 
 #if OPT_WIDE_ATTRS
-#define DIM_IT(n) work.n = (unsigned short) ((2 * (unsigned)work.n) / 3)
+#define DIM_IT(n) work.n = (unsigned short) (((unsigned)work.n + (unsigned)bkg.n) / 2)
     if ((attr_flags & ATR_FAINT)) {
+#if OPT_SGR2_HASH
+#define SizeOfHT ((unsigned) sizeof(unsigned long) * CHAR_BIT)
+	static DimColorHT ht[SizeOfHT];
+	Pixel bg = T_COLOR(TScreenOf(xw), TEXT_BG);
+	XColor work;
+	Pixel p;
+
+	if ((color >= 0)
+	    || (result != (Pixel) color)) {
+	    static unsigned long have = 0;
+	    static Boolean have_bg = False;
+	    static XColor bkg;
+
+	    /* cache bkg color in r/g/b */
+	    if (!have_bg || bg != bkg.pixel) {
+		bkg.pixel = bg;
+		have_bg = QueryOneColor(xw, &bkg);
+		have = 0;	/* invalidate color cache */
+	    }
+	    if (have_bg) {
+		unsigned hv;
+		hv = jhash1((unsigned char *) &result, sizeof(result));
+		hv %= SizeOfHT;
+
+		if ((have & (1UL << hv))
+		    && ht[hv].org == result) {
+		    result = ht[hv].dim;	/* return cached color */
+		} else {
+		    work.pixel = result;
+		    if (QueryOneColor(xw, &work)) {
+			DIM_IT(red);
+			DIM_IT(green);
+			DIM_IT(blue);
+			p = result;
+			if (allocateBestRGB(xw, &work))
+			    result = work.pixel;
+
+			/* cache the result */
+			have |= (1UL << hv);
+			ht[hv].org = p;
+			ht[hv].dim = result;
+		    }
+		}
+	    }
+	}
+#else /* !OPT_SGR2_HASH */
 	static Pixel last_in;
 	static Pixel last_out;
 	if ((result != last_in)
@@ -5106,6 +5179,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 	} else {
 	    result = last_out;
 	}
+#endif /* OPT_SGR2_HASH */
     }
 #endif
     return result;
