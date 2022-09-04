@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2424 2022/07/20 00:21:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.2425 2022/09/04 21:13:11 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1052,6 +1052,9 @@
         <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
       </ul>
     </li>
+
+    <li>disable pixel computation when rgb width is greater than 8,
+    to work with depth 30 (patch by Denis Kaganovich).</li>
 
     <li>improve color-computation for SGR 2 dim (patch by Boian
     Bonev).</li>

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1015 2022/02/18 09:08:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.1016 2022/04/23 13:37:20 Denis.Kaganovich Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2637,6 +2637,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   ((vi->red_mask & vi->green_mask) == 0) &&
 			   ((vi->green_mask & vi->blue_mask) == 0) &&
 			   ((vi->blue_mask & vi->red_mask) == 0) &&
+			   xw->rgb_widths[0] <= (unsigned)vi->bits_per_rgb &&
+			   xw->rgb_widths[1] <= (unsigned)vi->bits_per_rgb &&
+			   xw->rgb_widths[2] <= (unsigned)vi->bits_per_rgb &&
 			   (vi->class == TrueColor
 			    || vi->class == DirectColor));
 
@@ -2755,7 +2758,7 @@ AllocOneColor(XtermWidget xw, XColor *def)
 	             << xw->rgb_shifts[nn]) \
 	 & xw->visInfo->name ##_mask)
 
-    if (getVisualInfo(xw) != NULL && xw->has_rgb) {
+    if (getVisualInfo(xw) != NULL && xw->has_rgb && xw->visInfo->bits_per_rgb <= 8) {
 	def->pixel = MaskIt(red, 0) | MaskIt(green, 1) | MaskIt(blue, 2);
     } else {
 	Display *dpy = screen->display;
@@ -2792,7 +2795,7 @@ QueryOneColor(XtermWidget xw, XColor *def)
 	(unsigned short)((((UnMaskIt(name,nn) << 8) \
 			   |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
 
-    if (getVisualInfo(xw) != NULL && xw->has_rgb) {
+    if (getVisualInfo(xw) != NULL && xw->has_rgb && xw->visInfo->bits_per_rgb <= 8) {
 	/* *INDENT-EQLS* */
 	def->red   = UnMaskIt2(red, 0);
 	def->green = UnMaskIt2(green, 1);
