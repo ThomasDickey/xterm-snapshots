@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2425 2022/09/04 21:13:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.2426 2022/09/06 23:53:17 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1053,6 +1053,12 @@
       </ul>
     </li>
 
+    <li>set <tt>StartupWMClass</tt> in
+    &ldquo;<tt>.desktop</tt>&rdquo; files, e.g., to help
+    <tt>cinnamon-session</tt> notice that xterm sets
+    <tt>WM_CLASS</tt> and use its icon (patch by Richard de
+    Boer).</li>
+
     <li>disable pixel computation when rgb width is greater than 8,
     to work with depth 30 (patch by Denis Kaganovich).</li>
 
@@ -1093,6 +1099,8 @@
 
     <li>further extended list of environment variables to purge on
     startup (suggested by Thomas Wolff).</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_372" id="xterm_372">Patch #372 -
