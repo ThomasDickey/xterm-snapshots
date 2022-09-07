@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1016 2022/04/23 13:37:20 Denis.Kaganovich Exp $ */
+/* $XTermId: misc.c,v 1.1019 2022/09/07 20:49:08 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -98,6 +98,12 @@
 #include <graphics_sixel.h>
 
 #include <assert.h>
+
+#ifdef HAVE_MKSTEMP
+#define MakeTemp(f) mkstemp(f)
+#else
+#define MakeTemp(f) mktemp(f)
+#endif
 
 #ifdef VMS
 #define XTERM_VMS_LOGFILE "SYS$SCRATCH:XTERM_LOG.TXT"
@@ -743,7 +749,7 @@ void
 init_colored_cursor(Display *dpy)
 {
     static const char theme[] = "index.theme";
-    static const char pattern[] = "xtermXXXXXX";
+    static const char pattern[] = "xtermXXXXXXXX";
     char *env = getenv("XCURSOR_THEME");
 
     xterm_cursor_theme = 0;
@@ -777,7 +783,7 @@ init_colored_cursor(Display *dpy)
 #ifdef HAVE_MKDTEMP
 	    xterm_cursor_theme = mkdtemp(filename);
 #else
-	    if (mktemp(filename) != 0
+	    if (MakeTemp(filename) != 0
 		&& mkdir(filename, 0700) == 0) {
 		xterm_cursor_theme = filename;
 	    }
@@ -2140,6 +2146,7 @@ timestamp_filename(char *dst, const char *src)
 	    tstruct->tm_sec);
 }
 
+#if OPT_SCREEN_DUMPS
 FILE *
 create_printfile(XtermWidget xw, const char *suffix)
 {
@@ -2171,7 +2178,9 @@ create_printfile(XtermWidget xw, const char *suffix)
     fp = (fd >= 0) ? fdopen(fd, "wb") : NULL;
     return fp;
 }
+#endif /* OPT_SCREEN_DUMPS */
 
+#if OPT_SCREEN_DUMPS || defined(ALLOWLOGGING)
 int
 open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
 {
@@ -2319,6 +2328,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
     }
 }
 #endif /* !VMS */
+#endif /* OPT_SCREEN_DUMPS || defined(ALLOWLOGGING) */
 
 int
 xtermResetIds(TScreen *screen)
@@ -2476,7 +2486,7 @@ GenerateLogPath(void)
 #else
     static const char log_def_name[] = "XtermLog.XXXXXX";
     if ((log_default = x_strdup(log_def_name)) != NULL) {
-	mktemp(log_default);
+	MakeTemp(log_default);
     }
 #endif
 
@@ -2637,9 +2647,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   ((vi->red_mask & vi->green_mask) == 0) &&
 			   ((vi->green_mask & vi->blue_mask) == 0) &&
 			   ((vi->blue_mask & vi->red_mask) == 0) &&
-			   xw->rgb_widths[0] <= (unsigned)vi->bits_per_rgb &&
-			   xw->rgb_widths[1] <= (unsigned)vi->bits_per_rgb &&
-			   xw->rgb_widths[2] <= (unsigned)vi->bits_per_rgb &&
+			   xw->rgb_widths[0] <= (unsigned) vi->bits_per_rgb &&
+			   xw->rgb_widths[1] <= (unsigned) vi->bits_per_rgb &&
+			   xw->rgb_widths[2] <= (unsigned) vi->bits_per_rgb &&
 			   (vi->class == TrueColor
 			    || vi->class == DirectColor));
 
@@ -2758,7 +2768,9 @@ AllocOneColor(XtermWidget xw, XColor *def)
 	             << xw->rgb_shifts[nn]) \
 	 & xw->visInfo->name ##_mask)
 
-    if (getVisualInfo(xw) != NULL && xw->has_rgb && xw->visInfo->bits_per_rgb <= 8) {
+#define VisualIsRGB(xw) (getVisualInfo(xw) != NULL && xw->has_rgb && xw->visInfo->bits_per_rgb <= 8)
+
+    if (VisualIsRGB(xw)) {
 	def->pixel = MaskIt(red, 0) | MaskIt(green, 1) | MaskIt(blue, 2);
     } else {
 	Display *dpy = screen->display;
@@ -2795,7 +2807,7 @@ QueryOneColor(XtermWidget xw, XColor *def)
 	(unsigned short)((((UnMaskIt(name,nn) << 8) \
 			   |UnMaskIt(name,nn))) << (8 - xw->rgb_widths[nn]))
 
-    if (getVisualInfo(xw) != NULL && xw->has_rgb && xw->visInfo->bits_per_rgb <= 8) {
+    if (VisualIsRGB(xw)) {
 	/* *INDENT-EQLS* */
 	def->red   = UnMaskIt2(red, 0);
 	def->green = UnMaskIt2(green, 1);

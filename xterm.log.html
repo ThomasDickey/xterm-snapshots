@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2426 2022/09/06 23:53:17 tom Exp $
+  $XTermId: xterm.log.html,v 1.2429 2022/09/07 21:44:57 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1050,6 +1050,18 @@
         fontset.</li>
 
         <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
+      </ul>
+    </li>
+
+    <li>use <tt>mkstemp</tt> where <tt>mkdtemp</tt> is unavailable,
+    when initializing colored cursor.</li>
+
+    <li>adapt fixes from OpenBSD xenocara:
+      <ul>
+        <li>improve ifdef's for a few optional features.</li>
+
+        <li>correct <tt>#ifdef</tt> to <tt>#if</tt> in a few uses
+        of <tt>OPT_PRINT_ON_EXIT</tt>.</li>
       </ul>
     </li>
 

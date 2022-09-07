@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1893 2022/07/07 09:44:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1894 2022/09/07 00:27:08 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -363,7 +363,7 @@ static XtActionsRec actionsList[] = {
     { "meta-sends-escape",	HandleMetaEsc },
     { "set-num-lock",		HandleNumLock },
 #endif
-#ifdef OPT_PRINT_ON_EXIT
+#if OPT_PRINT_ON_EXIT
     { "print-immediate",	HandlePrintImmediate },
     { "print-on-error",		HandlePrintOnError },
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.225 2022/02/13 13:50:45 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.226 2022/09/07 08:27:55 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -84,6 +84,7 @@
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
 #undef HAVE_LIB_XCURSOR		/* AC_CHECK_LIB(Xcursor) */
 #undef HAVE_MKDTEMP		/* AC_CHECK_FUNCS(mkdtemp) */
+#undef HAVE_MKSTEMP		/* CF_MKSTEMP */
 #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */

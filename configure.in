@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.383 2022/02/20 14:18:05 tom Exp $
+dnl $XTermId: configure.in,v 1.384 2022/09/07 08:27:01 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -104,6 +104,7 @@ AC_CHECK_FUNCS( \
 	waitpid \
 	wcswidth \
 	wcwidth )
+CF_MKSTEMP
 CF_UTMP
 CF_STRUCT_LASTLOG
 CF_POSIX_SAVED_IDS

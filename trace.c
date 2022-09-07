@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.237 2022/07/19 23:48:31 tom Exp $ */
+/* $XTermId: trace.c,v 1.238 2022/09/06 23:55:46 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -504,6 +504,7 @@ visibleSelectionTarget(Display *d, Atom a)
     return result;
 }
 
+#if OPT_TEK4014
 const char *
 visibleTekparse(int code)
 {
@@ -523,6 +524,7 @@ visibleTekparse(int code)
     }
     return result;
 }
+#endif
 
 const char *
 visibleVTparse(int code)
