@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.638 2021/11/26 01:27:25 tom Exp $ */
+/* $XTermId: button.c,v 1.641 2022/09/11 22:41:48 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -5666,6 +5666,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
     return result;
 }
 
+#if OPT_EXEC_SELECTION
 /*
  * Split-up the format before substituting data, to avoid quoting issues.
  * The resource mechanism has a limited ability to handle escapes.  We take
@@ -5753,6 +5754,7 @@ tokenizeFormat(String format)
 
     return result;
 }
+#endif /* OPT_EXEC_SELECTION */
 
 static void
 formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
@@ -5935,6 +5937,7 @@ expandFormat(XtermWidget xw,
     return result;
 }
 
+#if OPT_EXEC_SELECTION
 /* execute the command after forking.  The main process frees its data */
 static void
 executeCommand(pid_t pid, char **argv)
@@ -6038,6 +6041,7 @@ HandleExecSelectable(Widget w,
 	}
     }
 }
+#endif /* OPT_EXEC_SELECTION */
 
 static void
 reallyInsertFormatted(Widget w, char *format, char *data, CELL *start, CELL *finish)

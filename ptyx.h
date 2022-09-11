@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1068 2022/07/19 23:43:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1069 2022/09/11 19:47:23 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -604,6 +604,10 @@ typedef enum {
 #else
 #define OPT_EBCDIC 0
 #endif
+#endif
+
+#ifndef OPT_EXEC_SELECTION
+#define OPT_EXEC_SELECTION 1 /* true if xterm can exec to process selection */
 #endif
 
 #ifndef OPT_EXEC_XTERM

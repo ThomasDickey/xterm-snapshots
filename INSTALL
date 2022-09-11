@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.189 2022/01/30 22:46:59 tom Exp $
+-- $XTermId: INSTALL,v 1.190 2022/09/11 19:44:11 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2021,2022 by Thomas E. Dickey
 --
@@ -162,6 +162,12 @@ The options (in alphabetic order):
   	Modify the generated Makefile so that most compiler options are
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
+
+  --disable-exec-selection  disable "exec-formatted" and "exec-selection" actions
+
+	Do not compile-in code for the "exec-formatted" and "exec-selection"
+	actions, which allow the user to run programs to process the results
+	of selecting text.
 
   --disable-fifo-lines    enable FIFO-storage for saved-lines
 

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2429 2022/09/07 21:44:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.2430 2022/09/11 19:48:39 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1029,8 +1029,9 @@
   <ul>
     <li>improve rendering of TrueType fonts:
       <ul>
-        <li>add resource <tt>xftTrackMemUsage</tt> to enable a new
-        feature of Xft which improves performance.</li>
+        <li>add resource <tt>xftTrackMemUsage</tt> to
+        enable/disable a new feature of Xft which improves
+        performance.</li>
 
         <li>add resources <tt>xftMaxGlyphMemory</tt> and
         <tt>xftMaxUnrefFonts</tt> to customize memory-usage of Xft
@@ -1052,6 +1053,9 @@
         <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
       </ul>
     </li>
+
+    <li>add configure option
+    <tt>--disable-exec-selection</tt>.</li>
 
     <li>use <tt>mkstemp</tt> where <tt>mkdtemp</tt> is unavailable,
     when initializing colored cursor.</li>

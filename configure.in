@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.384 2022/09/07 08:27:01 tom Exp $
+dnl $XTermId: configure.in,v 1.387 2022/09/11 22:34:16 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -633,6 +633,16 @@ CF_ARG_DISABLE(boxchars,
 	[enable_boxchars=yes])
 AC_MSG_RESULT($enable_boxchars)
 test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0,[Define to 0 to disable fallback-support for box chars])
+
+AC_MSG_CHECKING(if you want to allow spawning commands to process selections)
+CF_ARG_DISABLE(exec-selection,
+	[  --disable-exec-selection disable "exec-formatted" and "exec-selection" actions],
+	[enable_exec_selection=no],
+	[enable_exec_selection=yes])
+AC_MSG_RESULT($enable_exec_selection)
+if test "$enable_exec_selection" = no ; then
+	AC_DEFINE(OPT_EXEC_SELECTION,0,[Define to 0 to disable "exec-selection" action])
+fi
 
 AC_MSG_CHECKING(if you want to allow spawning new xterms)
 CF_ARG_ENABLE(exec-xterm,
