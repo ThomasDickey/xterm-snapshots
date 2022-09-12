@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.913 2022/06/26 18:32:50 tom Exp $ */
+/* $XTermId: xterm.h,v 1.914 2022/09/12 20:14:53 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -514,6 +514,7 @@ extern char **environ;
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
+#define XtNfaintIsRelative	"faintIsRelative"
 #define XtNfastScroll		"fastScroll"
 #define XtNfont1		"font1"
 #define XtNfont2		"font2"
@@ -727,6 +728,7 @@ extern char **environ;
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
+#define XtCFaintIsRelative	"FaintIsRelative"
 #define XtCFastScroll		"FastScroll"
 #define XtCFont1		"Font1"
 #define XtCFont2		"Font2"

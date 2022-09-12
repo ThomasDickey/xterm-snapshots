@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1019 2022/09/07 20:49:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.1020 2022/09/12 08:14:07 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2784,6 +2784,9 @@ AllocOneColor(XtermWidget xw, XColor *def)
 	    def->pixel = ((bright >= levels)
 			  ? xw->dft_background
 			  : xw->dft_foreground);
+	    TRACE(("XAllocColor failed, for %04x/%04x/%04x: choose %08lx (%d vs %d)\n",
+		   def->red, def->green, def->blue,
+		   def->pixel, bright, levels));
 	    result = False;
 	}
     }
@@ -2812,8 +2815,12 @@ QueryOneColor(XtermWidget xw, XColor *def)
 	def->red   = UnMaskIt2(red, 0);
 	def->green = UnMaskIt2(green, 1);
 	def->blue  = UnMaskIt2(blue, 2);
-    } else if (!XQueryColor(TScreenOf(xw)->display, xw->core.colormap, def)) {
-	result     = False;
+    } else {
+	Display *dpy = TScreenOf(xw)->display;
+	if (!XQueryColor(dpy, xw->core.colormap, def)) {
+	    TRACE(("XQueryColor failed, given %08lx\n", def->pixel));
+	    result     = False;
+	}
     }
     return result;
 }

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1069 2022/09/11 19:47:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1072 2022/09/12 21:15:45 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -568,6 +568,10 @@ typedef enum {
 
 #ifndef OPT_DEC_RECTOPS
 #define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
+#endif
+
+#ifndef OPT_SGR2_HASH
+#define OPT_SGR2_HASH 1 /* true if xterm hashes color-lookups for faint color */
 #endif
 
 #ifndef OPT_SIXEL_GRAPHICS
@@ -2354,6 +2358,9 @@ typedef struct {
 #endif
 #if OPT_DIRECT_COLOR
 	Boolean		direct_color;	/* direct-color enabled?	*/
+#endif
+#if OPT_WIDE_ATTRS && OPT_SGR2_HASH
+	Boolean		faint_relative;	/* faint is relative?		*/
 #endif
 #endif /* OPT_ISO_COLORS */
 #if OPT_DEC_CHRSET

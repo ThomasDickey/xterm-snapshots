@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.907 2022/07/20 00:19:25 tom Exp $ */
+/* $XTermId: util.c,v 1.909 2022/09/12 20:37:28 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5066,7 +5066,6 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
 }
 
 #if OPT_WIDE_ATTRS
-#define OPT_SGR2_HASH 1
 #if OPT_SGR2_HASH
 typedef struct _DimColorHT {
     Pixel org;
@@ -5088,6 +5087,18 @@ jhash1(unsigned char *key, size_t len)
     hash ^= (hash >> 11);
     hash += (hash << 15);
     return hash;
+}
+
+static unsigned
+computeFaint(XtermWidget xw, unsigned value, unsigned compare)
+{
+    TScreen *screen = TScreenOf(xw);
+    if (screen->faint_relative) {
+	value = (unsigned) ((value + compare) / 2);
+    } else {
+	value = (unsigned) ((2 * value) / 3);
+    }
+    return value;
 }
 #endif /* OPT_SGR2_HASH */
 #endif /* OPT_WIDE_ATTRS */
@@ -5111,9 +5122,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 #endif
 
 #if OPT_WIDE_ATTRS
-#define DIM_IT(n) work.n = (unsigned short) (((unsigned)work.n + (unsigned)bkg.n) / 2)
     if ((attr_flags & ATR_FAINT)) {
 #if OPT_SGR2_HASH
+#define DIM_IT(n) work.n = (unsigned short) computeFaint(xw, work.n, bkg.n)
 #define SizeOfHT ((unsigned) sizeof(unsigned long) * CHAR_BIT)
 	static DimColorHT ht[SizeOfHT];
 	Pixel bg = T_COLOR(TScreenOf(xw), TEXT_BG);
@@ -5147,8 +5158,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 			DIM_IT(green);
 			DIM_IT(blue);
 			p = result;
-			if (allocateBestRGB(xw, &work))
+			if (allocateBestRGB(xw, &work)) {
 			    result = work.pixel;
+			}
 
 			/* cache the result */
 			have |= (1UL << hv);
@@ -5159,6 +5171,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 	    }
 	}
 #else /* !OPT_SGR2_HASH */
+#define DIM_IT(n) work.n = (unsigned short) ((2 * (unsigned)work.n) / 3)
 	static Pixel last_in;
 	static Pixel last_out;
 	if ((result != last_in)

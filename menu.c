@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.368 2022/09/07 00:27:27 tom Exp $ */
+/* $XTermId: menu.c,v 1.369 2022/09/08 22:18:39 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

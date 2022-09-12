@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.862 2022/07/07 09:40:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.863 2022/09/12 20:46:04 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -3568,6 +3568,14 @@ Specifies the pointsize of the sixth alternative font.
 .TP 8
 .B "faceSize7\fP (class\fB FaceSize7\fP)"
 Specifies the pointsize of the seventh alternative font.
+.TP 8
+.B "faintIsRelative\fP (class\fB FaintIsRelative\fP)"
+Faint colors are derived from the current text color, e.g., the ANSI colors,
+by scaling the red, green and blue components.
+Use this resource to specify whether that is done relative to the
+current background color,
+or as an absolute value.
+The default is \*(``false\*(''.
 .TP 8
 .B "fastScroll\fP (class\fB FastScroll\fP)"
 Modifies the effect of jump scroll (\fBjumpScroll\fP)

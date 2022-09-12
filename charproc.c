@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1895 2022/09/11 19:26:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1897 2022/09/12 21:15:45 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -731,6 +731,10 @@ static XtResource xterm_resources[] =
     Sres(XtNdecGraphicsID, XtCDecGraphicsID, screen.graph_termid, DFT_DECID),
     Sres(XtNmaxGraphicSize, XtCMaxGraphicSize, screen.graphics_max_size,
 	 "1000x1000"),
+#endif
+
+#if OPT_WIDE_ATTRS && OPT_SGR2_HASH
+    Bres(XtNfaintIsRelative, XtCFaintIsRelative, screen.faint_relative, False),
 #endif
 
 #if OPT_SHIFT_FONTS
@@ -10308,6 +10312,9 @@ VTInitialize(Widget wrequest,
 #endif
 #if OPT_DIRECT_COLOR
     init_Bres(screen.direct_color);
+#endif
+#if OPT_WIDE_ATTRS && OPT_SGR2_HASH
+    init_Bres(screen.faint_relative);
 #endif
 
     TRACE(("...will fake resources for color%d to color%d\n",
