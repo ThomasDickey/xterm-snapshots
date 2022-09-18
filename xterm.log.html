@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2432 2022/09/12 21:09:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.2434 2022/09/18 21:20:19 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1051,6 +1051,17 @@
         fontset.</li>
 
         <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
+      </ul>
+    </li>
+
+    <li>improvements status-line feature:
+      <ul>
+        <li>avoid clearing the status-line when switching between
+        normal and alternate screens (report by Valtteri
+        Vuorikoski).</li>
+
+        <li>remove adjustment from <tt>update_winsize</tt> leftover
+        from initial work (report by Valtteri Vuorikoski).</li>
       </ul>
     </li>
 

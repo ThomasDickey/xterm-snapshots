@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.914 2022/09/12 20:14:53 tom Exp $ */
+/* $XTermId: xterm.h,v 1.915 2022/09/18 20:47:29 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1011,7 +1011,7 @@ extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name *
 extern void HideCursor (XtermWidget /* xw */);
 extern void RestartBlinking(XtermWidget /* xw */);
 extern void ShowCursor (XtermWidget /* xw */);
-extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
+extern void SwitchBufPtrs (XtermWidget /* xw */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
 extern GCC_NORETURN void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);

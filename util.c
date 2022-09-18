@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.909 2022/09/12 20:37:28 tom Exp $ */
+/* $XTermId: util.c,v 1.912 2022/09/13 07:52:42 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5023,15 +5023,18 @@ ClearCurBackground(XtermWidget xw,
 		   unsigned fw)
 {
     TScreen *screen = TScreenOf(xw);
+    int actual_rows = PlusStatusLine(screen, screen->max_row + 1);
+    Boolean visible = (((int) width > 0)
+		       && ((left + (int) width) <= screen->max_col + 1)
+		       && (((int) height + top) <= actual_rows));
 
-    TRACE(("ClearCurBackground %d,%d %dx%d with %d\n",
-	   top, left, height, width, xw->cur_background));
+    TRACE(("ClearCurBackground %d,%d %dx%d%s with %d %s\n",
+	   top, left, height, width,
+	   IsStatusShown(screen) ? "*" : "",
+	   xw->cur_background,
+	   visible ? "(ok)" : "(err)"));
 
-    assert((int) width > 0);
-    assert((left + (int) width) <= screen->max_col + 1);
-    assert(((int) height + top) <= screen->max_row + 1);
-
-    if (VWindow(screen)) {
+    if (VWindow(screen) && visible) {
 	set_background(xw, xw->cur_background);
 
 	xtermClear2(xw,

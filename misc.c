@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1020 2022/09/12 08:14:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.1022 2022/09/15 21:00:41 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -7499,14 +7499,6 @@ update_winsize(TScreen *screen, int rows, int cols, int height, int width)
 	last_cols = cols;
 	last_high = height;
 	last_wide = width;
-#if OPT_STATUS_LINE
-	if (IsStatusShown(screen)) {
-	    ++rows;
-	    height += FontHeight(screen);
-	    TRACE(("... account for status-line -> %dx%d (%dx%d)\n",
-		   rows, cols, height, width));
-	}
-#endif
 	setup_winsize(ts, rows, cols, height, width);
 	TRACE_RC(code, SET_TTYSIZE(screen->respond, ts));
 	trace_winsize(ts, "from SET_TTYSIZE");

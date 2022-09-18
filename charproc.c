@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1897 2022/09/12 21:15:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1899 2022/09/18 21:12:42 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -8665,7 +8665,13 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 	HideCursor(xw);
 
     rows = MaxRows(screen);
-    SwitchBufPtrs(screen, toBuf);
+#if OPT_STATUS_LINE
+    if (IsStatusShown(screen) && (rows > 0)) {
+	/* avoid clearing the status-line in this function */
+	--rows;
+    }
+#endif
+    SwitchBufPtrs(xw, toBuf);
 
     if ((top = INX2ROW(screen, 0)) < rows) {
 	if (screen->scroll_amt) {
@@ -8695,10 +8701,27 @@ CheckBufPtrs(TScreen *screen)
  * Swap buffer line pointers between alternate and regular screens.
  */
 void
-SwitchBufPtrs(TScreen *screen, int toBuf)
+SwitchBufPtrs(XtermWidget xw, int toBuf)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (CheckBufPtrs(screen)) {
+#if OPT_STATUS_LINE
+	if (IsStatusShown(screen)
+	    && (screen->visbuf != screen->editBuf_index[toBuf])) {
+	    LineData *oldLD;
+	    LineData *newLD;
+	    int row = MaxRows(screen);
+
+	    oldLD = getLineData(screen, row);
+	    screen->visbuf = screen->editBuf_index[toBuf];
+	    newLD = getLineData(screen, row);
+
+	    copyLineData(newLD, oldLD);
+	}
+#else
 	screen->visbuf = screen->editBuf_index[toBuf];
+#endif
     }
 }
 
