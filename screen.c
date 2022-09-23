@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.625 2022/09/18 20:57:37 tom Exp $ */
+/* $XTermId: screen.c,v 1.626 2022/09/19 23:08:41 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2248,6 +2248,9 @@ ScreenResize(XtermWidget xw,
 	TRACE(("...status line is currently on row %d\n",
 	       LastRowNumber(screen)));
 	copyLineData(newLD, savedStatus);
+	TRACE(("...copied::%s\n",
+	       visibleIChars(newLD->charData,
+			     newLD->lineSize)));
 	freeLineData(screen, savedStatus);
     }
 #endif
