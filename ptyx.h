@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1072 2022/09/12 21:15:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1073 2022/09/23 22:19:42 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2790,6 +2790,7 @@ typedef struct {
 #define AddStatusLineRows(nrow)         /* nothing */
 #define LastRowNumber(screen)           (screen)->max_row
 #define FirstRowNumber(screen)          0
+#define IsStatusShown(screen) False
 #define PlusStatusLine(screen,expr)     (expr)
 #define if_STATUS_LINE(screen,stmt)	/* nothing */
 

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2435 2022/09/23 08:26:31 tom Exp $
+  $XTermId: xterm.log.html,v 1.2436 2022/09/24 00:24:57 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1067,6 +1067,12 @@
         from initial work (report by Valtteri Vuorikoski).</li>
       </ul>
     </li>
+
+    <li>modify <tt>wcwidth</tt> tables to separate Unicode
+    <em>Cf</em> category as <em>formatting</em> control-characters,
+    to better match the guideline for <a href=
+    "http://www.unicode.org/faq/unsup_char.html">unsupported
+    characters</a> (report by Tim Chase).</li>
 
     <li>add configure option
     <tt>--disable-exec-selection</tt>.</li>
