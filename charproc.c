@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1899 2022/09/18 21:12:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1900 2022/09/25 17:45:08 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -733,7 +733,7 @@ static XtResource xterm_resources[] =
 	 "1000x1000"),
 #endif
 
-#if OPT_WIDE_ATTRS && OPT_SGR2_HASH
+#if OPT_ISO_COLORS && OPT_WIDE_ATTRS && OPT_SGR2_HASH
     Bres(XtNfaintIsRelative, XtCFaintIsRelative, screen.faint_relative, False),
 #endif
 

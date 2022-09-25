@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.912 2022/09/13 07:52:42 tom Exp $ */
+/* $XTermId: util.c,v 1.913 2022/09/25 17:46:22 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -5068,7 +5068,7 @@ getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
     return result;
 }
 
-#if OPT_WIDE_ATTRS
+#if OPT_ISO_COLORS && OPT_WIDE_ATTRS
 #if OPT_SGR2_HASH
 typedef struct _DimColorHT {
     Pixel org;
@@ -5104,7 +5104,7 @@ computeFaint(XtermWidget xw, unsigned value, unsigned compare)
     return value;
 }
 #endif /* OPT_SGR2_HASH */
-#endif /* OPT_WIDE_ATTRS */
+#endif /* OPT_ISO_COLORS && OPT_WIDE_ATTRS */
 
 Pixel
 getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
@@ -5124,7 +5124,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     (void) color;
 #endif
 
-#if OPT_WIDE_ATTRS
+#if OPT_ISO_COLORS && OPT_WIDE_ATTRS
     if ((attr_flags & ATR_FAINT)) {
 #if OPT_SGR2_HASH
 #define DIM_IT(n) work.n = (unsigned short) computeFaint(xw, work.n, bkg.n)
