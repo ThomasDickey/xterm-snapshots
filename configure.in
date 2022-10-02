@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.387 2022/09/11 22:34:16 tom Exp $
+dnl $XTermId: configure.in,v 1.389 2022/10/02 20:47:53 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -59,6 +59,9 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
 CF_PROG_LINT
+
+AC_PROG_EGREP
+AC_PROG_FGREP
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE(700)
@@ -444,8 +447,8 @@ if test "$cf_tic_prog" = yes ; then
 	fi
 	SET_TERMINFO=
 	if test -n "$TERMINFO_DIR" ; then
-		TERMINFO_DIR='$(DESTDIR)'$TERMINFO_DIR
-		SET_TERMINFO='TERMINFO=$(TERMINFO_DIR)'
+		TERMINFO_DIR='${DESTDIR}'$TERMINFO_DIR
+		SET_TERMINFO='TERMINFO=${TERMINFO_DIR}'
 	fi
 	no_ticprog=
 else
@@ -1204,5 +1207,5 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_CONFIG_FILES([Makefile df-install minstall:minstall.in])
+AC_CONFIG_FILES([Makefile df-install minstall:minstall.in run-tic.sh:run-tic.in])
 AC_OUTPUT
