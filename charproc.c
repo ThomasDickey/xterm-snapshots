@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1900 2022/09/25 17:45:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1901 2022/10/03 23:11:20 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -8718,10 +8718,9 @@ SwitchBufPtrs(XtermWidget xw, int toBuf)
 	    newLD = getLineData(screen, row);
 
 	    copyLineData(newLD, oldLD);
-	}
-#else
-	screen->visbuf = screen->editBuf_index[toBuf];
+	} else
 #endif
+	    screen->visbuf = screen->editBuf_index[toBuf];
     }
 }
 
