@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.740 2022/07/20 00:21:20 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.741 2022/10/06 11:02:42 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -3311,6 +3311,9 @@ xtermComputeFontInfo(XtermWidget xw,
 	    if (work->xft_defaults == NULL) {
 		FcInit();
 		work->xft_defaults = FcPatternCreate();
+		XftDefaultSubstitute(screen->display,
+				     XScreenNumberOfScreen(XtScreen(xw)),
+				     work->xft_defaults);
 		if (screen->xft_max_glyph_memory > 0) {
 		    FcPatternAddInteger(work->xft_defaults,
 					XFT_MAX_GLYPH_MEMORY,
