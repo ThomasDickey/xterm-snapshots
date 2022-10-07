@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1022 2022/09/15 21:00:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.1028 2022/10/06 22:24:07 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1219,13 +1219,13 @@ HandleInterpret(Widget w GCC_UNUSED,
 {
     if (*param_count == 1) {
 	const char *value = params[0];
-	int need = (int) strlen(value);
-	int used = (int) (VTbuffer->next - VTbuffer->buffer);
-	int have = (int) (VTbuffer->last - VTbuffer->buffer);
+	size_t need = strlen(value);
+	size_t used = (size_t) (VTbuffer->next - VTbuffer->buffer);
+	size_t have = (size_t) (VTbuffer->last - VTbuffer->buffer);
 
-	if (have - used + need < BUF_SIZE) {
+	if ((have - used) + need < (size_t) BUF_SIZE) {
 
-	    fillPtyData(term, VTbuffer, value, (int) strlen(value));
+	    fillPtyData(term, VTbuffer, value, strlen(value));
 
 	    TRACE(("Interpret %s\n", value));
 	    VTbuffer->update++;
@@ -1739,7 +1739,7 @@ dabbrev_expand(XtermWidget xw)
 	    memmove(copybuffer + del_cnt,
 		    expansion + hint_len,
 		    strlen(expansion) - hint_len);
-	    v_write(pty, copybuffer, (unsigned) buf_cnt);
+	    v_write(pty, copybuffer, buf_cnt);
 	    /* v_write() just reset our flag */
 	    screen->dabbrev_working = True;
 	    free(copybuffer);
@@ -2559,7 +2559,7 @@ FlushLog(XtermWidget xw)
 
     if (screen->logging && !(screen->inhibit & I_LOG)) {
 	Char *cp;
-	int i;
+	size_t i;
 
 #ifdef VMS			/* avoid logging output loops which otherwise occur sometimes
 				   when there is no output and cp/screen->logstart are 1 apart */
@@ -2569,8 +2569,8 @@ FlushLog(XtermWidget xw)
 #endif /* VMS */
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
-	    && (i = (int) (cp - screen->logstart)) > 0) {
-	    IGNORE_RC(write(screen->logfd, screen->logstart, (size_t) i));
+	    && (i = (size_t) (cp - screen->logstart)) > 0) {
+	    IGNORE_RC(write(screen->logfd, screen->logstart, i));
 	}
 	screen->logstart = VTbuffer->next;
     }
@@ -3376,93 +3376,85 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 	    PDATA('6', CUT_BUFFER6),
 	    PDATA('7', CUT_BUFFER7),
     };
+    char target_used[XtNumber(table)];
+    char select_code[XtNumber(table) + 1];
+    String select_args[XtNumber(table) + 1];
 
     const char *base = buf;
-    Cardinal j, n = 0;
+    Cardinal j;
+    Cardinal num_targets = 0;
 
     TRACE(("Manipulate selection data\n"));
 
+    memset(target_used, 0, sizeof(target_used));
     while (*buf != ';' && *buf != '\0') {
 	++buf;
     }
 
     if (*buf == ';') {
-	char *used;
 
 	*buf++ = '\0';
-
 	if (*base == '\0')
 	    base = "s0";
 
-	if ((used = x_strdup(base)) != 0) {
-	    String *select_args;
-
-	    if ((select_args = TypeCallocN(String, 2 + strlen(base))) != 0) {
-		while (*base != '\0') {
-		    for (j = 0; j < XtNumber(table); ++j) {
-			if (*base == table[j].given) {
-			    used[n] = *base;
-			    select_args[n++] = table[j].result;
-			    TRACE(("atom[%d] %s\n", n, table[j].result));
-			    break;
-			}
+	while (*base != '\0') {
+	    for (j = 0; j < XtNumber(table); ++j) {
+		if (*base == table[j].given) {
+		    if (!target_used[j]) {
+			target_used[j] = 1;
+			select_code[num_targets] = *base;
+			select_args[num_targets++] = table[j].result;
+			TRACE(("atom[%d] %s\n", num_targets, table[j].result));
 		    }
-		    ++base;
-		}
-		used[n] = 0;
-
-		if (!strcmp(buf, "?")) {
-		    if (AllowWindowOps(xw, ewGetSelection)) {
-			TRACE(("Getting selection\n"));
-			unparseputc1(xw, ANSI_OSC);
-			unparseputs(xw, "52");
-			unparseputc(xw, ';');
-
-			unparseputs(xw, used);
-			unparseputc(xw, ';');
-
-			/* Tell xtermGetSelection data is base64 encoded */
-			screen->base64_paste = n;
-			screen->base64_final = final;
-
-			screen->selection_time =
-			    XtLastTimestampProcessed(TScreenOf(xw)->display);
-
-			/* terminator will be written in this call */
-			xtermGetSelection((Widget) xw,
-					  screen->selection_time,
-					  select_args, n,
-					  NULL);
-			/*
-			 * select_args is used via SelectionReceived, cannot
-			 * free it here.
-			 */
-		    } else {
-			free(select_args);
-		    }
-		} else {
-		    if (AllowWindowOps(xw, ewSetSelection)) {
-			char *old = buf;
-
-			TRACE(("Setting selection(%s) with %s\n", used, buf));
-			screen->selection_time =
-			    XtLastTimestampProcessed(TScreenOf(xw)->display);
-
-			for (j = 0; j < n; ++j) {
-			    buf = old;
-			    ClearSelectionBuffer(screen, select_args[j]);
-			    while (*buf != '\0') {
-				AppendToSelectionBuffer(screen,
-							CharOf(*buf++),
-							select_args[j]);
-			    }
-			}
-			CompleteSelection(xw, select_args, n);
-		    }
-		    free(select_args);
+		    break;
 		}
 	    }
-	    free(used);
+	    ++base;
+	}
+	select_code[num_targets] = '\0';
+
+	if (!strcmp(buf, "?")) {
+	    if (AllowWindowOps(xw, ewGetSelection)) {
+		TRACE(("Getting selection\n"));
+		unparseputc1(xw, ANSI_OSC);
+		unparseputs(xw, "52");
+		unparseputc(xw, ';');
+
+		unparseputs(xw, select_code);
+		unparseputc(xw, ';');
+
+		/* Tell xtermGetSelection data is base64 encoded */
+		screen->base64_paste = num_targets;
+		screen->base64_final = final;
+
+		screen->selection_time =
+		    XtLastTimestampProcessed(TScreenOf(xw)->display);
+
+		/* terminator will be written in this call */
+		xtermGetSelection((Widget) xw,
+				  screen->selection_time,
+				  select_args, num_targets,
+				  NULL);
+	    }
+	} else {
+	    if (AllowWindowOps(xw, ewSetSelection)) {
+		char *old = buf;
+
+		TRACE(("Setting selection(%s) with %s\n", select_code, buf));
+		screen->selection_time =
+		    XtLastTimestampProcessed(TScreenOf(xw)->display);
+
+		for (j = 0; j < num_targets; ++j) {
+		    buf = old;
+		    ClearSelectionBuffer(screen, select_args[j]);
+		    while (*buf != '\0') {
+			AppendToSelectionBuffer(screen,
+						CharOf(*buf++),
+						select_args[j]);
+		    }
+		}
+		CompleteSelection(xw, select_args, num_targets);
+	    }
 	}
     }
 }
@@ -4033,8 +4025,8 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    /* FALLTHRU */
 	case 1:
 	    if (*cp != ';') {
-		TRACE(("do_osc did not find semicolon offset %d\n",
-		       (int) (cp - oscbuf)));
+		TRACE(("do_osc did not find semicolon offset %lu\n",
+		       (unsigned long) (cp - oscbuf)));
 		return;
 	    }
 	    state = 2;
@@ -4051,9 +4043,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 		case 2:
 		    break;
 		default:
-		    TRACE(("do_osc found nonprinting char %02X offset %d\n",
+		    TRACE(("do_osc found nonprinting char %02X offset %lu\n",
 			   CharOf(*cp),
-			   (int) (cp - oscbuf)));
+			   (unsigned long) (cp - oscbuf)));
 		    return;
 		}
 	    }

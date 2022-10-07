@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.248 2022/09/25 17:53:18 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.249 2022/10/06 19:41:47 tom Exp $ */
 
 /*
  * Copyright 2001-2021,2022 by Thomas E. Dickey
@@ -1335,9 +1335,9 @@ TekEnq(TekWidget tw,
     if (tekscr->gin_terminator == GIN_TERM_EOT)
 	cplot[len++] = '\004';
 #ifdef VMS
-    tt_write(cplot + adj, len - adj);
+    tt_write(cplot + adj, (size_t) (len - adj));
 #else /* VMS */
-    v_write(screen->respond, cplot + adj, (unsigned) (len - adj));
+    v_write(screen->respond, cplot + adj, (size_t) (len - adj));
 #endif /* VMS */
 }
 

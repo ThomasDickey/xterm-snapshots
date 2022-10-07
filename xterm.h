@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.915 2022/09/18 20:47:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.918 2022/10/06 19:48:28 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1034,7 +1034,7 @@ extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
-extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);
+extern void v_write (int  /* f */, const Char * /* d */, size_t  /* len */);
 extern void xtermAddInput (Widget  /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
 
@@ -1390,7 +1390,7 @@ extern void xtermDumpSvg (XtermWidget /* xw */);
 
 extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
-extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
+extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, size_t  /* length */);
 extern void initPtyData (PtyData ** /* data */);
 extern void trimPtyData (XtermWidget /* xw */, PtyData * /* data */);
 
@@ -1405,7 +1405,7 @@ extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
 extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (TScreen * /* screen */, int  /* f */);
-extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
+extern void writePtyData (int  /* f */, IChar * /* d */, size_t  /* len */);
 
 #define morePtyData(screen, data) \
 	(((data)->last > (data)->next) \

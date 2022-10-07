@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.238 2022/09/06 23:55:46 tom Exp $ */
+/* $XTermId: trace.c,v 1.239 2022/10/06 20:43:02 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -309,17 +309,17 @@ visibleScsCode(DECNRCM_codes chrset)
 }
 
 const char *
-visibleChars(const Char *buf, unsigned len)
+visibleChars(const Char *buf, size_t len)
 {
     static char *result;
-    static unsigned used;
+    static size_t used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
+	size_t limit = ((len + 1) * 8) + 1;
 
 	if (limit > used) {
 	    used = limit;
-	    result = XtRealloc(result, used);
+	    result = realloc(result, used);
 	}
 	if (result != 0) {
 	    char *dst = result;
@@ -359,17 +359,17 @@ visibleEventMode(EventMode value)
 }
 
 const char *
-visibleIChars(const IChar *buf, unsigned len)
+visibleIChars(const IChar *buf, size_t len)
 {
     static char *result;
-    static unsigned used;
+    static size_t used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 12) + 1;
+	size_t limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
 	    used = limit;
-	    result = XtRealloc(result, used);
+	    result = realloc(result, used);
 	}
 	if (result != 0) {
 	    char *dst = result;

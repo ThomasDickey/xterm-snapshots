@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.741 2022/10/06 11:02:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.743 2022/10/06 23:48:16 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -4268,7 +4268,7 @@ int
 findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 {
     TScreen *screen = TScreenOf(xw);
-    XftFont *given = XftFp(fontData);
+    XftFont *given;
     XftFont *actual = NULL;
     Cardinal n;
     FcResult status;
@@ -4277,6 +4277,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
     /* sanity-check */
     if (fontData == NULL)
 	return result;
+    given = XftFp(fontData);
 
     /* if fontsets are not wanted, just leave */
     if (xw->work.max_fontsets == 0) {
@@ -4311,11 +4312,11 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 			   FcMatchPattern);
 	FcDefaultSubstitute(myPattern);
 
-	fontData->fontset = FcFontSetCreate();
-
 	sortedFonts = FcFontSort(NULL, myPattern, FcTrue, NULL, &status);
 
-	if (!sortedFonts || sortedFonts->nfont <= 0) {
+	fontData->fontset = FcFontSetCreate();
+
+	if (fontData->fontset == 0 || !sortedFonts || sortedFonts->nfont <= 0) {
 	    xtermWarning("did not find any usable TrueType font\n");
 	    return 0;
 	}
@@ -4358,7 +4359,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	fontData->fs_size = (unsigned) fontData->fontset->nfont;
     }
 
-    if (fontData->fontset != NULL) {
+    {
 	XftFont *check;
 	Cardinal empty = fontData->fs_size;
 

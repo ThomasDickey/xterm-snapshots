@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1073 2022/09/23 22:19:42 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1075 2022/10/06 19:54:27 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1717,9 +1717,9 @@ typedef struct {
 	int      update;	/* HandleInterpret */
 #if OPT_WIDE_CHARS
 	IChar    utf_data;	/* resulting character */
-	int      utf_size;	/* ...number of bytes decoded */
+	size_t   utf_size;	/* ...number of bytes decoded */
 	Char    *write_buf;
-	unsigned write_len;
+	size_t   write_len;
 #endif
 	Char     buffer[1];
 } PtyData;
