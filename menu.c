@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.369 2022/09/08 22:18:39 tom Exp $ */
+/* $XTermId: menu.c,v 1.370 2022/10/07 08:00:53 Ben.Wong Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2344,7 +2344,7 @@ update_decsdm(void)
     UpdateCheckbox("update_decsdm",
 		   vtMenuEntries,
 		   vtMenu_sixelscrolling,
-		   (term->keyboard.flags & MODE_DECSDM) != 0);
+		   (term->keyboard.flags & MODE_DECSDM) == 0);
 }
 
 void

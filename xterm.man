@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.863 2022/09/12 20:46:04 tom Exp $
+.\" $XTermId: xterm.man,v 1.864 2022/10/08 00:17:27 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -5128,7 +5128,10 @@ If \fI\*n\fR is configured to support SIXEL graphics,
 this resource tells it whether to
 scroll up one line at a time when sixels would be written
 past the bottom line on the window.
-The default is \*(``false\*('' which enables scrolling.
+The default is \*(``true\*('' which enables scrolling.
+.IP
+Sixel scrolling is the opposite of DEC Sixel Display Mode (DECSDM):
+when one is on, the other is off.
 .TP 8
 .B "sixelScrollsRight\fP (class\fB SixelScrollsRight\fP)"
 If \fI\*n\fR is configured to support SIXEL graphics,
@@ -6694,15 +6697,29 @@ This corresponds to the \fB\-ai\fP option and the \fBactiveIcon\fP resource.
 .
 .TP
 .B Sixel Scrolling\fP (resource \fBsixelScrolling\fP)
-When enabled,
-sixel graphics are positioned at the current text cursor location, scroll
-the image vertically if larger than the screen, and leave the text cursor
-at the start of the next complete line after the image when returning to text
-mode (this is the default).
-When disabled,
-sixel graphics are positioned at the upper left of the screen, are
-cropped to fit the screen, and do not affect the text cursor location.
 This corresponds to the \fBsixelScrolling\fP resource.
+It can also be turned off and on using the private mode DECSDM
+(Sixel Display Mode).
+.RS
+.bP
+When enabled,
+\fI\*n\fR draws sixel graphics at the current text cursor location,
+scrolling the image vertically if it is larger than the screen,
+and leaving the text cursor
+at the same column in the next complete line after the image when
+returning to text mode
+.IP
+This is the default,
+which corresponds to the \fIreset\fP state of DECSDM.
+.bP
+When disabled,
+\fI\*n\fR draws sixel graphics starting at the upper left of the screen,
+cropping to fit the screen,
+and does not alter the text cursor location.
+.IP
+This corresponds to the \fIset\fP state of DECSDM.
+.RE
+.IP
 There is no corresponding command-line option.
 .
 .TP

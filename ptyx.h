@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1075 2022/10/06 19:54:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1076 2022/10/07 08:00:53 Ben.Wong Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -3313,7 +3313,7 @@ extern WidgetClass tekWidgetClass;
 #define MODE_DECCKM	xBIT(2)	/* private mode 1: cursor keys */
 #define MODE_SRM	xBIT(3)	/* mode 12: send-receive mode */
 #define MODE_DECBKM	xBIT(4)	/* private mode 67: backarrow */
-#define MODE_DECSDM	xBIT(5)	/* private mode 80: sixel scrolling mode */
+#define MODE_DECSDM	xBIT(5)	/* private mode 80: sixel DISPLAY mode -- note, when SDM is off, the terminal is in sixel SCROLLING mode  */
 
 #define N_MARGINBELL	10
 
@@ -3491,7 +3491,8 @@ typedef struct _TekWidgetRec {
 #endif
 
 /*
- * Sixel-scrolling is backwards, perhaps from an error in the hardware design.
+ * Sixel scrolling is on when Sixel Display Mode is off, and vice versa.
+ * (Note: DEC erroneously conflates the two in the VT330/340 manual).
  */
 #define SixelScrolling(xw) (!((xw)->keyboard.flags & MODE_DECSDM))
 

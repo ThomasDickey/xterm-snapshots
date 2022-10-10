@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.389 2022/10/02 20:47:53 tom Exp $
+dnl $XTermId: configure.in,v 1.390 2022/10/10 16:33:01 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -59,9 +59,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
 CF_PROG_LINT
-
-AC_PROG_EGREP
-AC_PROG_FGREP
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE(700)

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1905 2022/10/06 20:45:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1906 2022/10/10 15:42:50 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -742,7 +742,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_SIXEL_GRAPHICS
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, True),
     Bres(XtNsixelScrollsRight, XtCSixelScrollsRight,
 	 screen.sixel_scrolls_right, False),
 #endif
@@ -2281,7 +2281,7 @@ typedef enum {
     SLnone = 0,			/* no status-line timer needed */
     SLclock = 1,		/* status-line updates once/second */
     SLcoords = 2,		/* status-line shows cursor-position */
-    SLwritten = 3		/* status-line may need asynchonous repainting */
+    SLwritten = 3		/* status-line may need asynchronous repainting */
 } SL_MODE;
 
 #define SL_BUFSIZ 80
@@ -7048,12 +7048,12 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
-	case srm_DECSDM:	/* sixel scrolling */
+	case srm_DECSDM:	/* sixel display mode (no scrolling) */
 	    if (optSixelGraphics(screen)) {	/* FIXME: VT24x did not scroll sixel graphics */
 		(*func) (&xw->keyboard.flags, MODE_DECSDM);
-		TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
+		TRACE(("DECSET/DECRST DECSDM %s (resource default is %s)\n",
 		       BtoS(xw->keyboard.flags & MODE_DECSDM),
-		       TScreenOf(xw)->sixel_scrolling));
+		       BtoS(!TScreenOf(xw)->sixel_scrolling)));
 		update_decsdm();
 	    }
 	    break;
@@ -7399,7 +7399,7 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_LRMM, LEFT_RIGHT);
 	    break;
 #if OPT_SIXEL_GRAPHICS
-	case srm_DECSDM:	/* sixel scrolling */
+	case srm_DECSDM:	/* sixel display mode (no scroll) */
 	    DoSM(DP_DECSDM, xw->keyboard.flags & MODE_DECSDM);
 	    update_decsdm();
 	    break;
@@ -7762,7 +7762,7 @@ restoremodes(XtermWidget xw)
 	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
-	case srm_DECSDM:	/* sixel scrolling */
+	case srm_DECSDM:	/* sixel display mode (no scroll) */
 	    bitcpy(&xw->keyboard.flags, screen->save_modes[DP_DECSDM], MODE_DECSDM);
 	    update_decsdm();
 	    break;
@@ -10635,9 +10635,12 @@ VTInitialize(Widget wrequest,
 	   BtoS(wnew->keyboard.flags & MODE_DECBKM)));
 
 #if OPT_SIXEL_GRAPHICS
+    /* Sixel scrolling is opposite of Sixel Display Mode */
     init_Bres(screen.sixel_scrolling);
     if (screen->sixel_scrolling)
-	wnew->keyboard.flags |= MODE_DECSDM;
+	UIntClr(wnew->keyboard.flags, MODE_DECSDM);
+    else
+	UIntSet(wnew->keyboard.flags, MODE_DECSDM);
     TRACE(("initialized DECSDM %s\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECSDM)));
 #endif
@@ -13284,10 +13287,12 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	screen->pointer_mode = screen->pointer_mode0;
 #if OPT_SIXEL_GRAPHICS
 	if (TScreenOf(xw)->sixel_scrolling)
-	    xw->keyboard.flags |= MODE_DECSDM;
+	    UIntClr(xw->keyboard.flags, MODE_DECSDM);
+	else
+	    UIntSet(xw->keyboard.flags, MODE_DECSDM);
 	TRACE(("full reset DECSDM to %s (resource default is %s)\n",
 	       BtoS(xw->keyboard.flags & MODE_DECSDM),
-	       BtoS(TScreenOf(xw)->sixel_scrolling)));
+	       BtoS(!TScreenOf(xw)->sixel_scrolling)));
 #endif
 
 #if OPT_GRAPHICS
