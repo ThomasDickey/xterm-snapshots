@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.157 2022/10/06 21:55:29 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.158 2022/10/10 19:27:56 tom Exp $ */
 
 /*
  * Copyright 1999-2020,2022 by Thomas E. Dickey
@@ -922,8 +922,8 @@ do_range(const char *source)
 			    c_in, c_out);
 		} else if (message_level > 1) {
 		    *next = '\0';
-		    printf("TEST %04X (%ld:%s) ->%04X\n", c_in,
-			   (size_t) (next - buffer),
+		    printf("TEST %04X (%lu:%s) ->%04X\n", c_in,
+			   (unsigned long) (next - buffer),
 			   buffer,
 			   c_out);
 		    fflush(stdout);
@@ -936,8 +936,8 @@ do_range(const char *source)
 		data->last = next;
 		decodeUtf8(&screen, data);
 		if (message_level > 1) {
-		    printf("TEST %04X (%ld:%s) ->%04X\n", c_in,
-			   (size_t) (next - data->buffer),
+		    printf("TEST %04X (%lu:%s) ->%04X\n", c_in,
+			   (unsigned long) (next - data->buffer),
 			   data->buffer,
 			   data->utf_data);
 		    fflush(stdout);
