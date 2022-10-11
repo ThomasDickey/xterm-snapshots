@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: 88colors2.pl,v 1.20 2022/10/10 17:23:36 tom Exp $
+# $XTermId: 88colors2.pl,v 1.22 2022/10/11 00:05:34 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2018,2020 by Thomas E. Dickey
+# Copyright 1999-2021,2022 by Thomas E. Dickey
 # Copyright 1999 by Steve Wall
 #
 #                         All Rights Reserved
