@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.642 2022/10/06 16:52:06 tom Exp $ */
+/* $XTermId: button.c,v 1.643 2022/10/21 01:23:32 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2012,7 +2012,7 @@ _SelectionTargets(Widget w)
     return result;
 }
 
-#define isSELECT(value) (!strcmp(value, "SELECT"))
+#define isSELECT(value) (!strcmp(NonNull(value), "SELECT"))
 
 static int
 DefaultSelection(TScreen *screen)
