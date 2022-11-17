@@ -24187,6 +24187,235 @@ echo "${ECHO_T}$enable_warnings" >&6
 if test "$enable_warnings" = "yes"
 then
 
+if test "x$have_x" = xyes; then
+
+cf_save_LIBS_CF_CONST_X_STRING="$LIBS"
+cf_save_CFLAGS_CF_CONST_X_STRING="$CFLAGS"
+cf_save_CPPFLAGS_CF_CONST_X_STRING="$CPPFLAGS"
+LIBS="$LIBS ${X_PRE_LIBS} ${X_LIBS} ${X_EXTRA_LIBS}"
+for cf_X_CFLAGS in $X_CFLAGS
+do
+	case "x$cf_X_CFLAGS" in
+	x-[IUD]*)
+		CPPFLAGS="$CPPFLAGS $cf_X_CFLAGS"
+		;;
+	*)
+		CFLAGS="$CFLAGS $cf_X_CFLAGS"
+		;;
+	esac
+done
+
+cat >"conftest.$ac_ext" <<_ACEOF
+#line 24209 "configure"
+#include "confdefs.h"
+
+#include <stdlib.h>
+#include <X11/Intrinsic.h>
+
+int
+main (void)
+{
+String foo = malloc(1); free((void*)foo)
+  ;
+  return 0;
+}
+_ACEOF
+rm -f "conftest.$ac_objext"
+if { (eval echo "$as_me:24224: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:24227: \$? = $ac_status" >&5
+  (exit "$ac_status"); } &&
+         { ac_try='test -s "conftest.$ac_objext"'
+  { (eval echo "$as_me:24230: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:24233: \$? = $ac_status" >&5
+  (exit "$ac_status"); }; }; then
+
+echo "$as_me:24236: checking for X11/Xt const-feature" >&5
+echo $ECHO_N "checking for X11/Xt const-feature... $ECHO_C" >&6
+if test "${cf_cv_const_x_string+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+	cat >"conftest.$ac_ext" <<_ACEOF
+#line 24243 "configure"
+#include "confdefs.h"
+
+#define _CONST_X_STRING	/* X11R7.8 (perhaps) */
+#undef  XTSTRINGDEFINES	/* X11R5 and later */
+#include <stdlib.h>
+#include <X11/Intrinsic.h>
+
+int
+main (void)
+{
+String foo = malloc(1); *foo = 0
+  ;
+  return 0;
+}
+_ACEOF
+rm -f "conftest.$ac_objext"
+if { (eval echo "$as_me:24260: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:24263: \$? = $ac_status" >&5
+  (exit "$ac_status"); } &&
+         { ac_try='test -s "conftest.$ac_objext"'
+  { (eval echo "$as_me:24266: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:24269: \$? = $ac_status" >&5
+  (exit "$ac_status"); }; }; then
+
+			cf_cv_const_x_string=no
+
+else
+  echo "$as_me: failed program was:" >&5
+cat "conftest.$ac_ext" >&5
+
+			cf_cv_const_x_string=yes
+
+fi
+rm -f "conftest.$ac_objext" "conftest.$ac_ext"
+
+fi
+echo "$as_me:24284: result: $cf_cv_const_x_string" >&5
+echo "${ECHO_T}$cf_cv_const_x_string" >&6
+
+LIBS="$cf_save_LIBS_CF_CONST_X_STRING"
+CFLAGS="$cf_save_CFLAGS_CF_CONST_X_STRING"
+CPPFLAGS="$cf_save_CPPFLAGS_CF_CONST_X_STRING"
+
+case "$cf_cv_const_x_string" in
+(no)
+
+	test -n "$CPPFLAGS" && CPPFLAGS="$CPPFLAGS "
+	CPPFLAGS="${CPPFLAGS}-DXTSTRINGDEFINES"
+
+	;;
+(*)
+
+	test -n "$CPPFLAGS" && CPPFLAGS="$CPPFLAGS "
+	CPPFLAGS="${CPPFLAGS}-D_CONST_X_STRING"
+
+	;;
+esac
+
+else
+  echo "$as_me: failed program was:" >&5
+cat "conftest.$ac_ext" >&5
+fi
+rm -f "conftest.$ac_objext" "conftest.$ac_ext"
+ fi
+cat > "conftest.$ac_ext" <<EOF
+#line 24313 "${as_me:-configure}"
+int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
+EOF
+if test "$INTEL_COMPILER" = yes
+then
+# The "-wdXXX" options suppress warnings:
+# remark #1419: external declaration in primary source file
+# remark #1683: explicit conversion of a 64-bit integral type to a smaller integral type (potential portability problem)
+# remark #1684: conversion from pointer to same-sized integral type (potential portability problem)
+# remark #193: zero used for undefined preprocessing identifier
+# remark #593: variable "curs_sb_left_arrow" was set but never used
+# remark #810: conversion from "int" to "Dimension={unsigned short}" may lose significant bits
+# remark #869: parameter "tw" was never referenced
+# remark #981: operands are evaluated in unspecified order
+# warning #279: controlling expression is constant
+
+	{ echo "$as_me:24329: checking for $CC warning options..." >&5
+echo "$as_me: checking for $CC warning options..." >&6;}
+	cf_save_CFLAGS="$CFLAGS"
+	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
+	for cf_opt in \
+		wd1419 \
+		wd1683 \
+		wd1684 \
+		wd193 \
+		wd593 \
+		wd279 \
+		wd810 \
+		wd869 \
+		wd981
+	do
+		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
+		if { (eval echo "$as_me:24345: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:24348: \$? = $ac_status" >&5
+  (exit "$ac_status"); }; then
+			test -n "$verbose" && echo "$as_me:24350: result: ... -$cf_opt" >&5
+echo "${ECHO_T}... -$cf_opt" >&6
+			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
+		fi
+	done
+	CFLAGS="$cf_save_CFLAGS"
+elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
+then
+	{ echo "$as_me:24358: checking for $CC warning options..." >&5
+echo "$as_me: checking for $CC warning options..." >&6;}
+	cf_save_CFLAGS="$CFLAGS"
+	cf_warn_CONST=""
+	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
+	cf_gcc_warnings="Wignored-qualifiers Wlogical-op Wvarargs"
+	test "x$CLANG_COMPILER" = xyes && cf_gcc_warnings=
+	for cf_opt in W Wall \
+		Wbad-function-cast \
+		Wcast-align \
+		Wcast-qual \
+		Wdeclaration-after-statement \
+		Wextra \
+		Winline \
+		Wmissing-declarations \
+		Wmissing-prototypes \
+		Wnested-externs \
+		Wpointer-arith \
+		Wshadow \
+		Wstrict-prototypes \
+		Wundef Wno-inline $cf_gcc_warnings $cf_warn_CONST Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual
+	do
+		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
+		if { (eval echo "$as_me:24381: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:24384: \$? = $ac_status" >&5
+  (exit "$ac_status"); }; then
+			test -n "$verbose" && echo "$as_me:24386: result: ... -$cf_opt" >&5
+echo "${ECHO_T}... -$cf_opt" >&6
+			case "$cf_opt" in
+			(Winline)
+				case "$GCC_VERSION" in
+				([34].*)
+					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
+
+echo "${as_me:-configure}:24394: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
+
+					continue;;
+				esac
+				;;
+			(Wpointer-arith)
+				case "$GCC_VERSION" in
+				([12].*)
+					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
+
+echo "${as_me:-configure}:24404: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
+
+					continue;;
+				esac
+				;;
+			esac
+			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
+		fi
+	done
+	CFLAGS="$cf_save_CFLAGS"
+fi
+rm -rf ./conftest*
+
+fi
+
 if test "$GCC" = yes || test "$GXX" = yes
 then
 cat > conftest.i <<EOF
@@ -24205,10 +24434,10 @@ cat > conftest.i <<EOF
 EOF
 if test "$GCC" = yes
 then
-	{ echo "$as_me:24208: checking for $CC __attribute__ directives..." >&5
+	{ echo "$as_me:24437: checking for $CC __attribute__ directives..." >&5
 echo "$as_me: checking for $CC __attribute__ directives..." >&6;}
 cat > "conftest.$ac_ext" <<EOF
-#line 24211 "${as_me:-configure}"
+#line 24440 "${as_me:-configure}"
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -24257,12 +24486,12 @@ EOF
 			;;
 		esac
 
-		if { (eval echo "$as_me:24260: \"$ac_compile\"") >&5
+		if { (eval echo "$as_me:24489: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
-  echo "$as_me:24263: \$? = $ac_status" >&5
+  echo "$as_me:24492: \$? = $ac_status" >&5
   (exit "$ac_status"); }; then
-			test -n "$verbose" && echo "$as_me:24265: result: ... $cf_attribute" >&5
+			test -n "$verbose" && echo "$as_me:24494: result: ... $cf_attribute" >&5
 echo "${ECHO_T}... $cf_attribute" >&6
 			cat conftest.h >>confdefs.h
 			case "$cf_attribute" in
@@ -24319,235 +24548,6 @@ else
 	${FGREP-fgrep} define conftest.i >>confdefs.h
 fi
 rm -rf ./conftest*
-fi
-
-if test "x$have_x" = xyes; then
-
-cf_save_LIBS_CF_CONST_X_STRING="$LIBS"
-cf_save_CFLAGS_CF_CONST_X_STRING="$CFLAGS"
-cf_save_CPPFLAGS_CF_CONST_X_STRING="$CPPFLAGS"
-LIBS="$LIBS ${X_PRE_LIBS} ${X_LIBS} ${X_EXTRA_LIBS}"
-for cf_X_CFLAGS in $X_CFLAGS
-do
-	case "x$cf_X_CFLAGS" in
-	x-[IUD]*)
-		CPPFLAGS="$CPPFLAGS $cf_X_CFLAGS"
-		;;
-	*)
-		CFLAGS="$CFLAGS $cf_X_CFLAGS"
-		;;
-	esac
-done
-
-cat >"conftest.$ac_ext" <<_ACEOF
-#line 24343 "configure"
-#include "confdefs.h"
-
-#include <stdlib.h>
-#include <X11/Intrinsic.h>
-
-int
-main (void)
-{
-String foo = malloc(1); free((void*)foo)
-  ;
-  return 0;
-}
-_ACEOF
-rm -f "conftest.$ac_objext"
-if { (eval echo "$as_me:24358: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:24361: \$? = $ac_status" >&5
-  (exit "$ac_status"); } &&
-         { ac_try='test -s "conftest.$ac_objext"'
-  { (eval echo "$as_me:24364: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:24367: \$? = $ac_status" >&5
-  (exit "$ac_status"); }; }; then
-
-echo "$as_me:24370: checking for X11/Xt const-feature" >&5
-echo $ECHO_N "checking for X11/Xt const-feature... $ECHO_C" >&6
-if test "${cf_cv_const_x_string+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-	cat >"conftest.$ac_ext" <<_ACEOF
-#line 24377 "configure"
-#include "confdefs.h"
-
-#define _CONST_X_STRING	/* X11R7.8 (perhaps) */
-#undef  XTSTRINGDEFINES	/* X11R5 and later */
-#include <stdlib.h>
-#include <X11/Intrinsic.h>
-
-int
-main (void)
-{
-String foo = malloc(1); *foo = 0
-  ;
-  return 0;
-}
-_ACEOF
-rm -f "conftest.$ac_objext"
-if { (eval echo "$as_me:24394: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:24397: \$? = $ac_status" >&5
-  (exit "$ac_status"); } &&
-         { ac_try='test -s "conftest.$ac_objext"'
-  { (eval echo "$as_me:24400: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:24403: \$? = $ac_status" >&5
-  (exit "$ac_status"); }; }; then
-
-			cf_cv_const_x_string=no
-
-else
-  echo "$as_me: failed program was:" >&5
-cat "conftest.$ac_ext" >&5
-
-			cf_cv_const_x_string=yes
-
-fi
-rm -f "conftest.$ac_objext" "conftest.$ac_ext"
-
-fi
-echo "$as_me:24418: result: $cf_cv_const_x_string" >&5
-echo "${ECHO_T}$cf_cv_const_x_string" >&6
-
-LIBS="$cf_save_LIBS_CF_CONST_X_STRING"
-CFLAGS="$cf_save_CFLAGS_CF_CONST_X_STRING"
-CPPFLAGS="$cf_save_CPPFLAGS_CF_CONST_X_STRING"
-
-case "$cf_cv_const_x_string" in
-(no)
-
-	test -n "$CPPFLAGS" && CPPFLAGS="$CPPFLAGS "
-	CPPFLAGS="${CPPFLAGS}-DXTSTRINGDEFINES"
-
-	;;
-(*)
-
-	test -n "$CPPFLAGS" && CPPFLAGS="$CPPFLAGS "
-	CPPFLAGS="${CPPFLAGS}-D_CONST_X_STRING"
-
-	;;
-esac
-
-else
-  echo "$as_me: failed program was:" >&5
-cat "conftest.$ac_ext" >&5
-fi
-rm -f "conftest.$ac_objext" "conftest.$ac_ext"
- fi
-cat > "conftest.$ac_ext" <<EOF
-#line 24447 "${as_me:-configure}"
-int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
-EOF
-if test "$INTEL_COMPILER" = yes
-then
-# The "-wdXXX" options suppress warnings:
-# remark #1419: external declaration in primary source file
-# remark #1683: explicit conversion of a 64-bit integral type to a smaller integral type (potential portability problem)
-# remark #1684: conversion from pointer to same-sized integral type (potential portability problem)
-# remark #193: zero used for undefined preprocessing identifier
-# remark #593: variable "curs_sb_left_arrow" was set but never used
-# remark #810: conversion from "int" to "Dimension={unsigned short}" may lose significant bits
-# remark #869: parameter "tw" was never referenced
-# remark #981: operands are evaluated in unspecified order
-# warning #279: controlling expression is constant
-
-	{ echo "$as_me:24463: checking for $CC warning options..." >&5
-echo "$as_me: checking for $CC warning options..." >&6;}
-	cf_save_CFLAGS="$CFLAGS"
-	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
-	for cf_opt in \
-		wd1419 \
-		wd1683 \
-		wd1684 \
-		wd193 \
-		wd593 \
-		wd279 \
-		wd810 \
-		wd869 \
-		wd981
-	do
-		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
-		if { (eval echo "$as_me:24479: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:24482: \$? = $ac_status" >&5
-  (exit "$ac_status"); }; then
-			test -n "$verbose" && echo "$as_me:24484: result: ... -$cf_opt" >&5
-echo "${ECHO_T}... -$cf_opt" >&6
-			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
-		fi
-	done
-	CFLAGS="$cf_save_CFLAGS"
-elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
-then
-	{ echo "$as_me:24492: checking for $CC warning options..." >&5
-echo "$as_me: checking for $CC warning options..." >&6;}
-	cf_save_CFLAGS="$CFLAGS"
-	cf_warn_CONST=""
-	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
-	cf_gcc_warnings="Wignored-qualifiers Wlogical-op Wvarargs"
-	test "x$CLANG_COMPILER" = xyes && cf_gcc_warnings=
-	for cf_opt in W Wall \
-		Wbad-function-cast \
-		Wcast-align \
-		Wcast-qual \
-		Wdeclaration-after-statement \
-		Wextra \
-		Winline \
-		Wmissing-declarations \
-		Wmissing-prototypes \
-		Wnested-externs \
-		Wpointer-arith \
-		Wshadow \
-		Wstrict-prototypes \
-		Wundef Wno-inline $cf_gcc_warnings $cf_warn_CONST Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual
-	do
-		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
-		if { (eval echo "$as_me:24515: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:24518: \$? = $ac_status" >&5
-  (exit "$ac_status"); }; then
-			test -n "$verbose" && echo "$as_me:24520: result: ... -$cf_opt" >&5
-echo "${ECHO_T}... -$cf_opt" >&6
-			case "$cf_opt" in
-			(Winline)
-				case "$GCC_VERSION" in
-				([34].*)
-					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
-
-echo "${as_me:-configure}:24528: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
-
-					continue;;
-				esac
-				;;
-			(Wpointer-arith)
-				case "$GCC_VERSION" in
-				([12].*)
-					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
-
-echo "${as_me:-configure}:24538: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
-
-					continue;;
-				esac
-				;;
-			esac
-			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
-		fi
-	done
-	CFLAGS="$cf_save_CFLAGS"
-fi
-rm -rf ./conftest*
-
 fi
 
 fi

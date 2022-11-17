@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.390 2022/10/10 16:33:01 tom Exp $
+dnl $XTermId: configure.in,v 1.391 2022/11/17 01:03:32 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1152,7 +1152,7 @@ if test -n "$cf_cv_lib_part_tgetent"; then
     AC_CHECK_FUNCS(use_extended_names)
 fi
 
-CF_ENABLE_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
+CF_ENABLE_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual,yes)
 
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(CHARPROC_DEPS)
