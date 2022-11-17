@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.641 2022/10/10 14:18:26 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.642 2022/11/17 00:28:04 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #374
-.ds RF 2022/10/10
+.ds LF Patch #376
+.ds RF 2022/11/16
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1287,6 +1287,10 @@ Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP).
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*g
 Tab Clear (TBC).
+ECMA-48 defines additional codes,
+but the VT100 user manual notes that it
+ignores other codes.
+DEC's later terminals (and \fI\*(xt\fP) do the same, for compatibility.
   \*(Ps = \*0 \(-> Clear Current Column (default).
   \*(Ps = \*3 \(-> Clear All.
 .

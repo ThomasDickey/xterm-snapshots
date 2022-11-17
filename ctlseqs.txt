@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2022)
-               updated for XTerm Patch #374 (2022/10/10)
+               updated for XTerm Patch #376 (2022/11/16)
 
 
 
@@ -738,7 +738,9 @@ CSI Ps ; Ps f
           Horizontal and Vertical Position [row;column] (default =
           [1,1]) (HVP).
 
-CSI Ps g  Tab Clear (TBC).
+CSI Ps g  Tab Clear (TBC).  ECMA-48 defines additional codes, but the
+          VT100 user manual notes that it ignores other codes.  DEC's
+          later terminals (and xterm) do the same, for compatibility.
             Ps = 0  -> Clear Current Column (default).
             Ps = 3  -> Clear All.
 

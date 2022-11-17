@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.864 2022/10/08 00:17:27 tom Exp $
+.\" $XTermId: xterm.man,v 1.866 2022/11/17 00:33:56 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -3976,7 +3976,8 @@ which change character sets.
 The default is \*(``B\*('', which corresponds to US ASCII.
 .TP 8
 .B "limitFontsets\fP (class\fB LimitFontsets\fP)"
-Limits the number of TrueType fallback fonts (i.e., fontset) which can be tested.
+Limits the number of TrueType fallback fonts (i.e., fontset)
+which can be tested.
 The default is \*(``50\*(''.
 No more than \*(``255\*('' will be scanned.
 .IP
@@ -4363,7 +4364,7 @@ Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is \*(``10\*(''.
 .TP 8
-.B "\fIname\fP\fBKeymap\fP (class\fB \fIName\fP\fBKeymap\fP)"
+.B "\fIname\fBKeymap\fR (class\fB \fIName\fBKeymap\fR)"
 See the discussion of the \fBkeymap()\fP action.
 .TP 8
 .B "nextEventDelay\fP (class\fB NextEventDelay\fP)"
@@ -6924,7 +6925,7 @@ which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
 .RS
 .TP
-.B Allow Color Ops\fP (resource \fBallow\-font\-ops\fP)
+.B Allow Color Ops\fP (resource \fBallow\-color\-ops\fP)
 This corresponds to the \fBallowColorOps\fP resource.
 Enable or disable control sequences that set/query the colors.
 .TP
