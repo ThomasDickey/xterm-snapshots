@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.750 2022/10/23 22:55:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.751 2022/11/21 23:25:37 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -1965,6 +1965,8 @@ xtermLoadItalics(XtermWidget xw)
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " found \"%s\"\n", NonNull(dst.name))); \
 	}
 #define MERGE_SUBLIST(dst,src,name) \
+	if (dst.fonts.x11.name == NULL) \
+	    dst.fonts.x11.name = TypeCalloc(char *); \
 	if (merge_sublist(&(dst.fonts.x11.name), src.fonts.x11.name)) { \
 	    TRACE(("MERGE_SUBLIST " #dst "." #name " merge \"%s\"\n", src.fonts.x11.name[0])); \
 	} else { \

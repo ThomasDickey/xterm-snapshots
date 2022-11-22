@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.866 2022/11/17 00:33:56 tom Exp $
+.\" $XTermId: xterm.man,v 1.868 2022/11/22 00:11:13 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -1446,6 +1446,10 @@ The default is
 This option specifies the font to be used for displaying normal text.
 The corresponding resource name is \fIfont\fP.
 The resource value default is \fIfixed\fP.
+.IP
+\fI\*N\fP's \fB\-fn\fP option accepts a comma-separated list like \fB\-fa\fP,
+for the VT100 widget,
+however other widgets (such as scrollbar) will warn and not use the result.
 .TP 8
 .B \-font \fIfont\fP
 This is the same as \fB\-fn\fP.
@@ -5512,7 +5516,7 @@ The default is \*(``0\*('' to use Xft's default value.
 Enables glyph memory tracking (introduced in Xft 2.3.5),
 which allows Xft to efficiently discard obsolete data when running
 short of memory.
-The default is \*(``true\*(''.
+The default is \*(``false\*(''.
 .TP 8
 .B "ximFont\fP (class\fB XimFont\fP)"
 This option specifies the font to be used for displaying the preedit string
