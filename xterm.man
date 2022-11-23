@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.868 2022/11/22 00:11:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.869 2022/11/23 01:20:52 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -1449,7 +1449,9 @@ The resource value default is \fIfixed\fP.
 .IP
 \fI\*N\fP's \fB\-fn\fP option accepts a comma-separated list like \fB\-fa\fP,
 for the VT100 widget,
-however other widgets (such as scrollbar) will warn and not use the result.
+using the first bitmap font (and discarding additional fonts).
+However, other widgets (such as the toolbar) will be confused by this
+and give a warning.
 .TP 8
 .B \-font \fIfont\fP
 This is the same as \fB\-fn\fP.

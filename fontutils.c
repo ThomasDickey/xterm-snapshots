@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.751 2022/11/21 23:25:37 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.752 2022/11/23 00:58:38 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -163,7 +163,7 @@ static Boolean merge_sublist(char ***, char **);
 #endif
 
 static void save2FontList(XtermWidget, const char *, XtermFontNames *,
-			  VTFontEnum, const char *, Bool);
+			  VTFontEnum, const char *, Bool, Bool);
 
 #if OPT_RENDERFONT
 static void fillInFaceSize(XtermWidget, int);
@@ -2186,10 +2186,20 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     * Now, save the string to a font-list for consistency
 	     */
 #define ALLOC_SUBLIST(which,field) \
-	    save2FontList(xw, "cached", \
-			  &(subresourceRec.fonts), \
-			  which, \
-			  subresourceRec.default_font.field, False)
+	    do { \
+		char *blob = x_strdup(subresourceRec.default_font.field); \
+		char *base = blob; \
+		for (base = blob; ; base = NULL) { \
+		    char *item = strtok(base, ","); \
+		    if (item == NULL) \
+			break; \
+		    save2FontList(xw, "cached", \
+				  &(subresourceRec.fonts), \
+				  which, \
+				  item, False, False); \
+		} \
+		free(blob); \
+	    } while (0)
 
 	    ALLOC_SUBLIST(fNorm, f_n);
 	    ALLOC_SUBLIST(fBold, f_b);
@@ -5244,6 +5254,7 @@ save2FontList(XtermWidget xw,
 	      XtermFontNames * fontnames,
 	      VTFontEnum which,
 	      const char *source,
+	      Bool check,
 	      Bool ttf)
 {
     char *value;
@@ -5388,9 +5399,7 @@ save2FontList(XtermWidget xw,
 			   (unsigned long) count,
 			   value));
 		} else {
-		    fprintf(stderr,
-			    "realloc failure in save2FontList(%s)\n",
-			    name);
+		    xtermWarning("realloc failure in save2FontList(%s)\n", name);
 		    freeFontList(list);
 		    success = False;
 		}
@@ -5403,10 +5412,11 @@ save2FontList(XtermWidget xw,
 	    size_t limit = use_ttf ? MAX_XFT_FONTS : MAX_XLFD_FONTS;
 #endif
 	    if (count > limit && *x_skip_blanks(value)) {
-		fprintf(stderr, "%s: too many fonts for %s, ignoring %s\n",
-			ProgramName,
-			whichFontEnum(which),
-			value);
+		if (check) {
+		    xtermWarning("too many fonts for %s, ignoring %s\n",
+				 whichFontEnum(which),
+				 value);
+		}
 		if (list && *list) {
 		    free((*list)[limit]);
 		    (*list)[limit] = 0;
@@ -5467,7 +5477,7 @@ allocFontList(XtermWidget xw,
 	if (list) {
 	    for (n = 0; list[n] != 0; ++n) {
 		if (*list[n]) {
-		    save2FontList(xw, name, target, which, list[n], ttf);
+		    save2FontList(xw, name, target, which, list[n], True, ttf);
 		}
 	    }
 	    free(list);
@@ -5486,7 +5496,7 @@ initFontList(XtermWidget xw,
 
     TRACE(("initFontList(%s)\n", name));
     for (which = 0; which < fMAX; ++which) {
-	save2FontList(xw, name, target, (VTFontEnum) which, "", ttf);
+	save2FontList(xw, name, target, (VTFontEnum) which, "", False, ttf);
     }
 }
 
