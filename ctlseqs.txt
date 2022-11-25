@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2022)
-               updated for XTerm Patch #376 (2022/11/16)
+               updated for XTerm Patch #377 (2022/11/24)
 
 
 
@@ -442,16 +442,23 @@ DCS + Q Pt ST
           Request resource values (XTGETXRES), xterm.  The string
           following the "Q" is a list of names encoded in hexadecimal (2
           digits per character) separated by ; which correspond to xterm
-          resource names.  Only boolean, numeric and string resources
-          are supported by this query.
+          resource names.
 
           xterm responds with
           DCS 1 + R Pt ST for valid requests, adding to Pt an = , and
-          the value of the corresponding resource that xterm is using,
-          or
+          the value of the corresponding xterm resource, or
           DCS 0 + R Pt ST for invalid requests.
           The strings are encoded in hexadecimal (2 digits per
           character).
+
+          Only boolean, numeric and string resources for the VT100
+          widget are supported by this query.  XTerm evaluates resources
+          at startup time.  Several of xterm's state variables use
+          resources to determine their initial value.  Because the
+          resource variable may not reflect the current state, xterm
+          provides control sequences for querying the state directly:
+          o   XTQALLOWED
+          o   XTQMODKEYS
 
 
 DCS + p Pt ST
@@ -926,7 +933,7 @@ CSI ? Pm l
             Ps = 6 9  -> Disable left and right margin mode (DECLRMM),
           VT420 and up.
             Ps = 8 0  -> Disable Sixel Display Mode (DECSDM), VT330,
-          VT340, VT382.  Turns on ``Sixel Scrolling''.  See the section
+          VT340, VT382.  Turns on "Sixel Scrolling".  See the section
           Sixel Graphics and mode 8 4 5 2 .
             Ps = 9 5  -> Clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
@@ -1155,6 +1162,19 @@ CSI > Pp m
 
           If no parameters are given, all resources are reset to their
           initial values.
+
+CSI ? Pp m
+          Query key modifier options (XTQMODKEYS), xterm.
+
+          The parameter Pp identifies the resource to query.
+
+            Pp = 0  -> modifyKeyboard.
+            Pp = 1  -> modifyCursorKeys.
+            Pp = 2  -> modifyFunctionKeys.
+            Pp = 4  -> modifyOtherKeys.
+
+          XTerm's response can be used to restore this state, because it
+          is formatted as an XTMODKEYS control.
 
 CSI Ps n  Device Status Report (DSR).
             Ps = 5  -> Status Report.
@@ -1848,6 +1868,24 @@ OSC Ps ; Pt ST
 
           If the second parameter is neither a base64 string nor ? ,
           then the selection is cleared.
+
+            Ps = 6 0  -> Query allowed features (XTQALLOWED).  XTerm
+          replies with
+
+            OSC 6 2  ; Pt ST
+
+          where Pt is a comma-separated list of the allowed optional
+          runtime features, e.g., allowColorOps.
+
+            Ps = 6 1  -> Query disallowed features (XTQALLOWED).  The
+          second parameter (i.e., the main feature) must be one of the
+          strings returned by OSC 6 0 .  XTerm replies with
+
+            OSC 6 2  ; Pt ST
+
+          where Pt is a comma-separated list of the optional runtime
+          features which would be disallowed if the main feature is
+          disabled.
 
             Ps = 1 0 4 ; c -> Reset Color Number c.  It is reset to the
           color specified by the corresponding X resource.  Any number

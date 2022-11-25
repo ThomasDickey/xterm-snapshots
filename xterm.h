@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.919 2022/10/23 13:37:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.920 2022/11/25 00:18:40 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1026,16 +1026,17 @@ extern void resetCharsets (TScreen * /* screen */);
 extern void resetMargins (XtermWidget /* xw */);
 extern void restoreCharsets (TScreen * /* screen */, DECNRCM_codes * /* source */);
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
-extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
-extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
+extern void set_max_col(TScreen * /* screen */, int  /* cols */);
+extern void set_max_row(TScreen * /* screen */, int  /* rows */);
+extern void unparse_disallowed_ops (XtermWidget /* xw */, char * /* value */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
-extern void v_write (int  /* f */, const Char * /* d */, size_t  /* len */);
-extern void xtermAddInput (Widget  /* w */);
+extern void v_write (int /* f */, const Char * /* d */, size_t  /* len */);
+extern void xtermAddInput (Widget /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
 
 #if OPT_BLINK_CURS

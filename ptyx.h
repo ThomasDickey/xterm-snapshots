@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1076 2022/10/07 08:00:53 Ben.Wong Exp $ */
+/* $XTermId: ptyx.h,v 1.1077 2022/11/25 00:27:17 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2495,8 +2495,8 @@ typedef struct {
 	String		disallowedMouseOps;
 	char		disallow_mouse_ops[emLAST];
 
-	String		disallowedPasteControls;
-	char		disallow_paste_controls[epLAST];
+	String		disallowedPasteOps;
+	char		disallow_paste_ops[epLAST];
 
 	String		disallowedTcapOps;
 	char		disallow_tcap_ops[etLAST];

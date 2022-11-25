@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.869 2022/11/23 01:20:52 tom Exp $
+.\" $XTermId: xterm.man,v 1.870 2022/11/24 13:20:43 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -4091,7 +4091,7 @@ you can add those after the command, e.g.,
 .NE
 .IP
 Alternatively,
-you may put those parameter within a shell script to execute the converter,
+you may put those parameters within a shell script to execute the converter,
 and set this resource to point to the shell script.
 .IP
 When using a locale-filter, e.g., with the \fI\-e\fP option, or the shell,
