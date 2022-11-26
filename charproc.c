@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1917 2022/11/25 01:15:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1919 2022/11/25 08:51:47 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -12392,7 +12392,7 @@ VTSetValues(Widget cur,
 	 T_COLOR(TScreenOf(newvt), TEXT_FG)) ||
 	(TScreenOf(curvt)->MenuFontName(TScreenOf(curvt)->menu_font_number) !=
 	 TScreenOf(newvt)->MenuFontName(TScreenOf(newvt)->menu_font_number)) ||
-	strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	strcmp(NonNull(DefaultFontN(curvt)), NonNull(DefaultFontN(newvt)))) {
 	if (strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
 	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = DefaultFontN(newvt);
 	}
@@ -12402,7 +12402,7 @@ VTSetValues(Widget cur,
 	    /* resizing does the redisplay, so don't ask for it here */
 	    refresh_needed = True;
 	    fonts_redone = True;
-	} else if (strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	} else if (strcmp(NonNull(DefaultFontN(curvt)), NonNull(DefaultFontN(newvt)))) {
 	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = DefaultFontN(curvt);
 	}
     }
