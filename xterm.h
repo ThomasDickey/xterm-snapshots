@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.920 2022/11/25 00:18:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.921 2022/12/30 17:49:03 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -548,6 +548,7 @@ extern char **environ;
 #define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlimitFontsets	"limitFontsets"
+#define XtNlimitFontWidth	"limitFontWidth"
 #define XtNlimitResize		"limitResize"
 #define XtNlimitResponse	"limitResponse"
 #define XtNlocale		"locale"
@@ -758,6 +759,7 @@ extern char **environ;
 #define XtCKeepSelection	"KeepSelection"
 #define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLimitFontsets	"LimitFontsets"
+#define XtCLimitFontWidth	"LimitFontWidth"
 #define XtCLimitResize		"LimitResize"
 #define XtCLimitResponse	"LimitResponse"
 #define XtCLocale		"Locale"

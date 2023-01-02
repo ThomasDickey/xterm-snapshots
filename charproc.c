@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1919 2022/11/25 08:51:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1921 2022/12/30 17:55:11 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -838,6 +838,7 @@ static XtResource xterm_resources[] =
     Sres(XtNfaceName, XtCFaceName, misc.default_xft.f_n, DEFFACENAME),
     Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
     Ires(XtNlimitFontsets, XtCLimitFontsets, misc.limit_fontsets, DEF_XFT_CACHE),
+    Ires(XtNlimitFontWidth, XtCLimitFontWidth, misc.limit_fontwidth, 10),
 #if OPT_RENDERWIDE
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.default_xft.f_w, DEFFACENAME),
 #endif
@@ -2276,7 +2277,7 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 }
 
 static void
-report_mod_fkeys(XtermWidget xw, int which)
+report_mod_fkeys(XtermWidget xw, int which)	/* XTQMODKEYS */
 {
 #define GET_MOD_FKEYS(field) \
     reply.a_param[1] = (ParmType) xw->keyboard.modify_now.field
@@ -10554,6 +10555,12 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
     init_Ires(misc.limit_fontsets);
+    init_Ires(misc.limit_fontwidth);
+    if (wnew->misc.limit_fontwidth > 50) {
+	xtermWarning("limiting extra fontwidth percent to 50 (was %u)\n",
+		     wnew->misc.limit_fontwidth);
+	wnew->misc.limit_fontwidth = 50;
+    }
     wnew->work.max_fontsets = (unsigned) wnew->misc.limit_fontsets;
     if (wnew->work.max_fontsets > 255) {
 	xtermWarning("limiting number of fontsets to 255 (was %u)\n",

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1040 2022/11/25 00:45:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.1041 2022/12/06 00:51:03 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -4892,12 +4892,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	cp++;
 	switch (*cp) {
 #if OPT_TCAP_QUERY
-	case 'p':
+	case 'p':		/* XTSETTCAP */
 	    if (AllowTcapOps(xw, etSetTcap)) {
 		set_termcap(xw, cp + 1);
 	    }
 	    break;
-	case 'q':
+	case 'q':		/* XTGETTCAP */
 	    if (AllowTcapOps(xw, etGetTcap)) {
 		Bool fkey;
 		unsigned state;

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2022)
-               updated for XTerm Patch #377 (2022/11/24)
+               updated for XTerm Patch #378 (2022/12/05)
 
 
 
@@ -429,7 +429,7 @@ DCS $ q Pt ST
             * |     -> DECSNLS
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
-          r Pt ST for invalid requests.
+          r  ST for invalid requests.
 
 DCS Ps $ t Pt ST
           Restore presentation status (DECRSPS), VT320 and up.  The

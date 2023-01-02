@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.654 2022/11/25 01:07:51 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.656 2022/12/06 01:14:56 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #377
-.ds RF 2022/11/24
+.ds LF Patch #378
+.ds RF 2022/12/05
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -886,7 +886,7 @@ The string following the \*(``q\*('' is one of the following:
 for valid requests, replacing the \*(Pt with the corresponding \*(Cs
 string,
 or
-\*(Dc\*0\*$\*r\*(Pt\*s\*(ST
+\*(Dc\*0\*$\*r\*s\*(ST
 for invalid requests.
 .iP
 .IP \\*(Dc\\*(Ps\\*s\\*$\\*t\\*(Pt\\*s\\*(ST

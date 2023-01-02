@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.261 2022/10/02 21:20:56 tom Exp $
+## $XTermId: Makefile.in,v 1.262 2022/12/30 19:52:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -194,10 +194,10 @@ $(OBJS1) : xterm.h ptyx.h fontutils.h menu.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
 
 256colres.h :
 	-$(RM) $@
