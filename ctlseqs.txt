@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2022)
-               updated for XTerm Patch #378 (2022/12/05)
+                    invisible-island.net (2006-2023)
+               updated for XTerm Patch #378 (2023/01/02)
 
 
 
@@ -463,10 +463,12 @@ DCS + Q Pt ST
 
 DCS + p Pt ST
           Set Termcap/Terminfo Data (XTSETTCAP), xterm.  The string
-          following the "p" is a name to use for retrieving data from
-          the terminal database.  The data will be used for the "tcap"
-          keyboard configuration's function- and special-keys, as well
-          as by the Request Termcap/Terminfo String control.
+          following the "p" is encoded in hexadecimal.  After decoding
+          it, xterm will use the name to retrieve data from the terminal
+          database.  If successful, that overrides the termName resource
+          when handling the "tcap" keyboard configuration's function-
+          and special-keys, as well as by the Request Termcap/Terminfo
+          String control.
 
 
 DCS + q Pt ST
@@ -489,9 +491,12 @@ DCS + q Pt ST
           DCS 1 + r Pt ST for valid requests, adding to Pt an = , and
           the value of the corresponding string that xterm would send,
           or
-          DCS 0 + r Pt ST for invalid requests.
+          DCS 0 + r ST for invalid requests.
           The strings are encoded in hexadecimal (2 digits per
-          character).
+          character).  If more than one name is given, xterm replies
+          with each name/value pair in the same response.  An invalid
+          name (one not found in xterm's tables) ends processing of the
+          list of names.
 
 
 Functions using CSI , ordered by the final character(s)
@@ -3332,44 +3337,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
+    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
 
-    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
-    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
-    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
+    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
+    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
+    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
     supported by SCO and other vendors.
 
-    The  SCOSC/SCORC pair is considered a private mode because the final
+    The SCOSC/SCORC pair is considered a private mode because the  final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to  octal 0176).  Other private control sequences can be constructed
+    to octal 0176).  Other private control sequences can be  constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals  may  behave differently.  For example, DEC (a contributor
-    to the early xterm as well as a manufacturer of terminals)  used  an
-    incompatible  private control in one of its terminals more than five
+    terminals may behave differently.  For example, DEC  (a  contributor
+    to  the  early xterm as well as a manufacturer of terminals) used an
+    incompatible private control in one of its terminals more than  five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In that model of the VT420, CSI ? Pm;  Pc  r  selects  the  PC  TERM
-    emulation  mode.  When this mode is enabled, the keyboard sends scan
-    codes rather than characters (analogous to X keyboard events).   The
-    first  parameter of this private control enables or disables PC TERM
+    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
+    emulation mode.  When this mode is enabled, the keyboard sends  scan
+    codes  rather than characters (analogous to X keyboard events).  The
+    first parameter of this private control enables or disables PC  TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
+    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
     into account when designing the feature.
 
-    If  there  were  potential  users, xterm could accommodate this by a
-    resource setting.  In retrospect (thirty years  later),  there  have
-    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
+    If there were potential users, xterm could  accommodate  this  by  a
+    resource  setting.   In  retrospect (thirty years later), there have
+    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3379,7 +3384,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.

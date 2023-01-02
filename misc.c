@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1041 2022/12/06 00:51:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.1042 2023/01/02 17:40:52 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4980,7 +4980,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    ++cp;
 	    if (AllowXResOps(xw)) {
 		Boolean first = True;
-		while (*cp != '\0') {
+		okay = True;
+		while (*cp != '\0' && okay) {
 		    const char *parsed = 0;
 		    const char *tmp;
 		    char *name = x_decode_hex(cp, &parsed);
@@ -4989,6 +4990,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    if (cp == parsed || name == NULL) {
 			free(name);
 			break;	/* no data found, error */
+		    }
+		    if ((cp - parsed) > 1024) {
+			break;	/* ignore improbable resource */
 		    }
 		    TRACE(("query-feature '%s'\n", name));
 		    if ((value = vt100ResourceToString(xw, name)) != 0) {

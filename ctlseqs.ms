@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.656 2022/12/06 01:14:56 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.661 2023/01/02 20:48:46 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2021,2022 by Thomas E. Dickey
+.\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #378
-.ds RF 2022/12/05
+.ds RF 2023/01/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2022)
+invisible-island.net (2006-2023)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -934,9 +934,11 @@ XTQMODKEYS
 .iP
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
 Set Termcap/Terminfo Data (XTSETTCAP), \fI\*(xt\fP.
-The string following the \*(``p\*('' is a name to use for retrieving data from
-the terminal database.
-The data will be used for the \*(``tcap\*('' keyboard
+The string following the \*(``p\*('' is encoded in hexadecimal.
+After decoding it, \fI\*(xt\fP will use the name to
+retrieve data from the terminal database.
+If successful, that overrides the \fBtermName\fP resource when
+handling the \*(``tcap\*('' keyboard
 configuration's function- and special-keys, as well as by the
 Request Termcap/Terminfo String control.
 .
@@ -969,10 +971,14 @@ for valid requests, adding to \*(Pt an \*=,
 and the value of the corresponding string that \fI\*(xt\fP would send,
 or
 .br
-\*(Dc\*0\*+\*r\*(Pt\*s\*(ST
+\*(Dc\*0\*+\*r\*(ST
 for invalid requests.
 .br
 The strings are encoded in hexadecimal (2 digits per character).
+If more than one name is given, \fI\*(xt\fP replies with each
+name/value pair in the same response.
+An invalid name (one not found in \fI\*(xt\fP's tables)
+ends processing of the list of names.
 .Ed
 .\"
 .Ss Functions using \*(Cs, ordered by the final character(s)
