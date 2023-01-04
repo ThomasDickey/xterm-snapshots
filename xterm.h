@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.921 2022/12/30 17:49:03 tom Exp $ */
+/* $XTermId: xterm.h,v 1.922 2023/01/04 09:21:42 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1762,7 +1762,6 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 #endif
 
 #if OPT_WIDE_CHARS
-extern Boolean isWideControl(unsigned /* ch */);
 extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
 extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);

@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1921 2022/12/30 17:55:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1923 2023/01/04 09:25:08 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2828,6 +2828,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     do {
 #if OPT_WIDE_CHARS
 	int this_is_wide = 0;
+	int is_formatter = 0;
 
 	/*
 	 * Handle zero-width combining characters.  Make it faster by noting
@@ -2838,7 +2839,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (c >= 0x300
 	    && screen->wide_chars
 	    && CharWidth(screen, c) == 0
-	    && !isWideControl(c)) {
+	    && !(is_formatter = (CharacterClass((int) c) == CNTRL))) {
 	    int prev, test;
 	    Boolean used = True;
 	    int use_row;
@@ -2943,7 +2944,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * printing characters.
 	     */
 	    if (sp->parsestate == sp->groundtable) {
-		sp->nextstate = CASE_PRINT;
+		sp->nextstate = is_formatter ? CASE_IGNORE : CASE_PRINT;
 	    } else if (sp->parsestate == sos_table) {
 		c &= WIDEST_ICHAR;
 		if (c > 255) {
