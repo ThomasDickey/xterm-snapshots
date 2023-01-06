@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.501 2022/10/02 23:57:07 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.503 2023/01/06 00:38:33 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2021,2022 by Thomas E. Dickey
+dnl Copyright 1997-2022,2023 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1007,7 +1007,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 23 updated: 2020/06/02 20:17:00
+dnl CF_FUNC_TGETENT version: 24 updated: 2023/01/05 18:52:37
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1077,7 +1077,10 @@ for cf_termlib in '' $cf_TERMLIB ; do
 	AC_TRY_RUN([
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
+#else
+extern int tgetent(char *, const char *);
 #endif
+
 /* terminfo implementations ignore the buffer argument, making it useless for
  * the xterm application, which uses this information to make a new TERMCAP
  * environment variable.
@@ -1176,6 +1179,7 @@ then
 	AC_CHECKING([for $CC __attribute__ directives])
 cat > "conftest.$ac_ext" <<EOF
 #line __oline__ "${as_me:-configure}"
+#include <stdio.h>
 #include "confdefs.h"
 #include "conftest.h"
 #include "conftest.i"
@@ -1934,7 +1938,7 @@ fi
 test "$cf_cv_mixedcase" = yes && AC_DEFINE(MIXEDCASE_FILENAMES,1,[Define to 1 if filesystem supports mixed-case filenames.])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MKSTEMP version: 11 updated: 2021/01/01 13:31:04
+dnl CF_MKSTEMP version: 12 updated: 2023/01/05 17:53:11
 dnl ----------
 dnl Check for a working mkstemp.  This creates two files, checks that they are
 dnl successfully created and distinct (AmigaOS apparently fails on the last).
@@ -1945,14 +1949,8 @@ unistd.h \
 AC_CACHE_CHECK(for working mkstemp, cf_cv_func_mkstemp,[
 rm -rf ./conftest*
 AC_TRY_RUN([
-#include <sys/types.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
+$ac_includes_default
+
 int main(void)
 {
 	char *tmpl = "conftestXXXXXX";
@@ -2254,7 +2252,7 @@ fi # cf_cv_posix_visible
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_SAVED_IDS version: 9 updated: 2020/03/10 18:53:47
+dnl CF_POSIX_SAVED_IDS version: 10 updated: 2023/01/05 17:53:42
 dnl ------------------
 dnl
 dnl Check first if saved-ids are always supported.  Some systems
@@ -2288,10 +2286,8 @@ make an error
 ],[cf_cv_posix_saved_ids=yes
 ],[
 AC_TRY_RUN([
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#include <unistd.h>
+$ac_includes_default
+
 int main(void)
 {
 	void *p = (void *) seteuid;
@@ -2335,7 +2331,7 @@ AC_TRY_COMPILE([#include <stdio.h>],[
 ])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_WAIT version: 4 updated: 2020/03/10 18:53:47
+dnl CF_POSIX_WAIT version: 5 updated: 2023/01/05 19:26:07
 dnl -------------
 dnl Check for POSIX wait support
 AC_DEFUN([CF_POSIX_WAIT],
@@ -2343,9 +2339,8 @@ AC_DEFUN([CF_POSIX_WAIT],
 AC_REQUIRE([AC_HEADER_SYS_WAIT])
 AC_CACHE_CHECK(for POSIX wait functions,cf_cv_posix_wait,[
 AC_TRY_LINK([
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
+$ac_includes_default
+
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
@@ -2813,7 +2808,7 @@ AC_MSG_RESULT($cf_cv_sig_atomic_t)
 test "$cf_cv_sig_atomic_t" != no && AC_DEFINE_UNQUOTED(SIG_ATOMIC_T, $cf_cv_sig_atomic_t,[Define to signal global datatype])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_STRUCT_LASTLOG version: 3 updated: 2020/03/10 18:53:47
+dnl CF_STRUCT_LASTLOG version: 4 updated: 2023/01/05 17:56:31
 dnl -----------------
 dnl Check for header defining struct lastlog, ensure that its .ll_time member
 dnl is compatible with time().
@@ -2822,7 +2817,8 @@ AC_DEFUN([CF_STRUCT_LASTLOG],
 AC_CHECK_HEADERS(lastlog.h)
 AC_CACHE_CHECK(for struct lastlog,cf_cv_struct_lastlog,[
 AC_TRY_RUN([
-#include <sys/types.h>
+$ac_includes_default
+
 #include <time.h>
 #include <lastlog.h>
 
@@ -3091,7 +3087,7 @@ if test "$cf_cv_xopen_source" != no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 14 updated: 2021/01/03 18:30:50
+dnl CF_TTY_GROUP version: 15 updated: 2023/01/05 17:57:39
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
@@ -3177,10 +3173,10 @@ cf_tty_name="`tty`"
 if test "$cf_tty_name" != "not a tty"
 then
 AC_TRY_RUN([
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+$ac_includes_default
+
 #include <grp.h>
+
 int main(void)
 {
 	struct stat sb;
@@ -4738,7 +4734,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 62 updated: 2022/10/02 19:55:56
+dnl CF_XOPEN_SOURCE version: 63 updated: 2022/12/29 10:10:26
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -4841,10 +4837,12 @@ case "$host_os" in
 	cf_save_xopen_cppflags="$CPPFLAGS"
 	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	# Some of these niche implementations use copy/paste, double-check...
-	CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
-	AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
-		AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
-		CPPFLAGS="$cf_save_xopen_cppflags"])
+	if test "$cf_cv_xopen_source" != no ; then
+		CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
+		AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
+			AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
+			CPPFLAGS="$cf_save_xopen_cppflags"])
+	fi
 	;;
 esac
 
