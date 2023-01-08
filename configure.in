@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.391 2022/11/17 01:03:32 tom Exp $
+dnl $XTermId: configure.in,v 1.392 2023/01/08 11:41:52 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2021,2022 by Thomas E. Dickey
+dnl Copyright 1997-2022,2023 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -65,14 +65,14 @@ CF_XOPEN_SOURCE(700)
 CF_SIGWINCH
 
 ###	checks for header files
+AC_CHECK_DECL(exit)
 AC_CHECK_HEADERS( \
 ncurses/curses.h \
 ncurses/term.h \
-stdlib.h \
-sys/ptem.h sys/ttydefaults.h \
+sys/ptem.h \
+sys/ttydefaults.h \
 term.h \
 termios.h \
-unistd.h \
 wchar.h \
 )
 AC_HEADER_TIME
