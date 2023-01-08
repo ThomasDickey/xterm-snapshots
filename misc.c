@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1042 2023/01/02 17:40:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.1044 2023/01/07 01:11:16 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3562,7 +3562,6 @@ typedef enum {
     ,OSC_SelectionData = 52
     ,OSC_AllowedOps = 60
     ,OSC_DisallowedOps = 61
-    ,OSC_OpsResponse = 62
 } OscMiscOps;
 
 static Bool
@@ -4363,15 +4362,12 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif
 
-    case OSC_AllowedOps:
+    case OSC_AllowedOps:	/* XTQALLOWED */
 	report_allowed_ops(xw, final);
 	break;
 
-    case OSC_DisallowedOps:
+    case OSC_DisallowedOps:	/* XTQDISALLOWED */
 	report_disallowed_ops(xw, buf, final);
-	break;
-
-    case OSC_OpsResponse:
 	break;
 
     case OSC_Unused_30:

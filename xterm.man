@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.872 2022/12/30 17:47:35 tom Exp $
+.\" $XTermId: xterm.man,v 1.873 2023/01/07 01:38:26 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -1398,7 +1398,7 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
-.SS \fIX Toolkit\fP Options
+.SS X Toolkit Options
 .PP
 The following standard \fIX Toolkit\fP command line arguments are commonly used
 with \fI\*n\fP:
@@ -8556,7 +8556,7 @@ may be defined to a nonstandard location using the configure script.
 .SH WINDOW PROPERTIES
 .PP
 In the output from \fBxprop\fP(1), there are several properties.
-.SS Properties set by \fIX Toolkit\fP
+.SS Properties set by X Toolkit
 .TP 5
 .B WM_CLASS
 This shows the \fIinstance name\fP and the X resource \fIclass\fP,

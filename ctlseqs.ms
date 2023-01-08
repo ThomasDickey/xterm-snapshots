@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.661 2023/01/02 20:48:46 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.666 2023/01/07 01:30:20 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #378
-.ds RF 2023/01/02
+.ds RF 2023/01/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -924,6 +924,7 @@ use resources to determine their initial value.
 Because the resource variable may not reflect the current state,
 \fI\*(xt\fP provides control sequences for querying the state directly:
 .RS
+.iP
 .bP
 XTQALLOWED
 .bP
@@ -1767,7 +1768,16 @@ The parameter \*(Pp identifies the resource to query.
 .iP
 .IP
 \*(XT's response can be used to restore this state,
-because it is formatted as an XTMODKEYS control.
+because it is formatted as an XTMODKEYS control, i.e.,
+.iP
+  \*(Cs\*>\*(Pp\*s\*m
+.iP
+where
+.iP
+  \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*n
@@ -2610,18 +2620,26 @@ then the selection is cleared.
   \*(Ps = \*6\*0 \(-> Query allowed features (XTQALLOWED).
 \fI\*(XT\fP replies with
 .sP
-  \*(Os\*6\*2\*s\*;\*(Pt\*s\*(ST
+  \*(Os\*6\*0\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
 of the \fIallowed\fP optional runtime features,
-e.g., \fBallowColorOps\fR.
+i.e., zero or more of these resource names:
+.iP
+  \fBallowColorOps\fR
+  \fBallowFontOps\fR
+  \fBallowMouseOps\fR
+  \fBallowPasteControls\fR
+  \fBallowTcapOps\fR
+  \fBallowTitleOps\fR
+  \fBallowWindowOps\fR
 .sP
-  \*(Ps = \*6\*1 \(-> Query disallowed features (XTQALLOWED).
+  \*(Ps = \*6\*1 \(-> Query disallowed features (XTQDISALLOWED).
 The second parameter (i.e., the main feature)
-must be one of the strings returned by \*(Os\*6\*0.
+must be one of the resource names returned by \*(Os\*6\*0.
 \fI\*(XT\fP replies with
 .sP
-  \*(Os\*6\*2\*s\*;\*(Pt\*s\*(ST
+  \*(Os\*6\*1\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
 of the optional runtime features which would be disallowed

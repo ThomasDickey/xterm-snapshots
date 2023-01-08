@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #378 (2023/01/02)
+               updated for XTerm Patch #378 (2023/01/06)
 
 
 
@@ -457,6 +457,7 @@ DCS + Q Pt ST
           resources to determine their initial value.  Because the
           resource variable may not reflect the current state, xterm
           provides control sequences for querying the state directly:
+
           o   XTQALLOWED
           o   XTQMODKEYS
 
@@ -1179,7 +1180,16 @@ CSI ? Pp m
             Pp = 4  -> modifyOtherKeys.
 
           XTerm's response can be used to restore this state, because it
-          is formatted as an XTMODKEYS control.
+          is formatted as an XTMODKEYS control, i.e.,
+
+            CSI > Pp m
+
+          where
+
+            Pp = 0  -> modifyKeyboard.
+            Pp = 1  -> modifyCursorKeys.
+            Pp = 2  -> modifyFunctionKeys.
+            Pp = 4  -> modifyOtherKeys.
 
 CSI Ps n  Device Status Report (DSR).
             Ps = 5  -> Status Report.
@@ -1877,16 +1887,24 @@ OSC Ps ; Pt ST
             Ps = 6 0  -> Query allowed features (XTQALLOWED).  XTerm
           replies with
 
-            OSC 6 2  ; Pt ST
+            OSC 6 0  ; Pt ST
 
           where Pt is a comma-separated list of the allowed optional
-          runtime features, e.g., allowColorOps.
+          runtime features, i.e., zero or more of these resource names:
 
-            Ps = 6 1  -> Query disallowed features (XTQALLOWED).  The
+            allowColorOps
+            allowFontOps
+            allowMouseOps
+            allowPasteControls
+            allowTcapOps
+            allowTitleOps
+            allowWindowOps
+
+            Ps = 6 1  -> Query disallowed features (XTQDISALLOWED).  The
           second parameter (i.e., the main feature) must be one of the
-          strings returned by OSC 6 0 .  XTerm replies with
+          resource names returned by OSC 6 0 .  XTerm replies with
 
-            OSC 6 2  ; Pt ST
+            OSC 6 1  ; Pt ST
 
           where Pt is a comma-separated list of the optional runtime
           features which would be disallowed if the main feature is
