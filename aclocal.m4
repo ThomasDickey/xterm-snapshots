@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.503 2023/01/06 00:38:33 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.504 2023/01/09 01:39:39 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1007,7 +1007,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 24 updated: 2023/01/05 18:52:37
+dnl CF_FUNC_TGETENT version: 25 updated: 2023/01/08 20:38:09
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1048,6 +1048,13 @@ test -z "$cf_TERMVAR" && cf_TERMVAR=vt100
 # returns the termcap text.
 AC_CHECK_HEADERS(termcap.h)
 
+cf_termcap_h="\
+#ifdef HAVE_TERMCAP_H
+#include <termcap.h>
+#else
+extern int tgetent(char *, const char *);
+#endif"
+
 AC_MSG_CHECKING(if we want full tgetent function)
 CF_ARG_DISABLE(full-tgetent,
 	[  --disable-full-tgetent  disable check for full tgetent function],
@@ -1075,11 +1082,7 @@ for cf_termlib in '' $cf_TERMLIB ; do
 	LIBS="$cf_save_LIBS"
 	test -n "$cf_termlib" && { CF_ADD_LIB($cf_termlib) }
 	AC_TRY_RUN([
-#ifdef HAVE_TERMCAP_H
-#include <termcap.h>
-#else
-extern int tgetent(char *, const char *);
-#endif
+$cf_termcap_h
 
 /* terminfo implementations ignore the buffer argument, making it useless for
  * the xterm application, which uses this information to make a new TERMCAP
@@ -1117,8 +1120,6 @@ if test "x$cf_cv_lib_tgetent" != xno ; then
 #ifdef NCURSES_VERSION
 make an error
 #endif],[AC_DEFINE(HAVE_TERMCAP_H)])
-	else
-		AC_CHECK_HEADERS(termcap.h)
 	fi
 else
         # If we didn't find a tgetent() that supports the buffer
@@ -1130,7 +1131,7 @@ else
 	cf_cv_lib_part_tgetent=no
 	for cf_termlib in $cf_TERMLIB ; do
 		LIBS="$cf_save_LIBS -l$cf_termlib"
-		AC_TRY_LINK([],[tgetent(0, "$cf_TERMVAR")],
+		AC_TRY_LINK([$cf_termcap_h],[tgetent(0, "$cf_TERMVAR")],
 			[echo "there is a terminfo/tgetent in $cf_termlib" 1>&AC_FD_CC
 			 cf_cv_lib_part_tgetent="-l$cf_termlib"
 			 break])
@@ -1140,8 +1141,6 @@ else
 
 	if test "$cf_cv_lib_part_tgetent" != no ; then
 		CF_ADD_LIBS($cf_cv_lib_part_tgetent)
-		AC_CHECK_HEADERS(termcap.h)
-
                 # If this is linking against ncurses, we'll trigger the
                 # ifdef in resize.c that turns the termcap stuff back off.
 		AC_DEFINE(USE_TERMINFO,1,[Define to 1 to indicate that terminfo provides the tgetent interface])
