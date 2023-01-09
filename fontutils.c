@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.759 2023/01/02 15:25:32 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.760 2023/01/08 23:42:23 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -2928,7 +2928,7 @@ xtermOpenXft(XtermWidget xw,
 	    }
 	}
     }
-    if (result == NULL) {
+    if (result == NULL && (fontNum <= MaxXftCache)) {
 	XftFpN(fontData, fontNum) = NULL;
 	XftIsN(fontData, fontNum) = xcEmpty;
     }

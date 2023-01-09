@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1923 2023/01/04 09:25:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1924 2023/01/09 00:26:45 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -12401,7 +12401,7 @@ VTSetValues(Widget cur,
 	(TScreenOf(curvt)->MenuFontName(TScreenOf(curvt)->menu_font_number) !=
 	 TScreenOf(newvt)->MenuFontName(TScreenOf(newvt)->menu_font_number)) ||
 	strcmp(NonNull(DefaultFontN(curvt)), NonNull(DefaultFontN(newvt)))) {
-	if (strcmp(DefaultFontN(curvt), DefaultFontN(newvt))) {
+	if (strcmp(NonNull(DefaultFontN(curvt)), NonNull(DefaultFontN(newvt)))) {
 	    TScreenOf(newvt)->MenuFontName(fontMenu_default) = DefaultFontN(newvt);
 	}
 	if (xtermLoadFont(newvt,
