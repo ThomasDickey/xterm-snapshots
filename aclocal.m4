@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.504 2023/01/09 01:39:39 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.505 2023/01/11 09:05:23 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -36,7 +36,7 @@ dnl     https://invisible-island.net/autoconf/autoconf.html
 dnl     https://invisible-island.net/autoconf/my-autoconf.html
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
-dnl AM_LANGINFO_CODESET version: 6 updated: 2021/01/01 16:53:59
+dnl AM_LANGINFO_CODESET version: 7 updated: 2023/01/11 04:05:23
 dnl -------------------
 dnl Inserted as requested by gettext 0.10.40
 dnl File from /usr/share/aclocal
@@ -48,7 +48,9 @@ dnl From Bruno Haible.
 AC_DEFUN([AM_LANGINFO_CODESET],
 [
 AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
-	[AC_TRY_LINK([#include <langinfo.h>],
+	[AC_TRY_LINK([
+$ac_includes_default
+#include <langinfo.h>],
 	[char* cs = nl_langinfo(CODESET); (void)cs],
 	am_cv_langinfo_codeset=yes,
 	am_cv_langinfo_codeset=no)
@@ -4880,7 +4882,7 @@ fi
 fi # cf_cv_posix_visible
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA version: 24 updated: 2020/03/10 18:53:47
+dnl CF_X_ATHENA version: 25 updated: 2023/01/11 04:05:23
 dnl -----------
 dnl Check for Xaw (Athena) libraries
 dnl
@@ -4954,6 +4956,7 @@ if test "$PKG_CONFIG" != none ; then
 
 AC_CACHE_CHECK(for usable $cf_x_athena/Xmu package,cf_cv_xaw_compat,[
 AC_TRY_LINK([
+$ac_includes_default
 #include <X11/Xmu/CharSet.h>
 ],[
 int check = XmuCompareISOLatin1("big", "small");
@@ -5040,7 +5043,7 @@ elif test "$cf_x_athena_inc" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 13 updated: 2020/01/11 18:16:10
+dnl CF_X_ATHENA_LIBS version: 14 updated: 2023/01/11 04:05:23
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -5073,6 +5076,7 @@ do
 		CF_ADD_LIBS($cf_libs)
 		AC_MSG_CHECKING(for $cf_test in $cf_libs)
 		AC_TRY_LINK([
+$ac_includes_default
 #include <X11/Intrinsic.h>
 #include <X11/$cf_x_athena_root/SimpleMenu.h>
 ],[
@@ -5310,7 +5314,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 26 updated: 2021/01/02 09:31:20
+dnl CF_X_TOOLKIT version: 27 updated: 2023/01/11 04:05:23
 dnl ------------
 dnl Check for X Toolkit libraries
 AC_DEFUN([CF_X_TOOLKIT],
@@ -5345,6 +5349,7 @@ CF_TRY_PKG_CONFIG(xt,[
 # we have an "xt" package, but it may omit Xt's dependency on X11
 AC_CACHE_CHECK(for usable X dependency,cf_cv_xt_x11_compat,[
 AC_TRY_LINK([
+$ac_includes_default
 #include <X11/Xlib.h>
 ],[
 	int rc1 = XDrawLine((Display*) 0, (Drawable) 0, (GC) 0, 0, 0, 0, 0);
@@ -5363,6 +5368,7 @@ AC_TRY_LINK([
 
 AC_CACHE_CHECK(for usable X Toolkit package,cf_cv_xt_ice_compat,[
 AC_TRY_LINK([
+$ac_includes_default
 #include <X11/Shell.h>
 ],[int num = IceConnectionNumber(0); (void) num
 ],[cf_cv_xt_ice_compat=yes],[cf_cv_xt_ice_compat=no])])
