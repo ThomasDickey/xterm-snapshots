@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.227 2022/09/11 19:26:01 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.228 2023/01/26 00:54:10 tom Exp $ */
 
 /*
- * Copyright 1997-2021,2022 by Thomas E. Dickey
+ * Copyright 1997-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -96,6 +96,7 @@
 #undef HAVE_PTSNAME		/* CF_FUNC_GRANTPT */
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
+#undef HAVE_SETITIMER		/* CF_SETITIMER */
 #undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #undef HAVE_STDINT_H		/* AC_PROG_CC_STDC */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */

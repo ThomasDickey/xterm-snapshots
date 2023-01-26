@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.505 2023/01/11 09:05:23 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.506 2023/01/26 00:55:24 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2712,6 +2712,24 @@ do
 		;;
 	esac
 done
+])dnl
+dnl ---------------------------------------------------------------------------
+AC_DEFUN([CF_SETITIMER],
+[
+AC_CACHE_CHECK(if setitimer is available,cf_cv_func_setitimer,[
+AC_TRY_COMPILE([
+$ac_includes_default
+#include <sys/time.h>
+],[
+    struct itimerval it;
+    memset(&it, 0, sizeof(struct itimerval));
+    it.it_value.tv_sec = 1;
+    setitimer(ITIMER_REAL, &it, NULL);
+],
+[cf_cv_func_setitimer=yes],
+[cf_cv_func_setitimer=no])
+])
+test "$cf_cv_func_setitimer" != no && AC_DEFINE(HAVE_SETITIMER,1,[Define to 1 if setitimer is available])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_SIGWINCH version: 6 updated: 2021/01/01 13:31:04

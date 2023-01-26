@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.922 2023/01/04 09:21:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.923 2023/01/26 00:43:11 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -209,6 +209,12 @@
 
 #if defined(linux) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(VMS) || defined(__INTERIX))
 #define HAVE_INITGROUPS
+#endif
+
+#if !defined(USG) && !defined(__minix)
+#define HAVE_SETITIMER 1
+#else
+#define HAVE_SETITIMER 0
 #endif
 
 #endif /* HAVE_CONFIG_H */
