@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1924 2023/01/09 00:26:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1929 2023/01/28 01:23:21 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2479,6 +2479,8 @@ StatusPutChars(XtermWidget xw, const char *value, int length)
 	Cardinal n;
 	for (n = 0; n < SL_BUFSIZ && length > 0 && *value != '\0'; ++n) {
 	    buffer[n] = CharOf(*value++);
+	    if (buffer[n] < 32 || buffer[n] > 126)
+		buffer[n] = ' ';	/* FIXME - provide for UTF-8 */
 	    --length;
 	}
 	buffer[n] = 0;
@@ -2493,6 +2495,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 {
     XtermWidget xw = (XtermWidget) closure;
     TScreen *screen = TScreenOf(xw);
+    int right_margin;
 
     time_t now;
     const char *parse;
@@ -2569,10 +2572,14 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	    StatusPutChars(xw, parse, 1);
 	}
     }
-    while (screen->cur_col < screen->max_col)
-	StatusPutChars(xw, " ", 1);
+    right_margin = ScrnRightMargin(xw);
+    memset(buffer, ' ', SL_BUFSIZ);
+    while (screen->cur_col < right_margin) {
+	int chunk = Min(SL_BUFSIZ, (right_margin - screen->cur_col));
+	StatusPutChars(xw, buffer, chunk);
+    }
 
-    ScrnRefresh(xw, FirstRowNumber(screen), 0, 1, screen->max_col, True);
+    ScrnRefresh(xw, FirstRowNumber(screen), 0, 1, right_margin, True);
     screen->status_active = False;
 
     CursorRestore2(xw, &screen->status_data[0]);
@@ -2609,6 +2616,7 @@ clear_status_line(XtermWidget xw)
 	int n;
 	char buffer[SL_BUFSIZ + 1];
 	CLineData *ld = getLineData(screen, screen->cur_row);
+	int right_margin = ScrnRightMargin(xw);
 
 	TRACE(("...text[%d:%d]:%s\n",
 	       screen->cur_row,
@@ -2617,7 +2625,7 @@ clear_status_line(XtermWidget xw)
 
 	memset(buffer, '#', SL_BUFSIZ);
 	for (n = 0; n < screen->max_col; n += SL_BUFSIZ) {
-	    StatusPutChars(xw, buffer, screen->max_col - n);
+	    StatusPutChars(xw, buffer, right_margin - n);
 	}
     }
 #endif
@@ -3178,6 +3186,56 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (xw->work.palette_changed) {
 	    repaintWhenPaletteChanged(xw, sp);
 	}
+#if OPT_STATUS_LINE
+	/*
+	 * If we are currently writing to the status-line, ignore controls that
+	 * apply only to the full screen, or which use features which we will
+	 * not support in the status-line.
+	 */
+	if (IsStatusShown(screen) && (screen)->status_active) {
+	    switch (sp->nextstate) {
+	    case CASE_DECDHL:
+	    case CASE_DECSWL:
+	    case CASE_DECDWL:
+	    case CASE_CUU:
+	    case CASE_CUD:
+	    case CASE_VPA:
+	    case CASE_VPR:
+	    case CASE_ED:
+	    case CASE_TRACK_MOUSE:
+	    case CASE_DECSTBM:
+	    case CASE_DECALN:
+	    case CASE_GRAPHICS_ATTRIBUTES:
+	    case CASE_SPA:
+	    case CASE_EPA:
+	    case CASE_SU:
+	    case CASE_IND:
+	    case CASE_CPL:
+	    case CASE_CNL:
+	    case CASE_NEL:
+	    case CASE_RI:
+#if OPT_DEC_LOCATOR
+	    case CASE_DECEFR:
+	    case CASE_DECELR:
+	    case CASE_DECSLE:
+	    case CASE_DECRQLP:
+#endif
+#if OPT_DEC_RECTOPS
+	    case CASE_DECRQCRA:
+	    case CASE_DECCRA:
+	    case CASE_DECERA:
+	    case CASE_DECFRA:
+	    case CASE_DECSERA:
+	    case CASE_DECSACE:
+	    case CASE_DECCARA:
+	    case CASE_DECRARA:
+#endif
+		ResetState(sp);
+		sp->nextstate = -1;	/* not a legal state */
+		break;
+	    }
+	}
+#endif
 
 	switch (sp->nextstate) {
 	case CASE_PRINT:
@@ -13300,6 +13358,11 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
 	   screen->cursor_blink));
+#endif
+#if OPT_STATUS_LINE
+    if (screen->vtXX_level >= 2) {
+	handle_DECSSDT(xw, 0);	/* DEC STD 070, page 14-10 */
+    }
 #endif
 
     /* reset scrolling region */
