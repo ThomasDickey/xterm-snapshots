@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.506 2023/01/26 00:55:24 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.507 2023/02/10 09:13:16 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1009,7 +1009,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 25 updated: 2023/01/08 20:38:09
+dnl CF_FUNC_TGETENT version: 26 updated: 2023/02/10 04:11:55
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1073,11 +1073,12 @@ fi
 AC_CACHE_CHECK(for $cf_test_message function,cf_cv_lib_tgetent,[
 cf_save_LIBS="$LIBS"
 cf_cv_lib_tgetent=no
+cf_TERMLIB="termlib ncursesw ncurses curses"
 if test "$cf_full_tgetent" = yes ; then
-	cf_TERMLIB="otermcap termcap termlib ncurses curses"
+	cf_TERMLIB="otermcap termcap $cf_TERMLIB"
 	cf_TERMTST="buffer[[0]] == 0"
 else
-	cf_TERMLIB="termlib ncurses curses"
+	cf_TERMLIB="tinfow tinfo $cf_TERMLIB"
 	cf_TERMTST="0"
 fi
 for cf_termlib in '' $cf_TERMLIB ; do
@@ -2714,6 +2715,8 @@ do
 done
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_SETITIMER version: 1 updated: 2023/01/25 19:55:24
+dnl ------------
 AC_DEFUN([CF_SETITIMER],
 [
 AC_CACHE_CHECK(if setitimer is available,cf_cv_func_setitimer,[
