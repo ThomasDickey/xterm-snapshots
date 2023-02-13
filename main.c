@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.892 2023/01/09 00:28:06 tom Exp $ */
+/* $XTermId: main.c,v 1.896 2023/02/13 09:06:28 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -502,9 +502,6 @@ static char **command_to_exec = NULL;
 static char **command_to_exec_with_luit = NULL;
 static unsigned command_length_with_luit = 0;
 #endif
-
-#define TERMCAP_ERASE "kb"
-#define VAL_INITIAL_ERASE A2E(8)
 
 /* choose a nice default value for speed - if we make it too low, users who
  * mistakenly use $TERM set to vt100 will get padding delays.  Setting it to a
@@ -2198,6 +2195,52 @@ lookup_baudrate(const char *value)
 }
 
 int
+get_tty_erase(int fd, int default_erase, const char *tag)
+{
+    int result = default_erase;
+    int rc;
+
+#ifdef TERMIO_STRUCT
+    TERMIO_STRUCT my_tio;
+    rc = ttyGetAttr(fd, &my_tio);
+    if (rc == 0)
+	result = my_tio.c_cc[VERASE];
+#else /* !TERMIO_STRUCT */
+    struct sgttyb my_sg;
+    rc = ioctl(fd, TIOCGETP, (char *) &my_sg);
+    if (rc == 0)
+	result = my_sg.sg_erase;
+#endif /* TERMIO_STRUCT */
+    TRACE(("%s erase:%d (from %s)\n", (rc == 0) ? "OK" : "FAIL", result, tag));
+    (void) tag;
+    return result;
+}
+
+int
+get_tty_lnext(int fd, int default_lnext, const char *tag)
+{
+    int result = default_lnext;
+    int rc;
+
+#ifdef TERMIO_STRUCT
+    TERMIO_STRUCT my_tio;
+    rc = ttyGetAttr(fd, &my_tio);
+    if (rc == 0)
+	result = my_tio.c_cc[VLNEXT];
+#elif defined(HAS_LTCHARS)
+    struct ltchars my_ltc;
+    rc = ioctl(fd, TIOCGLTC, (char *) &my_ltc);
+    if (rc == 0)
+	result = my_ltc.t_lnextc;
+#else
+    result = XTERM_LNEXT;
+#endif /* TERMIO_STRUCT */
+    TRACE(("%s lnext:%d (from %s)\n", (rc == 0) ? "OK" : "FAIL", result, tag));
+    (void) tag;
+    return result;
+}
+
+int
 main(int argc, char *argv[]ENVP_ARG)
 {
 #if OPT_MAXIMIZE
@@ -3750,7 +3793,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     int done;
 #endif
 #if OPT_INITIAL_ERASE
-    int initial_erase = VAL_INITIAL_ERASE;
+    int initial_erase = XTERM_ERASE;
     Bool setInitialErase;
 #endif
     int rc = 0;
@@ -3867,7 +3910,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	got_handshake_size = False;
 #endif /* OPT_PTY_HANDSHAKE */
 #if OPT_INITIAL_ERASE
-	initial_erase = VAL_INITIAL_ERASE;
+	initial_erase = XTERM_ERASE;
 #endif
 	signal(SIGALRM, SIG_DFL);
 
@@ -3982,20 +4025,9 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	TRACE_GET_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
-#ifdef TERMIO_STRUCT
-	    TERMIO_STRUCT my_tio;
-	    rc = ttyGetAttr(screen->respond, &my_tio);
-	    if (rc == 0)
-		initial_erase = my_tio.c_cc[VERASE];
-#else /* !TERMIO_STRUCT */
-	    struct sgttyb my_sg;
-	    rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg);
-	    if (rc == 0)
-		initial_erase = my_sg.sg_erase;
-#endif /* TERMIO_STRUCT */
-	    TRACE(("%s initial_erase:%d (from pty)\n",
-		   (rc == 0) ? "OK" : "FAIL",
-		   initial_erase));
+	    initial_erase = get_tty_erase(screen->respond,
+					  initial_erase,
+					  "pty");
 	}
 #endif /* OPT_INITIAL_ERASE */
     }
@@ -5045,6 +5077,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 		}
 		if (*newtc) {
 #if OPT_INITIAL_ERASE
+#define TERMCAP_ERASE "kb"
 		    unsigned len;
 		    remove_termcap_entry(newtc, TERMCAP_ERASE "=");
 		    len = (unsigned) strlen(newtc);

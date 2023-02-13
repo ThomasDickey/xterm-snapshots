@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.627 2022/10/23 22:57:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.628 2023/02/13 00:04:20 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1896,7 +1896,7 @@ freeLineData(TScreen *screen, LineData *source)
 
 #define ALLOC_IT(field) \
     if (result != NULL) { \
-	if ((result->field = calloc(ncol, sizeof(*result->field))) == NULL) { \
+	if ((result->field = calloc((size_t) ncol, sizeof(*result->field))) == NULL) { \
 	    result = freeLineData(screen, result); \
 	} \
     }
@@ -1913,7 +1913,7 @@ allocLineData(TScreen *screen, LineData *source)
 #if OPT_WIDE_CHARS
     size += source->combSize * sizeof(result->combData[0]);
 #endif
-    if ((result = calloc(1, size)) != NULL) {
+    if ((result = calloc((size_t) 1, size)) != NULL) {
 	result->lineSize = ncol;
 	ALLOC_IT(attribs);
 #if OPT_ISO_COLORS

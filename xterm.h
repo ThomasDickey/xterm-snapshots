@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.923 2023/01/26 00:43:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.924 2023/02/13 08:42:48 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1153,6 +1153,9 @@ extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
 extern int GetBytesAvailable (int  /* fd */);
 extern int kill_process_group (int  /* pid */, int  /* sig */);
 extern int nonblocking_wait (void);
+
+extern int get_tty_erase(int /* fd */, int /* default_erase */, const char * /* tag */);
+extern int get_tty_lnext(int /* fd */, int /* default_lnext */, const char * /* tag */);
 
 #if OPT_PTY_HANDSHAKE
 extern void first_map_occurred (void);

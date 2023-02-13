@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.666 2023/01/07 01:30:20 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.667 2023/02/12 21:59:49 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #378
-.ds RF 2023/01/06
+.ds LF Patch #379
+.ds RF 2023/02/12
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1433,7 +1433,12 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation, i.e, X11R6,
 \fI\*(xt\fP.
   \*(Ps = \*1\*0\*6\*1 \(-> Set VT220 keyboard emulation, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*1 \(-> Enable readline mouse button-1, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*2 \(-> Enable readline mouse button-2, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*3 \(-> Enable readline mouse button-3, \fI\*(xt\fP.
   \*(Ps = \*2\*0\*0\*4 \(-> Set bracketed paste mode, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*5 \(-> Enable readline character-quoting, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*6 \(-> Enable readline newline pasting, \fI\*(xt\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*i
@@ -1569,7 +1574,12 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Reset SCO function-key mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation, i.e, X11R6, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*6\*1 \(-> Reset keyboard emulation to Sun/PC style, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*1 \(-> Disable readline mouse button-1, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*2 \(-> Disable readline mouse button-2, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*3 \(-> Disable readline mouse button-3, \fI\*(xt\fP.
   \*(Ps = \*2\*0\*0\*4 \(-> Reset bracketed paste mode, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*5 \(-> Disable readline character-quoting, \fI\*(xt\fP.
+  \*(Ps = \*2\*0\*0\*6 \(-> Disable readline newline pasting, \fI\*(xt\fP.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*m
@@ -3303,6 +3313,48 @@ For background and discussion, see the FAQ:
 .\" https://invisible-island.net/xterm/xterm-paste64.html
 \fIXTerm - bracketed-paste\fP
 .DE
+.
+.Sh "Readline Modes"
+.LP
+Several modes provide support for mouse button events in \fIreadline\fP.
+Bracketed paste is one of these \fIreadline\fP modes, but is used more widely.
+.
+.LP
+Some assumptions (particular mouse buttons) and limitations
+(the mouse is clicked on the current row on the screen) apply:
+.
+.IP "\*2\*0\*0\*1"
+If mouse button 1 is used to end or extend a selection
+(the \fBselect-end\fP action),
+and if the cursor position is on the same row as the mouse-click,
+send left/right cursor control sequences to the host to
+adjust the cursor position to match the mouse click.
+.
+.IP "\*2\*0\*0\*2"
+When pasting text (the \fBinsert-selection\fP action
+which is normally bound to mouse button 2),
+if mouse protocol is not enabled,
+and if the cursor position is on the same row as the mouse-click,
+send left/right cursor control sequences to the host to
+adjust the cursor position to match the mouse click.
+.IP "\*2\*0\*0\*3"
+If mouse button 3 is double-clicked when ending or extending a selection,
+(the \fBselect-end\fP action),
+and if the cursor position is on the same row as the mouse-click,
+send left/right cursor control sequences to the host to
+adjust the cursor position to match the mouse click.
+After adjusting the cursor position,
+\fI\*(xt\fP sends erase-characters
+(one for each character in the selection)
+to tell the host to delete the selected text.
+.IP "\*2\*0\*0\*5"
+When writing a selection to the host
+(i.e., pasting text),
+escape each character with the \fIliteral-next\fP (Ctrl-V) character.
+.IP "\*2\*0\*0\*6"
+Normally when \fI\*(xt\fP writes selections to the host,
+it translates newlines to carriage returns.
+This mode disables the translation, passing newlines literally.
 .
 .Sh "Title Modes"
 .LP

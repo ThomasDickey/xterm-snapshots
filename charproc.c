@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1929 2023/01/28 01:23:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1931 2023/02/13 00:18:41 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2573,7 +2573,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	}
     }
     right_margin = ScrnRightMargin(xw);
-    memset(buffer, ' ', SL_BUFSIZ);
+    memset(buffer, ' ', (size_t) SL_BUFSIZ);
     while (screen->cur_col < right_margin) {
 	int chunk = Min(SL_BUFSIZ, (right_margin - screen->cur_col));
 	StatusPutChars(xw, buffer, chunk);
@@ -6212,7 +6212,7 @@ in_put(XtermWidget xw)
 	     * of output.
 	     */
 	    if (size == FRG_SIZE) {
-		init_timeval(&my_timeout, 0);
+		init_timeval(&my_timeout, 0L);
 		i = Select(max_plus1, &select_mask, &write_mask, 0, &my_timeout);
 		if (i > 0 && FD_ISSET(screen->respond, &select_mask)) {
 		    sched_yield();
@@ -6241,7 +6241,7 @@ in_put(XtermWidget xw)
 	    XFD_COPYSET(&pty_mask, &write_mask);
 	} else
 	    FD_ZERO(&write_mask);
-	init_timeval(&my_timeout, 0);
+	init_timeval(&my_timeout, 0L);
 	time_select = 0;
 
 	/*
@@ -6263,12 +6263,12 @@ in_put(XtermWidget xw)
 		}
 #if OPT_STATUS_LINE
 	    if ((screen->status_type == 1) && screen->status_timeout) {
-		ImproveTimeout(find_SL_Timeout(xw) * 1000);
+		ImproveTimeout(find_SL_Timeout(xw) * 1000L);
 		time_select = 1;
 	    }
 #endif
 	    if (screen->awaitInput) {
-		ImproveTimeout(50000);
+		ImproveTimeout(50000L);
 		time_select = 1;
 	    }
 #if OPT_BLINK_CURS
@@ -6279,9 +6279,9 @@ in_put(XtermWidget xw)
 		 * Compute the timeout for the blinking cursor to be much
 		 * smaller than the "on" or "off" interval.
 		 */
-		long tick = smaller_timeout((screen->blink_on < screen->blink_off)
-					    ? screen->blink_on
-					    : screen->blink_off);
+		long tick = smaller_timeout((long) ((screen->blink_on < screen->blink_off)
+						    ? screen->blink_on
+						    : screen->blink_off));
 		ImproveTimeout(tick);
 		time_select = 1;
 	    }
@@ -6305,7 +6305,7 @@ in_put(XtermWidget xw)
 
 	/* if there is room to write more data to the pty, go write more */
 	if (FD_ISSET(screen->respond, &write_mask)) {
-	    v_write(screen->respond, (Char *) 0, 0);	/* flush buffer */
+	    v_write(screen->respond, (Char *) 0, (size_t) 0);	/* flush buffer */
 	}
 
 	/* if there are X events already in our queue, it
@@ -8684,11 +8684,11 @@ unparse_end(XtermWidget xw)
     if (screen->unparse_len) {
 	TRACE(("unparse_end %u:%s\n",
 	       screen->unparse_len,
-	       visibleIChars(screen->unparse_bfr, screen->unparse_len)));
+	       visibleIChars(screen->unparse_bfr, (size_t) screen->unparse_len)));
 #ifdef VMS
 	tt_write(screen->unparse_bfr, screen->unparse_len);
 #else /* VMS */
-	writePtyData(screen->respond, screen->unparse_bfr, screen->unparse_len);
+	writePtyData(screen->respond, screen->unparse_bfr, (size_t) screen->unparse_len);
 #endif /* VMS */
 	screen->unparse_len = 0;
     }

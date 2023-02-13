@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.190 2022/09/11 19:44:11 tom Exp $
+-- $XTermId: INSTALL,v 1.192 2023/02/12 19:17:48 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2021,2022 by Thomas E. Dickey
+-- Copyright 1997-2022,2023 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -32,7 +32,7 @@
 Xterm was originally built as part of the X Window System source tree, using
 imake to generate a Makefile from Imakefile.
 
-An example Imakefile is provided for legacy use.
+An example Imakefile is provided for legacy use (with xmkmf).
 
 The preferred method uses the configure script to generate a Makefile from
 Makefile.in
@@ -298,6 +298,13 @@ The options (in alphabetic order):
 	leaving the right scrollbar incorrectly positioned after changing
 	the font size.
 
+  --disable-readline-mouse enable support for mouse in readline applications
+
+	Do not compile-in code to support readline with mouse.
+
+	(The "paste64" feature, which fits xterm's protocol better, is
+	configured by default).
+
   --disable-rpath-hack    don't add rpath options for additional libraries
 
 	By default, the configure script looks for libraries in unusual places
@@ -525,16 +532,6 @@ The options (in alphabetic order):
   --enable-pty-erase      set default ptyInitialErase resource (default: false)
 
 	This sets the default resource value, which is shown in the manpage.
-
-  --enable-readline-mouse enable support for mouse in readline applications
-
-	Compile-in code to support predecessor to bracketed paste mode, i.e.,
-	provide functions for setting/getting the selection data.  Essentially
-	this puts xterm into a mode that sends special function-key strings to
-	bracket the data.
-
-	(The "paste64" feature, which fits xterm's protocol better, is
-	configured by default).
 
   --enable-regis-graphics enable support for ReGIS graphics
 

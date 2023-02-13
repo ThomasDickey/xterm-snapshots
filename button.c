@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.646 2022/11/25 00:26:32 tom Exp $ */
+/* $XTermId: button.c,v 1.653 2023/02/13 22:34:51 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1302,8 +1302,9 @@ eventColBetween(TScreen *screen, XEvent *event)		/* must be XButtonEvent */
 }
 
 static int
-ReadLineMovePoint(TScreen *screen, int col, int ldelta)
+ReadLineMovePoint(XtermWidget xw, int col, int ldelta)
 {
+    TScreen *screen = TScreenOf(xw);
     Char line[6];
     unsigned count = 0;
 
@@ -1314,13 +1315,13 @@ ReadLineMovePoint(TScreen *screen, int col, int ldelta)
 	line[count++] = ANSI_CSI;
     } else {
 	line[count++] = ANSI_ESC;
-	line[count++] = '[';	/* XXX maybe sometimes O is better? */
+	line[count++] = (xw->keyboard.flags & MODE_DECCKM) ? 'O' : '[';
     }
     line[count] = CharOf(col > 0 ? 'C' : 'D');
     if (col < 0)
 	col = -col;
     while (col--)
-	v_write(screen->respond, line, 3);
+	v_write(screen->respond, line, (size_t) 3);
     return 1;
 }
 
@@ -1328,12 +1329,16 @@ static int
 ReadLineDelete(TScreen *screen, CELL *cell1, CELL *cell2)
 {
     int del;
+    Char erases[2];
+
+    erases[0] = (Char) get_tty_erase(screen->respond, XTERM_ERASE, "pty");
+    erases[1] = 0;
 
     del = (cell2->col - cell1->col) + ((cell2->row - cell1->row) * MaxCols(screen));
     if (del <= 0)		/* Just in case... */
 	return 0;
     while (del--)
-	v_write(screen->respond, (const Char *) "\177", 1);
+	v_write(screen->respond, erases, (size_t) 1);
     return 1;
 }
 
@@ -1348,13 +1353,13 @@ readlineExtend(XtermWidget xw, XEvent *event)
 	if (isClick1_clean(xw, my_event)
 	    && SCREEN_FLAG(screen, click1_moves)
 	    && rowOnCurrentLine(screen, eventRow(screen, event), &ldelta1)) {
-	    ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta1);
+	    ReadLineMovePoint(xw, eventColBetween(screen, event), ldelta1);
 	}
 	if (isDoubleClick3(xw, screen, my_event)
 	    && SCREEN_FLAG(screen, dclick3_deletes)
 	    && rowOnCurrentLine(screen, screen->startSel.row, &ldelta1)
 	    && rowOnCurrentLine(screen, screen->endSel.row, &ldelta2)) {
-	    ReadLineMovePoint(screen, screen->endSel.col, ldelta2);
+	    ReadLineMovePoint(xw, screen->endSel.col, ldelta2);
 	    ReadLineDelete(screen, &screen->startSel, &(screen->endSel));
 	}
     }
@@ -1388,7 +1393,7 @@ DiredButton(Widget w,
 	    Line[2] = 'G';
 	    Line[3] = CharOf(' ' + col);
 	    Line[4] = CharOf(' ' + line);
-	    v_write(screen->respond, Line, 5);
+	    v_write(screen->respond, Line, (size_t) 5);
 	}
     }
 }
@@ -1436,13 +1441,12 @@ ReadLineButton(Widget w,
 	if (col == 0)
 	    goto finish;
 	Line[0] = ANSI_ESC;
-	/* XXX: sometimes it is better to send '['? */
-	Line[1] = 'O';
+	Line[1] = (xw->keyboard.flags & MODE_DECCKM) ? 'O' : '[';
 	Line[2] = CharOf(col > 0 ? 'C' : 'D');
 	if (col < 0)
 	    col = -col;
 	while (col--)
-	    v_write(screen->respond, Line, 3);
+	    v_write(screen->respond, Line, (size_t) 3);
       finish:
 	if (event->type == ButtonRelease)
 	    do_select_end(xw, event, params, num_params, False);
@@ -1473,7 +1477,7 @@ ViButton(Widget w,
 		Char Line[6];
 
 		Line[0] = ANSI_ESC;	/* force an exit from insert-mode */
-		v_write(pty, Line, 1);
+		v_write(pty, Line, (size_t) 1);
 
 		if (line < 0) {
 		    line = -line;
@@ -1482,7 +1486,7 @@ ViButton(Widget w,
 		    Line[0] = CONTROL('p');
 		}
 		while (--line >= 0)
-		    v_write(pty, Line, 1);
+		    v_write(pty, Line, (size_t) 1);
 	    }
 	}
     }
@@ -2278,7 +2282,7 @@ GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 #ifdef VMS
 #  define tty_vwrite(pty,lag,l)		tt_write(lag,l)
 #else /* !( VMS ) */
-#  define tty_vwrite(pty,lag,l)		v_write(pty,lag,l)
+#  define tty_vwrite(pty,lag,l)		v_write(pty,lag,(size_t) l)
 #endif /* defined VMS */
 
 #if OPT_PASTE64
@@ -2454,14 +2458,18 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, size_t length)
 #endif /* OPT_PASTE64 */
 #if OPT_READLINE
     if (SCREEN_FLAG(screen, paste_quotes)) {
+	Char quote[2];
+	quote[0] = (Char) get_tty_lnext(screen->respond, XTERM_LNEXT, "pty");
+	quote[1] = 0;
+	TRACE(("writing quoted selection data %s\n", visibleChars(lag, length)));
 	while (length--) {
-	    tty_vwrite(screen->respond, (const Char *) "\026", 1);	/* Control-V */
+	    tty_vwrite(screen->respond, quote, 1);
 	    tty_vwrite(screen->respond, lag++, 1);
 	}
     } else
 #endif
     {
-	TRACE(("writing base64 padding %s\n", visibleChars(lag, length)));
+	TRACE(("writing selection data %s\n", visibleChars(lag, length)));
 	tty_vwrite(screen->respond, lag, length);
     }
 }
@@ -2469,14 +2477,9 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, size_t length)
 static void
 _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 {
-    /* Write data to pty a line at a time. */
-    /* Doing this one line at a time may no longer be necessary
-       because v_write has been re-written. */
-
-#if OPT_PASTE64
+#if OPT_PASTE64 || OPT_READLINE
     TScreen *screen = TScreenOf(xw);
 #endif
-    Char *lag, *end;
 
     /* in the VMS version, if tt_pasting isn't set to True then qio
        reads aren't blocked and an infinite loop is entered, where the
@@ -2486,30 +2489,23 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
     tt_pasting = True;
 #endif
 
-    end = &line[length];
-    lag = line;
-
 #if OPT_PASTE64
     if (screen->base64_paste) {
-	_qWriteSelectionData(xw, lag, (size_t) (end - lag));
+	_qWriteSelectionData(xw, line, length);
 	base64_flush(screen);
     } else
 #endif
     {
 	if (!SCREEN_FLAG(screen, paste_literal_nl)) {
-	    Char *cp;
-	    for (cp = line; cp != end; cp++) {
-		if (*cp == '\n') {
-		    *cp = '\r';
-		    _qWriteSelectionData(xw, lag, (size_t) (cp - lag + 1));
-		    lag = cp + 1;
+	    size_t n;
+	    for (n = 0; n < length; ++n) {
+		if (line[n] == '\n') {
+		    line[n] = '\r';
 		}
 	    }
 	}
 
-	if (lag != end) {
-	    _qWriteSelectionData(xw, lag, (size_t) (end - lag));
-	}
+	_qWriteSelectionData(xw, line, length);
     }
 #ifdef VMS
     tt_pasting = False;
@@ -2826,7 +2822,7 @@ HandleInsertSelection(Widget w,
 		&& (okSendMousePos(xw) == MOUSE_OFF)
 		&& SCREEN_FLAG(screen, paste_moves)
 		&& rowOnCurrentLine(screen, eventRow(screen, event), &ldelta))
-		ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta);
+		ReadLineMovePoint(xw, eventColBetween(screen, event), ldelta);
 #endif /* OPT_READLINE */
 
 	    xtermGetSelection(w, event->xbutton.time, params, *num_params, NULL);
@@ -3101,7 +3097,7 @@ EndExtend(XtermWidget xw,
 		    break;
 		}
 	    }
-	    v_write(screen->respond, line, count);
+	    v_write(screen->respond, line, (size_t) count);
 	    UnHiliteText(xw);
 	}
     }
@@ -5432,7 +5428,7 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 
 	/* Transmit key sequence to process running under xterm */
 	TRACE(("EditorButton -> %s\n", visibleChars(line, count)));
-	v_write(pty, line, count);
+	v_write(pty, line, (size_t) count);
     }
     return;
 }

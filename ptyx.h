@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1082 2023/01/02 13:24:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1084 2023/02/13 08:53:55 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -396,6 +396,9 @@ typedef struct {
 			 (((c) < ANSI_SPA) || \
 			  ((c) >= ANSI_DEL && (c) <= ANSI_APC)))
 #define OnlyLatin1(c)	(NonLatin1(c) ? BAD_ASCII : (c))
+
+#define L_BLOK		'['
+#define R_BLOK		']'
 
 #define L_CURL		'{'
 #define R_CURL		'}'
@@ -1593,6 +1596,9 @@ extern int A2E(int);
 #endif
 
 #define CONTROL(a) (A2E(E2A(a)&037))
+
+#define XTERM_ERASE A2E(CONTROL('H'))
+#define XTERM_LNEXT A2E(CONTROL('V'))
 
 /***====================================================================***/
 

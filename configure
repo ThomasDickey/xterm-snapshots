@@ -785,7 +785,7 @@ Optional Features:
   --disable-num-lock      disable NumLock keypad support
   --disable-paste64       disable get/set base64 selection data
   --disable-pty-handshake disable pty-handshake support
-  --enable-readline-mouse enable support for mouse in readline applications
+  --disable-readline-mouse disable support for mouse in readline applications
   --disable-regex         disable regular-expression selections
   --with-pcre2            use PCRE2 for regular-expressions
   --with-pcre             use PCRE for regular-expressions
@@ -20561,15 +20561,15 @@ echo $ECHO_N "checking if you want support for mouse in readline applications...
 # Check whether --enable-readline-mouse or --disable-readline-mouse was given.
 if test "${enable_readline_mouse+set}" = set; then
   enableval="$enable_readline_mouse"
-  test "$enableval" != yes && enableval=no
-	if test "$enableval" != "no" ; then
-    enable_readline_mouse=yes
+  test "$enableval" != no && enableval=yes
+	if test "$enableval" != "yes" ; then
+    enable_readline_mouse=no
 	else
-		enable_readline_mouse=no
+		enable_readline_mouse=yes
 	fi
 else
-  enableval=no
-	enable_readline_mouse=no
+  enableval=yes
+	enable_readline_mouse=yes
 
 fi;
 echo "$as_me:20575: result: $enable_readline_mouse" >&5

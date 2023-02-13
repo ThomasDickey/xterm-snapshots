@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.393 2023/01/26 00:32:26 tom Exp $
+dnl $XTermId: configure.in,v 1.394 2023/02/12 19:12:35 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -840,10 +840,10 @@ else
 fi
 
 AC_MSG_CHECKING(if you want support for mouse in readline applications)
-CF_ARG_ENABLE(readline-mouse,
-	[  --enable-readline-mouse enable support for mouse in readline applications],
-	[enable_readline_mouse=yes],
-	[enable_readline_mouse=no])
+CF_ARG_DISABLE(readline-mouse,
+	[  --disable-readline-mouse disable support for mouse in readline applications],
+	[enable_readline_mouse=no],
+	[enable_readline_mouse=yes])
 AC_MSG_RESULT($enable_readline_mouse)
 if test "$enable_readline_mouse" = yes ; then
 	AC_DEFINE(OPT_READLINE,1,[Define to 1 to enable support for mouse in readline applications])
