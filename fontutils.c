@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.760 2023/01/08 23:42:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.762 2023/02/15 09:03:18 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -2398,8 +2398,12 @@ xtermSetCursorBox(TScreen *screen)
     XPoint *vp;
     int fw = FontWidth(screen) - 1;
     int fh = FontHeight(screen) - 1;
-    int ww = isCursorBar(screen) ? 1 : fw;
-    int hh = isCursorUnderline(screen) ? 1 : fh;
+    int ww = isCursorBar(screen) ? fw / 8 : fw;
+    int hh = isCursorUnderline(screen) ? fw / 8 : fh;
+    if (ww < 2)
+	ww = 2;
+    if (hh < 2)
+	hh = 2;
 
     vp = &VTbox[1];
     (vp++)->x = (short) ww;

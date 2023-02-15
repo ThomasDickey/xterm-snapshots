@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.874 2023/01/08 19:20:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.876 2023/02/15 00:16:39 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -460,6 +460,14 @@ the outer edge of the characters and the window border) in pixels.
 That is the \fIvt100\fP \fBinternalBorder\fP resource.
 The
 default is \*(``2\*(''.
+.TP 8
+.B "\-barc"
+This option, corresponding to the \fBcursorBar\fP resource,
+makes the cursor a bar instead of a box.
+.TP 8
+.B "+barc"
+This option, corresponding to the \fBcursorBar\fP resource,
+makes the cursor a box instead of a bar.
 .TP 8
 .BI \-baudrate " number"
 Set the line-speed, used to test the behavior of applications that
@@ -1249,10 +1257,12 @@ when your operating system does not support locale.
 This option resets the \fButf8\fP resource.
 .TP 8
 .B "\-uc"
-This option makes the cursor underlined instead of a box.
+This option, corresponding to the \fBcursorUnderline\fP resource,
+makes the cursor underlined instead of a box.
 .TP 8
 .B "+uc"
-This option makes the cursor a box instead of underlined.
+This option m, corresponding to the \fBcursorUnderline\fP resource,
+akes the cursor a box instead of underlined.
 .TP 8
 .B "\-ulc"
 This option disables the display of characters with underline attribute as
@@ -2952,6 +2962,11 @@ should be worked around.
 See the \fB\-cu\fP option for details.
 The default is \*(``false\*(''.
 .TP 8
+.B "cursorBar\fP (class\fB CursorBar\fP)"
+Specifies whether to make the cursor a left-bar or a box,
+unless the \fBcursorUnderline\fP resource is set.
+The default is \*(``false\*(''.
+.TP 8
 .B "cursorBlink\fP (class\fB CursorBlink\fP)"
 Specifies whether to make the cursor blink.
 \fI\*N\fP accepts either a keyword (ignoring case)
@@ -3029,6 +3044,7 @@ The default is \*(``600\*(''.
 .TP 8
 .B "cursorUnderLine\fP (class\fB CursorUnderLine\fP)"
 Specifies whether to make the cursor underlined or a box.
+If unset (false), the \fBcursorBar\fP resource may set the cursor shape.
 The default is \*(``false\*(''.
 .TP 8
 .B "cutNewline\fP (class\fB CutNewline\fP)"

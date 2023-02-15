@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.896 2023/02/13 09:06:28 tom Exp $ */
+/* $XTermId: main.c,v 1.899 2023/02/15 01:25:39 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -1008,6 +1008,8 @@ DATA("-ai",		"*activeIcon",	XrmoptionNoArg,		"off"),
 DATA("+ai",		"*activeIcon",	XrmoptionNoArg,		"on"),
 #endif /* NO_ACTIVE_ICON */
 DATA("-b",		"*internalBorder",XrmoptionSepArg,	NULL),
+DATA("-barc",		"*cursorBar",	XrmoptionNoArg,		"on"),
+DATA("+barc",		"*cursorBar",	XrmoptionNoArg,		"off"),
 DATA("-bc",		"*cursorBlink",	XrmoptionNoArg,		"on"),
 DATA("+bc",		"*cursorBlink",	XrmoptionNoArg,		"off"),
 DATA("-bcf",		"*cursorOffTime",XrmoptionSepArg,	NULL),
@@ -1153,8 +1155,8 @@ DATA("-uc",		"*cursorUnderLine", XrmoptionNoArg,	"on"),
 DATA("+uc",		"*cursorUnderLine", XrmoptionNoArg,	"off"),
 DATA("-ulc",		"*colorULMode",	XrmoptionNoArg,		"off"),
 DATA("+ulc",		"*colorULMode",	XrmoptionNoArg,		"on"),
-DATA("-ulit",       	"*italicULMode", XrmoptionNoArg,        "off"),
-DATA("+ulit",       	"*italicULMode", XrmoptionNoArg,        "on"),
+DATA("-ulit",		"*italicULMode", XrmoptionNoArg,	"off"),
+DATA("+ulit",		"*italicULMode", XrmoptionNoArg,	"on"),
 DATA("-ut",		"*utmpInhibit",	XrmoptionNoArg,		"on"),
 DATA("+ut",		"*utmpInhibit",	XrmoptionNoArg,		"off"),
 DATA("-im",		"*useInsertMode", XrmoptionNoArg,	"on"),

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1084 2023/02/13 08:53:55 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1085 2023/02/14 22:14:16 Jan.Engelhardt Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2578,6 +2578,7 @@ typedef struct {
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
+	Boolean         cursor_bar;     /* true if cursor is in bar mode */
 	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
 	BlinkOps	cursor_blink;	/* cursor blink enable		*/

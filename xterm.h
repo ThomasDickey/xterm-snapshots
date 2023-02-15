@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.924 2023/02/13 08:42:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.926 2023/02/14 23:49:04 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -491,6 +491,7 @@ extern char **environ;
 #define XtNcombiningChars	"combiningChars"
 #define XtNctrlFKeys		"ctrlFKeys"
 #define XtNcurses		"curses"
+#define XtNcursorBar		"cursorBar"
 #define XtNcursorBlink		"cursorBlink"
 #define XtNcursorBlinkXOR	"cursorBlinkXOR"
 #define XtNcursorColor		"cursorColor"
@@ -707,6 +708,7 @@ extern char **environ;
 #define XtCCombiningChars	"CombiningChars"
 #define XtCCtrlFKeys		"CtrlFKeys"
 #define XtCCurses		"Curses"
+#define XtCCursorBar		"CursorBar"
 #define XtCCursorBlink		"CursorBlink"
 #define XtCCursorBlinkXOR	"CursorBlinkXOR"
 #define XtCCursorOffTime	"CursorOffTime"

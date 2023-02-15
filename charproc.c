@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1931 2023/02/13 00:18:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1934 2023/02/15 00:10:20 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -583,6 +583,7 @@ static XtResource xterm_resources[] =
     Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "false"),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
+    Bres(XtNcursorBar, XtCCursorBar, screen.cursor_bar, False),
 
 #if OPT_BLINK_TEXT
     Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
@@ -9482,9 +9483,8 @@ set_flags_from_list(char *target,
 }
 
 #define InitCursorShape(target, source) \
-    target->cursor_shape = source->cursor_underline \
-	? CURSOR_UNDERLINE \
-	: CURSOR_BLOCK
+    target->cursor_shape = source->cursor_underline ? CURSOR_UNDERLINE : \
+                           source->cursor_bar ? CURSOR_BAR : CURSOR_BLOCK
 
 #if OPT_XRES_QUERY
 static XtResource *
@@ -10039,6 +10039,7 @@ VTInitialize(Widget wrequest,
     screen->cursor_blink_i = screen->cursor_blink;
 #endif
     init_Bres(screen.cursor_underline);
+    init_Bres(screen.cursor_bar);
     /* resources allow for underline or block, not (yet) bar */
     InitCursorShape(screen, TScreenOf(request));
 #if OPT_BLINK_CURS
@@ -12882,9 +12883,14 @@ ShowCursor(XtermWidget xw)
 	     * Finally, draw the underline.
 	     */
 	    screen->box->x = (short) x;
-	    screen->box->y = (short) (y + FontHeight(screen) - 2);
-	    XDrawLines(screen->display, VDrawable(screen), outlineGC,
-		       screen->box, NBOX, CoordModePrevious);
+	    screen->box->y = (short) (y
+				      + FontHeight(screen)
+				      - screen->box[2].y);
+	    XFillRectangle(screen->display, VDrawable(screen), outlineGC,
+			   screen->box->x,
+			   screen->box->y,
+			   (unsigned) screen->box[1].x,
+			   (unsigned) screen->box[2].y);
 	} else if (isCursorBar(screen)) {
 
 	    /*
@@ -12892,8 +12898,11 @@ ShowCursor(XtermWidget xw)
 	     */
 	    screen->box->x = (short) x;
 	    screen->box->y = (short) y;
-	    XDrawLines(screen->display, VDrawable(screen), outlineGC,
-		       screen->box, NBOX, CoordModePrevious);
+	    XFillRectangle(screen->display, VDrawable(screen), outlineGC,
+			   screen->box->x,
+			   screen->box->y,
+			   (unsigned) screen->box[1].x,
+			   (unsigned) screen->box[2].y);
 	} else {
 #if OPT_WIDE_ATTRS
 	    int italics_on = ((ld->attribs[cursor_col] & ATR_ITALIC) != 0);
