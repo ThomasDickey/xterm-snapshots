@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.228 2023/01/26 00:54:10 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.229 2023/02/27 01:12:57 tom Exp $ */
 
 /*
  * Copyright 1997-2022,2023 by Thomas E. Dickey
@@ -223,6 +223,7 @@
 #undef cc_t			/* CF_TYPE_CC_T */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef mode_t			/* AC_TYPE_MODE_T */
+#undef nfds_t			/* CF_TYPE_NFDS_T */
 #undef off_t			/* AC_TYPE_OFF_T */
 #undef pid_t			/* AC_TYPE_PID_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
