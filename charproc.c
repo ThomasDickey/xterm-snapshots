@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1934 2023/02/15 00:10:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1935 2023/03/07 00:56:20 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1660,25 +1660,29 @@ dump_params(void)
 		} \
 		size = new_length
 
-#define WriteNow() {						\
-	    unsigned single = 0;				\
-								\
-	    if (screen->curss) {				\
-		dotext(xw,					\
-		       screen->gsets[(int) (screen->curss)],	\
-		       sp->print_area,				\
-		       (Cardinal) 1);				\
-		screen->curss = 0;				\
-		single++;					\
-	    }							\
-	    if (sp->print_used > single) {			\
-		dotext(xw,					\
-		       screen->gsets[(int) (screen->curgl)],	\
-		       sp->print_area + single,			\
-		       (Cardinal) (sp->print_used - single));	\
-	    }							\
-	    sp->print_used = 0;					\
-	}							\
+#define WriteNow() {							\
+	    unsigned single = 0;					\
+									\
+	    if (screen->curss) {					\
+		if (sp->print_area != NULL) {				\
+		    dotext(xw,						\
+			   screen->gsets[(int) (screen->curss)],	\
+			   sp->print_area,				\
+			   (Cardinal) 1);				\
+		    single++;						\
+		}							\
+		screen->curss = 0;					\
+	    }								\
+	    if (sp->print_used > single) {				\
+		if (sp->print_area != NULL) {				\
+		    dotext(xw,						\
+			   screen->gsets[(int) (screen->curgl)],	\
+			   sp->print_area + single,			\
+			   (Cardinal) (sp->print_used - single));	\
+		}							\
+	    }								\
+	    sp->print_used = 0;						\
+	}								\
 
 #define PARSE_SRM 1
 

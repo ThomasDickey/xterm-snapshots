@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.46 2023/01/04 09:26:46 tom Exp $ */
+/* $XTermId: charclass.c,v 1.48 2023/03/07 09:29:16 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -311,7 +311,7 @@ expected_class(int wch)
 {
     int result = wch;
     wint_t ch = (wint_t) wch;
-    if (ch == '\0' || ch == '\t') {
+    if (wch < 0 || ch == '\0' || ch == '\t') {
 	result = BLANK;
     } else if (iswcntrl(ch)) {
 	result = CNTRL;
