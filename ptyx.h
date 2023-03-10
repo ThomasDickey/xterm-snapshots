@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1085 2023/02/14 22:14:16 Jan.Engelhardt Exp $ */
+/* $XTermId: ptyx.h,v 1.1086 2023/03/10 00:04:25 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3237,6 +3237,7 @@ typedef struct _Misc {
     float face_size[NMENUFONTS];
     char *render_font_s;
     int limit_fontsets;
+    int limit_fontheight;
     int limit_fontwidth;
 #endif
 } Misc;

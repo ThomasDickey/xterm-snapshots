@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1935 2023/03/07 00:56:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1936 2023/03/09 23:51:58 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -839,6 +839,7 @@ static XtResource xterm_resources[] =
     Sres(XtNfaceName, XtCFaceName, misc.default_xft.f_n, DEFFACENAME),
     Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
     Ires(XtNlimitFontsets, XtCLimitFontsets, misc.limit_fontsets, DEF_XFT_CACHE),
+    Ires(XtNlimitFontHeight, XtCLimitFontHeight, misc.limit_fontheight, 10),
     Ires(XtNlimitFontWidth, XtCLimitFontWidth, misc.limit_fontwidth, 10),
 #if OPT_RENDERWIDE
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.default_xft.f_w, DEFFACENAME),
@@ -10619,6 +10620,12 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
     init_Ires(misc.limit_fontsets);
+    init_Ires(misc.limit_fontheight);
+    if (wnew->misc.limit_fontheight > 50) {
+	xtermWarning("limiting extra fontheight percent to 50 (was %u)\n",
+		     wnew->misc.limit_fontheight);
+	wnew->misc.limit_fontheight = 50;
+    }
     init_Ires(misc.limit_fontwidth);
     if (wnew->misc.limit_fontwidth > 50) {
 	xtermWarning("limiting extra fontwidth percent to 50 (was %u)\n",

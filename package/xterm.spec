@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.158 2023/02/27 01:00:24 tom Exp $
+# $XTermId: xterm.spec,v 1.159 2023/03/08 01:17:27 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -9,7 +9,7 @@ Version: 380
 Release: 1
 License: X11
 Group: User Interface/X
-Source: xterm-%{version}.tgz
+Source: https://invisible-island.net/archives/xterm/xterm-%{version}.tgz
 URL: https://invisible-island.net/xterm/
 Provides: x-terminal-emulator >= %{version}
 
@@ -208,14 +208,6 @@ if [ -x %{_bindir}/gtk-update-icon-cache ]; then
   %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
 fi
 %endif
-
-%clean
-if rm -rf $RPM_BUILD_ROOT; then
-  echo OK
-else
-  find $RPM_BUILD_ROOT -type f | grep -F -v /.nfs && exit 1
-fi
-exit 0
 
 %files
 %defattr(-,root,root,-)

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.763 2023/02/27 01:01:44 Jan.Engelhardt Exp $ */
+/* $XTermId: fontutils.c,v 1.765 2023/03/09 01:49:50 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4405,7 +4405,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
     }
 
     /* initialize on the first call */
-    if (fontData->fontset == NULL) {
+    if (fontData->fontset == NULL && fontData->pattern != NULL) {
 	FcFontSet *sortedFonts;
 	FcPattern *myPattern;
 	int j;
@@ -4466,7 +4466,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 	FcPatternDestroy(myPattern);
 
 	fontData->fs_size = Min(MaxXftCache, fontData->fontset->nfont);
-    } {
+    }
+    if (fontData->fs_size > 0) {
 	XftFont *check;
 	int empty = fontData->fs_size;
 
@@ -5780,6 +5781,7 @@ getDoubleXftFont(XTermDraw * params, XTermXftFonts *data, unsigned chrset, unsig
 			    (void *) 0);
 	}
 	xtermOpenXft(xw, data, 0, face_name, sub_pattern, category);
+	data->pattern = sub_pattern;
     }
 }
 #endif

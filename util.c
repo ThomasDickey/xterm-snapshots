@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.914 2023/01/04 09:21:31 tom Exp $ */
+/* $XTermId: util.c,v 1.917 2023/03/10 23:54:03 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3469,7 +3469,8 @@ drawClippedXftString(XTermDraw * params,
 			       font, x, y,
 			       text,
 			       len);
-    TScreen *screen = TScreenOf(params->xw);
+    XtermWidget xw = params->xw;
+    TScreen *screen = TScreenOf(xw);
     int fontHigh = FontHeight(screen);
     int fontWide = FontWidth(screen);
 
@@ -3498,8 +3499,10 @@ drawClippedXftString(XTermDraw * params,
 	    fontHigh = font->height;
 	    fontWide = font->max_advance_width;
 	    /* check if this is really a double-height font */
+#define DoubleScale(macro,field) \
+	    (int) (macro(screen) * (1.0 + (Max(20, xw->misc.field) / 100.)))
 	    if (halfHigh) {
-		int wantHigh = (int) (FontHeight(screen) * 1.8);
+		int wantHigh = DoubleScale(FontHeight, limit_fontheight);
 		halfHigh = (fontHigh >= wantHigh);
 		TRACE(("comparing fontHigh %d/%d vs %d:"
 		       " double-height %s for %s\n",
@@ -3512,7 +3515,7 @@ drawClippedXftString(XTermDraw * params,
 			: FontHeight(screen));
 	    /* check if this is really a double-width font */
 	    if (halfWide) {
-		int wantWide = (int) (FontWidth(screen) * 1.8);
+		int wantWide = DoubleScale(FontWidth, limit_fontwidth);
 		halfWide = (fontWide >= wantWide);
 		TRACE(("comparing fontWide %d/%d vs %d:"
 		       " double-width %s for %s\n",
@@ -3775,15 +3778,16 @@ drawXtermText(XTermDraw * params,
 #if OPT_RENDERFONT
 	if (UsingRenderFont(recur.xw)) {
 	    if (!IsIcon(screen) && screen->font_doublesize) {
+		int next;
 		TRACE(("drawing %s\n", visibleDblChrset((unsigned) recur.this_chrset)));
 		recur.real_chrset = recur.this_chrset;
 		recur.this_chrset = CSET_SWL;
-		x = drawXtermText(&recur,
-				  gc,
-				  x, y,
-				  text,
-				  len);
-		x += ((int) len) * FontWidth(screen);
+		next = drawXtermText(&recur,
+				     gc,
+				     x, y,
+				     text,
+				     len);
+		x += (next - x) * 2;
 	    } else {
 		x = fakeDoubleChars(&recur,
 				    gc, y, x,
@@ -3890,6 +3894,7 @@ drawXtermText(XTermDraw * params,
 	XTermXftFonts *wdata;
 	XTermXftFonts *wdata0;
 #endif
+	int ncells = 0;
 
 #if OPT_DEC_CHRSET
 	/*
@@ -3939,15 +3944,15 @@ drawXtermText(XTermDraw * params,
 
 	if (!(recur.draw_flags & NOBACKGROUND)) {
 	    XftColor *bg_color = GET_XFT_BG();
-	    int ncells = xtermXftWidth(&recur, recur.attr_flags,
-				       bg_color,
-				       XftFp(ndata), x, y,
-				       text,
-				       len);
+	    int nc = xtermXftWidth(&recur, recur.attr_flags,
+				   bg_color,
+				   XftFp(ndata), x, y,
+				   text,
+				   len);
 	    XftDrawRect(screen->renderDraw,
 			bg_color,
 			x, y,
-			(unsigned) (ncells * FontWidth(screen)),
+			(unsigned) (nc * FontWidth(screen)),
 			(unsigned) FontHeight(screen));
 	}
 
@@ -3962,9 +3967,10 @@ drawXtermText(XTermDraw * params,
 		Boolean replace = False;
 		Boolean missing = False;
 		unsigned ch = (unsigned) text[last];
+		int ch_width = CharWidth(screen, ch);
 		int filler = 0;
 #if OPT_WIDE_CHARS
-		int needed = forceDbl ? 2 : CharWidth(screen, ch);
+		int needed = forceDbl ? 2 : ch_width;
 		XTermXftFonts *currData = pickXftData(needed, ndata, wdata);
 		XftFont *tempFont = 0;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
@@ -4111,30 +4117,32 @@ drawXtermText(XTermDraw * params,
 		    }
 		    first = last + 1;
 		}
+		ncells += ch_width;
 	    }
 	    if (last > first) {
-		underline_len += (Cardinal)
-		    drawClippedXftString(&recur,
-					 recur.attr_flags,
-					 XftFp(ndata),
-					 GET_XFT_FG(),
-					 curX,
-					 y,
-					 text + first,
-					 (Cardinal) (last - first));
+		int nc = drawClippedXftString(&recur,
+					      recur.attr_flags,
+					      XftFp(ndata),
+					      GET_XFT_FG(),
+					      curX,
+					      y,
+					      text + first,
+					      (Cardinal) (last - first));
+		underline_len += (Cardinal) nc;
 	    }
 	}
 #else
 	{
-	    underline_len += (Cardinal)
-		drawClippedXftString(&recur,
-				     recur.attr_flags,
-				     XftFp(ndata),
-				     GET_XFT_FG(),
-				     x,
-				     y,
-				     text,
-				     len);
+	    int nc = drawClippedXftString(&recur,
+					  recur.attr_flags,
+					  XftFp(ndata),
+					  GET_XFT_FG(),
+					  x,
+					  y,
+					  text,
+					  len);
+	    underline_len += (Cardinal) nc;
+	    ncells = nc;
 	}
 #endif /* OPT_BOX_CHARS */
 
@@ -4147,7 +4155,7 @@ drawXtermText(XTermDraw * params,
 		      y + y_shift,
 		      did_ul);
 
-	x += (int) len *FontWidth(screen);
+	x += (int) ncells *FontWidth(screen);
 
 	return x;
     }

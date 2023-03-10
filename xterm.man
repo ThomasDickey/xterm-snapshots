@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.876 2023/02/15 00:16:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.877 2023/03/10 01:08:28 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -4017,6 +4017,13 @@ to the standard output.
 .IP
 Set this to \*(``0\*('' to disable fallbacks entirely.
 .TP 8
+.B "limitFontHeight\fP (class\fB LimitFontHeight\fP)"
+When scaling a TrueType font to provide the parts for a double-high
+character, \fI\*n\fP compares the scaled font with the original
+to ensure that it is taller.
+.IP
+The default is \*(``10\*('' (percent).
+.TP 8
 .B "limitFontWidth\fP (class\fB LimitFontWidth\fP)"
 When looking for fallback fonts, \fI\*n\fP checks to see that the
 the character to be displayed is the same width as the primary font.
@@ -4025,6 +4032,9 @@ If a character extends outside the font's bounding box,
 .IP
 This resource controls the amount by which the character can extend
 outside its bounding box before \fI\*n\fP looks further for a better font.
+.IP
+This resource is also used in scaling TrueType fonts for double-wide characters,
+like \fBlimitFontHeight\fP for double-wide characters.
 .IP
 The default is \*(``10\*('' (percent).
 .TP 8
