@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1936 2023/03/09 23:51:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1937 2023/03/14 22:15:19 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -11414,8 +11414,9 @@ VTDestroy(Widget w GCC_UNUSED)
     XtFree((void *) (xw->visInfo));
 
 #if OPT_WIDE_CHARS
+    FreeTypedBuffer(IChar);
     FreeTypedBuffer(XChar2b);
-    FreeTypedBuffer(char);
+    FreeTypedBuffer(Char);
 #endif
 #if OPT_RENDERFONT
 #if OPT_RENDERWIDE

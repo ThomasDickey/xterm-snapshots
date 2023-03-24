@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1086 2023/03/10 00:04:25 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1089 2023/03/24 00:03:59 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1534,10 +1534,10 @@ typedef enum {
 #if OPT_DEC_CHRSET
 #define if_OPT_DEC_CHRSET(code) code
 	/* Use 2 bits for encoding the double high/wide sense of characters */
-#define CSET_SWL        0
-#define CSET_DHL_TOP    1
-#define CSET_DHL_BOT    2
-#define CSET_DWL        3
+#define CSET_SWL        0	/* character set: single-width line */
+#define CSET_DHL_TOP    1	/* character set: double-height top line */
+#define CSET_DHL_BOT    2	/* character set: double-height bottom line */
+#define CSET_DWL        3	/* character set: double-width line */
 #define NUM_CHRSET      8	/* normal/bold and 4 CSET_xxx values */
 
 	/* Use remaining bits for encoding the other character-sets */
@@ -1666,7 +1666,9 @@ typedef unsigned IChar;		/* for 8-21 bit characters */
 #define WIDEST_ICHAR	NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
-#else
+#else	/* !OPT_WIDE_CHARS */
+#undef OPT_WIDER_ICHAR
+#define OPT_WIDER_ICHAR 0
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
 typedef unsigned char IChar;	/* for 8-bit characters */
@@ -2410,9 +2412,10 @@ typedef struct {
 	Boolean		char_was_written;
 	int		last_written_col;
 	int		last_written_row;
-	TypedBuffer(XChar2b);
-	TypedBuffer(char);
 #endif
+	TypedBuffer(IChar);
+	TypedBuffer(Char);
+	TypedBuffer(XChar2b);
 #if OPT_BROKEN_OSC
 	Boolean		brokenLinuxOSC; /* true to ignore Linux palette ctls */
 #endif
@@ -3472,10 +3475,11 @@ typedef struct _TekWidgetRec {
 #define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
 #define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
 #define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
-#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+#define DOUBLEFIRST	DrawBIT(4)	/* Draw chars one-by-one */
+#define CHARBYCHAR	DrawBIT(5)	/* Draw chars one-by-one */
 
 /* The following attribute is used in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+#define NORESOLUTION	DrawBIT(6)	/* find the font without resolution */
 
 /*
  * Groups of attributes
