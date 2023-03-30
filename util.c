@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.922 2023/03/24 00:27:58 tom Exp $ */
+/* $XTermId: util.c,v 1.924 2023/03/28 09:56:26 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3760,15 +3760,17 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 	} else {
 	    beginClipping(screen, gc, (Cardinal) width, (Cardinal) ncells);
 	}
-	XSetLineAttributes(screen->display, gc,
-			   (unsigned) thick,
-			   LineOnOffDash,
-			   CapProjecting,
-			   JoinMiter);
-	XDrawRectangle(screen->display,
-		       VDrawable(screen), gc,
-		       x, y - height + descent + thick,
-		       (unsigned) (width - thick2), (unsigned) yhigh);
+	if (screen->force_all_chars) {
+	    XSetLineAttributes(screen->display, gc,
+			       (unsigned) thick,
+			       LineOnOffDash,
+			       CapProjecting,
+			       JoinMiter);
+	    XDrawRectangle(screen->display,
+			   VDrawable(screen), gc,
+			   x, y - height + descent + thick,
+			   (unsigned) (width - thick2), (unsigned) yhigh);
+	}
 	if (!too_big) {
 	    endClipping(screen, gc);
 	}
@@ -4046,7 +4048,7 @@ drawXtermText(XTermDraw * params,
 				gc, y, x,
 				text, len);
 	}
-	TRACE(("DrewText [%4d,%4d]\n", y, x));
+	TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
 	return x;
     }
 #endif
@@ -4286,7 +4288,8 @@ drawXtermText(XTermDraw * params,
 		    }
 		    first = last + 1;
 		}
-		ncells += ch_width;
+		if (ch_width > 0)
+		    ncells += ch_width;
 	    }
 	    if (last > first) {
 		int nc = drawClippedXftString(&recur,
@@ -4326,6 +4329,7 @@ drawXtermText(XTermDraw * params,
 
 	x += (int) ncells *FontWidth(screen);
 
+	TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
 	return x;
     }
 #endif /* OPT_RENDERFONT */
@@ -4377,6 +4381,7 @@ drawXtermText(XTermDraw * params,
 			      text++, 1) - adj;
 	}
 
+	TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
 	return x;
     }
 #if OPT_BOX_CHARS
@@ -4500,18 +4505,21 @@ drawXtermText(XTermDraw * params,
 	    }
 	}
 	if (last <= first) {
+	    TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
 	    return x;
 	}
 	text += first;
 	len = (Cardinal) (last - first);
 	recur.draw_flags |= NOTRANSLATION;
 	if (drewBoxes) {
-	    return drawXtermText(&recur,
-				 gc,
-				 x,
-				 y,
-				 text,
-				 len);
+	    x = drawXtermText(&recur,
+			      gc,
+			      x,
+			      y,
+			      text,
+			      len);
+	    TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
+	    return x;
 	}
     }
 #endif /* OPT_BOX_CHARS */
@@ -4794,6 +4802,7 @@ drawXtermText(XTermDraw * params,
 		  did_ul);
 
     x += ((int) real_length) * FontWidth(screen);
+    TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
     return x;
 }
 

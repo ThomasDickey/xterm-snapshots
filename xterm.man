@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.877 2023/03/10 01:08:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.878 2023/03/28 09:54:38 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -5156,7 +5156,7 @@ otherwise the default is \*(``false\*(''.
 .B "showMissingGlyphs\fP (class\fB ShowMissingGlyphs\fP)"
 Tells \fI\*n\fP whether to display a box outlining places where
 a character has been used that the font does not represent.
-The default is \*(``false\*(''.
+The default is \*(``true\*(''.
 .TP 8
 .B "showWrapMarks\fP (class\fB ShowWrapMarks\fP)"
 For debugging \fI\*n\fP and applications that may manipulate the

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.765 2023/03/09 01:49:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.770 2023/03/30 22:59:06 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4041,6 +4041,7 @@ xtermDrawBoxChar(XTermDraw * params,
 			   * screen->fnt_wide);
     unsigned font_height = (((params->draw_flags & DOUBLEHFONT) ? 2U : 1U)
 			    * screen->fnt_high);
+    unsigned thick;
 
     if (cells > 1)
 	font_width *= (unsigned) cells;
@@ -4123,17 +4124,16 @@ xtermDrawBoxChar(XTermDraw * params,
     setCgsBack(params->xw, cgsWin, cgsId, getCgsBack(params->xw, cgsWin, gc));
     gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
-    XSetLineAttributes(screen->display, gc2,
-		       (params->attr_flags & BOLD)
-		       ? ((font_height > 12)
-			  ? font_height / 12
-			  : 1)
-		       : ((font_height > 16)
-			  ? font_height / 16
-			  : 1),
-		       LineSolid,
-		       CapProjecting,
-		       JoinMiter);
+    thick = ((params->attr_flags & BOLD)
+	     ? (Max(screen->fnt_high / 12, 1))
+	     : (Max(screen->fnt_high / 16, 1))),
+	XSetLineAttributes(screen->display, gc2,
+			   thick,
+			   ((ch < XtNumber(lines))
+			    ? LineSolid
+			    : LineOnOffDash),	/* like xtermDrawMissing */
+			   CapProjecting,
+			   JoinMiter);
 
     if (ch == 1) {		/* diamond */
 	XPoint points[5];
@@ -4213,9 +4213,33 @@ xtermDrawBoxChar(XTermDraw * params,
 	}
     } else if (screen->force_all_chars) {
 	/* bounding rectangle, for debugging */
-	XDrawRectangle(screen->display, VDrawable(screen), gc2, x, y,
-		       font_width - 1,
-		       font_height - 1);
+	if ((params->draw_flags & DOUBLEHFONT)) {
+	    XRectangle clip;
+
+	    clip.x = 0;
+	    clip.y = 0;
+	    clip.width = (unsigned short) ((font_width - 1) + (unsigned) thick);
+	    clip.height = (unsigned short) ((unsigned) FontHeight(screen) + thick);
+
+	    if ((params->draw_flags & DOUBLEFIRST)) {
+		y -= (2 * FontDescent(screen));
+		clip.height =
+		    (unsigned short) (clip.height
+				      - ((unsigned short) FontDescent(screen)));
+	    } else {
+		y -= FontHeight(screen);
+		y += FontDescent(screen);
+		clip.y = (short) FontHeight(screen);
+	    }
+	    XSetClipRectangles(screen->display, gc2, x, y, &clip, 1, Unsorted);
+	}
+	XDrawRectangle(screen->display, VDrawable(screen), gc2,
+		       x + (int) thick, y + (int) thick,
+		       font_width - (2 * thick),
+		       font_height - (2 * thick));
+	if ((params->draw_flags & DOUBLEHFONT)) {
+	    XSetClipMask(screen->display, gc2, None);
+	}
     }
 }
 #endif /* OPT_BOX_CHARS */
