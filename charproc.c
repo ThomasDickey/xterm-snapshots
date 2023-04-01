@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1938 2023/03/28 09:38:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1939 2023/03/31 22:56:50 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -8576,14 +8576,14 @@ unparseseq(XtermWidget xw, ANSI *ap)
 	    }
 	    switch (ap->a_radix[i]) {
 	    case 16:
-		sprintf(temp, "%04X", ap->a_param[i] & 0xffff);
+		sprintf(temp, "%04X", UParmOf(ap->a_param[i]));
 		unparseputs(xw, temp);
 		break;
 	    case 1:
 		unparseputc(xw, ap->a_param[i]);
 		break;
 	    default:
-		unparseputn(xw, (unsigned) (UParm) ap->a_param[i]);
+		unparseputn(xw, UParmOf(ap->a_param[i]));
 		break;
 	    }
 	}
@@ -8653,7 +8653,7 @@ unparseputc(XtermWidget xw, int c)
      */
     if (screen->tc_query_code >= 0) {
 	char tmp[3];
-	sprintf(tmp, "%02X", c & 0xFF);
+	sprintf(tmp, "%02X", (unsigned) (c & 0xFF));
 	buf[len++] = CharOf(tmp[0]);
 	buf[len++] = CharOf(tmp[1]);
     } else
@@ -10622,13 +10622,13 @@ VTInitialize(Widget wrequest,
     init_Ires(misc.limit_fontsets);
     init_Ires(misc.limit_fontheight);
     if (wnew->misc.limit_fontheight > 50) {
-	xtermWarning("limiting extra fontheight percent to 50 (was %u)\n",
+	xtermWarning("limiting extra fontheight percent to 50 (was %d)\n",
 		     wnew->misc.limit_fontheight);
 	wnew->misc.limit_fontheight = 50;
     }
     init_Ires(misc.limit_fontwidth);
     if (wnew->misc.limit_fontwidth > 50) {
-	xtermWarning("limiting extra fontwidth percent to 50 (was %u)\n",
+	xtermWarning("limiting extra fontwidth percent to 50 (was %d)\n",
 		     wnew->misc.limit_fontwidth);
 	wnew->misc.limit_fontwidth = 50;
     }

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1044 2023/01/07 01:11:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.1045 2023/03/31 23:03:37 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4935,7 +4935,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 				    unparseputn(xw, xw->rgb_widths[0]);
 				} else {
 				    char temp[1024];
-				    sprintf(temp, "%d/%d/%d",
+				    sprintf(temp, "%u/%u/%u",
 					    xw->rgb_widths[0],
 					    xw->rgb_widths[1],
 					    xw->rgb_widths[2]);

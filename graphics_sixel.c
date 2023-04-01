@@ -1,8 +1,8 @@
-/* $XTermId: graphics_sixel.c,v 1.38 2022/10/10 15:09:41 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.42 2023/03/31 23:18:18 tom Exp $ */
 
 /*
- * Copyright 2014-2021,2022 by Ross Combs
- * Copyright 2014-2021,2022 by Thomas E. Dickey
+ * Copyright 2014-2022,2023 by Ross Combs
+ * Copyright 2014-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -74,9 +74,10 @@ parse_prefixedtype_params(ANSI *params, const char **string)
 	if (isdigit(ch)) {
 	    last_empty = 0;
 	    if (nparam < NPARAM) {
-		params->a_param[nparam] =
-		    (ParmType) ((params->a_param[nparam] * 10)
-				+ (ch - '0'));
+		unsigned oldValue = (unsigned) params->a_param[nparam];
+		unsigned newValue = (oldValue * 10) + (ch - '0');
+		newValue = Min(MaxUParm, newValue);
+		params->a_param[nparam] = (ParmType) newValue;
 	    }
 	} else if (ch == ';') {
 	    last_empty = 1;
@@ -376,13 +377,13 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
     }
 
     {
-	int Pmacro = params->a_param[0];
-	int Pbgmode = params->a_param[1];
-	int Phgrid = params->a_param[2];
-	int Pan = params->a_param[3];
-	int Pad = params->a_param[4];
-	int Ph = params->a_param[5];
-	int Pv = params->a_param[6];
+	int Pmacro = UParmOf(params->a_param[0]);
+	int Pbgmode = UParmOf(params->a_param[1]);
+	int Phgrid = UParmOf(params->a_param[2]);
+	int Pan = UParmOf(params->a_param[3]);
+	int Pad = UParmOf(params->a_param[4]);
+	int Ph = UParmOf(params->a_param[5]);
+	int Pv = UParmOf(params->a_param[6]);
 
 	(void) Phgrid;
 
@@ -402,7 +403,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    context.aspect_vertical = Pan;
 	    context.aspect_horizontal = Pad;
 
-	    if (Ph <= 0 || Pv <= 0) {
+	    if (Ph == 0 || Pv == 0) {
 		TRACE(("DATA_ERROR: raster image dimensions are invalid %dx%d\n",
 		       Ph, Pv));
 		return -1;
@@ -574,26 +575,26 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    }
 	} else if (ch == '#') {	/* DECGCI */
 	    ANSI color_params;
-	    int Pregister;
+	    RegisterNum Pregister;
 
 	    parse_prefixedtype_params(&color_params, &string);
-	    Pregister = color_params.a_param[0];
-	    if (Pregister >= (int) graphic->valid_registers) {
-		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
+	    Pregister = (RegisterNum) color_params.a_param[0];
+	    if (Pregister >= graphic->valid_registers) {
+		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %u\n", Pregister));
 		/* FIXME: supposedly the DEC terminals wrapped register indices -- verify */
-		while (Pregister >= (int) graphic->valid_registers)
-		    Pregister -= (int) graphic->valid_registers;
-		TRACE(("DATA_WARNING: converted to %d\n", Pregister));
+		while (Pregister >= graphic->valid_registers)
+		    Pregister -= (RegisterNum) graphic->valid_registers;
+		TRACE(("DATA_WARNING: converted to %u\n", Pregister));
 	    }
 
 	    if (color_params.a_nparam > 2 && color_params.a_nparam <= 5) {
-		int Pspace = color_params.a_param[1];
-		int Pc1 = color_params.a_param[2];
-		int Pc2 = color_params.a_param[3];
-		int Pc3 = color_params.a_param[4];
+		int Pspace = UParmOf(color_params.a_param[1]);
+		int Pc1 = UParmOf(color_params.a_param[2]);
+		int Pc2 = UParmOf(color_params.a_param[3]);
+		int Pc3 = UParmOf(color_params.a_param[4]);
 		short r, g, b;
 
-		TRACE(("sixel set color register=%d space=%d color=[%d,%d,%d] (nparams=%d)\n",
+		TRACE(("sixel set color register=%u space=%d color=[%d,%d,%d] (nparams=%d)\n",
 		       Pregister, Pspace, Pc1, Pc2, Pc3, color_params.a_nparam));
 
 		switch (Pspace) {
@@ -620,12 +621,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		    return finished_parsing(xw, graphic);
 		}
 		update_color_register(graphic,
-				      (RegisterNum) Pregister,
+				      Pregister,
 				      r, g, b);
 	    } else if (color_params.a_nparam == 1) {
-		TRACE(("sixel switch to color register=%d (nparams=%d)\n",
+		TRACE(("sixel switch to color register=%u (nparams=%d)\n",
 		       Pregister, color_params.a_nparam));
-		context.current_register = (RegisterNum) Pregister;
+		context.current_register = Pregister;
 	    } else {
 		TRACE(("DATA_ERROR: sixel switch color operator with unexpected parameter count (nparams=%d)\n", color_params.a_nparam));
 		return finished_parsing(xw, graphic);
@@ -639,8 +640,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		TRACE(("DATA_ERROR: sixel raster attribute operator with incomplete parameters (found %d, expected 2 or 4)\n", raster_params.a_nparam));
 		return finished_parsing(xw, graphic);
 	    } {
-		int Pan = raster_params.a_param[0];
-		int Pad = raster_params.a_param[1];
+		int Pan = UParmOf(raster_params.a_param[0]);
+		int Pad = UParmOf(raster_params.a_param[1]);
 		TRACE(("sixel raster attribute with h:w=%d:%d\n", Pan, Pad));
 		if (Pan == 0 || Pad == 0) {
 		    TRACE(("DATA_ERROR: invalid raster ratio %d/%d\n", Pan, Pad));
@@ -652,8 +653,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    }
 
 	    if (raster_params.a_nparam >= 4) {
-		int Ph = raster_params.a_param[2];
-		int Pv = raster_params.a_param[3];
+		int Ph = UParmOf(raster_params.a_param[2]);
+		int Pv = UParmOf(raster_params.a_param[3]);
 
 		TRACE(("sixel raster attribute with h=%d v=%d\n", Ph, Pv));
 		if (Ph <= 0 || Pv <= 0) {

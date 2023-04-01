@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2494 2023/03/28 10:07:16 tom Exp $
+  $XTermId: xterm.log.html,v 1.2495 2023/03/31 23:48:56 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1050,6 +1050,9 @@
 
     <li>pointer/overflow fixes (reported by David Leadbeater):
       <ul>
+        <li>improve limit-checks for control-sequence numeric
+        parameters in SIXEL graphics.</li>
+
         <li>add null-pointer checks in <tt>WriteNow</tt> macro to
         handle a case where <tt>SS2</tt> or <tt>SS3</tt> might be
         in effect while processing a combining character.</li>

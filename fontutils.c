@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.770 2023/03/30 22:59:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.772 2023/03/31 23:43:05 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -1222,8 +1222,8 @@ reportOneVTFont(const char *tag,
 	ReportFonts("\t\tall chars:     %s\n", (fs->all_chars_exist
 						? "yes"
 						: "no"));
-	ReportFonts("\t\tdefault char:  %d\n", fs->default_char);
-	ReportFonts("\t\tdirection:     %d\n", fs->direction);
+	ReportFonts("\t\tdefault char:  %u\n", fs->default_char);
+	ReportFonts("\t\tdirection:     %u\n", fs->direction);
 	ReportFonts("\t\tascent:        %d\n", fs->ascent);
 	ReportFonts("\t\tdescent:       %d\n", fs->descent);
 	ReportFonts("\t\tfirst char:    %u\n", first_char);
@@ -1243,8 +1243,8 @@ reportOneVTFont(const char *tag,
 	    ReportFonts("\t\tmissing-chars: %u\n", missing);
 	    ReportFonts("\t\tpresent-chars: %u\n", countGlyphs(fs) - missing);
 	}
-	ReportFonts("\t\tmin_byte1:     %d\n", fs->min_byte1);
-	ReportFonts("\t\tmax_byte1:     %d\n", fs->max_byte1);
+	ReportFonts("\t\tmin_byte1:     %u\n", fs->min_byte1);
+	ReportFonts("\t\tmax_byte1:     %u\n", fs->max_byte1);
 	ReportFonts("\t\tproperties:    %d\n", fs->n_properties);
 	reportXCharStruct("min_bounds", &(fs->min_bounds));
 	reportXCharStruct("max_bounds", &(fs->max_bounds));
@@ -2188,7 +2188,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 #define ALLOC_SUBLIST(which,field) \
 	    if (subresourceRec.default_font.field != NULL) { \
 		char *blob = x_strdup(subresourceRec.default_font.field); \
-		char *base = blob; \
+		char *base; \
 		for (base = blob; ; base = NULL) { \
 		    char *item = strtok(base, ","); \
 		    if (item == NULL) \

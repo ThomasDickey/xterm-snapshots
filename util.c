@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.924 2023/03/28 09:56:26 tom Exp $ */
+/* $XTermId: util.c,v 1.925 2023/03/31 22:23:05 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3873,8 +3873,6 @@ xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
     Char *buffer1 = BfBuf(Char);
 
     int dst;
-
-    buffer1 = BfBuf(Char);
 
     for (dst = 0; dst < length; ++dst)
 	buffer1[dst] = (Char) LO_BYTE(mapped[dst]);

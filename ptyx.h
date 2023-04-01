@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1089 2023/03/24 00:03:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1090 2023/03/31 22:58:04 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -447,6 +447,12 @@ typedef	struct {
 
 typedef short ParmType;
 typedef unsigned short UParm;		/* unparseputn passes ParmType	*/
+
+#define MaxSParm   0x7fff		/* limit if a signed value is needed */
+#define MaxUParm   0xffff		/* limit if unsigned value is needed */
+
+#define SParmOf(n) ((int)(ParmType)(n))
+#define UParmOf(n) ((unsigned)(UParm)(n))
 
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
