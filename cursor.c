@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.83 2022/09/23 08:13:43 tom Exp $ */
+/* $XTermId: cursor.c,v 1.84 2023/04/02 22:25:58 tom Exp $ */
 
 /*
- * Copyright 2002-2021,2022 by Thomas E. Dickey
+ * Copyright 2002-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -100,19 +100,31 @@ CursorSet(TScreen *screen, int row, int col, unsigned flags)
 }
 
 /*
- * moves the cursor left n, no wrap around
+ * Unlike VT100, xterm allows reverse wrapping of the cursor.  This feature was
+ * introduced in X10R4 (December 1986), but did not modify the comment which
+ * said "moves the cursor left n, no wrap around".  However, this reverse
+ * wrapping allowed the cursor to wrap around to the end of the screen.
+ *
+ * xterm added VT420-compatible left/right margin support in 2012.  If the
+ * cursor starts off within the margins, the reverse wrapping result will be
+ * within the margins.
+ *
+ * Wrapping to the end of the screen did not appear to be the original intent.
+ * That was suppressed in 2023.
  */
 void
 CursorBack(XtermWidget xw, int n)
 {
 #define WRAP_MASK (REVERSEWRAP | WRAPAROUND)
     TScreen *screen = TScreenOf(xw);
-    int rev;
+    int rev = (((xw->flags & WRAP_MASK) == WRAP_MASK) != 0);
     int left = ScrnLeftMargin(xw);
     int before = screen->cur_col;
 
-    if ((rev = ((xw->flags & WRAP_MASK) == WRAP_MASK)) != 0
-	&& screen->do_wrap) {
+    TRACE(("CursorBack(%d) current %d,%d rev=%d left=%d\n",
+	   n, screen->cur_row, screen->cur_col, rev, left));
+
+    if (rev && screen->do_wrap) {
 	n--;
     }
 
@@ -124,13 +136,15 @@ CursorBack(XtermWidget xw, int n)
 	if (rev) {
 	    int in_row = ScrnRightMargin(xw) - left + 1;
 	    int offset = (in_row * screen->cur_row) + screen->cur_col - left;
+	    int length = in_row * MaxRows(screen);
 	    if ((before == left) &&
 		ScrnIsColInMargins(screen, before) &&
 		ScrnIsRowInMargins(screen, screen->cur_row) &&
 		screen->cur_row == screen->top_marg) {
 		offset = (screen->bot_marg + 1) * in_row - 1;
+	    } else if (-offset > length) {
+		offset = 0;
 	    } else if (offset < 0) {
-		int length = in_row * MaxRows(screen);
 		offset += ((-offset) / length + 1) * length;
 	    }
 	    set_cur_row(screen, (offset / in_row));
