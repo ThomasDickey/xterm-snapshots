@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.262 2022/12/30 19:52:22 tom Exp $
+## $XTermId: Makefile.in,v 1.263 2023/04/02 17:29:25 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2020,2022 by Thomas E. Dickey
+# Copyright 1997-2022,2023 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -394,7 +394,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
 @no_pixmapdir@	@ECHO_CC@ACTUAL_XTERM=$(actual_xterm) $(SHELL) -c '\
 @no_pixmapdir@		h=$(PIXMAPDIR); \
-@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_*x*.xpm; \
 @no_pixmapdir@		do \
 @no_pixmapdir@			l=`basename $$n`; \
 @no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
