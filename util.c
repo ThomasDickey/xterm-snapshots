@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.925 2023/03/31 22:23:05 tom Exp $ */
+/* $XTermId: util.c,v 1.929 2023/04/12 23:45:35 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3761,15 +3761,24 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 	    beginClipping(screen, gc, (Cardinal) width, (Cardinal) ncells);
 	}
 	if (screen->force_all_chars) {
+	    int xpos = x;
+	    int ypos = (y - height + descent + thick);
+	    unsigned high = (unsigned) yhigh;
+	    unsigned wide = (unsigned) (width - thick2);
+
 	    XSetLineAttributes(screen->display, gc,
 			       (unsigned) thick,
 			       LineOnOffDash,
 			       CapProjecting,
 			       JoinMiter);
+	    XDrawImageString(screen->display, VDrawable(screen), gc,
+			     x, y,
+			     "    ",
+			     Min(4, ncells));
 	    XDrawRectangle(screen->display,
 			   VDrawable(screen), gc,
-			   x, y - height + descent + thick,
-			   (unsigned) (width - thick2), (unsigned) yhigh);
+			   xpos, ypos,
+			   wide, high);
 	}
 	if (!too_big) {
 	    endClipping(screen, gc);
@@ -3783,24 +3792,51 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 {
     if (length > 0) {
 	XChar2b *buffer2 = BfBuf(XChar2b);
+	Char *buffer1 = BfBuf(Char);
+	int n;
+	Bool eightBit = True;
+
+	for (n = 0; n < length; ++n) {
+	    if (buffer2[n].byte1 != 0) {
+		eightBit = False;
+		break;
+	    }
+	    buffer1[n] = buffer2[n].byte2;
+	}
 
 	if ((flags & NOBACKGROUND)) {
-	    XDrawString16(screen->display,
-			  VDrawable(screen), gc,
-			  x, y,
-			  buffer2, length);
+	    if (eightBit) {
+		XDrawString(screen->display,
+			    VDrawable(screen), gc,
+			    x, y,
+			    (char *) buffer1, length);
+	    } else {
+		XDrawString16(screen->display,
+			      VDrawable(screen), gc,
+			      x, y,
+			      buffer2, length);
+	    }
 	} else {
 	    int b_pos;
 	    int b_max = MaxImageString;
 	    for (b_pos = 0; b_pos < length; b_pos += b_max) {
 		if (b_pos + b_max > length)
 		    b_max = (length - b_pos);
-		XDrawImageString16(screen->display,
-				   VDrawable(screen), gc,
-				   x + (b_pos * FontWidth(screen)),
-				   y,
-				   buffer2 + b_pos,
-				   b_max);
+		if (eightBit) {
+		    XDrawImageString(screen->display,
+				     VDrawable(screen), gc,
+				     x + (b_pos * FontWidth(screen)),
+				     y,
+				     (char *) buffer1 + b_pos,
+				     b_max);
+		} else {
+		    XDrawImageString16(screen->display,
+				       VDrawable(screen), gc,
+				       x + (b_pos * FontWidth(screen)),
+				       y,
+				       buffer2 + b_pos,
+				       b_max);
+		}
 	    }
 	}
 	x += length * FontWidth(screen);
@@ -4620,7 +4656,7 @@ drawXtermText(XTermDraw * params,
 			&& okFont(NormalWFont(screen)))) {
 		    needWide = True;
 		}
-		dst += ch_width;
+		++dst;
 	    }
 	}
 
@@ -4726,7 +4762,6 @@ drawXtermText(XTermDraw * params,
 	    }
 	}
 
-	/* FIXME: optimize this as XDrawString (8-bits) if nothing above 8 */
 	xtermFullString16(screen, recur.draw_flags, gc,
 			  x, y + y_shift + ascent_adjust, dst);
 #if OPT_WIDE_ATTRS
