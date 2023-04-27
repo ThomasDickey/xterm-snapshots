@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.667 2023/02/12 21:59:49 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.669 2023/04/21 08:25:40 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #379
-.ds RF 2023/02/12
+.ds LF Patch #380
+.ds RF 2023/04/21
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3340,13 +3340,22 @@ adjust the cursor position to match the mouse click.
 .IP "\*2\*0\*0\*3"
 If mouse button 3 is double-clicked when ending or extending a selection,
 (the \fBselect-end\fP action),
-and if the cursor position is on the same row as the mouse-click,
-send left/right cursor control sequences to the host to
+and if the cursor position is on the same line as the mouse-click:
+.RS
+.bP
+Send left/right cursor control sequences to the host to
 adjust the cursor position to match the mouse click.
+.bP
+In addition to the same \fIrow\fP,
+the selection may be part of a wrapped
+line as in other \fI\*(xt\fP selections
+(see the \fBSelection Functions\fR section in the manual page).
+.bP
 After adjusting the cursor position,
 \fI\*(xt\fP sends erase-characters
 (one for each character in the selection)
 to tell the host to delete the selected text.
+.RE
 .IP "\*2\*0\*0\*5"
 When writing a selection to the host
 (i.e., pasting text),

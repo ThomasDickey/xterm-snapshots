@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.82 2022/11/21 22:28:35 tom Exp $ */
+/* $XTermId: main.h,v 1.83 2023/04/27 08:10:24 tom Exp $ */
 
 /*
- * Copyright 2000-2021,2022 by Thomas E. Dickey
+ * Copyright 2000-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -225,6 +225,14 @@
 
 #ifndef DEF_SCROLL_LINES
 #define DEF_SCROLL_LINES	1
+#endif
+
+#ifndef DEF_SL_CLOCK
+#define DEF_SL_CLOCK		1000
+#endif
+
+#ifndef DEF_SL_COORDS
+#define DEF_SL_COORDS		80
 #endif
 
 #ifndef DEF_SL_FORMAT

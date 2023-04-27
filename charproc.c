@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1939 2023/03/31 22:56:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1945 2023/04/27 08:18:57 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2422,10 +2422,10 @@ find_SL_Timeout(XtermWidget xw)
     case SLwritten:
 	break;
     case SLclock:
-	result = 1000;
+	result = DEF_SL_CLOCK;
 	break;
     case SLcoords:
-	result = 80;
+	result = DEF_SL_COORDS;
 	break;
     }
     return result;
@@ -2512,7 +2512,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	screen->status_timeout = False;
 	return;
     }
-    if (screen->status_active) {
+    if (screen->status_active && (screen->status_type == screen->status_shown)) {
 	return;
     }
 
@@ -2685,16 +2685,19 @@ update_status_line(XtermWidget xw)
     TRACE_SL("update_status_line");
 
     if (screen->status_type == 1) {
+	int next_shown = screen->status_type;
 	if (screen->status_type != screen->status_shown) {
 	    if (screen->status_shown == 0) {
 		resize_status_line(xw);
 	    } else {
 		clear_status_line(xw);
 	    }
-	    screen->status_shown = screen->status_type;
-	    TRACE_SL("...updating shown");
 	}
 	show_indicator_status(xw, NULL);
+	if (screen->status_shown != next_shown) {
+	    screen->status_shown = next_shown;
+	    TRACE_SL("...updating shown");
+	}
     } else if (screen->status_active) {
 	if (screen->status_type != screen->status_shown) {
 	    Boolean do_resize = False;
@@ -2748,7 +2751,8 @@ update_status_line(XtermWidget xw)
  * forth between the main-display and the status-line without clearing the
  * status-line (unless the status-line was not shown before).
  *
- * This has no effect if the status-line displays an indicator (type==1).
+ * This has no effect if the status-line displays an indicator (type==1),
+ * or if no status-line type was selected (type==0).
  */
 static void
 handle_DECSASD(XtermWidget xw, int value)
@@ -2761,9 +2765,10 @@ handle_DECSASD(XtermWidget xw, int value)
 	   BtoS(screen->status_active)));
 
     if (screen->status_active != updates) {
+	int was_active = screen->status_active;
 	screen->status_active = updates;
-	if (screen->status_type != 1) {
-	    if (updates) {
+	if (screen->status_type >= 2) {
+	    if (updates && !was_active) {
 		TRACE(("...@%d, saving main position %d,%d\n",
 		       __LINE__, screen->cur_row, screen->cur_col));
 		CursorSave2(xw, &screen->status_data[0]);
@@ -2801,7 +2806,9 @@ handle_DECSSDT(XtermWidget xw, int value)
 	update_status_line(xw);
     }
 }
-#endif
+#else
+#define clear_status_line(xw)	/* nothing */
+#endif /* OPT_STATUS_LINE */
 
 #if OPT_VT52_MODE
 static void
@@ -6898,6 +6905,12 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_appcursor();
 	    break;
 	case srm_DECANM:	/* ANSI/VT52 mode      */
+#if OPT_STATUS_LINE
+	    if (screen->status_type == 2 && screen->status_active) {
+		/* DEC 070, section 14.2.3 item 4 */
+		/* EMPTY */ ;
+	    } else
+#endif
 	    if (IsSM()) {	/* ANSI (VT100) */
 		/*
 		 * Setting DECANM should have no effect, since this function
@@ -6944,8 +6957,13 @@ dpmodes(XtermWidget xw, BitFunc func)
 					  ? 132
 					  : 80)
 				      || j != MaxCols(screen));
-		if (!(xw->flags & NOCLEAR_COLM))
+		if (!(xw->flags & NOCLEAR_COLM)) {
+#if OPT_STATUS_LINE
+		    if (IsStatusShown(screen))
+			clear_status_line(xw);
+#endif
 		    ClearScreen(xw);
+		}
 		if (willResize)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
@@ -8938,9 +8956,15 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 #if OPT_STATUS_LINE
-    if (IsStatusShown(screen) && (rows > 0)) {
-	TRACE(("...reserve a row for status-line\n"));
-	++rows;
+    if (IsStatusShown(screen)) {
+	if (rows == -1) {
+	    /* prevent shrinking on DECCOLM, XTRESTORE, DECSCPP, DECANM */
+	    rows = MaxRows(screen);
+	}
+	if (rows > 0) {
+	    TRACE(("...reserve a row for status-line\n"));
+	    ++rows;
+	}
     }
 #endif
 
