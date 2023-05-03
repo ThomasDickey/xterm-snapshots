@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1090 2023/03/31 22:58:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1091 2023/05/02 08:19:02 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2798,10 +2798,10 @@ typedef struct {
 	if (IsStatusShown(screen) && (screen)->status_active) stmt
 
 	Boolean		status_timeout;	/* status timeout needs service	*/
-	Boolean		status_active;	/* DECSASD */
+	int		status_active;	/* DECSASD */
 	int		status_type;	/* DECSSDT */
 	int		status_shown;	/* last-displayed type */
-	SavedCursor	status_data[2];
+	SavedCursor	status_data[2];	/* main- and status-cursors */
 	char *		status_fmt;	/* format for indicator-status	*/
 
 #else /* !OPT_STATUS_LINE */

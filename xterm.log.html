@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2502 2023/04/25 22:25:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.2503 2023/05/03 00:31:27 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1051,6 +1051,10 @@
 
         <li>ignore <tt>DECSASD</tt> if no previous
         <tt>DECSSDT</tt></li>
+
+        <li>allow <tt>DECSSDT&nbsp;1</tt> immediately after
+        <tt>DECSSDT&nbsp;2</tt>, i.e., without switching back to
+        host mode.</li>
       </ul>
     </li>
 

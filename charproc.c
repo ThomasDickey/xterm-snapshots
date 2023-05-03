@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1945 2023/04/27 08:18:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1946 2023/05/03 00:19:48 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2439,38 +2439,37 @@ StatusInit(SavedCursor * data)
     data->sgr_background = -1;
 }
 
+#define SL_SAVE(n) \
+	do { \
+	    TRACE(("@%d saving %s to %d,%d\n", __LINE__, \
+		  (n) ? "status" : "main", \
+		  screen->cur_row, \
+		  screen->cur_col)); \
+	    CursorSave2(xw, &screen->status_data[n]); \
+	} while (0)
+#define SL_RESTORE(n) \
+	do { \
+	    CursorRestore2(xw, &screen->status_data[n]); \
+	    TRACE(("@%d restored %s to %d,%d\n", __LINE__, \
+		  (n) ? "status" : "main", \
+		  screen->status_data[n].row, \
+		  screen->status_data[n].col)); \
+	} while (0)
+
 /* save the status-line position, restore main display */
-static void
-StatusSave(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    CursorSave2(xw, &screen->status_data[1]);
-    CursorRestore2(xw, &screen->status_data[0]);
-
-    TRACE(("...StatusSave %d,%d -> %d,%d (main)\n",
-	   screen->status_data[1].row,
-	   screen->status_data[1].col,
-	   screen->cur_row,
-	   screen->cur_col));
-}
+#define SL_SAVE2() \
+	do { \
+	    SL_SAVE(1); \
+	    SL_RESTORE(0); \
+	} while (0)
 
 /* save the main-display position, restore status-line */
-static void
-StatusRestore(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    CursorSave2(xw, &screen->status_data[0]);
-    CursorRestore2(xw, &screen->status_data[1]);
-    screen->cur_row = FirstRowNumber(screen);
-
-    TRACE(("...StatusRestore %d,%d -> %d,%d (status)\n",
-	   screen->status_data[0].row,
-	   screen->status_data[0].col,
-	   screen->cur_row,
-	   screen->cur_col));
-}
+#define SL_RESTORE2() \
+	do { \
+	    SL_SAVE(0); \
+	    SL_RESTORE(1); \
+	    screen->cur_row = FirstRowNumber(screen); \
+	} while (0)
 
 static void
 StatusPutChars(XtermWidget xw, const char *value, int length)
@@ -2518,7 +2517,9 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 
     screen->status_active = True;
 
-    CursorSave2(xw, &screen->status_data[0]);
+    if (screen->status_shown <= 1) {
+	SL_SAVE(0);
+    }
     screen->cur_row = FirstRowNumber(screen);
     screen->cur_col = 0;
 
@@ -2588,7 +2589,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     ScrnRefresh(xw, FirstRowNumber(screen), 0, 1, right_margin, True);
     screen->status_active = False;
 
-    CursorRestore2(xw, &screen->status_data[0]);
+    SL_RESTORE(0);
 
     /* if we processed a position or date/time, repeat */
     interval = find_SL_Timeout(xw);
@@ -2678,11 +2679,32 @@ resize_status_line(XtermWidget xw)
  * DEC STD 070, chapter 14 "VSRM - Status Display Extension"
  */
 static void
-update_status_line(XtermWidget xw)
+update_status_line(XtermWidget xw, int new_active, int new_type)
 {
+    /* *INDENT-EQLS* */
     TScreen *screen = TScreenOf(xw);
+    int old_active  = screen->status_active;
+    int old_type    = screen->status_type;
+    int old_shown   = screen->status_shown;
 
     TRACE_SL("update_status_line");
+
+    if (new_active >= 0 && new_active <= 1) {
+	screen->status_active = new_active;
+	if (old_active == new_active) {
+	    goto finish;
+	}
+	if (old_type < 2) {
+	    goto finish;
+	}
+	if (new_active && !old_active) {
+	    SL_SAVE(0);
+	}
+    } else if (new_type >= 0 && new_type <= 2) {
+	screen->status_type = new_type;
+    } else {
+	goto finish;
+    }
 
     if (screen->status_type == 1) {
 	int next_shown = screen->status_type;
@@ -2698,20 +2720,23 @@ update_status_line(XtermWidget xw)
 	    screen->status_shown = next_shown;
 	    TRACE_SL("...updating shown");
 	}
+	if (old_shown == 2) {
+	    SL_RESTORE(0);
+	}
     } else if (screen->status_active) {
 	if (screen->status_type != screen->status_shown) {
 	    Boolean do_resize = False;
 
 	    if (screen->status_type == 0) {
 		if (screen->status_shown >= 2) {
-		    StatusSave(xw);
+		    SL_SAVE2();
 		}
 		do_resize = True;	/* shrink... */
 		clear_status_line(xw);
 		StatusInit(&screen->status_data[1]);
 	    } else if (screen->status_shown == 0) {
 		if (screen->status_type >= 2) {
-		    StatusRestore(xw);
+		    SL_RESTORE2();
 		}
 		do_resize = True;	/* grow... */
 	    } else {
@@ -2731,7 +2756,7 @@ update_status_line(XtermWidget xw)
 		clear_status_line(xw);
 	    }
 	    if (screen->status_shown >= 2) {
-		StatusSave(xw);
+		SL_SAVE2();
 	    }
 	    if (screen->status_type == 0) {
 		screen->status_timeout = False;
@@ -2743,7 +2768,9 @@ update_status_line(XtermWidget xw)
 	    TRACE_SL("...updating shown");
 	}
     }
+  finish:
     TRACE_SL("update_status_line (done)");
+    return;
 }
 
 /*
@@ -2757,25 +2784,11 @@ update_status_line(XtermWidget xw)
 static void
 handle_DECSASD(XtermWidget xw, int value)
 {
-    TScreen *screen = TScreenOf(xw);
-    Boolean updates = value ? True : False;
-
     TRACE(("CASE_DECSASD - select active status display: %s (currently %s)\n",
 	   BtoS(value),
-	   BtoS(screen->status_active)));
+	   BtoS(TScreenOf(xw)->status_active)));
 
-    if (screen->status_active != updates) {
-	int was_active = screen->status_active;
-	screen->status_active = updates;
-	if (screen->status_type >= 2) {
-	    if (updates && !was_active) {
-		TRACE(("...@%d, saving main position %d,%d\n",
-		       __LINE__, screen->cur_row, screen->cur_col));
-		CursorSave2(xw, &screen->status_data[0]);
-	    }
-	    update_status_line(xw);
-	}
-    }
+    update_status_line(xw, value, -1);
 }
 
 /*
@@ -2791,21 +2804,13 @@ handle_DECSASD(XtermWidget xw, int value)
 static void
 handle_DECSSDT(XtermWidget xw, int value)
 {
-    TScreen *screen = TScreenOf(xw);
-
     TRACE(("CASE_DECSSDT - select type of status display: %d (currently %d)\n",
 	   value,
-	   screen->status_type));
-    if (value <= 2) {
-	screen->status_type = value;
-	if (!screen->status_active) {
-	    TRACE(("...@%d, saving main position %d,%d\n",
-		   __LINE__, screen->cur_row, screen->cur_col));
-	    CursorSave2(xw, &screen->status_data[0]);
-	}
-	update_status_line(xw);
-    }
+	   TScreenOf(xw)->status_type));
+
+    update_status_line(xw, -1, value);
 }
+
 #else
 #define clear_status_line(xw)	/* nothing */
 #endif /* OPT_STATUS_LINE */
