@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2503 2023/05/03 00:31:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.2504 2023/05/04 08:09:24 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1041,6 +1041,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>drop the <tt>-title</tt> option from <tt>uxterm</tt> and
+    <tt>koi8rxterm</tt>, because that interferes with deriving the
+    default title from the <tt>-e</tt> option (Debian
+    #1031837).</li>
+
     <li>improve description of readline 2003 mode in
     <tt>ctlseqs.ms</tt> (report by Thomas Wolff).</li>
 
