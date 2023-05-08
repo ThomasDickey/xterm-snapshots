@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.84 2023/04/02 22:25:58 tom Exp $ */
+/* $XTermId: cursor.c,v 1.87 2023/05/08 00:05:45 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -119,7 +119,14 @@ CursorBack(XtermWidget xw, int n)
     TScreen *screen = TScreenOf(xw);
     int rev = (((xw->flags & WRAP_MASK) == WRAP_MASK) != 0);
     int left = ScrnLeftMargin(xw);
+    int right = ScrnRightMargin(xw);
     int before = screen->cur_col;
+
+    CLineData *ld;
+    int count;
+    int top;
+    int col;
+    int row;
 
     TRACE(("CursorBack(%d) current %d,%d rev=%d left=%d\n",
 	   n, screen->cur_row, screen->cur_col, rev, left));
@@ -132,28 +139,59 @@ CursorBack(XtermWidget xw, int n)
     if (before < left)
 	left = 0;
 
-    if ((screen->cur_col -= n) < left) {
-	if (rev) {
-	    int in_row = ScrnRightMargin(xw) - left + 1;
-	    int offset = (in_row * screen->cur_row) + screen->cur_col - left;
-	    int length = in_row * MaxRows(screen);
-	    if ((before == left) &&
-		ScrnIsColInMargins(screen, before) &&
-		ScrnIsRowInMargins(screen, screen->cur_row) &&
-		screen->cur_row == screen->top_marg) {
-		offset = (screen->bot_marg + 1) * in_row - 1;
-	    } else if (-offset > length) {
-		offset = 0;
-	    } else if (offset < 0) {
-		offset += ((-offset) / length + 1) * length;
+    ld = NULL;
+    count = n;
+    top = 0;
+    col = screen->cur_col - 1;
+    row = screen->cur_row;
+
+    for (;;) {
+	if (col < left) {
+	    if (!rev) {
+		col = left;
+		break;
 	    }
-	    set_cur_row(screen, (offset / in_row));
-	    set_cur_col(screen, (offset % in_row) + left);
-	    do_xevents(xw);
-	} else {
-	    set_cur_col(screen, left);
+	    if (row <= top) {
+		col = left;
+		row = top;
+		break;
+	    }
+	    ld = NULL;		/* try a reverse-wrap */
+	    --row;
 	}
+	if (ld == NULL) {
+	    ld = getLineData(screen, ROW2INX(screen, row));
+	    if (ld == NULL)
+		break;		/* should not happen */
+	    if (row != screen->cur_row) {
+		if (!LineTstWrapped(ld)) {
+		    ++row;	/* reverse-wrap failed */
+		    col = left;
+		    break;
+		}
+		col = right;
+	    }
+	}
+
+	/* skip over hidden-characters, which are used as filler
+	 * for double-width characters.
+	 */
+	if_OPT_WIDE_CHARS(screen, {
+	    IChar ch = (IChar) getXtermCell(screen, row, col);
+	    if (ch == HIDDEN_CHAR) {
+		--col;
+		continue;
+	    }
+	});
+
+	if (--count <= 0)
+	    break;
+	--col;
     }
+    set_cur_row(screen, row);
+    set_cur_col(screen, col);
+    do_xevents(xw);
+
     ResetWrap(screen);
 }
 

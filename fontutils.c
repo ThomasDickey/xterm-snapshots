@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.772 2023/03/31 23:43:05 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.773 2023/05/08 00:00:38 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4491,7 +4491,7 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 
 	fontData->fs_size = Min(MaxXftCache, fontData->fontset->nfont);
     }
-    if (fontData->fs_size > 0) {
+    if (fontData->fontset != NULL && fontData->fs_size > 0) {
 	XftFont *check;
 	int empty = fontData->fs_size;
 

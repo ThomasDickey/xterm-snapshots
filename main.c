@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.899 2023/02/15 01:25:39 tom Exp $ */
+/* $XTermId: main.c,v 1.901 2023/05/07 23:43:44 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -2749,14 +2749,11 @@ main(int argc, char *argv[]ENVP_ARG)
     if (command_to_exec) {
 	Arg args[2];
 
-	if (!resource.title) {
-	    if (command_to_exec) {
-		resource.title = x_basename(command_to_exec[0]);
-	    }			/* else not reached */
-	}
-
+	if (!resource.title)
+	    resource.title = x_basename(command_to_exec[0]);
 	if (!resource.icon_name)
 	    resource.icon_name = resource.title;
+
 	XtSetArg(args[0], XtNtitle, resource.title);
 	XtSetArg(args[1], XtNiconName, resource.icon_name);
 
@@ -2767,6 +2764,18 @@ main(int argc, char *argv[]ENVP_ARG)
 	       *command_to_exec));
 
 	XtSetValues(toplevel, args, 2);
+    } else if (IsEmpty(resource.title) && strcmp(my_class, DEFCLASS)) {
+	Arg args[2];
+	int n;
+
+	resource.title = x_strdup(my_class);
+	for (n = 0; resource.title[n]; ++n) {
+	    if (isalpha(resource.title[n]))
+		resource.title[n] = (char) tolower(resource.title[n]);
+	}
+	TRACE(("setting:\n\ttitle \"%s\"\n", resource.title));
+	XtSetArg(args[0], XtNtitle, resource.title);
+	XtSetValues(toplevel, args, 1);
     }
 #if OPT_LUIT_PROG
     if (term->misc.callfilter) {
