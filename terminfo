@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.206 2023/01/08 10:51:12 tom Exp $
+# $XTermId: terminfo,v 1.207 2023/05/08 08:25:09 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -147,6 +147,7 @@ xterm-new|modern xterm terminal emulator,
 	use=xterm+nofkeys,
 	use=bracketed+paste,
 	use=report+version,
+	use=xterm+focus,
 
 # Left/right margins are supported in xterm since patch #279 (2012/05/10)
 vt420+lrmm|VT420 left/right margins,
@@ -928,7 +929,7 @@ ecma+index|ECMA-48 scroll up/down,
 # The XM capability is an ncurses extension
 xterm+sm+1006|xterm SGR-mouse,
 	kmous=\E[<,
-	XM=\E[?1006;1000
+	XM=\E[?1006;1004;1000
 		%?
 			%p1%{1}%=
 			%th
@@ -968,6 +969,14 @@ xterm+x11mouse|X11 xterm mouse protocol,
 		%p2%'!'%+%c
 		%p1%'!'%+%c,
 
+# xterm patch #224 2007/2/11 added private mode 1004, for enabling/disabling
+# focus in/out event reporting.  The 1004 is normally part of XM in a different
+# building-block, e.g., for reporting any events.
+xterm+focus|xterm focus-in/out event "keys",
+	XF,
+	kxIN=\E[I,
+	kxOUT=\E[O,
+
 # https://invisible-island.net/xterm/xterm-paste64.html
 #
 # Bracketed paste was introduced by xterm patch #203 in May 2005, as part of a
@@ -988,7 +997,21 @@ bracketed+paste|xterm bracketed paste,
 # For example:
 #	^[P>|XTerm(354)^[\
 report+version|Report xterm name and version (XTVERSION).,
-	RV=\E[>0q,
+	XR=\E[>0q,
+	xr=\EP>\\|XTerm\\([1-9][0-9]+\\)
+	   \E\\\\,
+	use=report+da2,
+
+# Vim uses RV to denote the secondary device attributes.  Xterm documents the
+# - first parameter as the terminal type (extending it to VT100),
+# - the second as the patch number for xterm, and
+# - the third parameter as zero.
+# Other terminals may provide useful responses, though few are documented.
+#
+# Since patch #280 2012/06/24, xterm by default reports itself as a VT420.
+report+da2|report secondary device attributes (DA2),
+	RV=\E[>c,
+	rv=\E\\[41;[1-6][0-9][0-9];0c,
 
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,
