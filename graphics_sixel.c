@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.42 2023/03/31 23:18:18 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.45 2023/05/10 00:06:42 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -75,7 +75,7 @@ parse_prefixedtype_params(ANSI *params, const char **string)
 	    last_empty = 0;
 	    if (nparam < NPARAM) {
 		unsigned oldValue = (unsigned) params->a_param[nparam];
-		unsigned newValue = (oldValue * 10) + (ch - '0');
+		unsigned newValue = ((oldValue * 10) + (unsigned) (ch - '0'));
 		newValue = Min(MaxUParm, newValue);
 		params->a_param[nparam] = (ParmType) newValue;
 	    }
@@ -249,36 +249,30 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
     if (SixelScrolling(xw)) {
 	int new_row, new_col;
 
+	/* NOTE: XTerm follows the VT382 behavior in text cursor placement. 
+	 * The VT382's vertical position appears to be truncated (rounded
+	 * toward zero) after converting to character row.  While rounding up
+	 * is more often what is desired, so as to not overwrite the image,
+	 * doing so automatically would cause text or graphics to scroll off
+	 * the top of the screen.  Therefore, applications must add their own
+	 * newline character, if desired, after a sixel image.
+	 *
+	 * FIXME: The VT340 also rounds down, but it seems to have a strange
+	 * behavior where, on rare occasions, two newlines are required to
+	 * advance beyond the end of the image.  This appears to be a firmware
+	 * bug, but it should be added as an option for compatibility.
+	 */
+	new_row = (graphic->charrow - 1
+		   + (((graphic->actual_height * graphic->pixh)
+		       + FontHeight(screen) - 1)
+		      / FontHeight(screen)));
+
 	if (screen->sixel_scrolls_right) {
-	    new_row = (graphic->charrow
-		       + (((graphic->actual_height * graphic->pixh)
-			   + FontHeight(screen) - 1)
-			  / FontHeight(screen))
-		       - 1);
 	    new_col = (graphic->charcol
 		       + (((graphic->actual_width * graphic->pixw)
 			   + FontWidth(screen) - 1)
 			  / FontWidth(screen)));
 	} else {
-	    /* NOTE: XTerm follows the VT382 behavior in text cursor
-	     * placement.  The VT382's vertical position appears to be
-	     * truncated (rounded toward zero) after converting to character
-	     * row.  While rounding up is more often what is desired, so as to
-	     * not overwrite the image, doing so automatically would cause text
-	     * or graphics to scroll off the top of the screen.  Therefore,
-	     * applications must add their own newline character, if desired,
-	     * after a sixel image.
-	     *
-	     * FIXME: The VT340 also rounds down, but it seems to have a
-	     * strange behavior where, on rare occasions, two newlines are
-	     * required to advance beyond the end of the image.  This appears
-	     * to be a firmware bug, but it should be added as an option for
-	     * compatibility.
-	     */
-	    new_row = (graphic->charrow - 1
-		       + (((graphic->actual_height * graphic->pixh)
-			   + FontHeight(screen) - 1)
-			  / FontHeight(screen)));
 	    new_col = graphic->charcol;
 	}
 
@@ -583,7 +577,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %u\n", Pregister));
 		/* FIXME: supposedly the DEC terminals wrapped register indices -- verify */
 		while (Pregister >= graphic->valid_registers)
-		    Pregister -= (RegisterNum) graphic->valid_registers;
+		    Pregister = Pregister - (RegisterNum) graphic->valid_registers;
 		TRACE(("DATA_WARNING: converted to %u\n", Pregister));
 	    }
 

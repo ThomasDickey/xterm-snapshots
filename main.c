@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.901 2023/05/07 23:43:44 tom Exp $ */
+/* $XTermId: main.c,v 1.902 2023/05/09 07:49:19 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -1823,7 +1823,7 @@ my_pty_name(char *device)
 	    if (name)
 		break;
 	    len--;
-	} else if (isalpha(ch)) {
+	} else if (isalpha(CharOf(ch))) {
 	    name = True;
 	    len--;
 	} else {
@@ -2770,7 +2770,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
 	resource.title = x_strdup(my_class);
 	for (n = 0; resource.title[n]; ++n) {
-	    if (isalpha(resource.title[n]))
+	    if (isalpha(CharOf(resource.title[n])))
 		resource.title[n] = (char) tolower(resource.title[n]);
 	}
 	TRACE(("setting:\n\ttitle \"%s\"\n", resource.title));

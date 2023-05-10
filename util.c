@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.929 2023/04/12 23:45:35 tom Exp $ */
+/* $XTermId: util.c,v 1.930 2023/05/09 07:57:05 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4638,7 +4638,8 @@ drawXtermText(XTermDraw * params,
 		if (screen->unicode_font
 		    && (ch == ANSI_DEL ||
 			ch < ANSI_SPA)) {
-		    ch = (IChar) dec2ucs(screen, (ch == ANSI_DEL) ? 0 : ch);
+		    ch = (IChar) dec2ucs(screen,
+					 (unsigned) ((ch == ANSI_DEL) ? 0 : ch));
 		}
 #endif /* OPT_MINI_LUIT */
 	    }

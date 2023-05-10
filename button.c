@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.653 2023/02/13 22:34:51 tom Exp $ */
+/* $XTermId: button.c,v 1.654 2023/05/09 08:09:12 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4943,14 +4943,15 @@ _OwnSelection(XtermWidget xw,
 		SelectedCells *tcp = &(screen->clipboard_data);
 		TRACE(("saving selection to clipboard buffer\n"));
 		scp = &(screen->selected_cells[CLIPBOARD_CODE]);
-		if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0)
+		if ((buf = (Char *) malloc((size_t) scp->data_length)) == 0) {
 		    SysError(ERROR_BMALLOC2);
-
-		free(tcp->data_buffer);
-		memcpy(buf, scp->data_buffer, scp->data_length);
-		tcp->data_buffer = buf;
-		tcp->data_limit = scp->data_length;
-		tcp->data_length = scp->data_length;
+		} else {
+		    free(tcp->data_buffer);
+		    memcpy(buf, scp->data_buffer, scp->data_length);
+		    tcp->data_buffer = buf;
+		    tcp->data_limit = scp->data_length;
+		    tcp->data_length = scp->data_length;
+		}
 	    }
 	    scp = &(screen->selected_cells[which]);
 	    if (scp->data_length == 0) {

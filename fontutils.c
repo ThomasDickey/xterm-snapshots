@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.773 2023/05/08 00:00:38 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.774 2023/05/09 08:06:11 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -3516,8 +3516,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		     */
 		    if (screen->fnt_boxes) {
 			screen->fnt_boxes = 0;
-			TRACE(("Xft opened - will %suse internal line-drawing characters\n",
-			       screen->fnt_boxes ? "not " : ""));
+			TRACE(("Xft opened - will not use internal line-drawing characters\n"));
 		    }
 		}
 
@@ -4125,8 +4124,8 @@ xtermDrawBoxChar(XTermDraw * params,
     gc2 = getCgsGC(params->xw, cgsWin, cgsId);
 
     thick = ((params->attr_flags & BOLD)
-	     ? (Max(screen->fnt_high / 12, 1))
-	     : (Max(screen->fnt_high / 16, 1))),
+	     ? (Max((unsigned) screen->fnt_high / 12, 1))
+	     : (Max((unsigned) screen->fnt_high / 16, 1))),
 	XSetLineAttributes(screen->display, gc2,
 			   thick,
 			   ((ch < XtNumber(lines))
