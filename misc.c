@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1045 2023/03/31 23:03:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.1046 2023/05/28 15:13:08 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4988,6 +4988,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			break;	/* no data found, error */
 		    }
 		    if ((cp - parsed) > 1024) {
+			free(name);
 			break;	/* ignore improbable resource */
 		    }
 		    TRACE(("query-feature '%s'\n", name));

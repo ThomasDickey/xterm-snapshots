@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.930 2023/05/09 07:57:05 tom Exp $ */
+/* $XTermId: util.c,v 1.932 2023/05/28 13:29:49 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3760,7 +3760,10 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 	} else {
 	    beginClipping(screen, gc, (Cardinal) width, (Cardinal) ncells);
 	}
-	if (screen->force_all_chars) {
+#if OPT_BOX_CHARS
+	if (screen->force_all_chars)
+#endif
+	{
 	    int xpos = x;
 	    int ypos = (y - height + descent + thick);
 	    unsigned high = (unsigned) yhigh;
@@ -3845,16 +3848,19 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 }
 
 static int
-xtermFullString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
+xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int length)
 {
+    TScreen *screen = TScreenOf(xw);
     int src, dst;
     IChar *mapped = BfBuf(IChar);
     XChar2b *buffer2 = BfBuf(XChar2b);
+    VTwin *currentWin = WhichVWin(screen);
+    XTermFonts *xf = getCgsFont(xw, currentWin, gc);
+    XTermFonts *fp = xf ? xf : getNormalFont(screen, fNorm);
 
     for (src = dst = 0; src < (int) length; src++) {
 	IChar ch = mapped[src];
 	int ch_width = CharWidth(screen, ch);
-	XTermFonts *fp = getNormalFont(screen, fNorm);
 	/*
 	 * X11 bitmap-fonts are limited to 16-bits.
 	 */
@@ -4092,10 +4098,10 @@ drawXtermText(XTermDraw * params,
 	Display *dpy = screen->display;
 	XTermXftFonts *ndata;
 	XGCValues values;
-#if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS && OPT_BOX_CHARS
 	XTermXftFonts *ndata0;
 #endif
-#if OPT_RENDERWIDE
+#if OPT_RENDERWIDE && OPT_BOX_CHARS
 	XTermXftFonts *wdata;
 	XTermXftFonts *wdata0;
 #endif
@@ -4133,10 +4139,10 @@ drawXtermText(XTermDraw * params,
 #define IS_BOLD  (recur.attr_flags & BOLDATTR(screen))
 #define NOT_BOLD (recur.attr_flags & ~BOLDATTR(screen))
 	ndata = getNormXftFont(&recur, recur.attr_flags, &did_ul);
-#if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS && OPT_BOX_CHARS
 	ndata0 = IS_BOLD ? getNormXftFont(&recur, NOT_BOLD, &did_ul) : ndata;
 #endif
-#if OPT_RENDERWIDE
+#if OPT_RENDERWIDE && OPT_BOX_CHARS
 	wdata = getWideXftFont(&recur, recur.attr_flags);
 	wdata0 = IS_BOLD ? getWideXftFont(&recur, NOT_BOLD) : wdata;
 #endif
@@ -4763,7 +4769,7 @@ drawXtermText(XTermDraw * params,
 	    }
 	}
 
-	xtermFullString16(screen, recur.draw_flags, gc,
+	xtermFullString16(recur.xw, recur.draw_flags, gc,
 			  x, y + y_shift + ascent_adjust, dst);
 #if OPT_WIDE_ATTRS
 	if (need_clipping) {
@@ -4775,7 +4781,7 @@ drawXtermText(XTermDraw * params,
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		beginClipping(screen, gc, (Cardinal) font_width, len);
 	    }
-	    xtermFullString16(screen, recur.draw_flags | NOBACKGROUND,
+	    xtermFullString16(recur.xw, recur.draw_flags | NOBACKGROUND,
 			      gc, x + 1, y + y_shift + ascent_adjust, dst);
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		endClipping(screen, gc);
