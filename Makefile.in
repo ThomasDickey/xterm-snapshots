@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.263 2023/04/02 17:29:25 tom Exp $
+## $XTermId: Makefile.in,v 1.264 2023/05/29 11:16:21 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -424,8 +424,8 @@ SET_TERMINFO = @SET_TERMINFO@
 @no_ticprog@install-full \
 @no_ticprog@install-ti :: $(TERMINFO_DIR)
 @no_ticprog@	@echo "Installing $(srcdir)/terminfo"
-@no_ticprog@	@$(SHELL) -c "chmod +x $(srcdir)/run-tic.sh"
-@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
+@no_ticprog@	@$(SHELL) -c "chmod +x ./run-tic.sh"
+@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) ./run-tic.sh $(srcdir)/terminfo"
 @no_ticprog@	@echo 'Completed installation of terminfo description.'
 
 install-full \
