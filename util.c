@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.932 2023/05/28 13:29:49 tom Exp $ */
+/* $XTermId: util.c,v 1.933 2023/05/29 18:16:51 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3910,7 +3910,6 @@ xtermPartString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
 static void
 xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
-#if OPT_WIDE_CHARS
     IChar *mapped = BfBuf(IChar);
     Char *buffer1 = BfBuf(Char);
 
@@ -3918,7 +3917,6 @@ xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
 
     for (dst = 0; dst < length; ++dst)
 	buffer1[dst] = (Char) LO_BYTE(mapped[dst]);
-#endif
 
     xtermPartString(screen, flags, gc, x, y, length);
 }
