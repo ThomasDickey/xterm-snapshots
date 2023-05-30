@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.87 2023/05/08 00:05:45 tom Exp $ */
+/* $XTermId: cursor.c,v 1.88 2023/05/29 23:52:12 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -172,17 +172,6 @@ CursorBack(XtermWidget xw, int n)
 		col = right;
 	    }
 	}
-
-	/* skip over hidden-characters, which are used as filler
-	 * for double-width characters.
-	 */
-	if_OPT_WIDE_CHARS(screen, {
-	    IChar ch = (IChar) getXtermCell(screen, row, col);
-	    if (ch == HIDDEN_CHAR) {
-		--col;
-		continue;
-	    }
-	});
 
 	if (--count <= 0)
 	    break;
