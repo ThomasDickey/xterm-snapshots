@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.158 2022/10/10 19:27:56 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.159 2023/06/13 21:57:36 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -889,7 +889,7 @@ do_range(const char *source)
 		data->last = data->buffer + j;
 		while (decodeUtf8(&screen, data)) {
 		    total_test++;
-		    if (data->utf_data == UCS_REPL)
+		    if (is_UCS_SPECIAL(data->utf_data))
 			total_errs++;
 		    data->next += data->utf_size;
 		    if (message_level > 1) {

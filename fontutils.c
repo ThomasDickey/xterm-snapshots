@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.774 2023/05/09 08:06:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.775 2023/06/13 21:45:38 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -1775,7 +1775,7 @@ xtermLoadFont(XtermWidget xw,
 	    UIntSet(screen->fnt_boxes, 2);
 	    for (ch = 1; ch < 32; ch++) {
 		unsigned n = dec2ucs(screen, ch);
-		if ((n != UCS_REPL)
+		if (!is_UCS_SPECIAL(n)
 		    && (n != ch)
 		    && (screen->fnt_boxes & 2)) {
 		    if (xtermMissingChar(n, &new_fonts[fNorm]) ||
@@ -4055,7 +4055,7 @@ xtermDrawBoxChar(XTermDraw * params,
 	&& !UsingRenderFont(params->xw)
 #endif
 	&& (ch > 127)
-	&& (ch != UCS_REPL)) {
+	&& !is_UCS_SPECIAL(ch)) {
 	int which = (params->attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
@@ -4688,7 +4688,7 @@ ucs2dec(TScreen *screen, unsigned ch)
 
     (void) screen;
     if ((ch > 127)
-	&& (ch != UCS_REPL)) {
+	&& !is_UCS_SPECIAL(ch)) {
 #if OPT_VT52_MODE
 	if (screen != 0 && !(screen->vtXX_level)) {
 	    /*

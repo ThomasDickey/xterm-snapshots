@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.628 2023/02/13 00:04:20 tom Exp $ */
+/* $XTermId: screen.c,v 1.630 2023/06/13 21:37:40 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2845,6 +2845,10 @@ xtermCheckRect(XtermWidget xw,
 		int ch = ((ld->attribs[col] & CHARDRAWN)
 			  ? (int) ld->charData[col]
 			  : ' ');
+		if_OPT_WIDE_CHARS(screen, {
+		    if (is_UCS_SPECIAL(ch))
+			continue;
+		})
 		if (!(mode & csBYTE)) {
 		    unsigned c2 = (unsigned) ch;
 		    if (c2 > 0x7f && my_GR != nrc_ASCII) {

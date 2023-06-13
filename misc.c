@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1046 2023/05/28 15:13:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.1047 2023/06/13 21:54:47 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3482,7 +3482,7 @@ xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 	PtyData data;
 
 	if (decodeUtf8(screen, fakePtyData(&data, cp, last))) {
-	    if (data.utf_data != UCS_REPL
+	    if (!is_UCS_SPECIAL(data.utf_data)
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
 		next += (data.utf_size - 1);

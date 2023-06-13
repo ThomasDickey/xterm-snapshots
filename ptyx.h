@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1091 2023/05/02 08:19:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1092 2023/06/13 21:37:22 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -423,6 +423,7 @@ typedef struct {
 /* constants used for utf8 mode */
 #define UCS_REPL	0xfffd
 #define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
+#define is_UCS_SPECIAL(c) ((c) >= 0xfff0 && (c) <= 0xffff)
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 

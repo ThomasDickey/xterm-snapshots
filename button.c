@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.654 2023/05/09 08:09:12 tom Exp $ */
+/* $XTermId: button.c,v 1.655 2023/06/13 21:44:29 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1708,7 +1708,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 	    Bool extra = False;
 	    IChar value;
 	    skipPtyData(&data, value);
-	    if (value == UCS_REPL) {
+	    if (is_UCS_SPECIAL(value)) {
 		fails = True;
 	    } else if (value < 256) {
 		AddChar(&buffer, &used, offset, CharOf(value));
