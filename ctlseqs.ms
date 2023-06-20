@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.669 2023/04/21 08:25:40 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.672 2023/06/14 23:06:11 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #380
-.ds RF 2023/04/21
+.ds LF Patch #383
+.ds RF 2023/06/14
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1351,16 +1351,17 @@ This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*4\*1 \(-> \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets
 (DECNRCM), VT220.
-  \*(Ps = \*4\*3 \(-> Enable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*3 \(-> Enable Graphic Expanded Print Mode (DECGEPM), VT340.
   \*(Ps = \*4\*4 \(-> Turn on margin bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*4 \(-> Enable Graphics Print Color Mode (DECGPCM).
-  \*(Ps = \*4\*5 \(-> Reverse-wraparound mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> Enable Graphics Print ColorSpace (DECGPCS).
-  \*(Ps = \*4\*6 \(-> Start logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Enable Graphic Print Color Mode (DECGPCM), VT340.
+  \*(Ps = \*4\*5 \(-> Reverse-wraparound mode (XTREVWRAP), \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Enable Graphic Print Color Syntax (DECGPCS), VT340.
+  \*(Ps = \*4\*6 \(-> Start logging (XTLOGGING), \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
+  \*(Ps = \*4\*6 \(-> Graphic Print Background Mode, VT340.
   \*(Ps = \*4\*7 \(-> Use \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This may be disabled by the \fBtiteInhibit\fP resource.
-  \*(Ps = \*4\*7 \(-> Enable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*4\*7 \(-> Enable Graphic Rotated Print Mode (DECGRPM), VT340.
   \*(Ps = \*6\*6 \(-> Application keypad mode (DECNKM), VT320.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
@@ -1412,6 +1413,7 @@ This enables the \fBpopOnBell\fP resource.
   \*(Ps = \*1\*0\*4\*4 \(-> Reuse the most recent data copied to CLIPBOARD,
 \fI\*(xt\fP.
 This enables the \fBkeepClipboard\fP resource.
+  \*(Ps = \*1\*0\*4\*5 \(-> Extended Reverse-wraparound mode (XTREVWRAP2), \fI\*(xt\fP.
   \*(Ps = \*1\*0\*4\*6 \(-> Enable switching to/from
 \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This works for terminfo-based systems, updating the \fBtiteInhibit\fP resource.
@@ -1491,15 +1493,15 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*4\*1 \(-> No \fBmore\fP(1) fix (see \fBcurses\fP resource).
   \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM),
 VT220.
-  \*(Ps = \*4\*3 \(-> Disable Graphics Expanded Print Mode (DECGEPM).
+  \*(Ps = \*4\*3 \(-> Disable Graphic Expanded Print Mode (DECGEPM), VT340.
   \*(Ps = \*4\*4 \(-> Turn off margin bell, \fI\*(xt\fP.
-  \*(Ps = \*4\*4 \(-> Disable Graphics Print Color Mode (DECGPCM).
-  \*(Ps = \*4\*5 \(-> No Reverse-wraparound mode, \fI\*(xt\fP.
-  \*(Ps = \*4\*5 \(-> Disable Graphics Print ColorSpace (DECGPCS).
-  \*(Ps = \*4\*6 \(-> Stop logging, \fI\*(xt\fP.
+  \*(Ps = \*4\*4 \(-> Disable Graphic Print Color Mode (DECGPCM), VT340.
+  \*(Ps = \*4\*5 \(-> No Reverse-wraparound mode (XTREVWRAP), \fI\*(xt\fP.
+  \*(Ps = \*4\*5 \(-> Disable Graphic Print Color Syntax (DECGPCS), VT340.
+  \*(Ps = \*4\*6 \(-> Stop logging (XTLOGGING), \fI\*(xt\fP.
 This is normally disabled by a compile-time option.
   \*(Ps = \*4\*7 \(-> Use \fINormal Screen Buffer\fP, \fI\*(xt\fP.
-  \*(Ps = \*4\*7 \(-> Disable Graphics Rotated Print Mode (DECGRPM).
+  \*(Ps = \*4\*7 \(-> Disable Graphic Rotated Print Mode (DECGRPM), VT340.
   \*(Ps = \*6\*6 \(-> Numeric keypad mode (DECNKM), VT320.
   \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
@@ -1553,6 +1555,7 @@ This disables the \fBbellIsUrgent\fP resource.
   \*(Ps = \*1\*0\*4\*3 \(-> Disable raising of the window
 when Control-G is received, \fI\*(xt\fP.
 This disables the \fBpopOnBell\fP resource.
+  \*(Ps = \*1\*0\*4\*5 \(-> No Extended Reverse-wraparound mode (XTREVWRAP2), \fI\*(xt\fP.
   \*(Ps = \*1\*0\*4\*6 \(-> Disable switching to/from
 \fIAlternate Screen Buffer\fP, \fI\*(xt\fP.
 This works for terminfo-based systems, updating the \fBtiteInhibit\fP resource.
@@ -3817,6 +3820,15 @@ with four possible values:
   \*(Pm = 2 \(-> resume command, use command display mode.
   \*(Pm = 3 \(-> start new command, use command display mode.
 .Ed
+.LP
+A few of the VT330/VT340 private modes conflict with \fI\*(xt\fP.
+Codes \*4\*0 to \*4\*7 were first used by xterm in X10R4 (December 1986).
+While X11R1 \fI\*(xt\fP dropped codes \*4\*1 and \*4\*2, the remaining
+ones are still used.
+The VT330/VT340 introduced in April 1987 uses \*4\*4 to \*4\*7 for
+color graphics printing controls.
+When configured for ReGIS,
+\fI\*(xt\fP uses the VT330/VT340 interpretation of these private modes.
 .
 .Sh "Non-VT100 Modes"
 .Ss "Tektronix 4014 Mode"

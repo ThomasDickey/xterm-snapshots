@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.88 2023/05/29 23:52:12 tom Exp $ */
+/* $XTermId: cursor.c,v 1.92 2023/06/20 08:13:06 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -110,51 +110,65 @@ CursorSet(TScreen *screen, int row, int col, unsigned flags)
  * within the margins.
  *
  * Wrapping to the end of the screen did not appear to be the original intent.
- * That was suppressed in 2023.
+ * That was revised in 2023, using private mode 45 for movement within the
+ * current (wrapped) line, and 1045 for movement to "any" line.
  */
 void
 CursorBack(XtermWidget xw, int n)
 {
 #define WRAP_MASK (REVERSEWRAP | WRAPAROUND)
+#define WRAP_MASK2 (REVERSEWRAP2 | WRAPAROUND)
     TScreen *screen = TScreenOf(xw);
-    int rev = (((xw->flags & WRAP_MASK) == WRAP_MASK) != 0);
-    int left = ScrnLeftMargin(xw);
-    int right = ScrnRightMargin(xw);
+    /* *INDENT-EQLS* */
+    int rev    = (((xw->flags & WRAP_MASK) == WRAP_MASK) != 0);
+    int rev2   = (((xw->flags & WRAP_MASK2) == WRAP_MASK2) != 0);
+    int left   = ScrnLeftMargin(xw);
+    int right  = ScrnRightMargin(xw);
     int before = screen->cur_col;
+    int top    = ScrnTopMargin(xw);
+    int bottom = ScrnBottomMargin(xw);
+    int col    = screen->cur_col;
+    int row    = screen->cur_row;
 
-    CLineData *ld;
     int count;
-    int top;
-    int col;
-    int row;
+    CLineData *ld;
 
-    TRACE(("CursorBack(%d) current %d,%d rev=%d left=%d\n",
-	   n, screen->cur_row, screen->cur_col, rev, left));
-
-    if (rev && screen->do_wrap) {
-	n--;
-    }
+    TRACE(("CursorBack(%d) current %d,%d rev=%d/%d margins H[%d..%d] V[%d..%d]\n",
+	   n,
+	   screen->cur_row, screen->cur_col,
+	   rev, rev2,
+	   left, right,
+	   top, bottom));
 
     /* if the cursor is already before the left-margin, we have to let it go */
     if (before < left)
 	left = 0;
 
     ld = NULL;
-    count = n;
-    top = 0;
-    col = screen->cur_col - 1;
-    row = screen->cur_row;
+    if ((count = n) > 0) {
+	if ((rev || rev2) && screen->do_wrap) {
+	    --count;
+	} else {
+	    --col;
+	}
+    }
 
     for (;;) {
 	if (col < left) {
-	    if (!rev) {
-		col = left;
-		break;
-	    }
-	    if (row <= top) {
-		col = left;
-		row = top;
-		break;
+	    if (rev2) {
+		col = right;
+		if (row == top)
+		    row = bottom + 1;
+	    } else {
+		if (!rev) {
+		    col = left;
+		    break;
+		}
+		if (row <= top) {
+		    col = left;
+		    row = top;
+		    break;
+		}
 	    }
 	    ld = NULL;		/* try a reverse-wrap */
 	    --row;
@@ -164,7 +178,7 @@ CursorBack(XtermWidget xw, int n)
 	    if (ld == NULL)
 		break;		/* should not happen */
 	    if (row != screen->cur_row) {
-		if (!LineTstWrapped(ld)) {
+		if (!rev2 && !LineTstWrapped(ld)) {
 		    ++row;	/* reverse-wrap failed */
 		    col = left;
 		    break;

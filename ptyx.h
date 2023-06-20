@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1092 2023/06/13 21:37:22 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1094 2023/06/14 23:27:08 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1153,6 +1153,7 @@ typedef enum {
     ,srm_BELL_IS_URGENT = 1042
     ,srm_POP_ON_BELL = 1043
     ,srm_KEEP_CLIPBOARD = 1044
+    ,srm_REVERSEWRAP2 = 1045	/* reverse-wrap without limits */
     ,srm_ALLOW_ALTBUF = 1046
     ,srm_OPT_ALTBUF = 1047
     ,srm_SAVE_CURSOR = 1048
@@ -2053,6 +2054,7 @@ typedef enum {
 	DP_X_MOUSE,
 	DP_X_NCSM,
 	DP_X_REVWRAP,
+	DP_X_REVWRAP2,
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
 	DP_CRS_BLINK,
@@ -3463,18 +3465,19 @@ typedef struct _TekWidgetRec {
 /*
  * Other flags
  */
-#define WRAPAROUND	MiscBIT(0)	/* true if auto wraparound mode */
-#define	REVERSEWRAP	MiscBIT(1)	/* true if reverse wraparound mode */
-#define REVERSE_VIDEO	MiscBIT(2)	/* true if screen white on black */
-#define LINEFEED	MiscBIT(3)	/* true if in auto linefeed mode */
-#define ORIGIN		MiscBIT(4)	/* true if in origin mode */
-#define INSERT		MiscBIT(5)	/* true if in insert mode */
-#define SMOOTHSCROLL	MiscBIT(6)	/* true if in smooth scroll mode */
-#define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
-#define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
-#define NATIONAL        MiscBIT(9)	/* true if writing national charset */
-#define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
-#define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
+#define INVISIBLE	MiscBIT(0)	/* true if writing invisible text */
+#define REVERSE_VIDEO	MiscBIT(1)	/* true if screen white on black */
+#define WRAPAROUND	MiscBIT(2)	/* true if auto wraparound mode */
+#define	REVERSEWRAP	MiscBIT(3)	/* true if reverse wraparound mode */
+#define	REVERSEWRAP2	MiscBIT(4)	/* true if extended reverse wraparound */
+#define LINEFEED	MiscBIT(5)	/* true if in auto linefeed mode */
+#define ORIGIN		MiscBIT(6)	/* true if in origin mode */
+#define INSERT		MiscBIT(7)	/* true if in insert mode */
+#define SMOOTHSCROLL	MiscBIT(8)	/* true if in smooth scroll mode */
+#define IN132COLUMNS	MiscBIT(9)	/* true if in 132 column mode */
+#define NATIONAL        MiscBIT(10)	/* true if writing national charset */
+#define LEFT_RIGHT      MiscBIT(11)	/* true if left/right margin mode */
+#define NOCLEAR_COLM    MiscBIT(12)	/* true if no clear on DECCOLM change */
 
 #define DrawBIT(n)	xBIT(n + 8)	/* XTermDraw.draw_flags */
 /* The following attributes are used in the argument of drawXtermText()  */

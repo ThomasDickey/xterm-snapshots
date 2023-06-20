@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1947 2023/05/09 08:03:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1949 2023/06/19 19:18:22 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1553,16 +1553,17 @@ check_bitmasks(void)
 	    DATA(DGRP(2), ATR_DIRECT_BG),
 #endif
 	    DATA(DMSK(DGRP(2)), SGR_MASK2),
+	    DATA(DGRP(3), INVISIBLE),
+	    DATA(DMSK(DGRP(3)), ATTRIBUTES),
+	    DATA(DGRP(3), REVERSE_VIDEO),
 	    DATA(DGRP(3), WRAPAROUND),
 	    DATA(DGRP(3), REVERSEWRAP),
-	    DATA(DGRP(3), REVERSE_VIDEO),
+	    DATA(DGRP(3), REVERSEWRAP2),
 	    DATA(DGRP(3), LINEFEED),
 	    DATA(DGRP(3), ORIGIN),
 	    DATA(DGRP(3), INSERT),
 	    DATA(DGRP(3), SMOOTHSCROLL),
 	    DATA(DGRP(3), IN132COLUMNS),
-	    DATA(DGRP(3), INVISIBLE),
-	    DATA(DMSK(DGRP(3)), ATTRIBUTES),
 	    DATA(DGRP(5), NATIONAL),
 	    DATA(DGRP(5), LEFT_RIGHT),
 	    DATA(DGRP(5), NOCLEAR_COLM),
@@ -7092,6 +7093,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		update_reversewrap();
 	    }
 	    break;
+	case srm_REVERSEWRAP2:	/* extended reverse wraparound (xterm) */
+	    (*func) (&xw->flags, REVERSEWRAP2);
+	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
 	    if_PRINT_GRAPHICS2(set_bool_mode(screen->graphics_print_background_mode)) {
@@ -7491,6 +7495,9 @@ savemodes(XtermWidget xw)
 		DoSM(DP_X_REVWRAP, xw->flags & REVERSEWRAP);
 	    }
 	    break;
+	case srm_REVERSEWRAP2:	/* extended reverse wraparound (xterm) */
+	    DoSM(DP_X_REVWRAP2, xw->flags & REVERSEWRAP2);
+	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
 	    if_PRINT_GRAPHICS2(DoSM(DP_DECGPBM, screen->graphics_print_background_mode)) {
@@ -7826,6 +7833,9 @@ restoremodes(XtermWidget xw)
 		bitcpy(&xw->flags, screen->save_modes[DP_X_REVWRAP], REVERSEWRAP);
 		update_reversewrap();
 	    }
+	    break;
+	case srm_REVERSEWRAP2:	/* extended reverse wraparound (xterm) */
+	    bitcpy(&xw->flags, screen->save_modes[DP_X_REVWRAP2], REVERSEWRAP2);
 	    break;
 #ifdef ALLOWLOGGING
 	case srm_ALLOWLOGGING:	/* logging (xterm) also DECGPBM (Graphics Print Background Mode) */
@@ -13560,7 +13570,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	 * it off.
 	 */
 	UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
-	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP);
+	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP | REVERSEWRAP2);
 	bitclr(&xw->flags, INSERT | INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
 	ResetItalics(xw);
 	if_OPT_ISO_COLORS(screen, {

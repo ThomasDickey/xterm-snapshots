@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1047 2023/06/13 21:54:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.1048 2023/06/14 23:18:40 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -5304,6 +5304,9 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    if_PRINT_GRAPHICS2(result = MdBool(screen->graphics_print_color_syntax))
 		result = MdFlag(xw->flags, REVERSEWRAP);
+	    break;
+	case srm_REVERSEWRAP2:	/* extended reverse wraparound   */
+	    result = MdFlag(xw->flags, REVERSEWRAP2);
 	    break;
 #if defined(ALLOWLOGGING)
 	case srm_ALLOWLOGGING:	/* logging              */
