@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1949 2023/06/19 19:18:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1950 2023/06/20 23:59:12 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -13420,7 +13420,10 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #endif
 #if OPT_STATUS_LINE
     if (screen->vtXX_level >= 2) {
-	handle_DECSSDT(xw, 0);	/* DEC STD 070, page 14-10 */
+	if (full)
+	    handle_DECSSDT(xw, 0);	/* DEC STD 070, page 14-10, RIS */
+	else
+	    handle_DECSASD(xw, 0);	/* DEC STD 070, page 14-9, DECSTR */
     }
 #endif
 

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1048 2023/06/14 23:18:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.1049 2023/06/21 21:20:18 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4864,7 +4864,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			cp);
 	    } else
 #endif
-	    if (!strcmp(cp, "*|")) {	/* DECSNLS */
+	    if (!strcmp(cp, "*x")) {	/* DECSACE */
+		TRACE(("reply DECSACE\n"));
+		sprintf(reply, "%d%s",
+			screen->cur_decsace,
+			cp);
+	    } else if (!strcmp(cp, "*|")) {	/* DECSNLS */
 		TRACE(("reply DECSNLS\n"));
 		sprintf(reply, "%d%s",
 			screen->max_row + 1,
