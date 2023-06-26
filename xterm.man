@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.878 2023/03/28 09:54:38 tom Exp $
+.\" $XTermId: xterm.man,v 1.886 2023/06/26 08:25:23 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -72,7 +72,7 @@
 .ie n  .in +4
 .el    .in +2
 .nf
-.ft C			\" Courier
+.ft CR			\" Courier
 ..
 .de NE
 .fi
@@ -6791,25 +6791,129 @@ VT\fIxxx\fP Commands:
 .RS
 .TP
 .B Do Soft Reset\fP (resource \fBsoftreset\fP)
-Reset scroll regions.
+This corresponds to the VT220 DECSTR control sequence.
+A soft reset leaves the contents of the window intact,
+but resets modes which affect subsequent updates:
+.RS
+.PP
+Soft reset differs from full reset in a minor detail:
+.bP
+Set the saved cursor position to the upper-left corner of the window.
+.bP
+Exit from the status-line without erasing it.
+.PP
+Both soft/full resets do the following:
+.bP
+Make the cursor visible, with shape reset according to the
+\fBcursorUnderLine\fR and
+\fBcursorBar\fR resources.
+.bP
+Enable or disable the cursor-blinking state
+according to the \fBcursorBlink\fR resource,
+and set the \fIEnable Blinking Cursor\fP menu checkmark to match.
+.bP
+Reset video attributes, e.g., bold, italic, underline, blink.
+.bP
+Reset the ANSI color mode to the \fI\*n\fP default foreground and background.
+.bP
+Reset the 256-color palette to its initial state.
+.bP
+Reset the selected character set, e.g., ASCII, alternate character set.
+The UTF-8 modes are not changed.
+.bP
+Reset ECMA-48 KAM.
+.bP
+Reset DECCKM and DECKPAM per resources
+.BR appcursorDefault " and"
+.BR appkeypadDefault .
+.bP
+Reset the key-modifier modes to the values set by resources
+.BR formatOtherKeys ,
+.BR modifyCursorKeys ,
+.BR modifyFunctionKeys ,
+.BR modifyKeyboard ", and"
+.BR modifyOtherKeys .
+.bP
+Reset origin mode (DECOM).
+.bP
+Reset all margins (i.e., top/bottom and left/right).
 This can be convenient when some program has left the scroll regions
 set incorrectly (often a problem when using VMS or TOPS-20).
-This corresponds to the VT220 DECSTR control sequence.
+.bP
+Set autowrap and reverse wrapping according to the resource values
+.BR autoWrap " and"
+.BR reverseWrap .
+.bP
+Reset checksum extension to the \fBchecksumExtension\fP resource.
+.RE
 .
 .TP
 .B Do Full Reset\fP (resource \fBhardreset\fP)
-The full reset entry will clear the screen, reset tabs to every
-eight columns, and reset the terminal modes (such as wrap and smooth scroll)
-to their initial states just after
-\fI\*n\fP has finished processing the command line options.
-This corresponds to the VT102 RIS control sequence,
-with a few obvious differences.
-For example, your session is not disconnected as a real VT102 would do.
+A full reset does this in addition to a soft reset:
+.RS
+.PP
+.bP
+Clear the window.
+.bP
+Reset tab stops to every eight columns.
+.bP
+Reset the screen to match the \fBreverseVideo\fP resource.
+.bP
+Resize the screen to 80 columns if 132-column mode was initially enabled
+with the \fBc132\fP resource.
+.bP
+Reset scrolling (jump versus smooth) per the \fBjumpScroll\fP resource.
+.bP
+Enable linefeed mode (ECMA-48 LNM) and send/receive mode (ECMA-48 SRM).
+.bP
+Reset DEC user-defined keys (DECUDK).
+.bP
+Disable application mode for cursor- and keypad-keys (DECCKM, DECKPAM).
+.bP
+Reset menu entry \fI8-bit Controls\fR, per resource \fBeightBitControl\fP.
+.bP
+Reset interpretation of the backarrow key, per initial resource settings.
+.bP
+Set the keyboard type according to the resources
+.BR keyboardType ,
+.BR hpFunctionKeys ,
+.BR scoFunctionKeys ,
+.BR sunFunctionKeys ,
+.BR tcapFunctionKeys ,
+.BR oldXtermFKeys " and"
+.BR sunKeyboard .
+.bP
+Turn mouse tracking off.
+.bP
+Reset title and pointer modes
+per resources \fBtitleModes\fP and \fBpointerMode\fP.
+.bP
+Reset the readline and bracketed paste modes.
+.bP
+Discard all SIXEL and ReGIS graphics data from memory.
+.bP
+Reset \fBsixelScrolling\fP and \fBprivateColorRegisters\fP from
+initial resource values.
+.bP
+Set DECSDM if the \fBsixelScrolling\fP resource is true.
+Otherwise, reset DECSDM.
+.PP
+A full reset does this, unlike a soft reset:
+.bP
+Move the cursor to the upper-left corner of the window,
+and then save that position.
+.bP
+Hide the status-line, setting its display-type to \*(``none\*(''.
+.RE
 .
 .TP
 .B Reset and Clear Saved Lines\fP (resource \fBclearsavedlines\fP)
 Perform a full reset,
 and also clear the saved lines.
+.IP
+This corresponds to the VT102 RIS control sequence,
+with a few obvious differences.
+For example, your session is not disconnected as a real VT102 would do.
 .RE
 .
 .TP

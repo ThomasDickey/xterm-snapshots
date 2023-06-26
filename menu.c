@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.370 2022/10/07 08:00:53 Ben.Wong Exp $ */
+/* $XTermId: menu.c,v 1.372 2023/06/26 22:52:21 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3752,6 +3752,7 @@ update_titeInhibit(void)
 void
 update_activeicon(void)
 {
+    SetItemSensitivity(vtMenuEntries[vtMenu_activeicon].widget, False);
     UpdateCheckbox("update_activeicon",
 		   vtMenuEntries,
 		   vtMenu_activeicon,

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #383 (2023/06/14)
+               updated for XTerm Patch #383 (2023/06/22)
 
 
 
@@ -426,6 +426,7 @@ DCS $ q Pt ST
             $ |     -> DECSCPP
             $ }     -> DECSASD
             $ ~     -> DECSSDT
+            * x     -> DECSACE
             * |     -> DECSNLS
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $

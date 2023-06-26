@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1950 2023/06/20 23:59:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1957 2023/06/26 22:28:07 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -143,7 +143,8 @@ typedef int (*BitFunc) (unsigned * /* p */ ,
 
 static IChar doinput(XtermWidget /* xw */ );
 static int set_character_class(char * /*s */ );
-static void FromAlternate(XtermWidget /* xw */ );
+static void FromAlternate(XtermWidget /* xw */ ,
+			  Bool /* clearFirst */ );
 static void ReallyReset(XtermWidget /* xw */ ,
 			Bool /* full */ ,
 			Bool /* saved */ );
@@ -4486,8 +4487,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSCUSR:
 	    TRACE(("CASE_DECSCUSR\n"));
 	    {
-		Boolean change = True;
+		Boolean change;
 		int blinks = screen->cursor_blink_esc;
+		XtCursorShape shapes = screen->cursor_shape;
 
 		HideCursor(xw);
 
@@ -4520,12 +4522,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    blinks = False;
 		    screen->cursor_shape = CURSOR_BAR;
 		    break;
-		default:
-		    change = False;
-		    break;
 		}
-		TRACE(("cursor_shape:%d blinks:%s\n",
-		       screen->cursor_shape, BtoS(blinks)));
+		change = (blinks != screen->cursor_blink_esc ||
+			  shapes != screen->cursor_shape);
+		TRACE(("cursor_shape:%d blinks:%d%s\n",
+		       screen->cursor_shape, blinks,
+		       change ? " (changed)" : ""));
 		if (change) {
 		    xtermSetCursorBox(screen);
 		    if (SettableCursorBlink(screen)) {
@@ -7126,7 +7128,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    ToAlternate(xw, True);
 		    ClearScreen(xw);
 		} else {
-		    FromAlternate(xw);
+		    FromAlternate(xw, False);
 		    CursorRestore(xw);
 		}
 	    } else if (IsSM()) {
@@ -7140,7 +7142,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		} else {
 		    if (screen->whichBuf)
 			ClearScreen(xw);
-		    FromAlternate(xw);
+		    FromAlternate(xw, False);
 		}
 	    } else if (IsSM()) {
 		do_ti_xtra_scroll(xw);
@@ -7152,7 +7154,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    if (IsSM()) {
 			ToAlternate(xw, False);
 		    } else {
-			FromAlternate(xw);
+			FromAlternate(xw, False);
 		    }
 		} else if (IsSM()) {
 		    do_ti_xtra_scroll(xw);
@@ -7182,7 +7184,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		(*func) (&xw->keyboard.flags, MODE_DECSDM);
 		TRACE(("DECSET/DECRST DECSDM %s (resource default is %s)\n",
 		       BtoS(xw->keyboard.flags & MODE_DECSDM),
-		       BtoS(!TScreenOf(xw)->sixel_scrolling)));
+		       BtoS(!screen->sixel_scrolling)));
 		update_decsdm();
 	    }
 	    break;
@@ -7296,7 +7298,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		xw->misc.titeInhibit = False;
 	    } else if (!xw->misc.titeInhibit) {
 		xw->misc.titeInhibit = True;
-		FromAlternate(xw);
+		FromAlternate(xw, False);
 	    }
 	    update_titeInhibit();
 	    break;
@@ -7362,7 +7364,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS to %s (resource default is %s)\n",
 		   BtoS(screen->privatecolorregisters),
-		   BtoS(TScreenOf(xw)->privatecolorregisters)));
+		   BtoS(screen->privatecolorregisters0)));
 	    set_bool_mode(screen->privatecolorregisters);
 	    update_privatecolorregisters();
 	    break;
@@ -7861,7 +7863,7 @@ restoremodes(XtermWidget xw)
 		if (screen->save_modes[DP_X_ALTBUF])
 		    ToAlternate(xw, False);
 		else
-		    FromAlternate(xw);
+		    FromAlternate(xw, False);
 		/* update_altscreen done by ToAlt and FromAlt */
 	    } else if (screen->save_modes[DP_X_ALTBUF]) {
 		do_ti_xtra_scroll(xw);
@@ -7873,7 +7875,7 @@ restoremodes(XtermWidget xw)
 		    if (screen->save_modes[DP_X_ALTBUF])
 			ToAlternate(xw, False);
 		    else
-			FromAlternate(xw);
+			FromAlternate(xw, False);
 		    /* update_altscreen done by ToAlt and FromAlt */
 		} else if (screen->save_modes[DP_X_ALTBUF]) {
 		    do_ti_xtra_scroll(xw);
@@ -7934,7 +7936,7 @@ restoremodes(XtermWidget xw)
 	case srm_ALLOW_ALTBUF:
 	    DoRM(DP_ALLOW_ALTBUF, xw->misc.titeInhibit);
 	    if (xw->misc.titeInhibit)
-		FromAlternate(xw);
+		FromAlternate(xw, False);
 	    update_titeInhibit();
 	    break;
 	case srm_SAVE_CURSOR:
@@ -8736,7 +8738,7 @@ void
 ToggleAlternate(XtermWidget xw)
 {
     if (TScreenOf(xw)->whichBuf)
-	FromAlternate(xw);
+	FromAlternate(xw, False);
     else
 	ToAlternate(xw, False);
 }
@@ -8761,7 +8763,7 @@ ToAlternate(XtermWidget xw, Bool clearFirst)
 }
 
 static void
-FromAlternate(XtermWidget xw)
+FromAlternate(XtermWidget xw, Bool clearFirst)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -8770,6 +8772,8 @@ FromAlternate(XtermWidget xw)
 	if (screen->scroll_amt) {
 	    FlushScroll(xw);
 	}
+	if (clearFirst)
+	    ClearScreen(xw);
 	SwitchBufs(xw, 0, False);
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
 	update_altscreen();
@@ -10861,6 +10865,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.privatecolorregisters);	/* FIXME: should this be off unconditionally here? */
     TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default: %s\n",
 	   BtoS(screen->privatecolorregisters)));
+    screen->privatecolorregisters0 = screen->privatecolorregisters;
 #endif
 
 #if OPT_GRAPHICS
@@ -10987,6 +10992,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_SIXEL_GRAPHICS
     init_Bres(screen.sixel_scrolls_right);
+    screen->sixel_scrolls_right0 = screen->sixel_scrolls_right;
 #endif
 #if OPT_PRINT_GRAPHICS
     init_Bres(screen.graphics_print_to_host);
@@ -12046,19 +12052,13 @@ VTRealize(Widget w,
 	copyCgs(xw, win, gcBoldReverse, gcNormReverse);
 
 	initBorderGC(xw, win);
-
-#if OPT_TOOLBAR
-	/*
-	 * Toolbar is initialized before we get here.  Enable the menu item
-	 * and set it properly.
-	 */
-	SetItemSensitivity(vtMenuEntries[vtMenu_activeicon].widget, True);
-	update_activeicon();
-#endif
     } else {
 	ReportIcons(("disabled active-icon\n"));
 	xw->work.active_icon = eiFalse;
     }
+#if OPT_TOOLBAR
+    update_activeicon();
+#endif
 #endif /* NO_ACTIVE_ICON */
 
 #if OPT_INPUT_METHOD
@@ -13412,8 +13412,8 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     InitCursorShape(screen, screen);
     xtermSetCursorBox(screen);
 #if OPT_BLINK_CURS
-    screen->cursor_blink = screen->cursor_blink_i;
     screen->cursor_blink_esc = 0;
+    SetCursorBlink(xw, screen->cursor_blink_i);
     TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
 	   screen->cursor_blink));
@@ -13441,6 +13441,12 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
     /* Reset character-sets to initial state */
     resetCharsets(screen);
+
+    UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
+    if (xw->misc.appcursorDefault)
+	xw->keyboard.flags |= MODE_DECCKM;
+    if (xw->misc.appkeypadDefault)
+	xw->keyboard.flags |= MODE_DECKPAM;
 
 #if OPT_MOD_FKEYS
     /* Reset modifier-resources to initial state */
@@ -13470,19 +13476,20 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	xtermShowPointer(xw, True);
 
 	TabReset(xw->tabs);
-	xw->keyboard.flags = MODE_SRM;
+	xw->keyboard.flags |= MODE_SRM;
 
 	guard_keyboard_type = False;
 	screen->old_fkeys = screen->old_fkeys0;
 	decode_keyboard_type(xw, &resource);
 	update_keyboard_type();
 
+	UIntClr(xw->keyboard.flags, MODE_DECBKM);
 #if OPT_INITIAL_ERASE
 	if (xw->keyboard.reset_DECBKM == 1)
 	    xw->keyboard.flags |= MODE_DECBKM;
 	else if (xw->keyboard.reset_DECBKM == 2)
 #endif
-	    if (TScreenOf(xw)->backarrow_key)
+	    if (screen->backarrow_key)
 		xw->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
@@ -13493,27 +13500,26 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	screen->title_modes = screen->title_modes0;
 	screen->pointer_mode = screen->pointer_mode0;
 #if OPT_SIXEL_GRAPHICS
-	if (TScreenOf(xw)->sixel_scrolling)
+	if (screen->sixel_scrolling)
 	    UIntClr(xw->keyboard.flags, MODE_DECSDM);
 	else
 	    UIntSet(xw->keyboard.flags, MODE_DECSDM);
 	TRACE(("full reset DECSDM to %s (resource default is %s)\n",
 	       BtoS(xw->keyboard.flags & MODE_DECSDM),
-	       BtoS(!TScreenOf(xw)->sixel_scrolling)));
+	       BtoS(!screen->sixel_scrolling)));
 #endif
 
 #if OPT_GRAPHICS
-	screen->privatecolorregisters = TScreenOf(xw)->privatecolorregisters;
-	TRACE(("full reset PRIVATE_COLOR_REGISTERS to %s (resource default is %s)\n",
-	       BtoS(screen->privatecolorregisters),
-	       BtoS(TScreenOf(xw)->privatecolorregisters)));
+	screen->privatecolorregisters = screen->privatecolorregisters0;
+	TRACE(("full reset PRIVATE_COLOR_REGISTERS to %s\n",
+	       BtoS(screen->privatecolorregisters)));
+	update_privatecolorregisters();
 #endif
 
 #if OPT_SIXEL_GRAPHICS
-	screen->sixel_scrolls_right = TScreenOf(xw)->sixel_scrolls_right;
-	TRACE(("full reset SIXEL_SCROLLS_RIGHT to %s (resource default is %s)\n",
-	       BtoS(screen->sixel_scrolls_right),
-	       BtoS(TScreenOf(xw)->sixel_scrolls_right)));
+	screen->sixel_scrolls_right = screen->sixel_scrolls_right0;
+	TRACE(("full reset SIXEL_SCROLLS_RIGHT to %s\n",
+	       BtoS(screen->sixel_scrolls_right)));
 #endif
 
 	update_appcursor();
@@ -13523,7 +13529,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	show_8bit_control(False);
 	reset_decudk(xw);
 
-	FromAlternate(xw);
+	FromAlternate(xw, True);
 	ClearScreen(xw);
 	screen->cursor_state = OFF;
 
@@ -13567,12 +13573,6 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	CursorSet(screen, 0, 0, xw->flags);
 	CursorSave(xw);
     } else {			/* DECSTR */
-	/*
-	 * There's a tiny difference, to accommodate usage of xterm.
-	 * We reset autowrap to the resource values rather than turning
-	 * it off.
-	 */
-	UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
 	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP | REVERSEWRAP2);
 	bitclr(&xw->flags, INSERT | INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
 	ResetItalics(xw);

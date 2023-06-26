@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1094 2023/06/14 23:27:08 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1096 2023/06/26 23:26:17 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -423,7 +423,6 @@ typedef struct {
 /* constants used for utf8 mode */
 #define UCS_REPL	0xfffd
 #define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
-#define is_UCS_SPECIAL(c) ((c) >= 0xfff0 && (c) <= 0xffff)
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 
@@ -1668,9 +1667,11 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
 #define NARROW_ICHAR	0xffff
 #if OPT_WIDER_ICHAR
+#define is_UCS_SPECIAL(c) ((c) >= 0xfff0 && (c) <= 0xffff)
 #define WIDEST_ICHAR	0x1fffff
 typedef unsigned IChar;		/* for 8-21 bit characters */
 #else
+#define is_UCS_SPECIAL(c) ((c) >= 0xfff0)
 #define WIDEST_ICHAR	NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
@@ -2762,11 +2763,13 @@ typedef struct {
 #if OPT_SIXEL_GRAPHICS
 	Boolean		sixel_scrolling; /* sixel scrolling             */
 	Boolean		sixel_scrolls_right; /* sixel scrolling moves cursor to right */
+	Boolean		sixel_scrolls_right0; /* initial sixelScrolling mode */
 #endif
 
 #if OPT_GRAPHICS
 	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
+	Boolean		privatecolorregisters0; /* initial privateColorRegisters */
 #endif
 
 	/* Graphics Printing */
