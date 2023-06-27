@@ -1,6 +1,6 @@
-.\" $XTermId: resize.man,v 1.37 2019/02/07 00:16:12 tom Exp $
+.\" $XTermId: resize.man,v 1.38 2023/06/27 08:01:41 tom Exp $
 .\"
-.\" Copyright 1998-2017,2019 by Thomas E. Dickey
+.\" Copyright 1998-2019,2023 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -215,7 +215,7 @@ COLUMNS, LINES
 .IR \*N 's
 generated shell command
 sets these variables on systems using terminfo.
-Many applications (including the curses library) 
+Many applications (including the curses library)
 use those variables when set to override their screensize.
 .SH "SEE ALSO"
 use_env(3x)
