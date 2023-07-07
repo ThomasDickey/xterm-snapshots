@@ -1,8 +1,8 @@
-/* $XTermId: graphics.c,v 1.118 2022/05/16 23:35:50 tom Exp $ */
+/* $XTermId: graphics.c,v 1.119 2023/07/07 20:10:40 tom Exp $ */
 
 /*
- * Copyright 2013-2021,2022 by Ross Combs
- * Copyright 2013-2021,2022 by Thomas E. Dickey
+ * Copyright 2013-2022,2023 by Ross Combs
+ * Copyright 2013-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -42,6 +42,10 @@
 
 #include <assert.h>
 #include <graphics.h>
+
+#if OPT_REGIS_GRAPHICS
+#include <graphics_regis.h>
+#endif
 
 #undef DUMP_BITMAP
 #undef DUMP_COLORS
@@ -1754,6 +1758,9 @@ reset_displayed_graphics(TScreen const *screen)
 	FOR_EACH_SLOT(ii) {
 	    deactivateSlot(ii);
 	}
+#if OPT_REGIS_GRAPHICS
+	reset_regis();
+#endif
     }
 }
 

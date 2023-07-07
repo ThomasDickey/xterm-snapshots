@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.139 2023/03/08 01:06:03 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.140 2023/07/07 19:37:37 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -7606,6 +7606,13 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	TRACE(("DATA_ERROR: skipping unexpected character at top level: \"%c\"\n", ch));
     }
     return 0;
+}
+
+void
+reset_regis(void)
+{
+    persistent_context.width = 0;
+    persistent_context.height = 0;
 }
 
 void

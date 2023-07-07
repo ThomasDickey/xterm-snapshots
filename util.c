@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.933 2023/05/29 18:16:51 tom Exp $ */
+/* $XTermId: util.c,v 1.934 2023/07/06 20:41:01 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4757,11 +4757,13 @@ drawXtermText(XTermDraw * params,
 		    NormalFont(screen)->max_bounds.width * 2) {
 		    underline_len = real_length = (Cardinal) (dst * 2);
 		} else if (cgsId == gcWide || cgsId == gcWBold) {
+		    int ascent2 = Max(NormalFont(screen)->ascent,
+				      thisFp->ascent);
 		    underline_len = real_length = (Cardinal) (dst * 2);
 		    xtermFillCells(&recur,
 				   gc,
 				   x,
-				   y - thisFp->ascent,
+				   y - ascent2,
 				   real_length);
 		}
 	    }
