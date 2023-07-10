@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2532 2023/07/10 00:18:02 tom Exp $
+  $XTermId: xterm.log.html,v 1.2534 2023/07/10 19:10:46 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1049,6 +1049,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>exclude ASCII space from <code>showMissingGlyphs</code>,
+    since a few bitmap fonts lack this (report by "SanRemo",
+    Emanuel Haupt).</li>
+
+    <li>correct a step in rendering double-width characters with
+    bitmap-fonts (report by Peter Fabinski, Debian #1039986).</li>
+
     <li>fixes for ReGIS-related problems (report by Ben Wong):
       <ul>
         <li>mimic an undocumented hardware VT340 feature which

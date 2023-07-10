@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.775 2023/06/13 21:45:38 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.776 2023/07/10 19:01:33 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4134,7 +4134,9 @@ xtermDrawBoxChar(XTermDraw * params,
 			   CapProjecting,
 			   JoinMiter);
 
-    if (ch == 1) {		/* diamond */
+    if (ch == 32) {		/* space! */
+	;			/* boxing a missing space is pointless */
+    } else if (ch == 1) {	/* diamond */
 	XPoint points[5];
 	int npoints = 5, n;
 

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.934 2023/07/06 20:41:01 tom Exp $ */
+/* $XTermId: util.c,v 1.936 2023/07/10 19:01:33 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3864,6 +3864,7 @@ xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int lengt
 	/*
 	 * X11 bitmap-fonts are limited to 16-bits.
 	 */
+	assert(ch != HIDDEN_CHAR);
 	if (
 #if OPT_WIDER_ICHAR
 	       (ch > NARROW_ICHAR) ||
@@ -4661,7 +4662,7 @@ drawXtermText(XTermDraw * params,
 			&& okFont(NormalWFont(screen)))) {
 		    needWide = True;
 		}
-		++dst;
+		mapped[dst++] = ch;
 	    }
 	}
 
@@ -4688,11 +4689,8 @@ drawXtermText(XTermDraw * params,
 	    }
 
 	    if (useBoldFont && FontIsIncomplete(bold)) {
-		for (src = 0; src < (int) len; src++) {
+		for (src = 0; src < dst; src++) {
 		    IChar ch = mapped[src];
-
-		    if (ch == HIDDEN_CHAR)
-			continue;
 
 		    noBold = IsXtermMissingChar(screen, ch, bold);
 		    if (noBold) {
@@ -4706,8 +4704,8 @@ drawXtermText(XTermDraw * params,
 	    }
 	}
 
-	/* FIXME This is probably wrong. But it works. */
-	underline_len = len;
+	/* This is probably wrong. But it works. */
+	underline_len = (Cardinal) dst;
 
 	/* Set the drawing font */
 	if (!(recur.draw_flags & (DOUBLEHFONT | DOUBLEWFONT))) {

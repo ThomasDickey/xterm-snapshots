@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1957 2023/06/26 22:28:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1958 2023/07/10 15:53:46 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -11220,6 +11220,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(last->windowName);
 	free(last);
     }
+#if OPT_STATUS_LINE
+    free(screen->status_fmt);
+#endif
 #ifndef NO_ACTIVE_ICON
     TRACE_FREE_LEAK(xw->misc.active_icon_s);
 #endif
