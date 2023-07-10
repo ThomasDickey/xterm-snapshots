@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.119 2023/07/07 20:10:40 tom Exp $ */
+/* $XTermId: graphics.c,v 1.122 2023/07/10 00:22:25 tom Exp $ */
 
 /*
  * Copyright 2013-2022,2023 by Ross Combs
@@ -412,6 +412,26 @@ set_shared_color_register(unsigned color, int r, int g, int b)
 
 	if (graphic->color_registers_used[ii]) {
 	    graphic->dirty = True;
+	}
+    }
+}
+
+void
+fetch_color_register(Graphic *graphic,
+		     unsigned color,
+		     ColorRegister *reg)
+{
+    assert(color < MAX_COLOR_REGISTERS);
+
+    reg->r = -1;
+    reg->g = -1;
+    reg->b = -1;
+
+    if (graphic->color_registers_used[color]) {
+	if (graphic->private_colors) {
+	    *reg = graphic->private_color_registers[color];
+	} else {
+	    *reg = getSharedRegisters()[color];
 	}
     }
 }
@@ -948,6 +968,8 @@ refresh_graphic(TScreen const *screen,
 	   holes, total, out_of_range));
 }
 
+#define MAX_RGB 100.		/* use this rather than 255 */
+
 /*
  * Primary color hues:
  *  blue:    0 degrees
@@ -958,8 +980,8 @@ void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
     const int hs = ((h + 240) / 60) % 6;
-    const double lv = l / 100.0;
-    const double sv = s / 100.0;
+    const double lv = l / MAX_RGB;
+    const double sv = s / MAX_RGB;
     double c, x, m, c2;
     double r1, g1, b1;
 
@@ -1014,9 +1036,9 @@ hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 	return;
     }
 
-    *r = (short) ((r1 + m) * 100.0 + 0.5);
-    *g = (short) ((g1 + m) * 100.0 + 0.5);
-    *b = (short) ((b1 + m) * 100.0 + 0.5);
+    *r = (short) ((r1 + m) * MAX_RGB + 0.5);
+    *g = (short) ((g1 + m) * MAX_RGB + 0.5);
+    *b = (short) ((b1 + m) * MAX_RGB + 0.5);
 
     if (*r < 0)
 	*r = 0;
@@ -1030,6 +1052,49 @@ hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 	*b = 0;
     else if (*b > 100)
 	*b = 100;
+}
+
+void
+rgb2hls(int r, int g, int b, short *h, short *l, short *s)
+{
+    const double scaled_r = (r / MAX_RGB);
+    const double scaled_g = (g / MAX_RGB);
+    const double scaled_b = (b / MAX_RGB);
+
+    const double min_scale = Min(Min(scaled_r, scaled_g), scaled_b);
+    const double max_scale = Max(Max(scaled_r, scaled_g), scaled_b);
+    const double dif_scale = max_scale - min_scale;
+
+    double h_work = 0.;
+    double s_work = 0.;
+    double l_work = ((max_scale + min_scale) / 2.);
+
+    if (dif_scale != 0.) {
+	if (l_work < 0.5f) {
+	    s_work = (dif_scale / (max_scale + min_scale));
+	} else {
+	    s_work = (dif_scale / (2. - max_scale - min_scale));
+	}
+
+	if (scaled_r == max_scale) {
+	    h_work = (scaled_g - scaled_b) / dif_scale;
+	} else if (scaled_g == max_scale) {
+	    h_work = 2. + (scaled_b - scaled_r) / dif_scale;
+	} else if (scaled_b == max_scale) {
+	    h_work = 4. + (scaled_r - scaled_g) / dif_scale;
+	}
+    }
+
+    h_work *= 60.;
+    if (h_work < 0)
+	h_work += 360.;
+
+    s_work *= MAX_RGB;
+    l_work *= MAX_RGB;
+
+    *h = (short) h_work;
+    *s = (short) s_work;
+    *l = (short) l_work;
 }
 
 void

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2530 2023/07/07 20:27:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.2532 2023/07/10 00:18:02 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1051,6 +1051,13 @@
   <ul>
     <li>fixes for ReGIS-related problems (report by Ben Wong):
       <ul>
+        <li>mimic an undocumented hardware VT340 feature which
+        handles color initialization with incomplete
+        parameters.</li>
+
+        <li>handle whitespace between operator/operands for color
+        values.</li>
+
         <li>reset ReGIS-context when resetting graphics in
         <tt>RIS</tt>.</li>
       </ul>

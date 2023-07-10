@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.140 2023/07/07 19:37:37 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.142 2023/07/10 00:09:54 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -3460,33 +3460,56 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     return 1;
 }
 
+#define spec_H xBIT(0)
+#define spec_L xBIT(1)
+#define spec_S xBIT(2)
+
+#define spec_HLS (spec_H | spec_L | spec_S)
+
+#define spec_R xBIT(3)
+#define spec_G xBIT(4)
+#define spec_B xBIT(5)
+
+#define spec_RGB (spec_R | spec_G | spec_B)
+
 static int
 load_regis_colorspec(RegisGraphicsContext const *context,
 		     RegisDataFragment const *input,
-		     short *r_out, short *g_out, short *b_out)
+		     ColorRegister *colors)
 {
     RegisDataFragment colorspec;
-    short r = -1, g = -1, b = -1;
+    short r = colors->r;
+    short g = colors->g;
+    short b = colors->b;
     short l = -1;
     int simple;
+    unsigned len;
+    unsigned spec = 0;
 
     assert(context);
     assert(input);
-    assert(r_out);
-    assert(g_out);
-    assert(b_out);
+    assert(colors);
 
     copy_fragment(&colorspec, input);
     TRACE(("colorspec option: \"%s\"\n", fragment_to_tempstr(&colorspec)));
 
     skip_regis_whitespace(&colorspec);
     simple = 0;
-    if (fragment_remaining(&colorspec) == 1U) {
+    if ((len = fragment_remaining(&colorspec)) == 1U) {
 	simple = 1;
-    } else if (fragment_remaining(&colorspec) > 1U) {
-	char after = get_fragment(&colorspec, 1U);
-	if (IsSpace(after))
-	    simple = 1;
+    } else if (len > 1U) {
+	unsigned n;
+	for (n = 1; n < len; ++n) {
+	    char after = get_fragment(&colorspec, n);
+	    /* if no parameters, we might see a right-parenthesis, but on error
+	     * we can anything */
+	    if (strchr("[(,)]", after) != NULL) {
+		simple = 1;
+		break;
+	    } else if (!IsSpace(after)) {
+		break;
+	    }
+	}
     }
     if (simple) {
 	char ch = pop_fragment(&colorspec);
@@ -3628,38 +3651,56 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	    switch (comp) {
 	    case 'H':
 		h = (short) val;
+		spec |= spec_H;
 		break;
 	    case 'L':
 		l = (short) val;
+		spec |= spec_L;
 		break;
 	    case 'S':
 		s = (short) val;
+		spec |= spec_S;
 		break;
 	    case 'R':
 		r = (short) val;
+		spec |= spec_R;
 		break;
 	    case 'G':
 		g = (short) val;
+		spec |= spec_G;
 		break;
 	    case 'B':
 		b = (short) val;
+		spec |= spec_B;
 		break;
 	    }
 	}
 
-	if (h >= 0 && l >= 0 && s >= 0 && r < 0 && g < 0 && b < 0) {
+	if ((spec & spec_HLS) && (spec & spec_RGB)) {
+	    TRACE(("DATA_ERROR: conflicting colorspec format\n"));
+	    return 0;
+	} else if (spec == spec_HLS) {
 	    TRACE(("found HLS colorspec to be converted: %hd,%hd,%hd\n",
 		   h, l, s));
 	    hls2rgb(h, l, s, &r, &g, &b);
 	    TRACE(("converted to RGB: %hd,%hd,%hd\n", r, g, b));
-	} else if (h < 0 && l < 0 && s < 0 && r >= 0 && g >= 0 && b >= 0) {
+	} else if (spec == spec_RGB) {
 	    TRACE(("found RGB colorspec: %hd,%hd,%hd\n", r, g, b));
 	    l = (short) ((MIN3(r, g, b) + MAX3(r, g, b)) / 2);
 	    TRACE(("calculated L: %d\n", l));
-	} else if (h < 0 && l >= 0 && s < 0 && r < 0 && g < 0 && b < 0) {
-	    TRACE(("found L colorspec to be converted: %hd,%hd,%hd\n",
+	} else if ((spec & spec_HLS)) {
+	    short old_h, old_l, old_s;
+	    TRACE(("using partial HLS %hd,%hd,%hd\n", h, l, s));
+	    rgb2hls(r, g, b, &old_h, &old_l, &old_s);
+	    if (h < 0)
+		h = old_h;
+	    if (l < 0)
+		l = old_l;
+	    if (s < 0)
+		s = old_s;
+	    TRACE(("resulting HLS colorspec to convert: %hd,%hd,%hd\n",
 		   h, l, s));
-	    hls2rgb(0, l, 0, &r, &g, &b);
+	    hls2rgb(h, l, s, &r, &g, &b);
 	    TRACE(("converted to RGB: %hd,%hd,%hd\n", r, g, b));
 	} else {
 	    TRACE(("DATA_ERROR: unrecognized colorspec format\n"));
@@ -3675,9 +3716,9 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 	TRACE(("converted to grayscale: %hd,%hd,%hd\n", r, g, b));
     }
 
-    *r_out = r;
-    *g_out = g;
-    *b_out = b;
+    colors->r = r;
+    colors->g = g;
+    colors->b = b;
 
     skip_regis_whitespace(&colorspec);
     if (!fragment_consumed(&colorspec)) {
@@ -3744,15 +3785,16 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
     }
 
     if (extract_regis_parenthesized_data(&colorspec, &coloroption)) {
-	short r, g, b;
+	ColorRegister find_reg =
+	{-1, -1, -1};
 
-	if (!load_regis_colorspec(context, &coloroption, &r, &g, &b)) {
+	if (!load_regis_colorspec(context, &coloroption, &find_reg)) {
 	    TRACE(("unable to parse colorspec\n"));
 	    return 0;
 	}
 
 	*out = find_color_register(context->destination_graphic->color_registers,
-				   r, g, b);
+				   find_reg.r, find_reg.g, find_reg.b);
 	TRACE(("colorspec maps to closest register %u\n", *out));
 
 	return 1;
@@ -6087,7 +6129,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    if (extract_regis_num(&optionarg, &regnum)) {
 			int register_num;
 			int color_only;
-			short r, g, b;
+			ColorRegister my_reg;
 
 			if (!regis_num_to_int(&regnum, &register_num)) {
 			    TRACE(("DATA_ERROR: unable to parse int in screen color register mapping option: \"%s\"\n",
@@ -6120,10 +6162,17 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    break;
 			}
 
-			TRACE(("mapping register %d to color spec: \"%s\"\n",
-			       register_num, fragment_to_tempstr(&colorspec)));
-			if (!load_regis_colorspec(context, &colorspec,
-						  &r, &g, &b)) {
+			fetch_color_register(context->destination_graphic,
+					     (RegisterNum) register_num,
+					     &my_reg);
+
+			TRACE(("mapping register %d %d,%d,%d to color spec: \"%s\"\n",
+			       register_num,
+			       my_reg.r,
+			       my_reg.g,
+			       my_reg.b,
+			       fragment_to_tempstr(&colorspec)));
+			if (!load_regis_colorspec(context, &colorspec, &my_reg)) {
 			    TRACE(("DATA_ERROR: unable to use colorspec for mapping of register %d\n",
 				   register_num));
 			    return 1;
@@ -6133,13 +6182,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    (context->graphics_termid == 240 ||
 			     context->graphics_termid == 330)) {
 			    TRACE(("NOT setting color register %d to %hd,%hd,%hd\n",
-				   register_num, r, g, b));
+				   register_num, my_reg.r, my_reg.g, my_reg.b));
 			} else {
 			    TRACE(("setting color register %d to %hd,%hd,%hd\n",
-				   register_num, r, g, b));
+				   register_num, my_reg.r, my_reg.g, my_reg.b));
 			    update_color_register(context->destination_graphic,
 						  (RegisterNum) register_num,
-						  r, g, b);
+						  my_reg.r, my_reg.g, my_reg.b);
 			}
 			continue;
 		    } {
