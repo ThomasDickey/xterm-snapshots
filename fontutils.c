@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.776 2023/07/10 19:01:33 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.777 2023/07/13 19:57:36 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4125,14 +4125,12 @@ xtermDrawBoxChar(XTermDraw * params,
 
     thick = ((params->attr_flags & BOLD)
 	     ? (Max((unsigned) screen->fnt_high / 12, 1))
-	     : (Max((unsigned) screen->fnt_high / 16, 1))),
-	XSetLineAttributes(screen->display, gc2,
+	     : (Max((unsigned) screen->fnt_high / 16, 1)));
+    setXtermLineAttributes(screen->display, gc2,
 			   thick,
 			   ((ch < XtNumber(lines))
 			    ? LineSolid
-			    : LineOnOffDash),	/* like xtermDrawMissing */
-			   CapProjecting,
-			   JoinMiter);
+			    : LineOnOffDash));
 
     if (ch == 32) {		/* space! */
 	;			/* boxing a missing space is pointless */
@@ -4242,6 +4240,7 @@ xtermDrawBoxChar(XTermDraw * params,
 	    XSetClipMask(screen->display, gc2, None);
 	}
     }
+    resetXtermLineAttributes(screen->display, gc2);
 }
 #endif /* OPT_BOX_CHARS */
 

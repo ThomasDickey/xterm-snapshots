@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.936 2023/07/10 19:01:33 tom Exp $ */
+/* $XTermId: util.c,v 1.937 2023/07/13 19:52:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3769,11 +3769,7 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 	    unsigned high = (unsigned) yhigh;
 	    unsigned wide = (unsigned) (width - thick2);
 
-	    XSetLineAttributes(screen->display, gc,
-			       (unsigned) thick,
-			       LineOnOffDash,
-			       CapProjecting,
-			       JoinMiter);
+	    setXtermLineAttributes(screen->display, gc, thick, LineOnOffDash);
 	    XDrawImageString(screen->display, VDrawable(screen), gc,
 			     x, y,
 			     "    ",
@@ -3782,6 +3778,7 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 			   VDrawable(screen), gc,
 			   xpos, ypos,
 			   wide, high);
+	    resetXtermLineAttributes(screen->display, gc);
 	}
 	if (!too_big) {
 	    endClipping(screen, gc);

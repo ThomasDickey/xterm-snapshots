@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.928 2023/03/24 00:02:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.929 2023/07/13 19:59:07 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1008,6 +1008,7 @@ extern void setCgsCSet(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/
 extern void setCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/);
 extern void setCgsFont2(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/, unsigned /*which*/);
 extern void setCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
+extern void setCgsLine(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
 extern void swapCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 
 #ifdef NO_LEAKS
@@ -1594,7 +1595,7 @@ extern Bool TabIsSet (Tabs /* tabs */, int /* col */);
 extern Boolean isDefaultBackground (const char * /* name */);
 extern Boolean isDefaultForeground (const char * /* name */);
 extern CgsEnum whichXtermCgs (XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
-extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);  
+extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);
 extern Pixel getXtermBackground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern Pixel getXtermForeground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern char * xtermSetLocale (int /* category */, String /* after */);
@@ -1773,6 +1774,12 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 			   && (sel) != (bg) \
 			   && (sel) != (xw)->dft_background)
 #endif
+
+#define setXtermLineAttributes(dpy, gc, width, style) \
+	XSetLineAttributes(dpy, gc, (unsigned) width, style, CapProjecting, JoinMiter);
+
+#define resetXtermLineAttributes(dpy, gc) \
+	setXtermLineAttributes(dpy, gc, 0, LineSolid);
 
 #if OPT_WIDE_CHARS
 extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
