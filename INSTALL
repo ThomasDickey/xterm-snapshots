@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.192 2023/02/12 19:17:48 tom Exp $
+-- $XTermId: INSTALL,v 1.193 2023/09/04 20:24:23 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2022,2023 by Thomas E. Dickey
 --
@@ -818,10 +818,26 @@ The options (in alphabetic order):
 	If xterm is not installed setuid'd to root, this option is not needed,
 	since it cannot change the tty device's ownership.
 
+  --with-utmp-path        use XXX rather than auto for utmp path
+
+	The pathname for the "utmp" file is documented in the manual page.
+	Because this is system-dependent, and xterm may be built on a machine
+	which has no desktop, that file may be absent (and the configure script
+	may give incorrect information).  Use this option to override the value
+	that the configure script uses.
+
   --with-valgrind         test: use valgrind
 
 	Activate the --disable-leaks option, and ensure that "-g" is added to
 	CFLAGS.
+
+  --with-wtmp-path        use XXX rather than auto for wtmp path
+
+	The pathname for the "wtmp" file is documented in the manual page. 
+	Because this is system-dependent, and xterm may be built on a machine
+	which has no desktop, that file may be absent (and the configure script
+	may give incorrect information).  Use this option to override the value
+	that the configure script uses.
 
   --without-xinerama      do not use Xinerama extension for multiple screens
 

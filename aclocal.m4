@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.508 2023/02/27 01:21:17 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.512 2023/09/04 20:07:51 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1259,7 +1259,7 @@ rm -rf ./conftest*
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_VERSION version: 8 updated: 2019/09/07 13:38:36
+dnl CF_GCC_VERSION version: 9 updated: 2023/03/05 14:30:13
 dnl --------------
 dnl Find version of gcc, and (because icc/clang pretend to be gcc without being
 dnl compatible), attempt to determine if icc/clang is actually used.
@@ -1268,7 +1268,7 @@ AC_REQUIRE([AC_PROG_CC])
 GCC_VERSION=none
 if test "$GCC" = yes ; then
 	AC_MSG_CHECKING(version of $CC)
-	GCC_VERSION="`${CC} --version 2>/dev/null | sed -e '2,$d' -e 's/^.*(GCC[[^)]]*) //' -e 's/^.*(Debian[[^)]]*) //' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
+	GCC_VERSION="`${CC} --version 2>/dev/null | sed -e '2,$d' -e 's/^[[^(]]*([[^)]][[^)]]*) //' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
 	test -z "$GCC_VERSION" && GCC_VERSION=unknown
 	AC_MSG_RESULT($GCC_VERSION)
 fi
@@ -4583,12 +4583,69 @@ fi
 AC_SUBST(no_pixmapdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_UTMP_PATH version: 1 updated: 2023/09/04 16:05:17
+dnl -----------------
+dnl utmp and wtmp have different pathnames on different systems, but there
+dnl are only a few common choices.  Note that they may not necessarily appear
+dnl in the same directories.  Prefer utmpx/wtmpx to utmp/wtmp, since that's
+dnl the way the configure script is designed.
+AC_DEFUN([CF_WITH_UTMP_PATH],[
+AC_ARG_WITH(utmp-path,
+	[  --with-utmp-path=XXX    use XXX rather than auto for utmp path],
+	[cf_utmp_path=$withval],
+	[cf_utmp_path=auto])
+if test "$cf_utmp_path" = auto ; then
+	for cf_utmp_path in /etc/utmp /var/adm/utmp /var/log/utmp /var/run/utmp
+	do
+		if test -f ${cf_utmp_path}x ; then
+			cf_utmp_path=${cf_utmp_path}x
+			break
+		elif test -f $cf_utmp_path ; then
+			break
+		fi
+	done
+else
+	CF_PATH_SYNTAX(cf_utmp_path)
+fi
+UTMP_PATH=$cf_utmp_path
+UTMP_NAME=`echo "$cf_utmp_path" | sed -e 's,^.*/,,'`
+AC_SUBST(UTMP_NAME)
+AC_SUBST(UTMP_PATH)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_VALGRIND version: 1 updated: 2006/12/14 18:00:21
 dnl ----------------
 AC_DEFUN([CF_WITH_VALGRIND],[
 CF_NO_LEAKS_OPTION(valgrind,
 	[  --with-valgrind         test: use valgrind],
 	[USE_VALGRIND])
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_WTMP_PATH version: 1 updated: 2023/09/04 16:05:17
+dnl -----------------
+dnl Like CF_WITH_UTMP_PATH, but for the wtmp file.
+AC_DEFUN([CF_WITH_WTMP_PATH],[
+AC_ARG_WITH(utmp-path,
+	[  --with-wtmp-path=XXX    use XXX rather than auto for wtmp path],
+	[cf_wtmp_path=$withval],
+	[cf_wtmp_path=auto])
+if test "$cf_wtmp_path" = auto ; then
+	for cf_wtmp_path in /etc/wtmp /var/adm/wtmp /var/run/wtmp /var/log/wtmp
+	do
+		if test -f ${cf_wtmp_path}x ; then
+			cf_wtmp_path=${cf_wtmp_path}x
+			break
+		elif test -f $cf_wtmp_path/wtmp ; then
+			break
+		fi
+	done
+else
+	CF_PATH_SYNTAX(cf_wtmp_path)
+fi
+WTMP_PATH=$cf_wtmp_path
+WTMP_NAME=`echo "$cf_wtmp_path" | sed -e 's,^.*/,,'`
+AC_SUBST(WTMP_NAME)
+AC_SUBST(WTMP_PATH)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_XINERAMA version: 1 updated: 2016/05/28 14:41:12
@@ -4770,7 +4827,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 64 updated: 2023/02/18 17:41:25
+dnl CF_XOPEN_SOURCE version: 66 updated: 2023/04/03 04:19:37
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -4779,6 +4836,18 @@ dnl
 dnl Parameters:
 dnl	$1 is the nominal value for _XOPEN_SOURCE
 dnl	$2 is the nominal value for _POSIX_C_SOURCE
+dnl
+dnl The default case prefers _XOPEN_SOURCE over _POSIX_C_SOURCE if the
+dnl implementation predefines it, because X/Open and most implementations agree
+dnl that the latter is a legacy or "aligned" value.
+dnl
+dnl Because _XOPEN_SOURCE is preferred, if defining _POSIX_C_SOURCE turns
+dnl that off, then refrain from setting _POSIX_C_SOURCE explicitly.
+dnl
+dnl References:
+dnl https://pubs.opengroup.org/onlinepubs/007904975/functions/xsh_chap02_02.html
+dnl https://docs.oracle.com/cd/E19253-01/816-5175/standards-5/index.html
+dnl https://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
 AC_DEFUN([CF_XOPEN_SOURCE],[
 AC_REQUIRE([AC_CANONICAL_HOST])
 AC_REQUIRE([CF_POSIX_VISIBLE])
@@ -4818,7 +4887,7 @@ case "$host_os" in
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys)
+(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*)
 	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 (minix*)
@@ -4870,8 +4939,8 @@ case "$host_os" in
 	cf_save_xopen_cppflags="$CPPFLAGS"
 	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	# Some of these niche implementations use copy/paste, double-check...
-	if test "$cf_cv_xopen_source" != no ; then
-		CF_VERBOSE(checking if _POSIX_C_SOURCE inteferes)
+	if test "$cf_cv_xopen_source" = no ; then
+		CF_VERBOSE(checking if _POSIX_C_SOURCE interferes with _XOPEN_SOURCE)
 		AC_TRY_COMPILE(CF__XOPEN_SOURCE_HEAD,CF__XOPEN_SOURCE_BODY,,[
 			AC_MSG_WARN(_POSIX_C_SOURCE definition is not usable)
 			CPPFLAGS="$cf_save_xopen_cppflags"])

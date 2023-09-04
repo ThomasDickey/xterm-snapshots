@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.887 2023/06/27 07:56:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.888 2023/09/04 17:47:02 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -937,7 +937,7 @@ may get away with something like
 .NE
 .IP
 Finally, \fB\-ls\fP is not completely ignored,
-because \fI\*n\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
+because \fI\*n\ \-ls\ \-e\fP does write a \fI__wtmp_name__\fP entry
 (if configured to do so),
 whereas \fI\*n\ \-e\fP does not.
 .TP 8
@@ -1284,11 +1284,11 @@ italics rather than with underlining.
 .TP 8
 .B \-ut
 This option indicates that \fI\*n\fP should not write a record into
-the system \fIutmp\fP log file.
+the system \fI__utmp_name__\fP log file.
 .TP 8
 .B +ut
 This option indicates that \fI\*n\fP should write a record into
-the system \fIutmp\fP log file.
+the system \fI__utmp_name__\fP log file.
 .TP 8
 .B \-vb
 This option indicates that a visual bell is preferred over an audible one.
@@ -1916,7 +1916,7 @@ assigns buttons 4 and 5 with different modifiers to the
 .TP 8
 .B ptyHandshake\fP (class\fB PtyHandshake\fP)
 If \*(``true\*('', \fI\*n\fP will perform handshaking during initialization
-to ensure that the parent and child processes update the \fIutmp\fP
+to ensure that the parent and child processes update the \fI__utmp_name__\fP
 and \fIstty\fP state.
 .IP
 See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
@@ -2149,13 +2149,13 @@ The default is \*(``false\*(''.
 .B "utmpDisplayId\fP (class\fB UtmpDisplayId\fP)"
 Specifies whether or not \fI\*n\fP should try to record the display
 identifier (display number and screen number) as well as the hostname in
-the system \fIutmp\fP log file.
+the system \fI__utmp_name__\fP log file.
 The default is \*(``true\*(''.
 .TP 8
 .B "utmpInhibit\fP (class\fB UtmpInhibit\fP)"
 Specifies whether or not \fI\*n\fP should try to record the user's terminal
 in
-the system \fIutmp\fP log file.
+the system \fI__utmp_name__\fP log file.
 If true, \fI\*n\fP will not try.
 The default is \*(``false\*(''.
 .TP 8
@@ -2240,7 +2240,7 @@ default (2)
 \fI\*N\fP checks at startup, and shows an active icon only for window
 managers which it can identify and which are known to support the feature.
 These are \fIfvwm\fP (full support), and \fIwindow maker\fP (limited).
-A few other windows managers (such as \fItwm\fP and \fIctwm\fP)
+A few other window managers (such as \fItwm\fP and \fIctwm\fP)
 support active icons,
 but do not support the extensions which allow \fI\*n\fP
 to identify the window manager.
@@ -8605,7 +8605,7 @@ Those are very rare, none newer than the mid 1990s when SVR4 became prevalent.
 .TP 5
 .B HOME
 .br
-when \fI\*n\fP is configured (at build-time) to update utmp.
+when \fI\*n\fP is configured (at build-time) to update __utmp_name__.
 .TP 5
 .B LINES
 the height of the \fI\*n\fP in characters (cf: \*(``stty rows\*('').
@@ -8618,14 +8618,14 @@ to tell the size of the terminal.
 Those are very rare, none newer than the mid 1990s when SVR4 became prevalent.
 .TP 5
 .B LOGNAME
-when \fI\*n\fP is configured (at build-time) to update utmp.
+when \fI\*n\fP is configured (at build-time) to update __utmp_name__.
 .IP
 Your configuration may have set \fBLOGNAME\fP; \fI\*n\fP does not modify that.
 If it is unset, \fI\*n\fP will use \fBUSER\fP if it is set.
 Finally, if neither is set, \fI\*n\fP will use the \fBgetlogin\fP(3) function.
 .TP 5
 .B SHELL
-when \fI\*n\fP is configured (at build-time) to update utmp.
+when \fI\*n\fP is configured (at build-time) to update __utmp_name__.
 It is also set if you provide a valid shell name as the optional parameter.
 .IP
 \fI\*N\fP sets this to an absolute pathname.
@@ -8746,10 +8746,10 @@ On systems which have the \fIgetusershell\fP function,
 \fI\*n\fP will use that function rather than directly reading the file,
 since the file may not be present if the system uses default settings.
 .TP 5
-\fI/etc/utmp\fP
+\fI__utmp_path__\fP
 the system log file, which records user logins.
 .TP 5
-\fI/etc/wtmp\fP
+\fI__wtmp_path__\fP
 the system log file, which records user logins and logouts.
 .TP 5
 .I __apploaddir__/__default_class__

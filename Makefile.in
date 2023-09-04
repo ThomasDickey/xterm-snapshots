@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.264 2023/05/29 11:16:21 tom Exp $
+## $XTermId: Makefile.in,v 1.265 2023/09/04 16:27:43 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -153,7 +153,7 @@ all :	$(PROGRAMS)
 	@$(AWK) 'BEGIN{printf "/* vile:cmode */\n";}/^CASE_/{printf "#define %s %d\n", $$1, n++}' < $< >$@
 
 .man.$(manext) :
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $* $*
 
 @NROFF_NOTE@.$(manext).txt :
 @NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -man | col -bx" >$@
@@ -322,11 +322,8 @@ install-full :: $(MANDIR)
 			$(SHELL) ./minstall \"$(INSTALL_DATA)\" \
 				$(srcdir)/\$$source.man  \
 				$(MANDIR)/\$$target.$(manext) \
-				$(appsdir) \
-				$(CLASS) \
 				\$$source \
-				\$$target \
-				$(pixmapdir); \
+				\$$target; \
 		done"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then \
 		source=$(actual_xterm).$(manext); \

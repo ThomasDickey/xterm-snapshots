@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.395 2023/02/27 01:10:27 tom Exp $
+dnl $XTermId: configure.in,v 1.396 2023/09/04 19:38:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -262,6 +262,10 @@ if test "$use_utempter" = yes ; then
 	fi
 fi
 
+# We use these for the manpage:
+CF_WITH_UTMP_PATH
+CF_WITH_WTMP_PATH
+
 ###	checks for external data
 CF_ERRNO
 CF_TTY_GROUP
@@ -298,7 +302,7 @@ CF_TERMIOS_TYPES
 # the feature if it is unwanted.
 AC_MSG_CHECKING(if we expect to use the Xcursor library)
 CF_ARG_DISABLE(xcursor,
-	[  --disable-xcursor        disable cursorTheme resource],
+	[  --disable-xcursor       disable cursorTheme resource],
 	[enable_xcursor=no],
 	[enable_xcursor=yes])
 AC_MSG_RESULT($enable_xcursor)
