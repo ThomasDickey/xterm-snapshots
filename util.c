@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.937 2023/07/13 19:52:34 tom Exp $ */
+/* $XTermId: util.c,v 1.940 2023/09/07 00:30:01 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3723,7 +3723,7 @@ fakeDoubleChars(XTermDraw * params,
 
 #if OPT_WIDE_CHARS
 static int
-xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncells)
+xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncells, Bool fullWidth)
 {
     /* *INDENT-EQLS* */
     int width   = FontWidth(screen) * ncells;
@@ -3769,6 +3769,8 @@ xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncell
 	    unsigned high = (unsigned) yhigh;
 	    unsigned wide = (unsigned) (width - thick2);
 
+	    if (fullWidth)
+		ncells /= 2;
 	    setXtermLineAttributes(screen->display, gc, thick, LineOnOffDash);
 	    XDrawImageString(screen->display, VDrawable(screen), gc,
 			     x, y,
@@ -3791,17 +3793,24 @@ static int
 xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
     if (length > 0) {
+	IChar *mapped = BfBuf(IChar);
 	XChar2b *buffer2 = BfBuf(XChar2b);
 	Char *buffer1 = BfBuf(Char);
 	int n;
 	Bool eightBit = True;
+	int ncells = 0;
 
 	for (n = 0; n < length; ++n) {
+	    IChar ch = mapped[n];
+	    int bump = 1;
 	    if (buffer2[n].byte1 != 0) {
+		bump = CharWidth(screen, ch);
+		bump = Max(1, bump);
 		eightBit = False;
-		break;
+	    } else {
+		buffer1[n] = buffer2[n].byte2;
 	    }
-	    buffer1[n] = buffer2[n].byte2;
+	    ncells += bump;
 	}
 
 	if ((flags & NOBACKGROUND)) {
@@ -3839,13 +3848,13 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 		}
 	    }
 	}
-	x += length * FontWidth(screen);
+	x += ncells * FontWidth(screen);
     }
     return x;
 }
 
 static int
-xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int length)
+xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int length, Bool fullwidth)
 {
     TScreen *screen = TScreenOf(xw);
     int src, dst;
@@ -3868,7 +3877,7 @@ xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int lengt
 #endif
 	       xtermMissingChar(ch, fp)) {
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
-	    x = xtermDrawMissing(screen, flags, gc, x, y, ch_width);
+	    x = xtermDrawMissing(screen, flags, gc, x, y, ch_width, fullwidth);
 	    dst = 0;
 	} else {
 	    UCS2SBUF(ch);
@@ -4765,7 +4774,8 @@ drawXtermText(XTermDraw * params,
 	}
 
 	xtermFullString16(recur.xw, recur.draw_flags, gc,
-			  x, y + y_shift + ascent_adjust, dst);
+			  x, y + y_shift + ascent_adjust,
+			  dst, needWide);
 #if OPT_WIDE_ATTRS
 	if (need_clipping) {
 	    endClipping(screen, gc);
@@ -4777,7 +4787,8 @@ drawXtermText(XTermDraw * params,
 		beginClipping(screen, gc, (Cardinal) font_width, len);
 	    }
 	    xtermFullString16(recur.xw, recur.draw_flags | NOBACKGROUND,
-			      gc, x + 1, y + y_shift + ascent_adjust, dst);
+			      gc, x + 1, y + y_shift + ascent_adjust,
+			      dst, needWide);
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		endClipping(screen, gc);
 	    }
