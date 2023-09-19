@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.940 2023/09/07 00:30:01 tom Exp $ */
+/* $XTermId: util.c,v 1.941 2023/09/14 22:55:55 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1007,9 +1007,12 @@ setZIconBeep(XtermWidget xw)
  * If warning should be given then give it
  */
 Boolean
-showZIconBeep(XtermWidget xw, char *name)
+showZIconBeep(XtermWidget xw, const char *name)
 {
     Boolean code = False;
+
+    if (name == NULL)
+	name = "";
 
     if (resource.zIconBeep && TScreenOf(xw)->zIconBeep_flagged) {
 	char *format = resource.zIconFormat;
@@ -3723,7 +3726,8 @@ fakeDoubleChars(XTermDraw * params,
 
 #if OPT_WIDE_CHARS
 static int
-xtermDrawMissing(TScreen *screen, unsigned flags, GC gc, int x, int y, int ncells, Bool fullWidth)
+xtermDrawMissing(TScreen *screen, unsigned flags, GC gc,
+		 int x, int y, int ncells, Bool fullWidth)
 {
     /* *INDENT-EQLS* */
     int width   = FontWidth(screen) * ncells;
@@ -3854,7 +3858,8 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 }
 
 static int
-xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int length, Bool fullwidth)
+xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int
+		  length, Bool fullwidth)
 {
     TScreen *screen = TScreenOf(xw);
     int src, dst;

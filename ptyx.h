@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1096 2023/06/26 23:26:17 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1097 2023/09/14 19:58:45 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2157,6 +2157,8 @@ typedef struct {
 
 #define NUM_GSETS 4
 
+#define SAVED_CURSORS 2
+
 typedef struct {
 	Boolean		saved;
 	int		row;
@@ -2181,7 +2183,12 @@ typedef struct _SaveTitle {
 	char		*windowName;
 } SaveTitle;
 
-#define SAVED_CURSORS 2
+#define MAX_SAVED_TITLES 10
+
+typedef struct {
+	int		used;		/* index to current item	*/
+	SaveTitle	data[MAX_SAVED_TITLES];
+} SavedTitles;
 
 typedef struct {
 	int		width;		/* if > 0, width of scrollbar,	*/
@@ -2705,7 +2712,7 @@ typedef struct {
 
 	int		title_modes;	/* control set/get of titles	*/
 	int		title_modes0;	/* ...initial value         	*/
-	SaveTitle	*save_title;
+	SavedTitles	saved_titles;
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/

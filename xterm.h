@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.929 2023/07/13 19:59:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.930 2023/09/14 08:02:15 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1277,6 +1277,10 @@ extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 extern void xtermUnsetenv (const char * /* var */);
 extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 
+extern Boolean xtermPopTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
+extern void xtermPushTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
+extern void xtermFreeTitle(SaveTitle *item);
+
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
 #endif
@@ -1747,7 +1751,7 @@ extern void discardRenderDraw(TScreen * /* screen */);
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);
 extern void resetZIconBeep(XtermWidget /* xw */);
-extern Boolean showZIconBeep(XtermWidget /* xw */, char * /* name */);
+extern Boolean showZIconBeep(XtermWidget /* xw */, const char * /* name */);
 #else
 #define initZIconBeep() /* nothing */
 #define resetZIconBeep(xw) /* nothing */

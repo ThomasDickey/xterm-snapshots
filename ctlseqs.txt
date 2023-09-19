@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #383 (2023/06/22)
+               updated for XTerm Patch #385 (2023/09/19)
 
 
 
@@ -684,6 +684,7 @@ CSI Ps c  Send Device Attributes (Primary DA).
             -> CSI ? 6 2 ; Ps c  ("VT220")
             -> CSI ? 6 3 ; Ps c  ("VT320")
             -> CSI ? 6 4 ; Ps c  ("VT420")
+            -> CSI ? 6 5 ; Ps c  ("VT510" to ("VT525")
 
           The VT100-style response parameters do not mean anything by
           themselves.  VT220 (and higher) parameters do, telling the
@@ -1523,6 +1524,12 @@ CSI Ps ; Ps ; Ps t
             Ps = 2 3 ; 2  -> Restore xterm window title from stack.
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP), VT340 and VT420.
           xterm adapts this by resizing its window.
+
+          XTWINOPS 2 2  (save/push title) and 2 3  (restore/pop title)
+          accept an optional third parameter for direct access to the
+          stack.  Parameters in the range 1 through 10, may be used to
+          store the title into the stack or retrieve the title from the
+          stack without pushing/popping.
 
 CSI > Pm t
           This xterm control sets one or more features of the title
@@ -3234,7 +3241,7 @@ Standards
 The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus extensions, e.g., "private modes".  Not all
 commonly-used features are standard.  For example, scrolling regions are
-not found in ECMA-48.  On the other hand, ECMA-48 was not intended to
+not found in ECMA-48.  On the other hand, ECMA-48 was not intended to be
 all-encompassing.  Quoting from the second edition:
 
     Full conformance to a standard means that all its requirements are
@@ -3248,7 +3255,7 @@ all-encompassing.  Quoting from the second edition:
 
     This Standard addresses a whole class of devices which can vary
     greatly from each other depending on the application for which a
-    device has been specifically designed. Obviously, a product which
+    device has been specifically designed.  Obviously, a product which
     implements all facilities described in this standard - thus being in
     "full conformance" with it - whilst theoretically possible, would be
     technically and economically unthinkable.

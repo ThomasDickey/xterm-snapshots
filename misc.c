@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1050 2023/06/26 23:08:42 tom Exp $ */
+/* $XTermId: misc.c,v 1.1055 2023/09/18 23:56:59 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -137,8 +137,6 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
-
-static char emptyString[] = "";
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -6009,9 +6007,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 void
 ChangeIconName(XtermWidget xw, char *name)
 {
-    if (name == 0) {
-	name = emptyString;
-    }
     if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);
 }
@@ -7603,6 +7598,76 @@ xtermSetWinSize(XtermWidget xw)
 			   Height(screen),
 			   Width(screen));
 	}
+}
+
+static void
+xtermInitTitle(TScreen *screen, int which)
+{
+    TRACE(("xtermInitTitle #%d\n", which));
+    screen->saved_titles.data[which].iconName = NULL;
+    screen->saved_titles.data[which].windowName = NULL;
+}
+
+/*
+ * Store/update an item on the title stack.
+ */
+void
+xtermPushTitle(TScreen *screen, int which, SaveTitle * item)
+{
+    if (which-- > 0) {
+	which %= MAX_SAVED_TITLES;
+    } else {
+	screen->saved_titles.used++;
+	screen->saved_titles.used %= MAX_SAVED_TITLES;
+	which = screen->saved_titles.used;
+    }
+    xtermFreeTitle(&screen->saved_titles.data[which]);
+    screen->saved_titles.data[which] = *item;
+    TRACE(("xtermPushTitle #%d: icon='%s', window='%s'\n", which,
+	   NonNull(item->iconName),
+	   NonNull(item->windowName)));
+}
+
+/*
+ * Pop/retrieve an item from the title stack.
+ */
+Boolean
+xtermPopTitle(TScreen *screen, int which, SaveTitle * item)
+{
+    Boolean result = True;
+    Boolean popped = False;
+
+    if (which-- > 0) {
+	which %= MAX_SAVED_TITLES;
+    } else if (screen->saved_titles.used > 0) {
+	which = (--(screen->saved_titles.used) % MAX_SAVED_TITLES);
+	popped = True;
+    } else {
+	result = False;
+    }
+    if (result) {
+	*item = screen->saved_titles.data[which];
+	TRACE(("xtermPopTitle #%d: icon='%s', window='%s'\n", which,
+	       NonNull(item->iconName),
+	       NonNull(item->windowName)));
+	if (popped) {
+	    xtermInitTitle(screen, which);
+	}
+    }
+    return result;
+}
+
+/*
+ * Discard data used for pushing or popping title.
+ */
+void
+xtermFreeTitle(SaveTitle * item)
+{
+    TRACE(("xtermFreeTitle icon='%s', window='%s'\n",
+	   NonNull(item->iconName),
+	   NonNull(item->windowName)));
+    FreeAndNull(item->iconName);
+    FreeAndNull(item->windowName);
 }
 
 #if OPT_XTERM_SGR

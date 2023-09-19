@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.673 2023/06/22 19:54:34 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.677 2023/09/19 08:07:18 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #383
-.ds RF 2023/06/22
+.ds LF Patch #385
+.ds RF 2023/09/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1234,6 +1234,7 @@ The response depends on the \fBdecTerminalID\fP resource setting.
   \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*s\*c (\*(``VT220\*('')
   \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*s\*c (\*(``VT320\*('')
   \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*s\*c (\*(``VT420\*('')
+  \(->\ \*(Cs\*?\*6\*5\*;\*(Ps\*s\*c (\*(``VT510\*('' to (\*(``VT525\*('')
 .iP
 The VT100-style response parameters do not mean anything by themselves.
 VT220 (and higher) parameters do,
@@ -2180,6 +2181,13 @@ from stack.
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP), VT340 and VT420.
 .br
 \fI\*(xt\fP adapts this by resizing its window.
+.iP
+XTWINOPS \*2\*2 (save/push title) and \*2\*3 (restore/pop title)
+accept an optional third parameter for direct access to the stack.
+Parameters in the range 1 through 10,
+may be used to store the title into the stack
+or retrieve the title from the stack
+without pushing/popping.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Pm\\*s\\*t
@@ -4279,7 +4287,7 @@ The DEC terminal family (VT100 through VT525) is upward-compatible,
 using standards plus \fIextensions\fP, e.g., \*(``private modes\*(''.
 Not all commonly-used features are standard.
 For example, scrolling regions are not found in ECMA-48.
-On the other hand, ECMA-48 was not intended to all-encompassing.
+On the other hand, ECMA-48 was not intended to be all-encompassing.
 Quoting from the second edition:
 .in +4n
 .sp
@@ -4295,7 +4303,8 @@ as defined hereunder.
 .sp
 This Standard addresses a whole class of devices which can vary greatly
 from each other depending on the application for which a device has
-been specifically designed. Obviously, a
+been specifically designed.
+Obviously, a
 product which implements all facilities described in this standard \[en]
 thus being in \*(``full conformance\*('' with it \[en] whilst theoretically
 possible, would be technically and economically unthinkable.
@@ -4510,10 +4519,11 @@ The latter was introduced in X10.4 (December 1986):
 .ft C
 .na
 Most Dec Private mode settings can be saved away internally using \\E[?\fIn\fPs,
-where \fIn\fP is the same number to set or reset the Dec Private mode.  The
-mode can be restored using \\E[?\fIn\fPr.  This can be used in termcap for \fBvi\fP, for
-example, to turn off saving of lines, but restore whatever the original
-state was on exit.
+where \fIn\fP is the same number to set or reset the Dec Private mode.
+The mode can be restored using \\E[?\fIn\fPr.
+This can be used in termcap for \fBvi\fP,
+for example, to turn off saving of lines,
+but restore whatever the original state was on exit.
 .ad
 .ft R
 .RE

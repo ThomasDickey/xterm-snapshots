@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1958 2023/07/10 15:53:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1960 2023/09/15 00:31:17 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -8464,61 +8464,50 @@ window_ops(XtermWidget xw)
 
     case ewPushTitle:		/* save the window's title(s) on stack */
 	if (AllowWindowOps(xw, ewPushTitle)) {
-	    SaveTitle *last = screen->save_title;
-	    SaveTitle *item = TypeCalloc(SaveTitle);
+	    SaveTitle item;
 
 	    TRACE(("...push title onto stack\n"));
-	    if (item != 0) {
-		switch (zero_if_default(1)) {
-		case 0:
-		    item->iconName = get_icon_label(xw);
-		    item->windowName = get_window_label(xw);
-		    break;
-		case 1:
-		    item->iconName = get_icon_label(xw);
-		    break;
-		case 2:
-		    item->windowName = get_window_label(xw);
-		    break;
-		}
-		item->next = last;
-		if (item->iconName == 0) {
-		    item->iconName = ((last == 0)
-				      ? get_icon_label(xw)
-				      : x_strdup(last->iconName));
-		}
-		if (item->windowName == 0) {
-		    item->windowName = ((last == 0)
-					? get_window_label(xw)
-					: x_strdup(last->windowName));
-		}
-		screen->save_title = item;
+	    item.iconName = NULL;
+	    item.windowName = NULL;
+	    switch (zero_if_default(1)) {
+	    case 0:
+		item.iconName = get_icon_label(xw);
+		item.windowName = get_window_label(xw);
+		break;
+	    case 1:
+		item.iconName = get_icon_label(xw);
+		break;
+	    case 2:
+		item.windowName = get_window_label(xw);
+		break;
 	    }
+	    xtermPushTitle(screen, zero_if_default(2), &item);
 	}
 	break;
 
     case ewPopTitle:		/* restore the window's title(s) from stack */
 	if (AllowWindowOps(xw, ewPopTitle)) {
-	    SaveTitle *item = screen->save_title;
+	    SaveTitle item;
 
-	    TRACE(("...pop title off stack\n"));
-	    if (item != 0) {
+	    TRACE(("...%s title off stack\n",
+		   (zero_if_default(2)
+		    ? "get"
+		    : "pop")));
+	    if (xtermPopTitle(screen, zero_if_default(2), &item)) {
 		switch (zero_if_default(1)) {
 		case 0:
-		    ChangeIconName(xw, item->iconName);
-		    ChangeTitle(xw, item->windowName);
+		    ChangeIconName(xw, item.iconName);
+		    ChangeTitle(xw, item.windowName);
 		    break;
 		case 1:
-		    ChangeIconName(xw, item->iconName);
+		    ChangeIconName(xw, item.iconName);
 		    break;
 		case 2:
-		    ChangeTitle(xw, item->windowName);
+		    ChangeTitle(xw, item.windowName);
 		    break;
 		}
-		screen->save_title = item->next;
-		free(item->iconName);
-		free(item->windowName);
-		free(item);
+		if (!zero_if_default(2))
+		    xtermFreeTitle(&item);
 	    }
 	}
 	break;
