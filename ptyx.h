@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1097 2023/09/14 19:58:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1098 2023/09/22 22:00:02 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1138,6 +1138,7 @@ typedef enum {
     ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
+    ,srm_FAST_SCROLL = 1014
     ,srm_EIGHT_BIT_META = 1034
 #if OPT_NUM_LOCK
     ,srm_REAL_NUMLOCK = 1035
@@ -2035,6 +2036,7 @@ typedef enum {
 	DP_DECTCEM,
 	DP_DELETE_IS_DEL,
 	DP_EIGHT_BIT_META,
+	DP_FAST_SCROLL,
 	DP_KEEP_CLIPBOARD,
 	DP_KEEP_SELECTION,
 	DP_KEYBOARD_TYPE,

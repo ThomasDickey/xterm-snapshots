@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.888 2023/09/04 17:47:02 tom Exp $
+.\" $XTermId: xterm.man,v 1.889 2023/09/22 08:08:28 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -799,6 +799,16 @@ feature on or off.
 .TP 8
 .B +j
 This option indicates that \fI\*n\fP should not do jump scrolling.
+.TP 8
+.B \-jf
+When doing jump-scrolling or related indexing, e.g., carriage returns,
+\fI\*n\fP will defer flushing screen-updates, to improve speed.
+This corresponds to the \fBfastScroll\fP resource.
+.TP 8
+.B +jf
+When doing jump-scrolling or related indexing, e.g., carriage returns,
+\fI\*n\fP will not defer flushing screen-updates, to improve speed.
+This corresponds to the \fBfastScroll\fP resource.
 .TP 8
 .B \-k8
 This option sets the \fBallowC1Printable\fP resource.
@@ -3603,7 +3613,13 @@ Modifies the effect of jump scroll (\fBjumpScroll\fP)
 by suppressing screen refreshes
 for the special case when output to the screen has completely shifted
 the contents off-screen.
-For instance, \fIcat\fP'ing a large file to the screen does this.
+Likewise, screen refreshes for related actions, e.g., carriage returns,
+are suppressed.
+.IP
+For instance, \fIcat\fP'ing a large file to the screen normally
+results in a large number of screen refreshes.
+By suppressing the corresponding refreshes,
+scrolling speed improves.
 .TP 8
 .B "font\fP (class\fB Font\fP)"
 Specifies the name of the normal font.

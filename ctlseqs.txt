@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #385 (2023/09/19)
+               updated for XTerm Patch #385 (2023/09/22)
 
 
 
@@ -836,6 +836,7 @@ CSI ? Pm h
           This sets the scrollTtyOutput resource to "true".
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).  This
           sets the scrollKey resource to "true".
+            Ps = 1 0 1 4  -> Enable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Enable SGR Mouse PixelMode, xterm.
             Ps = 1 0 3 4  -> Interpret "meta" key, xterm.  This sets the
@@ -977,6 +978,7 @@ CSI ? Pm l
           (rxvt).  This sets the scrollTtyOutput resource to "false".
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
           This sets the scrollKey resource to "false".
+            Ps = 1 0 1 4  -> Disable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Disable SGR Mouse Pixel-Mode, xterm.
             Ps = 1 0 3 4  -> Don't interpret "meta" key, xterm.  This

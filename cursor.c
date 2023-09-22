@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.92 2023/06/20 08:13:06 tom Exp $ */
+/* $XTermId: cursor.c,v 1.93 2023/09/21 08:17:56 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -344,7 +344,8 @@ CarriageReturn(XtermWidget xw)
 
     set_cur_col(screen, col);
     ResetWrap(screen);
-    do_xevents(xw);
+    if (screen->jumpscroll && !screen->fastscroll)
+	do_xevents(xw);
 }
 
 /*
@@ -506,7 +507,6 @@ CursorNextLine(XtermWidget xw, int count)
 
     CursorDown(screen, count < 1 ? 1 : count);
     CarriageReturn(xw);
-    do_xevents(xw);
 }
 
 /*
@@ -519,7 +519,6 @@ CursorPrevLine(XtermWidget xw, int count)
 
     CursorUp(screen, count < 1 ? 1 : count);
     CarriageReturn(xw);
-    do_xevents(xw);
 }
 
 /*

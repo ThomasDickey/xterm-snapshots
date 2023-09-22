@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.677 2023/09/19 08:07:18 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.678 2023/09/22 22:33:28 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #385
-.ds RF 2023/09/19
+.ds RF 2023/09/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1388,6 +1388,7 @@ This corresponds to the \fBalternateScroll\fP resource.
 This sets the \fBscrollTtyOutput\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
 This sets the \fBscrollKey\fP resource to \*(``true\*(''.
+  \*(Ps = \*1\*0\*1\*4 \(-> Enable \fBfastScroll\fP resource, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
@@ -1531,6 +1532,7 @@ This corresponds to the \fBalternateScroll\fP resource.
 This sets the \fBscrollTtyOutput\fP resource to \*(``false\*(''.
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
 This sets the \fBscrollKey\fP resource to \*(``false\*(''.
+  \*(Ps = \*1\*0\*1\*4 \(-> Disable \fBfastScroll\fP resource, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*6 \(-> Disable SGR Mouse Pixel-Mode, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret \*(``meta\*('' key, \fI\*(xt\fP.

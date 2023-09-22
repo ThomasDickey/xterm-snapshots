@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.902 2023/05/09 07:49:19 tom Exp $ */
+/* $XTermId: main.c,v 1.907 2023/09/22 07:46:08 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -92,6 +92,19 @@
 #include <xterm.h>
 #include <version.h>
 #include <graphics.h>
+
+/* xterm uses these X Toolkit resource names, which are exported in array */
+#undef XtNborderWidth
+#undef XtNiconName
+#undef XtNgeometry
+#undef XtNreverseVideo
+#undef XtNtitle
+
+#define XtNborderWidth		"borderWidth"
+#define XtNgeometry		"geometry"
+#define XtNiconName		"iconName"
+#define XtNreverseVideo		"reverseVideo"
+#define XtNtitle		"title"
 
 #if OPT_TOOLBAR
 
@@ -883,82 +896,82 @@ static sigjmp_buf env;
 
 static XtResource application_resources[] =
 {
-    Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
+    Sres(XtNiconGeometry, XtCIconGeometry, icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
     Sres(XtNiconHint, XtCIconHint, icon_hint, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
-    Sres("termName", "TermName", term_name, NULL),
-    Sres("ttyModes", "TtyModes", tty_modes, NULL),
-    Sres("validShells", "ValidShells", valid_shells, NULL),
-    Bres("hold", "Hold", hold_screen, False),
-    Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
-    Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
-    Bres("messages", "Messages", messages, True),
-    Ires("minBufSize", "MinBufSize", minBufSize, 4096),
-    Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
-    Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
-    Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
-    Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
+    Sres(XtNtermName, XtCTermName, term_name, NULL),
+    Sres(XtNttyModes, XtCTtyModes, tty_modes, NULL),
+    Sres(XtNvalidShells, XtCValidShells, valid_shells, NULL),
+    Bres(XtNhold, XtCHold, hold_screen, False),
+    Bres(XtNutmpInhibit, XtCUtmpInhibit, utmpInhibit, False),
+    Bres(XtNutmpDisplayId, XtCUtmpDisplayId, utmpDisplayId, True),
+    Bres(XtNmessages, XtCMessages, messages, True),
+    Ires(XtNminBufSize, XtCMinBufSize, minBufSize, 4096),
+    Ires(XtNmaxBufSize, XtCMaxBufSize, maxBufSize, 32768),
+    Sres(XtNmenuLocale, XtCMenuLocale, menuLocale, DEF_MENU_LOCALE),
+    Sres(XtNomitTranslation, XtCOmitTranslation, omitTranslation, NULL),
+    Sres(XtNkeyboardType, XtCKeyboardType, keyboardType, "unknown"),
 #ifdef HAVE_LIB_XCURSOR
-    Sres("cursorTheme", "CursorTheme", cursorTheme, "none"),
+    Sres(XtNcursorTheme, XtCCursorTheme, cursorTheme, "none"),
 #endif
 #if OPT_PRINT_ON_EXIT
-    Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
-    Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
-    Sres("printFileImmediate", "PrintFileImmediate", printFileNow, NULL),
-    Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
-    Ires("printOptsOnXError", "PrintOptsOnXError", printOptsOnXError, 9),
-    Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
+    Ires(XtNprintModeImmediate, XtCPrintModeImmediate, printModeNow, 0),
+    Ires(XtNprintOptsImmediate, XtCPrintOptsImmediate, printOptsNow, 9),
+    Sres(XtNprintFileImmediate, XtCPrintFileImmediate, printFileNow, NULL),
+    Ires(XtNprintModeOnXError, XtCPrintModeOnXError, printModeOnXError, 0),
+    Ires(XtNprintOptsOnXError, XtCPrintOptsOnXError, printOptsOnXError, 9),
+    Sres(XtNprintFileOnXError, XtCPrintFileOnXError, printFileOnXError, NULL),
 #endif
 #if OPT_SUNPC_KBD
-    Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
+    Bres(XtNsunKeyboard, XtCSunKeyboard, sunKeyboard, False),
 #endif
 #if OPT_HP_FUNC_KEYS
-    Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, False),
+    Bres(XtNhpFunctionKeys, XtCHpFunctionKeys, hpFunctionKeys, False),
 #endif
 #if OPT_SCO_FUNC_KEYS
-    Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, False),
+    Bres(XtNscoFunctionKeys, XtCScoFunctionKeys, scoFunctionKeys, False),
 #endif
 #if OPT_SUN_FUNC_KEYS
-    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
+    Bres(XtNsunFunctionKeys, XtCSunFunctionKeys, sunFunctionKeys, False),
 #endif
 #if OPT_TCAP_FKEYS
-    Bres("tcapFunctionKeys", "TcapFunctionKeys", termcapKeys, False),
+    Bres(XtNtcapFunctionKeys, XtCTcapFunctionKeys, termcapKeys, False),
 #endif
 #if OPT_INITIAL_ERASE
-    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
-    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
+    Bres(XtNptyInitialErase, XtCPtyInitialErase, ptyInitialErase, DEF_INITIAL_ERASE),
+    Bres(XtNbackarrowKeyIsErase, XtCBackarrowKeyIsErase, backarrow_is_erase, DEF_BACKARO_ERASE),
 #endif
-    Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
+    Bres(XtNuseInsertMode, XtCUseInsertMode, useInsertMode, False),
 #if OPT_ZICONBEEP
-    Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
-    Sres("zIconTitleFormat", "ZIconTitleFormat", zIconFormat, "*** %s"),
+    Ires(XtNzIconBeep, XtCZIconBeep, zIconBeep, 0),
+    Sres(XtNzIconTitleFormat, XtCZIconTitleFormat, zIconFormat, "*** %s"),
 #endif
 #if OPT_PTY_HANDSHAKE
-    Bres("waitForMap", "WaitForMap", wait_for_map, False),
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
-    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
+    Bres(XtNwaitForMap, XtCWaitForMap, wait_for_map, False),
+    Bres(XtNptyHandshake, XtCPtyHandshake, ptyHandshake, True),
+    Bres(XtNptySttySize, XtCPtySttySize, ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
 #if OPT_REPORT_CCLASS
-    Bres("reportCClass", "ReportCClass", reportCClass, False),
+    Bres(XtNreportCClass, XtCReportCClass, reportCClass, False),
 #endif
 #if OPT_REPORT_COLORS
-    Bres("reportColors", "ReportColors", reportColors, False),
+    Bres(XtNreportColors, XtCReportColors, reportColors, False),
 #endif
 #if OPT_REPORT_FONTS
-    Bres("reportFonts", "ReportFonts", reportFonts, False),
+    Bres(XtNreportFonts, XtCReportFonts, reportFonts, False),
 #endif
 #if OPT_REPORT_ICONS
-    Bres("reportIcons", "ReportIcons", reportIcons, False),
+    Bres(XtNreportIcons, XtCReportIcons, reportIcons, False),
 #endif
 #if OPT_XRES_QUERY
-    Bres("reportXRes", "ReportXRes", reportXRes, False),
+    Bres(XtNreportXRes, XtCReportXRes, reportXRes, False),
 #endif
 #if OPT_SAME_NAME
-    Bres("sameName", "SameName", sameName, True),
+    Bres(XtNsameName, XtCSameName, sameName, True),
 #endif
 #if OPT_SESSION_MGT
-    Bres("sessionMgt", "SessionMgt", sessionMgt, True),
+    Bres(XtNsessionMgt, XtCSessionMgt, sessionMgt, True),
 #endif
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
@@ -995,206 +1008,213 @@ static String fallback_resources[] =
    pass over the remaining options after XrmParseCommand is let loose. */
 /* *INDENT-OFF* */
 #define DATA(option,pattern,type,value) { (char *) option, (char *) pattern, type, (XPointer) value }
+#define OPTS(option,pattern_type,value) { (char *) option, (char *) pattern_type, (XPointer) value }
+#define UP_ARG(name) "."name, XrmoptionSepArg
+#define MY_ARG(name) "*"name, XrmoptionSepArg
+#define VT_ARG(name) "*vt100."name, XrmoptionSepArg
+#define NO_ARG(name) "*"name, XrmoptionNoArg
 static XrmOptionDescRec optionDescList[] = {
-DATA("-geometry",	"*vt100.geometry",XrmoptionSepArg,	NULL),
-DATA("-132",		"*c132",	XrmoptionNoArg,		"on"),
-DATA("+132",		"*c132",	XrmoptionNoArg,		"off"),
-DATA("-ah",		"*alwaysHighlight", XrmoptionNoArg,	"on"),
-DATA("+ah",		"*alwaysHighlight", XrmoptionNoArg,	"off"),
-DATA("-aw",		"*autoWrap",	XrmoptionNoArg,		"on"),
-DATA("+aw",		"*autoWrap",	XrmoptionNoArg,		"off"),
+OPTS("-geometry",	VT_ARG(XtNgeometry),			NULL),
+OPTS("-132",		NO_ARG(XtNc132),			"on"),
+OPTS("+132",		NO_ARG(XtNc132),			"off"),
+OPTS("-ah",		NO_ARG(XtNalwaysHighlight),		"on"),
+OPTS("+ah",		NO_ARG(XtNalwaysHighlight),		"off"),
+OPTS("-aw",		NO_ARG(XtNautoWrap),			"on"),
+OPTS("+aw",		NO_ARG(XtNautoWrap),			"off"),
 #ifndef NO_ACTIVE_ICON
-DATA("-ai",		"*activeIcon",	XrmoptionNoArg,		"off"),
-DATA("+ai",		"*activeIcon",	XrmoptionNoArg,		"on"),
+OPTS("-ai",		NO_ARG(XtNactiveIcon),			"off"),
+OPTS("+ai",		NO_ARG(XtNactiveIcon),			"on"),
 #endif /* NO_ACTIVE_ICON */
-DATA("-b",		"*internalBorder",XrmoptionSepArg,	NULL),
-DATA("-barc",		"*cursorBar",	XrmoptionNoArg,		"on"),
-DATA("+barc",		"*cursorBar",	XrmoptionNoArg,		"off"),
-DATA("-bc",		"*cursorBlink",	XrmoptionNoArg,		"on"),
-DATA("+bc",		"*cursorBlink",	XrmoptionNoArg,		"off"),
-DATA("-bcf",		"*cursorOffTime",XrmoptionSepArg,	NULL),
-DATA("-bcn",		"*cursorOnTime",XrmoptionSepArg,	NULL),
-DATA("-bdc",		"*colorBDMode",	XrmoptionNoArg,		"off"),
-DATA("+bdc",		"*colorBDMode",	XrmoptionNoArg,		"on"),
-DATA("-cb",		"*cutToBeginningOfLine", XrmoptionNoArg, "off"),
-DATA("+cb",		"*cutToBeginningOfLine", XrmoptionNoArg, "on"),
-DATA("-cc",		"*charClass",	XrmoptionSepArg,	NULL),
-DATA("-cm",		"*colorMode",	XrmoptionNoArg,		"off"),
-DATA("+cm",		"*colorMode",	XrmoptionNoArg,		"on"),
-DATA("-cn",		"*cutNewline",	XrmoptionNoArg,		"off"),
-DATA("+cn",		"*cutNewline",	XrmoptionNoArg,		"on"),
-DATA("-cr",		"*cursorColor",	XrmoptionSepArg,	NULL),
-DATA("-cu",		"*curses",	XrmoptionNoArg,		"on"),
-DATA("+cu",		"*curses",	XrmoptionNoArg,		"off"),
-DATA("-dc",		"*dynamicColors",XrmoptionNoArg,	"off"),
-DATA("+dc",		"*dynamicColors",XrmoptionNoArg,	"on"),
-DATA("-fb",		"*boldFont",	XrmoptionSepArg,	NULL),
-DATA("-fbb",		"*freeBoldBox", XrmoptionNoArg,		"off"),
-DATA("+fbb",		"*freeBoldBox", XrmoptionNoArg,		"on"),
-DATA("-fbx",		"*forceBoxChars", XrmoptionNoArg,	"off"),
-DATA("+fbx",		"*forceBoxChars", XrmoptionNoArg,	"on"),
-DATA("-fc",		"*initialFont",	XrmoptionSepArg,	NULL),
+OPTS("-b",		MY_ARG(XtNinternalBorder),		NULL),
+OPTS("-barc",		NO_ARG(XtNcursorBar),			"on"),
+OPTS("+barc",		NO_ARG(XtNcursorBar),			"off"),
+OPTS("-bc",		NO_ARG(XtNcursorBlink),			"on"),
+OPTS("+bc",		NO_ARG(XtNcursorBlink),			"off"),
+OPTS("-bcf",		MY_ARG(XtNcursorOffTime),		NULL),
+OPTS("-bcn",		MY_ARG(XtNcursorOnTime),		NULL),
+OPTS("-bdc",		NO_ARG(XtNcolorBDMode),			"off"),
+OPTS("+bdc",		NO_ARG(XtNcolorBDMode),			"on"),
+OPTS("-cb",		NO_ARG(XtNcutToBeginningOfLine),	"off"),
+OPTS("+cb",		NO_ARG(XtNcutToBeginningOfLine),	"on"),
+OPTS("-cc",		MY_ARG(XtNcharClass),			NULL),
+OPTS("-cm",		NO_ARG(XtNcolorMode),			"off"),
+OPTS("+cm",		NO_ARG(XtNcolorMode),			"on"),
+OPTS("-cn",		NO_ARG(XtNcutNewline),			"off"),
+OPTS("+cn",		NO_ARG(XtNcutNewline),			"on"),
+OPTS("-cr",		MY_ARG(XtNcursorColor),			NULL),
+OPTS("-cu",		NO_ARG(XtNcurses),			"on"),
+OPTS("+cu",		NO_ARG(XtNcurses),			"off"),
+OPTS("-dc",		NO_ARG(XtNdynamicColors),		"off"),
+OPTS("+dc",		NO_ARG(XtNdynamicColors),		"on"),
+OPTS("-fb",		MY_ARG(XtNboldFont),			NULL),
+OPTS("-fbb",		NO_ARG(XtNfreeBoldBox),			"off"),
+OPTS("+fbb",		NO_ARG(XtNfreeBoldBox),			"on"),
+OPTS("-fbx",		NO_ARG(XtNforceBoxChars),		"off"),
+OPTS("+fbx",		NO_ARG(XtNforceBoxChars),		"on"),
+OPTS("-fc",		MY_ARG(XtNinitialFont),			NULL),
 #ifndef NO_ACTIVE_ICON
-DATA("-fi",		"*iconFont",	XrmoptionSepArg,	NULL),
+OPTS("-fi",		MY_ARG(XtNiconFont),			NULL),
 #endif /* NO_ACTIVE_ICON */
 #if OPT_RENDERFONT
-DATA("-fa",		"*faceName",	XrmoptionSepArg,	NULL),
-DATA("-fd",		"*faceNameDoublesize", XrmoptionSepArg,	NULL),
-DATA("-fs",		"*faceSize",	XrmoptionSepArg,	NULL),
+OPTS("-fa",		MY_ARG(XtNfaceName),			NULL),
+OPTS("-fd",		MY_ARG(XtNfaceNameDoublesize),		NULL),
+OPTS("-fs",		MY_ARG(XtNfaceSize),			NULL),
 #endif
 #if OPT_WIDE_ATTRS && OPT_ISO_COLORS
-DATA("-itc",		"*colorITMode",	XrmoptionNoArg,		"off"),
-DATA("+itc",		"*colorITMode",	XrmoptionNoArg,		"on"),
+OPTS("-itc",		NO_ARG(XtNcolorITMode),			"off"),
+OPTS("+itc",		NO_ARG(XtNcolorITMode),			"on"),
 #endif
 #if OPT_WIDE_CHARS
-DATA("-fw",		"*wideFont",	XrmoptionSepArg,	NULL),
-DATA("-fwb",		"*wideBoldFont", XrmoptionSepArg,	NULL),
+OPTS("-fw",		MY_ARG(XtNwideFont),			NULL),
+OPTS("-fwb",		MY_ARG(XtNwideBoldFont),		NULL),
 #endif
 #if OPT_INPUT_METHOD
-DATA("-fx",		"*ximFont",	XrmoptionSepArg,	NULL),
+OPTS("-fx",		MY_ARG(XtNximFont),			NULL),
 #endif
 #if OPT_HIGHLIGHT_COLOR
-DATA("-hc",		"*highlightColor", XrmoptionSepArg,	NULL),
-DATA("-hm",		"*highlightColorMode", XrmoptionNoArg,	"on"),
-DATA("+hm",		"*highlightColorMode", XrmoptionNoArg,	"off"),
-DATA("-selfg",		"*highlightTextColor", XrmoptionSepArg,	NULL),
-DATA("-selbg",		"*highlightColor", XrmoptionSepArg,	NULL),
+OPTS("-hc",		MY_ARG(XtNhighlightColor),		NULL),
+OPTS("-hm",		NO_ARG(XtNhighlightColorMode),		"on"),
+OPTS("+hm",		NO_ARG(XtNhighlightColorMode),		"off"),
+OPTS("-selfg",		MY_ARG(XtNhighlightTextColor),		NULL),
+OPTS("-selbg",		MY_ARG(XtNhighlightColor),		NULL),
 #endif
 #if OPT_HP_FUNC_KEYS
-DATA("-hf",		"*hpFunctionKeys",XrmoptionNoArg,	"on"),
-DATA("+hf",		"*hpFunctionKeys",XrmoptionNoArg,	"off"),
+OPTS("-hf",		NO_ARG(XtNhpFunctionKeys),		"on"),
+OPTS("+hf",		NO_ARG(XtNhpFunctionKeys),		"off"),
 #endif
-DATA("-hold",		"*hold",	XrmoptionNoArg,		"on"),
-DATA("+hold",		"*hold",	XrmoptionNoArg,		"off"),
+OPTS("-hold",		NO_ARG(XtNhold),			"on"),
+OPTS("+hold",		NO_ARG(XtNhold),			"off"),
 #if OPT_INITIAL_ERASE
-DATA("-ie",		"*ptyInitialErase", XrmoptionNoArg,	"on"),
-DATA("+ie",		"*ptyInitialErase", XrmoptionNoArg,	"off"),
+OPTS("-ie",		NO_ARG(XtNptyInitialErase),		"on"),
+OPTS("+ie",		NO_ARG(XtNptyInitialErase),		"off"),
 #endif
-DATA("-j",		"*jumpScroll",	XrmoptionNoArg,		"on"),
-DATA("+j",		"*jumpScroll",	XrmoptionNoArg,		"off"),
+OPTS("-j",		NO_ARG(XtNjumpScroll),			"on"),
+OPTS("+j",		NO_ARG(XtNjumpScroll),			"off"),
+OPTS("-jf",		NO_ARG(XtNfastScroll),			"on"),
+OPTS("+jf",		NO_ARG(XtNfastScroll),			"off"),
 #if OPT_C1_PRINT
-DATA("-k8",		"*allowC1Printable", XrmoptionNoArg,	"on"),
-DATA("+k8",		"*allowC1Printable", XrmoptionNoArg,	"off"),
+OPTS("-k8",		NO_ARG(XtNallowC1Printable),		"on"),
+OPTS("+k8",		NO_ARG(XtNallowC1Printable),		"off"),
 #endif
-DATA("-kt",		"*keyboardType", XrmoptionSepArg,	NULL),
+OPTS("-kt",		MY_ARG(XtNkeyboardType),		NULL),
 /* parse logging options anyway for compatibility */
-DATA("-l",		"*logging",	XrmoptionNoArg,		"on"),
-DATA("+l",		"*logging",	XrmoptionNoArg,		"off"),
-DATA("-lf",		"*logFile",	XrmoptionSepArg,	NULL),
-DATA("-ls",		"*loginShell",	XrmoptionNoArg,		"on"),
-DATA("+ls",		"*loginShell",	XrmoptionNoArg,		"off"),
-DATA("-mb",		"*marginBell",	XrmoptionNoArg,		"on"),
-DATA("+mb",		"*marginBell",	XrmoptionNoArg,		"off"),
-DATA("-mc",		"*multiClickTime", XrmoptionSepArg,	NULL),
-DATA("-mesg",		"*messages",	XrmoptionNoArg,		"off"),
-DATA("+mesg",		"*messages",	XrmoptionNoArg,		"on"),
-DATA("-ms",		"*pointerColor",XrmoptionSepArg,	NULL),
-DATA("-nb",		"*nMarginBell",	XrmoptionSepArg,	NULL),
-DATA("-nul",		"*underLine",	XrmoptionNoArg,		"off"),
-DATA("+nul",		"*underLine",	XrmoptionNoArg,		"on"),
-DATA("-pc",		"*boldColors",	XrmoptionNoArg,		"on"),
-DATA("+pc",		"*boldColors",	XrmoptionNoArg,		"off"),
-DATA("-pf",		"*pointerFont",	XrmoptionSepArg,	NULL),
-DATA("-rw",		"*reverseWrap",	XrmoptionNoArg,		"on"),
-DATA("+rw",		"*reverseWrap",	XrmoptionNoArg,		"off"),
-DATA("-s",		"*multiScroll",	XrmoptionNoArg,		"on"),
-DATA("+s",		"*multiScroll",	XrmoptionNoArg,		"off"),
-DATA("-sb",		"*scrollBar",	XrmoptionNoArg,		"on"),
-DATA("+sb",		"*scrollBar",	XrmoptionNoArg,		"off"),
+OPTS("-l",		NO_ARG(XtNlogging),			"on"),
+OPTS("+l",		NO_ARG(XtNlogging),			"off"),
+OPTS("-lf",		MY_ARG(XtNlogFile),			NULL),
+OPTS("-ls",		NO_ARG(XtNloginShell),			"on"),
+OPTS("+ls",		NO_ARG(XtNloginShell),			"off"),
+OPTS("-mb",		NO_ARG(XtNmarginBell),			"on"),
+OPTS("+mb",		NO_ARG(XtNmarginBell),			"off"),
+OPTS("-mc",		MY_ARG(XtNmultiClickTime),		NULL),
+OPTS("-mesg",		NO_ARG(XtNmessages),			"off"),
+OPTS("+mesg",		NO_ARG(XtNmessages),			"on"),
+OPTS("-ms",		MY_ARG(XtNpointerColor),		NULL),
+OPTS("-nb",		MY_ARG(XtNnMarginBell),			NULL),
+OPTS("-nul",		NO_ARG(XtNunderLine),			"off"),
+OPTS("+nul",		NO_ARG(XtNunderLine),			"on"),
+OPTS("-pc",		NO_ARG(XtNboldColors),			"on"),
+OPTS("+pc",		NO_ARG(XtNboldColors),			"off"),
+OPTS("-pf",		MY_ARG(XtNpointerFont),			NULL),
+OPTS("-rw",		NO_ARG(XtNreverseWrap),			"on"),
+OPTS("+rw",		NO_ARG(XtNreverseWrap),			"off"),
+OPTS("-s",		NO_ARG(XtNmultiScroll),			"on"),
+OPTS("+s",		NO_ARG(XtNmultiScroll),			"off"),
+OPTS("-sb",		NO_ARG(XtNscrollBar),			"on"),
+OPTS("+sb",		NO_ARG(XtNscrollBar),			"off"),
 #if OPT_REPORT_CCLASS
-DATA("-report-charclass","*reportCClass", XrmoptionNoArg,	"on"),
+OPTS("-report-charclass", NO_ARG(XtNreportCClass),		"on"),
 #endif
 #if OPT_REPORT_COLORS
-DATA("-report-colors",	"*reportColors", XrmoptionNoArg,	"on"),
+OPTS("-report-colors",	NO_ARG(XtNreportColors),		"on"),
 #endif
 #if OPT_REPORT_ICONS
-DATA("-report-icons",	"*reportIcons",	XrmoptionNoArg,		"on"),
+OPTS("-report-icons",	NO_ARG(XtNreportIcons),			"on"),
 #endif
 #if OPT_REPORT_FONTS
-DATA("-report-fonts",	"*reportFonts", XrmoptionNoArg,		"on"),
+OPTS("-report-fonts",	NO_ARG(XtNreportFonts),			"on"),
 #endif
 #if OPT_XRES_QUERY
-DATA("-report-xres",	"*reportXRes",	XrmoptionNoArg,		"on"),
+OPTS("-report-xres",	NO_ARG(XtNreportXRes),			"on"),
 #endif
 #ifdef SCROLLBAR_RIGHT
-DATA("-leftbar",	"*rightScrollBar", XrmoptionNoArg,	"off"),
-DATA("-rightbar",	"*rightScrollBar", XrmoptionNoArg,	"on"),
+OPTS("-leftbar",	NO_ARG(XtNrightScrollBar),		"off"),
+OPTS("-rightbar",	NO_ARG(XtNrightScrollBar),		"on"),
 #endif
-DATA("-rvc",		"*colorRVMode",	XrmoptionNoArg,		"off"),
-DATA("+rvc",		"*colorRVMode",	XrmoptionNoArg,		"on"),
-DATA("-sf",		"*sunFunctionKeys", XrmoptionNoArg,	"on"),
-DATA("+sf",		"*sunFunctionKeys", XrmoptionNoArg,	"off"),
-DATA("-sh",		"*scaleHeight", XrmoptionSepArg,	NULL),
-DATA("-si",		"*scrollTtyOutput", XrmoptionNoArg,	"off"),
-DATA("+si",		"*scrollTtyOutput", XrmoptionNoArg,	"on"),
-DATA("-sk",		"*scrollKey",	XrmoptionNoArg,		"on"),
-DATA("+sk",		"*scrollKey",	XrmoptionNoArg,		"off"),
-DATA("-sl",		"*saveLines",	XrmoptionSepArg,	NULL),
+OPTS("-rvc",		NO_ARG(XtNcolorRVMode),			"off"),
+OPTS("+rvc",		NO_ARG(XtNcolorRVMode),			"on"),
+OPTS("-sf",		NO_ARG(XtNsunFunctionKeys),		"on"),
+OPTS("+sf",		NO_ARG(XtNsunFunctionKeys),		"off"),
+OPTS("-sh",		MY_ARG(XtNscaleHeight),			NULL),
+OPTS("-si",		NO_ARG(XtNscrollTtyOutput),		"off"),
+OPTS("+si",		NO_ARG(XtNscrollTtyOutput),		"on"),
+OPTS("-sk",		NO_ARG(XtNscrollKey),			"on"),
+OPTS("+sk",		NO_ARG(XtNscrollKey),			"off"),
+OPTS("-sl",		MY_ARG(XtNsaveLines),			NULL),
 #if OPT_SUNPC_KBD
-DATA("-sp",		"*sunKeyboard", XrmoptionNoArg,		"on"),
-DATA("+sp",		"*sunKeyboard", XrmoptionNoArg,		"off"),
+OPTS("-sp",		NO_ARG(XtNsunKeyboard),			"on"),
+OPTS("+sp",		NO_ARG(XtNsunKeyboard),			"off"),
 #endif
 #if OPT_TEK4014
-DATA("-t",		"*tekStartup",	XrmoptionNoArg,		"on"),
-DATA("+t",		"*tekStartup",	XrmoptionNoArg,		"off"),
+OPTS("-t",		NO_ARG(XtNtekStartup),			"on"),
+OPTS("+t",		NO_ARG(XtNtekStartup),			"off"),
 #endif
-DATA("-ti",		"*decTerminalID",XrmoptionSepArg,	NULL),
-DATA("-tm",		"*ttyModes",	XrmoptionSepArg,	NULL),
-DATA("-tn",		"*termName",	XrmoptionSepArg,	NULL),
+OPTS("-ti",		MY_ARG(XtNdecTerminalID),		NULL),
+OPTS("-tm",		MY_ARG(XtNttyModes),			NULL),
+OPTS("-tn",		MY_ARG(XtNtermName),			NULL),
 #if OPT_WIDE_CHARS
-DATA("-u8",		"*utf8",	XrmoptionNoArg,		"2"),
-DATA("+u8",		"*utf8",	XrmoptionNoArg,		"0"),
+OPTS("-u8",		NO_ARG(XtNutf8),			"2"),
+OPTS("+u8",		NO_ARG(XtNutf8),			"0"),
 #endif
 #if OPT_LUIT_PROG
-DATA("-lc",		"*locale",	XrmoptionNoArg,		"on"),
-DATA("+lc",		"*locale",	XrmoptionNoArg,		"off"),
-DATA("-lcc",		"*localeFilter",XrmoptionSepArg,	NULL),
-DATA("-en",		"*locale",	XrmoptionSepArg,	NULL),
+OPTS("-lc",		NO_ARG(XtNlocale),			"on"),
+OPTS("+lc",		NO_ARG(XtNlocale),			"off"),
+OPTS("-lcc",		MY_ARG(XtNlocaleFilter),		NULL),
+OPTS("-en",		MY_ARG(XtNlocale),			NULL),
 #endif
-DATA("-uc",		"*cursorUnderLine", XrmoptionNoArg,	"on"),
-DATA("+uc",		"*cursorUnderLine", XrmoptionNoArg,	"off"),
-DATA("-ulc",		"*colorULMode",	XrmoptionNoArg,		"off"),
-DATA("+ulc",		"*colorULMode",	XrmoptionNoArg,		"on"),
-DATA("-ulit",		"*italicULMode", XrmoptionNoArg,	"off"),
-DATA("+ulit",		"*italicULMode", XrmoptionNoArg,	"on"),
-DATA("-ut",		"*utmpInhibit",	XrmoptionNoArg,		"on"),
-DATA("+ut",		"*utmpInhibit",	XrmoptionNoArg,		"off"),
-DATA("-im",		"*useInsertMode", XrmoptionNoArg,	"on"),
-DATA("+im",		"*useInsertMode", XrmoptionNoArg,	"off"),
-DATA("-vb",		"*visualBell",	XrmoptionNoArg,		"on"),
-DATA("+vb",		"*visualBell",	XrmoptionNoArg,		"off"),
-DATA("-pob",		"*popOnBell",	XrmoptionNoArg,		"on"),
-DATA("+pob",		"*popOnBell",	XrmoptionNoArg,		"off"),
+OPTS("-uc",		NO_ARG(XtNcursorUnderLine),		"on"),
+OPTS("+uc",		NO_ARG(XtNcursorUnderLine),		"off"),
+OPTS("-ulc",		NO_ARG(XtNcolorULMode),			"off"),
+OPTS("+ulc",		NO_ARG(XtNcolorULMode),			"on"),
+OPTS("-ulit",		NO_ARG(XtNitalicULMode),		"off"),
+OPTS("+ulit",		NO_ARG(XtNitalicULMode),		"on"),
+OPTS("-ut",		NO_ARG(XtNutmpInhibit),			"on"),
+OPTS("+ut",		NO_ARG(XtNutmpInhibit),			"off"),
+OPTS("-im",		NO_ARG(XtNuseInsertMode),		"on"),
+OPTS("+im",		NO_ARG(XtNuseInsertMode),		"off"),
+OPTS("-vb",		NO_ARG(XtNvisualBell),			"on"),
+OPTS("+vb",		NO_ARG(XtNvisualBell),			"off"),
+OPTS("-pob",		NO_ARG(XtNpopOnBell),			"on"),
+OPTS("+pob",		NO_ARG(XtNpopOnBell),			"off"),
 #if OPT_WIDE_CHARS
-DATA("-wc",		"*wideChars",	XrmoptionNoArg,		"on"),
-DATA("+wc",		"*wideChars",	XrmoptionNoArg,		"off"),
-DATA("-mk_width",	"*mkWidth",	XrmoptionNoArg,		"on"),
-DATA("+mk_width",	"*mkWidth",	XrmoptionNoArg,		"off"),
-DATA("-cjk_width",	"*cjkWidth",	XrmoptionNoArg,		"on"),
-DATA("+cjk_width",	"*cjkWidth",	XrmoptionNoArg,		"off"),
+OPTS("-wc",		NO_ARG(XtNwideChars),			"on"),
+OPTS("+wc",		NO_ARG(XtNwideChars),			"off"),
+OPTS("-mk_width",	NO_ARG(XtNmkWidth),			"on"),
+OPTS("+mk_width",	NO_ARG(XtNmkWidth),			"off"),
+OPTS("-cjk_width",	NO_ARG(XtNcjkWidth),			"on"),
+OPTS("+cjk_width",	NO_ARG(XtNcjkWidth),			"off"),
 #endif
-DATA("-wf",		"*waitForMap",	XrmoptionNoArg,		"on"),
-DATA("+wf",		"*waitForMap",	XrmoptionNoArg,		"off"),
+OPTS("-wf",		NO_ARG(XtNwaitForMap),			"on"),
+OPTS("+wf",		NO_ARG(XtNwaitForMap),			"off"),
 #if OPT_ZICONBEEP
-DATA("-ziconbeep",	"*zIconBeep",	XrmoptionSepArg,	NULL),
+OPTS("-ziconbeep",	MY_ARG(XtNzIconBeep),			NULL),
 #endif
 #if OPT_SAME_NAME
-DATA("-samename",	"*sameName",	XrmoptionNoArg,		"on"),
-DATA("+samename",	"*sameName",	XrmoptionNoArg,		"off"),
+OPTS("-samename",	NO_ARG(XtNsameName),			"on"),
+OPTS("+samename",	NO_ARG(XtNsameName),			"off"),
 #endif
 #if OPT_SESSION_MGT
-DATA("-sm",		"*sessionMgt",	XrmoptionNoArg,		"on"),
-DATA("+sm",		"*sessionMgt",	XrmoptionNoArg,		"off"),
+OPTS("-sm",		NO_ARG(XtNsessionMgt),			"on"),
+OPTS("+sm",		NO_ARG(XtNsessionMgt),			"off"),
 #endif
 #if OPT_TOOLBAR
-DATA("-tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"on"),
-DATA("+tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"off"),
+OPTS("-tb",		NO_ARG(XtNtoolBar),			"on"),
+OPTS("+tb",		NO_ARG(XtNtoolBar),			"off"),
 #endif
 #if OPT_MAXIMIZE
-DATA("-maximized",	"*maximized",	XrmoptionNoArg,		"on"),
-DATA("+maximized",	"*maximized",	XrmoptionNoArg,		"off"),
-DATA("-fullscreen",	"*fullscreen",	XrmoptionNoArg,		"on"),
-DATA("+fullscreen",	"*fullscreen",	XrmoptionNoArg,		"off"),
+OPTS("-maximized",	NO_ARG(XtNmaximized),			"on"),
+OPTS("+maximized",	NO_ARG(XtNmaximized),			"off"),
+OPTS("-fullscreen",	NO_ARG(XtNfullscreen),			"on"),
+OPTS("+fullscreen",	NO_ARG(XtNfullscreen),			"off"),
 #endif
 /* options that we process ourselves */
 DATA("-help",		NULL,		XrmoptionSkipNArgs,	NULL),
@@ -1206,14 +1226,14 @@ DATA("-into",		NULL,		XrmoptionSkipArg,	NULL),
 /* bogus old compatibility stuff for which there are
    standard XtOpenApplication options now */
 DATA("%",		"*tekGeometry",	XrmoptionStickyArg,	NULL),
-DATA("#",		".iconGeometry",XrmoptionStickyArg,	NULL),
-DATA("-T",		".title",	XrmoptionSepArg,	NULL),
-DATA("-n",		"*iconName",	XrmoptionSepArg,	NULL),
-DATA("-r",		"*reverseVideo",XrmoptionNoArg,		"on"),
-DATA("+r",		"*reverseVideo",XrmoptionNoArg,		"off"),
-DATA("-rv",		"*reverseVideo",XrmoptionNoArg,		"on"),
-DATA("+rv",		"*reverseVideo",XrmoptionNoArg,		"off"),
-DATA("-w",		".borderWidth", XrmoptionSepArg,	NULL),
+DATA("#",		".iconGeometry", XrmoptionStickyArg,	NULL),
+OPTS("-T",		UP_ARG(XtNtitle),			NULL),
+OPTS("-n",		MY_ARG(XtNiconName),			NULL),
+OPTS("-r",		NO_ARG(XtNreverseVideo),		"on"),
+OPTS("+r",		NO_ARG(XtNreverseVideo),		"off"),
+OPTS("-rv",		NO_ARG(XtNreverseVideo),		"on"),
+OPTS("+rv",		NO_ARG(XtNreverseVideo),		"off"),
+OPTS("-w",		UP_ARG(XtNborderWidth),			NULL),
 #undef DATA
 };
 
@@ -1317,7 +1337,7 @@ static OptionHelp xtermOptions[] = {
 { "-report-fonts",         "report fonts as loaded to stdout" },
 #endif
 #if OPT_REPORT_ICONS
-{ "-report-icons",	   "report title/icon updates" },
+{ "-report-icons",         "report title/icon updates" },
 #endif
 #if OPT_XRES_QUERY
 { "-report-xres",          "report X resources for VT100 widget" },
@@ -5812,14 +5832,14 @@ parse_tty_modes(char *s)
     }
 }
 
-#ifndef VMS			/* don't use pipes on OpenVMS */
+#ifndef GetBytesAvailable
 int
-GetBytesAvailable(int fd)
+GetBytesAvailable(Display *dpy)
 {
+    int fd = ConnectionNumber(dpy);
+    int result;
 #if defined(FIONREAD)
-    int arg;
-    ioctl(fd, FIONREAD, (char *) &arg);
-    return (int) arg;
+    ioctl(fd, FIONREAD, (char *) &result);
 #elif defined(__CYGWIN__)
     fd_set set;
     struct timeval select_timeout =
@@ -5827,19 +5847,15 @@ GetBytesAvailable(int fd)
 
     FD_ZERO(&set);
     FD_SET(fd, &set);
-    if (Select(fd + 1, &set, NULL, NULL, &select_timeout) > 0)
-	return 1;
-    else
-	return 0;
-#elif defined(FIORDCK)
-    return (ioctl(fd, FIORDCHK, NULL));
-#else /* !FIORDCK */
+    result = (Select(fd + 1, &set, NULL, NULL, &select_timeout) > 0) ? 1 : 0;
+#else
     struct pollfd pollfds[1];
 
     pollfds[0].fd = fd;
     pollfds[0].events = POLLIN;
-    return poll(pollfds, 1, 0);
+    result = poll(pollfds, 1, 0);
 #endif
+    return result;
 }
 #endif /* !VMS */
 

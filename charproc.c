@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1960 2023/09/15 00:31:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1966 2023/09/22 21:57:02 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -573,10 +573,10 @@ static XtResource xterm_resources[] =
 #endif
 
 #ifndef NO_ACTIVE_ICON
-    Sres("activeIcon", "ActiveIcon", misc.active_icon_s, "default"),
-    Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-    Sres("iconFont", "IconFont", screen.icon_fontname, "nil2"),
-    Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
+    Sres(XtNactiveIcon, XtCActiveIcon, misc.active_icon_s, "default"),
+    Ires(XtNiconBorderWidth, XtCBorderWidth, misc.icon_border_width, 2),
+    Sres(XtNiconFont, XtCIconFont, screen.icon_fontname, "nil2"),
+    Cres(XtNiconBorderColor, XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
 #endif				/* NO_ACTIVE_ICON */
 
 #if OPT_BLINK_CURS
@@ -3335,7 +3335,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
 		CarriageReturn(xw);
-	    else
+	    else if (screen->jumpscroll && !screen->fastscroll)
 		do_xevents(xw);
 	    break;
 
@@ -6422,8 +6422,13 @@ dotext(XtermWidget xw,
 #if OPT_WIDE_CHARS
     if (screen->vt100_graphics)
 #endif
-	if (!(len = (Cardinal) xtermCharSetOut(xw, buf, buf + len, charset)))
+    {
+	DECNRCM_codes rightset = screen->gsets[(int) (screen->curgr)];
+	if ((charset != nrc_ASCII
+	     || rightset != nrc_ASCII)
+	    && !(len = (Cardinal) xtermCharSetOut(xw, buf, buf + len, charset)))
 	    return;
+    }
 
     if_OPT_XMC_GLITCH(screen, {
 	Cardinal n;
@@ -7310,6 +7315,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    CursorRestore(xw);
 	    }
 	    break;
+	case srm_FAST_SCROLL:
+	    set_bool_mode(screen->fastscroll);
+	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
 	    set_keyboard_type(xw, keyboardIsTermcap, IsSM());
@@ -7638,6 +7646,9 @@ savemodes(XtermWidget xw)
 		CursorSave(xw);
 	    }
 	    break;
+	case srm_FAST_SCROLL:
+	    DoSM(DP_FAST_SCROLL, screen->fastscroll);
+	    break;
 #if OPT_PASTE64 || OPT_READLINE
 	case srm_PASTE_IN_BRACKET:
 	    SCREEN_FLAG_save(screen, paste_brackets);
@@ -7943,6 +7954,9 @@ restoremodes(XtermWidget xw)
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }
+	    break;
+	case srm_FAST_SCROLL:
+	    DoRM(DP_FAST_SCROLL, screen->fastscroll);
 	    break;
 	case srm_ALTERNATE_SCROLL:
 	    DoRM(DP_ALTERNATE_SCROLL, screen->alternateScroll);

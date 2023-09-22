@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.930 2023/09/14 08:02:15 tom Exp $ */
+/* $XTermId: xterm.h,v 1.936 2023/09/22 07:53:15 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -438,6 +438,7 @@ extern char **environ;
 
 /***====================================================================***/
 
+#define XtNactiveIcon		"activeIcon"
 #define XtNallowBoldFonts	"allowBoldFonts"
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
@@ -459,10 +460,11 @@ extern char **environ;
 #define XtNappcursorDefault	"appcursorDefault"
 #define XtNappkeypadDefault	"appkeypadDefault"
 #define XtNassumeAllChars	"assumeAllChars"
-#define XtNautoWrap		"autoWrap"
 #define XtNautoScrollLock	"autoScrollLock"
+#define XtNautoWrap		"autoWrap"
 #define XtNawaitInput		"awaitInput"
 #define XtNbackarrowKey		"backarrowKey"
+#define XtNbackarrowKeyIsErase	"backarrowKeyIsErase"
 #define XtNbellIsUrgent		"bellIsUrgent"
 #define XtNbellOnReset		"bellOnReset"
 #define XtNbellSuppressTime	"bellSuppressTime"
@@ -497,6 +499,7 @@ extern char **environ;
 #define XtNcursorColor		"cursorColor"
 #define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorOnTime		"cursorOnTime"
+#define XtNcursorTheme		"cursorTheme"
 #define XtNcursorUnderLine	"cursorUnderLine"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
@@ -543,8 +546,14 @@ extern char **environ;
 #define XtNhighlightReverse	"highlightReverse"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhighlightTextColor	"highlightTextColor"
+#define XtNhold			"hold"
+#define XtNhpFunctionKeys	"hpFunctionKeys"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
 #define XtNi18nSelections	"i18nSelections"
+#define XtNiconBorderColor	"iconBorderColor"
+#define XtNiconBorderWidth	"iconBorderWidth"
+#define XtNiconFont		"iconFont"
+#define XtNiconGeometry		"iconGeometry"
 #define XtNiconHint		"iconHint"
 #define XtNindicatorFormat	"indicatorFormat"
 #define XtNinitialFont		"initialFont"
@@ -554,9 +563,10 @@ extern char **environ;
 #define XtNkeepClipboard	"keepClipboard"
 #define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
-#define XtNlimitFontsets	"limitFontsets"
+#define XtNkeyboardType		"keyboardType"
 #define XtNlimitFontHeight	"limitFontHeight"
 #define XtNlimitFontWidth	"limitFontWidth"
+#define XtNlimitFontsets	"limitFontsets"
 #define XtNlimitResize		"limitResize"
 #define XtNlimitResponse	"limitResponse"
 #define XtNlocale		"locale"
@@ -566,11 +576,15 @@ extern char **environ;
 #define XtNlogging		"logging"
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
+#define XtNmaxBufSize		"maxBufSize"
 #define XtNmaxGraphicSize	"maxGraphicSize"
 #define XtNmaximized		"maximized"
 #define XtNmenuBar		"menuBar"	/* internal */
 #define XtNmenuHeight		"menuHeight"
+#define XtNmenuLocale		"menuLocale"
+#define XtNmessages		"messages"
 #define XtNmetaSendsEscape	"metaSendsEscape"
+#define XtNminBufSize		"minBufSize"
 #define XtNmkSamplePass		"mkSamplePass"
 #define XtNmkSampleSize		"mkSampleSize"
 #define XtNmkWidth		"mkWidth"
@@ -587,6 +601,7 @@ extern char **environ;
 #define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
+#define XtNomitTranslation	"omitTranslation"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground "pointerColorBackground"
 #define XtNpointerFont		"pointerFont"
@@ -595,6 +610,12 @@ extern char **environ;
 #define XtNpopOnBell		"popOnBell"
 #define XtNprecompose		"precompose"
 #define XtNprintAttributes	"printAttributes"
+#define XtNprintFileImmediate	"printFileImmediate"
+#define XtNprintFileOnXError	"printFileOnXError"
+#define XtNprintModeImmediate	"printModeImmediate"
+#define XtNprintModeOnXError	"printModeOnXError"
+#define XtNprintOptsImmediate	"printOptsImmediate"
+#define XtNprintOptsOnXError	"printOptsOnXError"
 #define XtNprinterAutoClose	"printerAutoClose"
 #define XtNprinterCommand	"printerCommand"
 #define XtNprinterControlMode	"printerControlMode"
@@ -602,23 +623,34 @@ extern char **environ;
 #define XtNprinterFormFeed	"printerFormFeed"
 #define XtNprinterNewLine	"printerNewLine"
 #define XtNprivateColorRegisters "privateColorRegisters"
+#define XtNptyHandshake		"ptyHandshake"
+#define XtNptyInitialErase	"ptyInitialErase"
+#define XtNptySttySize		"ptySttySize"
 #define XtNquietGrab		"quietGrab"
 #define XtNregisDefaultFont	"regisDefaultFont"
 #define XtNregisScreenSize	"regisScreenSize"
 #define XtNrenderFont		"renderFont"
+#define XtNreportCClass		"reportCClass"
+#define XtNreportColors		"reportColors"
+#define XtNreportFonts		"reportFonts"
+#define XtNreportIcons		"reportIcons"
+#define XtNreportXRes		"reportXRes"
 #define XtNresizeByPixel	"resizeByPixel"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
 #define XtNrightScrollBar	"rightScrollBar"
+#define XtNsameName		"sameName"
 #define XtNsaveLines		"saveLines"
 #define XtNscaleHeight		"scaleHeight"
+#define XtNscoFunctionKeys	"scoFunctionKeys"
 #define XtNscrollBar		"scrollBar"
 #define XtNscrollBarBorder	"scrollBarBorder"
 #define XtNscrollKey		"scrollKey"
 #define XtNscrollLines		"scrollLines"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
 #define XtNselectToClipboard	"selectToClipboard"
+#define XtNsessionMgt		"sessionMgt"
 #define XtNshiftEscape		"shiftEscape"
 #define XtNshiftFonts		"shiftFonts"
 #define XtNshowBlinkAsBold	"showBlinkAsBold"
@@ -627,29 +659,39 @@ extern char **environ;
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNsixelScrolling	"sixelScrolling"
 #define XtNsixelScrollsRight	"sixelScrollsRight"
+#define XtNsunFunctionKeys	"sunFunctionKeys"
+#define XtNsunKeyboard		"sunKeyboard"
+#define XtNtcapFunctionKeys	"tcapFunctionKeys"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
 #define XtNtekStartup		"tekStartup"
+#define XtNtermName		"termName"
 #define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
 #define XtNtitleModes		"titleModes"
 #define XtNtoolBar		"toolBar"
 #define XtNtrimSelection	"trimSelection"
+#define XtNttyModes		"ttyModes"
 #define XtNunderLine		"underLine"
 #define XtNuseBorderClipping	"useBorderClipping"
 #define XtNuseClipping		"useClipping"
+#define XtNuseInsertMode	"useInsertMode"
 #define XtNutf8			"utf8"
 #define XtNutf8Fonts		"utf8Fonts"
 #define XtNutf8Latin1		"utf8Latin1"
 #define XtNutf8SelectTypes	"utf8SelectTypes"
 #define XtNutf8Title		"utf8Title"
 #define XtNutf8Weblike		"utf8Weblike"
+#define XtNutmpDisplayId	"utmpDisplayId"
+#define XtNutmpInhibit		"utmpInhibit"
+#define XtNvalidShells		"validShells"
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
 #define XtNvisualBellDelay	"visualBellDelay"
 #define XtNvisualBellLine	"visualBellLine"
 #define XtNvt100Graphics	"vt100Graphics"
+#define XtNwaitForMap		"waitForMap"
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
@@ -661,7 +703,10 @@ extern char **environ;
 #define XtNxmcGlitch		"xmcGlitch"	/* ncurses-testing */
 #define XtNxmcInline		"xmcInline"	/* ncurses-testing */
 #define XtNxmcMoveSGR		"xmcMoveSGR"	/* ncurses-testing */
+#define XtNzIconBeep		"zIconBeep"
+#define XtNzIconTitleFormat	"zIconTitleFormat"
 
+#define XtCActiveIcon		"ActiveIcon"
 #define XtCAllowBoldFonts	"AllowBoldFonts"
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
@@ -682,10 +727,11 @@ extern char **environ;
 #define XtCAppcursorDefault	"AppcursorDefault"
 #define XtCAppkeypadDefault	"AppkeypadDefault"
 #define XtCAssumeAllChars	"AssumeAllChars"
-#define XtCAutoWrap		"AutoWrap"
 #define XtCAutoScrollLock	"AutoScrollLock"
+#define XtCAutoWrap		"AutoWrap"
 #define XtCAwaitInput		"AwaitInput"
 #define XtCBackarrowKey		"BackarrowKey"
+#define XtCBackarrowKeyIsErase	"BackarrowKeyIsErase"
 #define XtCBellIsUrgent		"BellIsUrgent"
 #define XtCBellOnReset		"BellOnReset"
 #define XtCBellSuppressTime	"BellSuppressTime"
@@ -714,6 +760,7 @@ extern char **environ;
 #define XtCCursorBlinkXOR	"CursorBlinkXOR"
 #define XtCCursorOffTime	"CursorOffTime"
 #define XtCCursorOnTime		"CursorOnTime"
+#define XtCCursorTheme		"CursorTheme"
 #define XtCCursorUnderLine	"CursorUnderLine"
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
@@ -758,18 +805,24 @@ extern char **environ;
 #define XtCHighlightColorMode	"HighlightColorMode"
 #define XtCHighlightReverse	"HighlightReverse"
 #define XtCHighlightSelection	"HighlightSelection"
+#define XtCHold			"Hold"
+#define XtCHpFunctionKeys	"HpFunctionKeys"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCI18nSelections	"I18nSelections"
+#define XtCIconFont		"IconFont"
+#define XtCIconGeometry		"IconGeometry"
 #define XtCIconHint		"IconHint"
 #define XtCIndicatorFormat	"IndicatorFormat"
 #define XtCInitialFont		"InitialFont"
+#define XtCInternalBorder	"InternalBorder"
 #define XtCJumpScroll		"JumpScroll"
 #define XtCKeepClipboard	"KeepClipboard"
 #define XtCKeepSelection	"KeepSelection"
 #define XtCKeyboardDialect	"KeyboardDialect"
-#define XtCLimitFontsets	"LimitFontsets"
+#define XtCKeyboardType		"KeyboardType"
 #define XtCLimitFontHeight	"LimitFontHeight"
 #define XtCLimitFontWidth	"LimitFontWidth"
+#define XtCLimitFontsets	"LimitFontsets"
 #define XtCLimitResize		"LimitResize"
 #define XtCLimitResponse	"LimitResponse"
 #define XtCLocale		"Locale"
@@ -779,11 +832,15 @@ extern char **environ;
 #define XtCLogging		"Logging"
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
+#define XtCMaxBufSize		"MaxBufSize"
 #define XtCMaxGraphicSize	"MaxGraphicSize"
 #define XtCMaximized		"Maximized"
 #define XtCMenuBar		"MenuBar"	/* internal */
 #define XtCMenuHeight		"MenuHeight"
+#define XtCMenuLocale		"MenuLocale"
+#define XtCMessages		"Messages"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
+#define XtCMinBufSize		"MinBufSize"
 #define XtCMkSamplePass		"MkSamplePass"
 #define XtCMkSampleSize		"MkSampleSize"
 #define XtCMkWidth		"MkWidth"
@@ -799,11 +856,18 @@ extern char **environ;
 #define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
+#define XtCOmitTranslation	"OmitTranslation"
 #define XtCPointerFont		"PointerFont"
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
 #define XtCPrecompose		"Precompose"
 #define XtCPrintAttributes	"PrintAttributes"
+#define XtCPrintFileImmediate	"PrintFileImmediate"
+#define XtCPrintFileOnXError	"PrintFileOnXError"
+#define XtCPrintModeImmediate	"PrintModeImmediate"
+#define XtCPrintModeOnXError	"PrintModeOnXError"
+#define XtCPrintOptsImmediate	"PrintOptsImmediate"
+#define XtCPrintOptsOnXError	"PrintOptsOnXError"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
 #define XtCPrinterControlMode	"PrinterControlMode"
@@ -811,22 +875,33 @@ extern char **environ;
 #define XtCPrinterFormFeed	"PrinterFormFeed"
 #define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCPrivateColorRegisters "PrivateColorRegisters"
+#define XtCPtyHandshake		"PtyHandshake"
+#define XtCPtyInitialErase	"PtyInitialErase"
+#define XtCPtySttySize		"PtySttySize"
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRegisDefaultFont	"RegisDefaultFont"
 #define XtCRegisScreenSize	"RegisScreenSize"
 #define XtCRenderFont		"RenderFont"
+#define XtCReportCClass		"ReportCClass"
+#define XtCReportColors		"ReportColors"
+#define XtCReportFonts		"ReportFonts"
+#define XtCReportIcons		"ReportIcons"
+#define XtCReportXRes		"ReportXRes"
 #define XtCResizeByPixel	"ResizeByPixel"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
 #define XtCRightScrollBar	"RightScrollBar"
+#define XtCSameName		"SameName"
 #define XtCSaveLines		"SaveLines"
 #define XtCScaleHeight		"ScaleHeight"
+#define XtCScoFunctionKeys	"ScoFunctionKeys"
 #define XtCScrollBar		"ScrollBar"
 #define XtCScrollBarBorder	"ScrollBarBorder"
 #define XtCScrollCond		"ScrollCond"
 #define XtCScrollLines		"ScrollLines"
 #define XtCSelectToClipboard	"SelectToClipboard"
+#define XtCSessionMgt		"SessionMgt"
 #define XtCShiftEscape		"ShiftEscape"
 #define XtCShiftFonts		"ShiftFonts"
 #define XtCShowBlinkAsBold	"ShowBlinkAsBold"
@@ -835,28 +910,38 @@ extern char **environ;
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCSixelScrolling	"SixelScrolling"
 #define XtCSixelScrollsRight	"SixelScrollsRight"
+#define XtCSunFunctionKeys	"SunFunctionKeys"
+#define XtCSunKeyboard		"SunKeyboard"
+#define XtCTcapFunctionKeys	"TcapFunctionKeys"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"
+#define XtCTermName		"TermName"
 #define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
 #define XtCTitleModes		"TitleModes"
 #define XtCToolBar		"ToolBar"
 #define XtCTrimSelection	"TrimSelection"
+#define XtCTtyModes		"TtyModes"
 #define XtCUnderLine		"UnderLine"
 #define XtCUseBorderClipping	"UseBorderClipping"
 #define XtCUseClipping		"UseClipping"
+#define XtCUseInsertMode	"UseInsertMode"
 #define XtCUtf8			"Utf8"
 #define XtCUtf8Fonts		"Utf8Fonts"
 #define XtCUtf8Latin1		"Utf8Latin1"
 #define XtCUtf8SelectTypes	"Utf8SelectTypes"
 #define XtCUtf8Title		"Utf8Title"
 #define XtCUtf8Weblike		"Utf8Weblike"
+#define XtCUtmpDisplayId	"UtmpDisplayId"
+#define XtCUtmpInhibit		"UtmpInhibit"
 #define XtCVT100Graphics	"VT100Graphics"
+#define XtCValidShells		"ValidShells"
 #define XtCVeryBoldColors	"VeryBoldColors"
 #define XtCVisualBell		"VisualBell"
 #define XtCVisualBellDelay	"VisualBellDelay"
 #define XtCVisualBellLine	"VisualBellLine"
+#define XtCWaitForMap		"WaitForMap"
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
@@ -868,6 +953,8 @@ extern char **environ;
 #define XtCXmcGlitch		"XmcGlitch"	/* ncurses-testing */
 #define XtCXmcInline		"XmcInline"	/* ncurses-testing */
 #define XtCXmcMoveSGR		"XmcMoveSGR"	/* ncurses-testing */
+#define XtCZIconBeep		"ZIconBeep"
+#define XtCZIconTitleFormat	"ZIconTitleFormat"
 
 #if defined(NO_ACTIVE_ICON) && !defined(XtNgeometry)
 #define XtNgeometry		"geometry"
@@ -979,18 +1066,20 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 extern void report_char_class(XtermWidget);
 #endif
 
+#define IsAscii1(n)  (((n) >= 32 && (n) <= 126))
+
 #if OPT_WIDE_CHARS
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
-#define CharWidth(screen, n) ((!((screen)->utf8_mode) && ((n) < 256)) \
+#define CharWidth(screen, n) (((n) < 256) \
 			      ? (IsLatin1(n) ? 1 : 0) \
 			      : my_wcwidth((wchar_t) (n)))
-#define IsLatin1(n)  (((n) >= 32 && (n) <= 126) || ((n) >= 160 && (n) <= 255))
+#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160 && (n) <= 255))
 #else
 #define WideCells(n) 1
 #define CharWidth(screen, n) (IsLatin1(n) ? 1 : 0)
-#define IsLatin1(n)  (((n) >= 32 && (n) <= 126) || ((n) >= 160))
+#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160))
 #endif
 
 /* cachedCgs.c */
@@ -1155,12 +1244,16 @@ extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */,
 #define ENVP_ARG /**/
 
 extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
-extern int GetBytesAvailable (int  /* fd */);
+extern int GetBytesAvailable (Display *  /* dpy */);
 extern int kill_process_group (int  /* pid */, int  /* sig */);
 extern int nonblocking_wait (void);
 
 extern int get_tty_erase(int /* fd */, int /* default_erase */, const char * /* tag */);
 extern int get_tty_lnext(int /* fd */, int /* default_lnext */, const char * /* tag */);
+
+#if (defined(VMS) || defined(__VMS))
+#define GetBytesAvailable(dpy) ((dpy)->qlen > 0)
+#endif
 
 #if OPT_PTY_HANDSHAKE
 extern void first_map_occurred (void);

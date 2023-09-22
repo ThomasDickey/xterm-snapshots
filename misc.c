@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1055 2023/09/18 23:56:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.1057 2023/09/22 23:18:30 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -306,14 +306,9 @@ do_xevents(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (xtermAppPending()
-	||
-#if defined(VMS) || defined(__VMS)
-	screen->display->qlen > 0
-#else
-	GetBytesAvailable(ConnectionNumber(screen->display)) > 0
-#endif
-	)
+	|| GetBytesAvailable(screen->display) > 0) {
 	xevents(xw);
+    }
 }
 
 void
@@ -5438,6 +5433,9 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
+	    break;
+	case srm_FAST_SCROLL:
+	    result = MdBool(screen->fastscroll);
 	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
