@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.31 2023/07/09 21:23:28 tom Exp $ */
+/* $XTermId: graphics.h,v 1.32 2023/09/28 00:24:13 tom Exp $ */
 
 /*
  * Copyright 2013-2022,2023 by Ross Combs
@@ -66,7 +66,7 @@ typedef struct {
     RegisterNum *pixels;
     ColorRegister *private_color_registers;
     ColorRegister *color_registers;
-    char color_registers_used[MAX_COLOR_REGISTERS];
+    Boolean color_registers_used[MAX_COLOR_REGISTERS];
     XtermWidget xw;
     int max_width;              /* largest image which can be stored */
     int max_height;             /* largest image which can be stored */

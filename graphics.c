@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.122 2023/07/10 00:22:25 tom Exp $ */
+/* $XTermId: graphics.c,v 1.128 2023/09/29 23:16:59 tom Exp $ */
 
 /*
  * Copyright 2013-2022,2023 by Ross Combs
@@ -42,6 +42,8 @@
 
 #include <assert.h>
 #include <graphics.h>
+
+#define OPT_INHERIT_COLORS 0
 
 #if OPT_REGIS_GRAPHICS
 #include <graphics_regis.h>
@@ -282,7 +284,7 @@ draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color)
 	y >= 0 && y < graphic->actual_height) {
 	_draw_pixel(graphic, x, y, color);
 	if (color < MAX_COLOR_REGISTERS)
-	    graphic->color_registers_used[color] = 1;
+	    graphic->color_registers_used[color] = True;
     }
 }
 
@@ -315,7 +317,7 @@ draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned 
 	y2 = graphic->actual_height - 1;
 
     if (color < MAX_COLOR_REGISTERS)
-	graphic->color_registers_used[color] = 1;
+	graphic->color_registers_used[color] = True;
     for (y = y1; y <= y2; y++)
 	for (x = x1; x <= x2; x++)
 	    _draw_pixel(graphic, x, y, color);
@@ -381,10 +383,13 @@ copy_overlapping_area(Graphic *graphic, int src_ul_x, int src_ul_y,
 
 #define set_color_register(color_registers, color, pr, pg, pb) \
 do { \
+    assert(color <= MAX_COLOR_REGISTERS); \
+    { \
     ColorRegister *reg = &color_registers[color]; \
     reg->r = (short) pr; \
     reg->g = (short) pg; \
     reg->b = (short) pb; \
+    } \
 } while (0)
 
 /* Graphics which don't use private colors will act as if they are using a
@@ -451,7 +456,7 @@ update_color_register(Graphic *graphic,
 	if (graphic->color_registers_used[color]) {
 	    graphic->dirty = True;
 	}
-	graphic->color_registers_used[color] = 1;
+	graphic->color_registers_used[color] = True;
     } else {
 	set_shared_color_register(color, r, g, b);
     }
@@ -494,17 +499,29 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
     return (RegisterNum) closest_index;
 }
 
+#if OPT_INHERIT_COLORS
 static void
-init_color_registers(ColorRegister *color_registers, int graphics_termid)
+copy_color_registers(Graphic *target, Graphic *source)
 {
-    TRACE(("setting initial colors for terminal %d\n", graphics_termid));
-    {
-	unsigned i;
+    memcpy(target->color_registers_used,
+	   source->color_registers_used,
+	   sizeof(Boolean) * MAX_COLOR_REGISTERS);
 
-	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	    set_color_register(color_registers, (RegisterNum) i, 0, 0, 0);
-	}
-    }
+    memcpy(target->private_color_registers,
+	   source->color_registers,
+	   sizeof(ColorRegister) * MAX_COLOR_REGISTERS);
+}
+#endif
+
+static void
+init_color_registers(TScreen const *screen, ColorRegister *color_registers)
+{
+    const int graphics_termid = GraphicsTermId(screen);
+
+    TRACE(("setting initial colors for terminal %d\n", graphics_termid));
+    memset(color_registers,
+	   0,
+	   sizeof(ColorRegister) * MAX_COLOR_REGISTERS);
 
     /*
      * default color registers:
@@ -610,6 +627,7 @@ init_color_registers(ColorRegister *color_registers, int graphics_termid)
 unsigned
 get_color_register_count(TScreen const *screen)
 {
+    const int graphics_termid = GraphicsTermId(screen);
     unsigned num_color_registers;
 
     if (screen->numcolorregisters >= 0) {
@@ -635,7 +653,7 @@ get_color_register_count(TScreen const *screen)
      * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
      * dxterm      ?
      */
-    switch (screen->graphics_termid) {
+    switch (graphics_termid) {
     case 125:
 	return 4U;
     case 240:
@@ -655,14 +673,14 @@ get_color_register_count(TScreen const *screen)
 }
 
 static void
-init_graphic(Graphic *graphic,
+init_graphic(TScreen *screen,
+	     Graphic *graphic,
 	     unsigned type,
-	     int graphics_termid,
 	     int charrow,
 	     int charcol,
-	     unsigned num_color_registers,
-	     int private_colors)
+	     unsigned num_color_registers)
 {
+    int private_colors = screen->privatecolorregisters;
     const unsigned max_pixels = (unsigned) (graphic->max_width *
 					    graphic->max_height);
 
@@ -671,7 +689,7 @@ init_graphic(Graphic *graphic,
     graphic->hidden = False;
     graphic->dirty = True;
     memset(graphic->pixels, COLOR_HOLE & 0xff, max_pixels * sizeof(RegisterNum));
-    memset(graphic->color_registers_used, 0, sizeof(graphic->color_registers_used));
+    memset(graphic->color_registers_used, False, sizeof(graphic->color_registers_used));
 
     /*
      * text and graphics interactions:
@@ -704,8 +722,33 @@ init_graphic(Graphic *graphic,
 
     graphic->private_colors = private_colors;
     if (graphic->private_colors) {
+#if OPT_INHERIT_COLORS
+	unsigned ii;
+	int max_charrow = -1;
+	Graphic *newest = NULL;
+#endif
+
 	TRACE(("using private color registers\n"));
-	init_color_registers(graphic->private_color_registers, graphics_termid);
+
+#if OPT_INHERIT_COLORS
+	FOR_EACH_SLOT(ii) {
+	    Graphic *check;
+	    if (!(check = getActiveSlot(ii)))
+		continue;
+	    if (!newest || check->charrow >= max_charrow) {
+		max_charrow = check->charrow;
+		newest = check;
+	    }
+	}
+
+	if (newest != NULL && newest != graphic) {
+	    copy_color_registers(graphic, newest);
+	} else {
+	    init_color_registers(screen, graphic->private_color_registers);
+	}
+#else
+	init_color_registers(screen, graphic->private_color_registers);
+#endif
 	graphic->color_registers = graphic->private_color_registers;
     } else {
 	TRACE(("using shared color registers\n"));
@@ -721,15 +764,17 @@ init_graphic(Graphic *graphic,
 Graphic *
 get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 {
-    TScreen const *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
     const int bufferid = screen->whichBuf;
-    const int graphics_termid = GraphicsTermId(screen);
     Graphic *graphic = NULL;
     unsigned ii;
 
+    TRACE(("get_new_graphic %d,%d type %d\n", charrow, charcol, type));
+
     FOR_EACH_SLOT(ii) {
 	if ((graphic = getInactiveSlot(screen, ii))) {
-	    TRACE(("using fresh graphic index=%u id=%u\n", ii, next_graphic_id));
+	    TRACE(("using fresh graphic index %u as id %u\n",
+		   ii, next_graphic_id));
 	    break;
 	}
     }
@@ -738,16 +783,19 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     if (!graphic) {
 	int min_charrow = 0;
 	Graphic *min_graphic = NULL;
+	if_TRACE(unsigned best_ii = (1 + MAX_GRAPHICS));
 
 	FOR_EACH_SLOT(ii) {
 	    if (!(graphic = getActiveSlot(ii)))
 		continue;
 	    if (!min_graphic || graphic->charrow < min_charrow) {
+		if_TRACE(best_ii = ii);
 		min_charrow = graphic->charrow;
 		min_graphic = graphic;
 	    }
 	}
-	TRACE(("recycling old graphic index=%u id=%u\n", ii, next_graphic_id));
+	TRACE(("recycling old graphic index %u as id %u\n",
+	       best_ii, next_graphic_id));
 	graphic = min_graphic;
     }
 
@@ -757,13 +805,12 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
-	init_graphic(graphic,
+	init_graphic(screen,
+		     graphic,
 		     type,
-		     graphics_termid,
 		     charrow,
 		     charcol,
-		     num_color_registers,
-		     screen->privatecolorregisters);
+		     num_color_registers);
     }
     return graphic;
 }
@@ -968,9 +1015,11 @@ refresh_graphic(TScreen const *screen,
 	   holes, total, out_of_range));
 }
 
+#define MAX_PCT 100.		/* HLS uses this for L, S percentages */
 #define MAX_RGB 100.		/* use this rather than 255 */
 
 /*
+ * In HLS, H is an angle, in degrees, and L, S are percentages.
  * Primary color hues:
  *  blue:    0 degrees
  *  red:   120 degrees
@@ -979,9 +1028,9 @@ refresh_graphic(TScreen const *screen,
 void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
-    const int hs = ((h + 240) / 60) % 6;
-    const double lv = l / MAX_RGB;
-    const double sv = s / MAX_RGB;
+    const int hs = ((h + 59) / 60) % 6;
+    const double lv = l / MAX_PCT;
+    const double sv = s / MAX_PCT;
     double c, x, m, c2;
     double r1, g1, b1;
 
@@ -1030,15 +1079,15 @@ hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 	break;
     default:
 	TRACE(("Bad HLS input: [%d,%d,%d], returning white\n", h, l, s));
-	*r = (short) 100;
-	*g = (short) 100;
-	*b = (short) 100;
+	*r = (short) 360;
+	*g = (short) MAX_PCT;
+	*b = (short) MAX_PCT;
 	return;
     }
 
-    *r = (short) ((r1 + m) * MAX_RGB + 0.5);
-    *g = (short) ((g1 + m) * MAX_RGB + 0.5);
-    *b = (short) ((b1 + m) * MAX_RGB + 0.5);
+    *r = (short) ((r1 + m) * MAX_PCT + 0.5);
+    *g = (short) ((g1 + m) * MAX_PCT + 0.5);
+    *b = (short) ((b1 + m) * MAX_PCT + 0.5);
 
     if (*r < 0)
 	*r = 0;
@@ -1814,7 +1863,7 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    init_color_registers(getSharedRegisters(), GraphicsTermId(screen));
+    init_color_registers(screen, getSharedRegisters());
 
     if (used_graphics) {
 	unsigned ii;

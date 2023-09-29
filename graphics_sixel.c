@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.45 2023/05/10 00:06:42 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.46 2023/09/28 00:24:54 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -156,7 +156,7 @@ init_sixel_background(Graphic *graphic, SixelContext const *context)
 	target += graphic->max_width;
 	memcpy(target, source, length);
     }
-    graphic->color_registers_used[context->background] = 1;
+    graphic->color_registers_used[context->background] = True;
 }
 
 #define ValidColumn(graphic, context) \
