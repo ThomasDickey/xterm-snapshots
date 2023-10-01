@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.142 2023/07/10 00:09:54 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.144 2023/10/01 19:38:59 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -66,9 +66,9 @@
 #undef DEBUG_SPECIFIC_CHAR_METRICS
 #define IS_DEBUG_CHAR(CH) ((CH) == 'W')		/* glyphs to dump to terminal */
 #undef DEBUG_COMPUTED_FONT_METRICS
-#undef DEBUG_FONT_NAME
-#undef DEBUG_FONT_SIZE_SEARCH
-#undef DEBUG_XFT_GLYPH
+#define DEBUG_FONT_NAME
+#define DEBUG_FONT_SIZE_SEARCH
+#undef DEBUG_XFT_GLYPH_COPY
 #undef DEBUG_GLYPH_RETRIEVAL
 #undef DEBUG_XFT_GLYPH_LOADING
 #undef DEBUG_LOAD
@@ -588,9 +588,6 @@ draw_shaded_polygon(RegisGraphicsContext *context)
     for (p = 0U; p < context->fill_point_count; p++) {
 	int new_x = context->fill_points[p].x;
 	int new_y = context->fill_points[p].y;
-#if 0
-	printf("got %d,%d (%d,%d) inside=%d\n", new_x, new_y, old_x, old_y, inside);
-#endif
 
 	/*
 	 * FIXME: This is using pixels to represent lines which loses
@@ -650,9 +647,6 @@ draw_filled_polygon(RegisGraphicsContext *context)
     for (p = 0U; p < context->fill_point_count; p++) {
 	int new_x = context->fill_points[p].x;
 	int new_y = context->fill_points[p].y;
-#if 0
-	printf("got %d,%d (%d,%d) inside=%d\n", new_x, new_y, old_x, old_y, inside);
-#endif
 
 	/*
 	 * FIXME: This is using pixels to represent lines which loses
@@ -1834,32 +1828,54 @@ get_xft_glyph_dimensions(XtermWidget xw, XftFont *font, unsigned *w,
 
 #define FONT_SIZE_CACHE_SIZE 32U
 
+typedef struct {
+    XftFont *font_data;
+    char fontname[REGIS_FONTNAME_LEN];
+    unsigned maxw, maxh, max_pixels;
+    unsigned targeth;
+    unsigned w, h;
+    unsigned xmin;
+    unsigned ymin;
+} FONT_CACHE;
+
+static FONT_CACHE font_cache[FONT_SIZE_CACHE_SIZE];
+
+static void
+close_xft_font(XtermWidget xw, XftFont *font)
+{
+    if (font != NULL) {
+	Display *display = XtDisplay(xw);
+	unsigned ii;
+	for (ii = 0; ii < FONT_SIZE_CACHE_SIZE; ++ii) {
+	    if (font == font_cache[ii].font_data) {
+		font_cache[ii].font_data = NULL;
+		break;
+	    }
+	}
+	XftFontClose(display, font);
+    }
+}
+
 /* Find the font pixel size which returns the font which is closest to the given
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
 find_best_xft_font_size(XtermWidget xw,
 			char const *fontname,
-			unsigned maxw, unsigned maxh, unsigned max_pixels,
-			unsigned *w, unsigned *h,
-			unsigned *xmin, unsigned *ymin)
+			unsigned maxw,
+			unsigned maxh,
+			unsigned max_pixels,
+			unsigned *w,
+			unsigned *h,
+			unsigned *xmin,
+			unsigned *ymin)
 {
     Display *display = XtDisplay(xw);
     Screen *screen = XtScreen(xw);
     XftFont *font;
     unsigned targeth;
-    unsigned ii, cacheindex;
-    /* FIXME: change cache to just cache the final result and put it in a
-     * wrapper function
-     */
-    static struct {
-	char fontname[REGIS_FONTNAME_LEN];
-	unsigned maxw, maxh, max_pixels;
-	unsigned targeth;
-	unsigned w, h;
-	unsigned xmin;
-	unsigned ymin;
-    } cache[FONT_SIZE_CACHE_SIZE];
+    unsigned ii;
+    FONT_CACHE *cp = NULL;
 
     assert(display);
     assert(screen);
@@ -1870,21 +1886,28 @@ find_best_xft_font_size(XtermWidget xw,
     assert(ymin);
 
 #ifdef DEBUG_FONT_SIZE_SEARCH
-    TRACE(("determining best size of font '%s' for %ux%u glyph with max_pixels=%u\n",
+    TRACE(("determining best size of font \"%s\" for %ux%u glyph with max_pixels=%u\n",
 	   fontname, maxw, maxh, max_pixels));
 #endif
-    cacheindex = FONT_SIZE_CACHE_SIZE;
     for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
-	if (cache[ii].maxw == maxw && cache[ii].maxh == maxh &&
-	    cache[ii].max_pixels == max_pixels &&
-	    strcmp(cache[ii].fontname, fontname) == 0) {
-	    cacheindex = ii;
+	if (font_cache[ii].maxw == maxw &&
+	    font_cache[ii].maxh == maxh &&
+	    font_cache[ii].max_pixels == max_pixels &&
+	    strcmp(font_cache[ii].fontname, fontname) == 0) {
+	    cp = &font_cache[ii];
+	    if (cp->font_data) {
+		*w = cp->w;
+		*h = cp->h;
+		*xmin = cp->xmin;
+		*ymin = cp->ymin;
+		return cp->font_data;
+	    }
 	    break;
 	}
     }
 
-    if (cacheindex < FONT_SIZE_CACHE_SIZE) {
-	targeth = cache[cacheindex].targeth;
+    if (cp != NULL) {
+	targeth = cp->targeth;
     } else {
 	targeth = maxh * 10U + 5U;
     }
@@ -1925,17 +1948,8 @@ find_best_xft_font_size(XtermWidget xw,
 		TRACE(("trying targeth=%g\n", targeth / 10.0));
 #endif
 		XftPatternBuild(pat,
-#if 0
-		/* arbitrary value */
-				XFT_SIZE, XftTypeDouble, 12.0,
-#endif
 				XFT_PIXEL_SIZE, XftTypeDouble, (double)
 				targeth / 10.0,
-#if 0
-				XFT_CHAR_WIDTH, XftTypeInteger, (int) maxw,
-				XFT_CHAR_HEIGHT, XftTypeInteger, (int)
-				(targeth / 10U),
-#endif
 				XFT_SPACING, XftTypeInteger, XFT_MONO,
 				XFT_SLANT, XftTypeInteger, 0,
 				XFT_ANTIALIAS, XftTypeBool, False,
@@ -1958,7 +1972,7 @@ find_best_xft_font_size(XtermWidget xw,
 		    printf("font name unparsed: \"%s\"\n", buffer);
 	    }
 #endif
-	    TRACE(("unable to open a monospaced Xft font matching '%s' with pixelsize %g\n",
+	    TRACE(("unable to open a monospaced Xft font matching \"%s\" with pixelsize %g\n",
 		   fontname, targeth / 10.0));
 	    return NULL;
 	}
@@ -1974,12 +1988,12 @@ find_best_xft_font_size(XtermWidget xw,
 	}
 #endif
 
-	if (cacheindex < FONT_SIZE_CACHE_SIZE &&
-	    targeth == cache[cacheindex].targeth) {
-	    *w = cache[cacheindex].w;
-	    *h = cache[cacheindex].h;
-	    *xmin = cache[cacheindex].xmin;
-	    *ymin = cache[cacheindex].ymin;
+	if (cp != NULL &&
+	    targeth == cp->targeth) {
+	    *w = cp->w;
+	    *h = cp->h;
+	    *xmin = cp->xmin;
+	    *ymin = cp->ymin;
 	} else {
 	    get_xft_glyph_dimensions(xw, font, w, h, xmin, ymin);
 
@@ -2060,34 +2074,34 @@ find_best_xft_font_size(XtermWidget xw,
 	}
 #endif
 
-	if (cacheindex == FONT_SIZE_CACHE_SIZE) {
+	if (cp == NULL) {
 	    for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
-		if (cache[ii].maxw == 0U || cache[ii].maxh == 0U ||
-		    cache[ii].max_pixels == 0U) {
-		    CopyFontname(cache[ii].fontname, fontname);
-		    cache[ii].maxw = maxw;
-		    cache[ii].maxh = maxh;
-		    cache[ii].max_pixels = max_pixels;
-		    cache[ii].targeth = targeth;
-		    cache[ii].w = *w;
-		    cache[ii].h = *h;
-		    cache[ii].xmin = *xmin;
-		    cache[ii].ymin = *ymin;
+		if (font_cache[ii].maxw == 0U ||
+		    font_cache[ii].maxh == 0U ||
+		    font_cache[ii].max_pixels == 0U) {
+		    cp = &font_cache[ii];
 		    break;
 		}
 	    }
-	    if (ii == FONT_SIZE_CACHE_SIZE) {
+	    if (cp == NULL) {
 		ii = targeth % FONT_SIZE_CACHE_SIZE;
-		CopyFontname(cache[ii].fontname, fontname);
-		cache[ii].maxw = maxw;
-		cache[ii].maxh = maxh;
-		cache[ii].max_pixels = max_pixels;
-		cache[ii].targeth = targeth;
-		cache[ii].w = *w;
-		cache[ii].h = *h;
-		cache[ii].xmin = *xmin;
-		cache[ii].ymin = *ymin;
+		cp = &font_cache[ii];
+		close_xft_font(xw, cp->font_data);
 	    }
+	    if (cp != NULL) {
+		CopyFontname(cp->fontname, fontname);
+		cp->maxw = maxw;
+		cp->maxh = maxh;
+		cp->max_pixels = max_pixels;
+		cp->targeth = targeth;
+		cp->w = *w;
+		cp->h = *h;
+		cp->xmin = *xmin;
+		cp->ymin = *ymin;
+	    }
+	}
+	if (cp != NULL) {
+	    cp->font_data = font;
 	}
 	return font;
     }
@@ -2110,7 +2124,6 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      */
 #ifdef XRENDERFONT
     XtermWidget xw = context->destination_graphic->xw;
-    Display *display = XtDisplay(xw);
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
@@ -2125,17 +2138,16 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
 
     if (*w == 0U || *h == 0U) {
 	TRACE(("empty glyph found for '%c'\n", ch));
-	XftFontClose(display, font);
+	close_xft_font(xw, font);
 	return 1;
     }
 
     if (!copy_bitmap_from_xft_font(xw, font, CharOf(ch), pixels, *w, *h,
 				   xmin, ymin)) {
 	TRACE(("Unable to create bitmap for '%c'\n", ch));
-	XftFontClose(display, font);
+	close_xft_font(xw, font);
 	return 0;
     }
-    XftFontClose(display, font);
 # ifdef DEBUG_XFT_GLYPH_LOADING
     TRACE(("loaded glyph '%c' at max size %dx%d\n", ch, maxw, maxh));
 # endif
@@ -2373,7 +2385,7 @@ get_bitmap_of_character(RegisGraphicsContext const *context, int ch,
 
     if (fontname) {
 #ifdef DEBUG_GLYPH_RETRIEVAL
-	TRACE(("using xft font %s\n", fontname));
+	TRACE(("using xft font \"%s\"\n", fontname));
 #endif
 	if (get_xft_bitmap_of_character(context, fontname, ch,
 					maxw, maxh, pixels,
@@ -3638,7 +3650,7 @@ load_regis_colorspec(RegisGraphicsContext const *context,
 		return 0;
 	    }
 	    if (!regis_num_to_int(&num, &val)) {
-		TRACE(("DATA_ERROR: component value %s is not a number\n",
+		TRACE(("DATA_ERROR: component value \"%s\" is not a number\n",
 		       fragment_to_tempstr(&num)));
 		return 0;
 	    }
@@ -3751,7 +3763,7 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 
     if (extract_regis_num(&colorspec, &num)) {
 	if (!regis_num_to_int(&num, &val)) {
-	    TRACE(("DATA_ERROR: colorspec value %s is not a valid register\n",
+	    TRACE(("DATA_ERROR: colorspec value \"%s\" is not a valid register\n",
 		   fragment_to_tempstr(&num)));
 	    return 0;
 	}
@@ -3928,11 +3940,11 @@ load_regis_mult_extent(char const *extent, int *w, int *h)
     int px, py;
 
     if (!load_regis_raw_extent(extent, &relx, &rely, &px, &py, 1)) {
-	TRACE(("invalid coordinates in extent %s\n", extent));
+	TRACE(("invalid coordinates in extent \"%s\"\n", extent));
 	return 0;
     }
     if (relx | rely) {
-	TRACE(("invalid relative value in multiplier extent %s\n", extent));
+	TRACE(("invalid relative value in multiplier extent \"%s\"\n", extent));
 	return 0;
     }
 
@@ -3950,7 +3962,7 @@ load_regis_pixel_extent(char const *extent, int origx, int origy,
     int px, py;
 
     if (!load_regis_raw_extent(extent, &relx, &rely, &px, &py, 1)) {
-	TRACE(("invalid coordinates in extent %s\n", extent));
+	TRACE(("invalid coordinates in extent \"%s\"\n", extent));
 	return 0;
     }
 
@@ -3975,7 +3987,7 @@ load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
     int ux, uy;
 
     if (!load_regis_raw_extent(extent, &relx, &rely, &ux, &uy, COORD_SCALE)) {
-	TRACE(("invalid coordinates in extent %s\n", extent));
+	TRACE(("invalid coordinates in extent \"%s\"\n", extent));
 	return 0;
     }
 
@@ -7509,12 +7521,6 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 {
     RegisDataFragment parenthesized;
     char ch;
-#if 0
-    TRACE(("reference line: shading=%d ref=%u loc=%d\n",
-	   context->temporary_write_controls.shading_enabled,
-	   context->temporary_write_controls.shading_reference_dim,
-	   context->temporary_write_controls.shading_reference));
-#endif
 
 #ifdef DEBUG_PARSING
     TRACE(("parsing top level: char %u of %u (next char '%c')\n",
