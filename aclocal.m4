@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.514 2023/09/06 22:56:40 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.516 2023/10/02 21:23:32 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4621,11 +4621,11 @@ CF_NO_LEAKS_OPTION(valgrind,
 	[USE_VALGRIND])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_WTMP_PATH version: 1 updated: 2023/09/04 16:05:17
+dnl CF_WITH_WTMP_PATH version: 2 updated: 2023/10/02 17:22:48
 dnl -----------------
 dnl Like CF_WITH_UTMP_PATH, but for the wtmp file.
 AC_DEFUN([CF_WITH_WTMP_PATH],[
-AC_ARG_WITH(utmp-path,
+AC_ARG_WITH(wtmp-path,
 	[  --with-wtmp-path=XXX    use XXX rather than auto for wtmp path],
 	[cf_wtmp_path=$withval],
 	[cf_wtmp_path=auto])

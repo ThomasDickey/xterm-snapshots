@@ -8576,9 +8576,9 @@ fi
 UTMP_PATH=$cf_utmp_path
 UTMP_NAME=`echo "$cf_utmp_path" | sed -e 's,^.*/,,'`
 
-# Check whether --with-utmp-path or --without-utmp-path was given.
-if test "${with_utmp_path+set}" = set; then
-  withval="$with_utmp_path"
+# Check whether --with-wtmp-path or --without-wtmp-path was given.
+if test "${with_wtmp_path+set}" = set; then
+  withval="$with_wtmp_path"
   cf_wtmp_path=$withval
 else
   cf_wtmp_path=auto
