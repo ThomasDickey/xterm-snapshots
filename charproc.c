@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1966 2023/09/22 21:57:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1967 2023/10/01 20:01:36 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -468,7 +468,7 @@ static XtResource xterm_resources[] =
     Bres(XtNshowWrapMarks, XtCShowWrapMarks, screen.show_wrap_marks, False),
     Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, False),
     Bres(XtNi18nSelections, XtCI18nSelections, screen.i18nSelections, True),
-    Bres(XtNfastScroll, XtCFastScroll, screen.fastscroll, False),
+    Bres(XtNfastScroll, XtCFastScroll, screen.fastscroll, True),
     Bres(XtNjumpScroll, XtCJumpScroll, screen.jumpscroll, True),
     Bres(XtNkeepClipboard, XtCKeepClipboard, screen.keepClipboard, False),
     Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, True),

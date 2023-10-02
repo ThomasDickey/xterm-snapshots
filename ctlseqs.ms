@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.679 2023/09/24 16:46:59 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.680 2023/10/01 20:24:32 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #385
-.ds RF 2023/09/24
+.ds RF 2023/10/01
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -3861,9 +3861,6 @@ that exiting back to ANSI mode is done by
 resetting private mode \*3\*8 (DECTEK)
 rather than \*(Es\*(Et.
 A real Tektronix 4014 would not respond to either.
-.LP
-The VT320 manual documents DECTEK as private mode \*3\*5; 
-\fI\*(xt\fP matches the VT240 documentation.
 .St
 .IP \\*(Be
 Bell (Ctrl-G).
