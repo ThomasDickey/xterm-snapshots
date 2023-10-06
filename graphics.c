@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.128 2023/09/29 23:16:59 tom Exp $ */
+/* $XTermId: graphics.c,v 1.131 2023/10/06 08:24:24 tom Exp $ */
 
 /*
  * Copyright 2013-2022,2023 by Ross Combs
@@ -627,7 +627,6 @@ init_color_registers(TScreen const *screen, ColorRegister *color_registers)
 unsigned
 get_color_register_count(TScreen const *screen)
 {
-    const int graphics_termid = GraphicsTermId(screen);
     unsigned num_color_registers;
 
     if (screen->numcolorregisters >= 0) {
@@ -653,7 +652,7 @@ get_color_register_count(TScreen const *screen)
      * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
      * dxterm      ?
      */
-    switch (graphics_termid) {
+    switch (screen->graphics_termid) {
     case 125:
 	return 4U;
     case 240:
