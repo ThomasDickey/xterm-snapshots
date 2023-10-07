@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1967 2023/10/01 20:01:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1968 2023/10/06 23:39:21 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -10898,7 +10898,7 @@ VTInitialize(Widget wrequest,
 	    break;
 	case 382:
 	    native_w = 960;
-	    native_h = 750;
+	    native_h = 720;
 	    break;
 	}
 

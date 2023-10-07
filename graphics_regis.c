@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.144 2023/10/01 19:38:59 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.147 2023/10/07 13:07:28 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -1909,8 +1909,13 @@ find_best_xft_font_size(XtermWidget xw,
     if (cp != NULL) {
 	targeth = cp->targeth;
     } else {
-	targeth = maxh * 10U + 5U;
+	targeth = maxh * 8U + 5U;
     }
+
+#define MAX_TARGETH 720U	/* above this level, fontconfig chokes */
+    if (targeth > MAX_TARGETH)
+	targeth = MAX_TARGETH;
+
     for (;;) {
 	if (targeth <= 5U) {
 	    TRACE(("Giving up finding suitable Xft font size for \"%s\" at %ux%u.\n",
@@ -2012,28 +2017,26 @@ find_best_xft_font_size(XtermWidget xw,
 #endif
 
 	if (*h > maxh) {
+	    float ratio = (float) (*h) / (float) maxh;
 	    XftFontClose(display, font);
 #ifdef DEBUG_FONT_SIZE_SEARCH
 	    TRACE(("got %ux%u glyph; too tall; reducing target size\n", *w, *h));
 #endif
-	    if (*h > 2U * maxh) {
-		targeth /= (*h / maxh);
-	    } else if (targeth > 10U && *h > maxh + 1U) {
-		targeth -= 10U;
+	    if (targeth >= 10U && ratio > 1.1) {
+		targeth = (unsigned) ((float) targeth / ratio);
 	    } else {
 		targeth--;
 	    }
 	    continue;
 	}
 	if (*w > maxw) {
+	    float ratio = (float) (*w) / (float) maxw;
 	    XftFontClose(display, font);
 #ifdef DEBUG_FONT_SIZE_SEARCH
 	    TRACE(("got %ux%u glyph; too wide; reducing target size\n", *w, *h));
 #endif
-	    if (*w > 2U * maxw) {
-		targeth /= (*w / maxw);
-	    } else if (targeth > 10U && *w > maxw + 1U) {
-		targeth -= 10U;
+	    if (targeth >= 10U && ratio > 1.1) {
+		targeth = (unsigned) ((float) targeth / ratio);
 	    } else {
 		targeth--;
 	    }
