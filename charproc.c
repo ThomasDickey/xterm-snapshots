@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1968 2023/10/06 23:39:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1971 2023/10/08 23:12:37 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -506,6 +506,7 @@ static XtResource xterm_resources[] =
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
     Ires(XtNlimitResponse, XtCLimitResponse, screen.unparse_max, DEF_LIMIT_RESPONSE),
+    Ires(XtNmaxStringParse, XtCMaxStringParse, screen.strings_max, DEF_STRINGS_MAX),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
     Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, DEF_POINTER_MODE),
@@ -1700,6 +1701,7 @@ struct ParseState {
     int scssize;
     Bool private_function;	/* distinguish private-mode from standard */
     int string_mode;		/* nonzero iff we're processing a string */
+    Bool string_skip;		/* true if we will ignore the string */
     int lastchar;		/* positive iff we had a graphic character */
     int nextstate;
 #if OPT_WIDE_CHARS
@@ -2995,7 +2997,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (screen->brokenLinuxOSC
 	    && sp->parsestate == sos_table) {
-	    if (sp->string_used) {
+	    if (sp->string_used && sp->string_area) {
 		switch (sp->string_area[0]) {
 		case 'P':
 		    if (sp->string_used <= 7)
@@ -3124,25 +3126,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * This should always be 8-bit characters.
 	 */
 	if (sp->parsestate == sos_table) {
-	    SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
-	    if (new_string == 0) {
-		xtermWarning("Cannot allocate %lu bytes for string mode %d\n",
-			     (unsigned long) new_length, sp->string_mode);
-		continue;
-	    }
-	    SafeFree(sp->string_area, sp->string_size);
+	    if (sp->string_skip) {
+		sp->string_used++;
+	    } else if (sp->string_used > screen->strings_max) {
+		sp->string_skip = True;
+		sp->string_used++;
+		FreeAndNull(sp->string_area);
+		sp->string_size = 0;
+	    } else {
+		SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
+		if (new_string == 0) {
+		    xtermWarning("Cannot allocate %lu bytes for string mode %#02x\n",
+				 (unsigned long) new_length, sp->string_mode);
+		    continue;
+		}
+		SafeFree(sp->string_area, sp->string_size);
 #if OPT_WIDE_CHARS
-	    /*
-	     * We cannot display codes above 255, but let's try to
-	     * accommodate the application a little by not aborting the
-	     * string.
-	     */
-	    if ((c & WIDEST_ICHAR) > 255) {
-		sp->nextstate = CASE_PRINT;
-		c = BAD_ASCII;
-	    }
+		/*
+		 * We cannot display codes above 255, but let's try to
+		 * accommodate the application a little by not aborting the
+		 * string.
+		 */
+		if ((c & WIDEST_ICHAR) > 255) {
+		    sp->nextstate = CASE_PRINT;
+		    c = BAD_ASCII;
+		}
 #endif
-	    sp->string_area[(sp->string_used)++] = CharOf(c);
+		sp->string_area[(sp->string_used)++] = CharOf(c);
+	    }
 	} else if (sp->parsestate != esc_table) {
 	    /* if we were accumulating, we're not any more */
 	    sp->string_mode = 0;
@@ -3284,10 +3295,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_BELL:
 	    TRACE(("CASE_BELL - bell\n"));
 	    if (sp->string_mode == ANSI_OSC) {
-		if (sp->string_used)
-		    sp->string_area[--(sp->string_used)] = '\0';
-		if (sp->check_recur <= 1)
-		    do_osc(xw, sp->string_area, sp->string_used, (int) c);
+		if (sp->string_area) {
+		    if (sp->string_used)
+			sp->string_area[--(sp->string_used)] = '\0';
+		    if (sp->check_recur <= 1)
+			do_osc(xw, sp->string_area, sp->string_used, (int) c);
+		}
 		ResetState(sp);
 	    } else {
 		/* bell */
@@ -4827,28 +4840,37 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    if (!sp->string_used)
 		break;
-	    sp->string_area[--(sp->string_used)] = '\0';
-	    if (sp->check_recur <= 1)
-		switch (sp->string_mode) {
-		case ANSI_APC:
-		    /* ignored */
-		    break;
-		case ANSI_DCS:
-		    do_dcs(xw, sp->string_area, sp->string_used);
-		    break;
-		case ANSI_OSC:
-		    do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
-		    break;
-		case ANSI_PM:
-		    /* ignored */
-		    break;
-		case ANSI_SOS:
-		    /* ignored */
-		    break;
-		default:
-		    TRACE(("unknown mode\n"));
-		    break;
+	    if (sp->string_skip) {
+		xtermWarning("Ignoring too-long string (%lu) for mode %#02x\n",
+			     (unsigned long) sp->string_used,
+			     sp->string_mode);
+		sp->string_skip = False;
+		sp->string_used = 0;
+	    } else {
+		sp->string_area[--(sp->string_used)] = '\0';
+		if (sp->check_recur <= 1) {
+		    switch (sp->string_mode) {
+		    case ANSI_APC:
+			/* ignored */
+			break;
+		    case ANSI_DCS:
+			do_dcs(xw, sp->string_area, sp->string_used);
+			break;
+		    case ANSI_OSC:
+			do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
+			break;
+		    case ANSI_PM:
+			/* ignored */
+			break;
+		    case ANSI_SOS:
+			/* ignored */
+			break;
+		    default:
+			TRACE(("unknown mode\n"));
+			break;
+		    }
 		}
+	    }
 	    break;
 
 	case CASE_SOS:
@@ -8481,8 +8503,7 @@ window_ops(XtermWidget xw)
 	    SaveTitle item;
 
 	    TRACE(("...push title onto stack\n"));
-	    item.iconName = NULL;
-	    item.windowName = NULL;
+	    memset(&item, 0, sizeof(item));
 	    switch (zero_if_default(1)) {
 	    case 0:
 		item.iconName = get_icon_label(xw);
@@ -11070,6 +11091,8 @@ VTInitialize(Widget wrequest,
     screen->unparse_bfr = (IChar *) (void *) XtCalloc(screen->unparse_max,
 						      (Cardinal) sizeof(IChar));
 
+    init_Ires(screen.strings_max);
+
     if (screen->savelines < 0)
 	screen->savelines = 0;
 
@@ -11216,13 +11239,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	deleteScrollback(screen);
     }
 
-    while (screen->save_title != 0) {
-	SaveTitle *last = screen->save_title;
-	screen->save_title = last->next;
-	free(last->iconName);
-	free(last->windowName);
-	free(last);
-    }
+    for (n = 0; n < MAX_SAVED_TITLES; ++n)
+	xtermFreeTitle(&screen->saved_titles.data[n]);
+
 #if OPT_STATUS_LINE
     free(screen->status_fmt);
 #endif

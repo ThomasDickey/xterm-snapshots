@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.31 2023/09/04 19:14:55 tom Exp $
+# $XTermId: minstall.in,v 1.32 2023/10/08 21:11:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -130,6 +130,7 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e "s%__mansuffix__%$MY_MANSECT%g" \
 	-e "s%__miscmansuffix__%$X_MANSECT%g" \
 	-e "s%__pixmapsdir__%@PIXMAPDIR@%" \
+	-e "s%__strings_max__%@STRINGS_MAX@%" \
 	-e "s%__utmp_name__%@UTMP_NAME@%g" \
 	-e "s%__utmp_path__%@UTMP_PATH@%g" \
 	-e "s%__wtmp_name__%@WTMP_NAME@%g" \

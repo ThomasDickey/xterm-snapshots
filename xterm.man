@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.891 2023/10/01 20:47:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.896 2023/10/08 23:28:21 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -56,6 +56,7 @@
 .\"
 .\" Updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .\"
+.TH XTERM 1 "__app_date__" "__app_version__" "X Window System"
 .ds N Xterm
 .ds n xterm
 .\"
@@ -64,15 +65,19 @@
 .ie n  .IP \(bu 4
 .el    .IP \(bu 2
 ..
-.\" these would be fallbacks for DS/DE,
-.\" but groff changed the meaning of the macros.
+.ie n .ds CW R
+.el   \{
+.ie \n(.g .ds CW CR
+.el       .ds CW CW
+.\}
+.\" Like EX/EE, but accounting for paragraph spacing.
 .de NS
 .ie n  .sp
 .el    .sp .5
 .ie n  .in +4
 .el    .in +2
 .nf
-.ft CR			\" Courier
+.ft \*(CW
 ..
 .de NE
 .fi
@@ -81,13 +86,19 @@
 .el    .in -2
 ..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
-.ie \n(.g .ds AQ \(aq
-.el       .ds AQ '
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
-.TH XTERM 1 "__app_date__" "__app_version__" "X Window System"
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.ds AQ \(aq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.ie t .ds AQ \(aq
+.el   .ds AQ '
+.\}",
 .SH NAME
 xterm \-
 terminal emulator for X
@@ -4204,6 +4215,34 @@ r r.
 860x750	382
 800x480	\fIother\fP
 .TE
+.TP 8
+.B "maxStringParse\fP (class\fB MaxStringParse\fP)"
+\fI\*N\fP's state parser recognizes
+several types of control strings which can contain text, e.g.,
+.sp
+.RS
+\fBAPC\fP (Application Program Command),
+.br
+\fBDCS\fP (Device Control String),
+.br
+\fBOSC\fP (Operating System Command),
+.br
+\fBPM\fP (Privacy Message), and
+.br
+\fBSOS\fP (Start of String),
+.RE
+.IP
+\fI\*N\fP reads these strings,
+accumulating them into a buffer until they are properly terminated.
+At that point, \fI\*n\fP interprets the strings.
+If they happen to be \fBDCS\fP commands to draw ReGIS or SIXEL images,
+these strings may be large, in the hundreds of kilobytes.
+A few \fBOSC\fP commands may be as large as 10 kilobytes.
+.IP
+This resource sets a limit on the size of the buffer used for these strings.
+The default is \*(``__strings_max__\*('' based on the features which are
+configured for \fI\*n\fP.
+Control strings which require larger buffer size are ignored.
 .TP 8
 .B "metaSendsEscape\fP (class\fB MetaSendsEscape\fP)"
 Tells \fI\*n\fP what to do with input-characters modified by \fIMeta\fP:

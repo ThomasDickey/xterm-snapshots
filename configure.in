@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.396 2023/09/04 19:38:36 tom Exp $
+dnl $XTermId: configure.in,v 1.397 2023/10/08 21:19:03 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1090,7 +1090,11 @@ if test "$enable_regis_graphics" = yes || test "$enable_sixel_graphics" = yes ; 
 	EXTRAHDRS="$EXTRAHDRS graphics.h"
 	EXTRASRCS="$EXTRASRCS graphics.c"
 	EXTRAOBJS="$EXTRAOBJS graphics.o"
+	STRINGS_MAX=600000
+else
+	STRINGS_MAX=20000
 fi
+AC_SUBST(STRINGS_MAX)
 
 AC_MSG_CHECKING(if you want sixel screen dump support)
 CF_ARG_DISABLE(print-graphics,

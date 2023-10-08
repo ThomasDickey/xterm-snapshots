@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.147 2023/10/07 13:07:28 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.149 2023/10/08 23:11:35 tom Exp $ */
 
 /*
  * Copyright 2014-2022,2023 by Ross Combs
@@ -66,8 +66,8 @@
 #undef DEBUG_SPECIFIC_CHAR_METRICS
 #define IS_DEBUG_CHAR(CH) ((CH) == 'W')		/* glyphs to dump to terminal */
 #undef DEBUG_COMPUTED_FONT_METRICS
-#define DEBUG_FONT_NAME
-#define DEBUG_FONT_SIZE_SEARCH
+#undef DEBUG_FONT_NAME
+#undef DEBUG_FONT_SIZE_SEARCH
 #undef DEBUG_XFT_GLYPH_COPY
 #undef DEBUG_GLYPH_RETRIEVAL
 #undef DEBUG_XFT_GLYPH_LOADING
@@ -1969,14 +1969,6 @@ find_best_xft_font_size(XtermWidget xw,
 	    }
 	}
 	if (!font) {
-#ifdef DEBUG_FONT_SIZE_SEARCH
-	    {
-		char buffer[1024];
-
-		if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer)))
-		    printf("font name unparsed: \"%s\"\n", buffer);
-	    }
-#endif
 	    TRACE(("unable to open a monospaced Xft font matching \"%s\" with pixelsize %g\n",
 		   fontname, targeth / 10.0));
 	    return NULL;
@@ -2091,17 +2083,15 @@ find_best_xft_font_size(XtermWidget xw,
 		cp = &font_cache[ii];
 		close_xft_font(xw, cp->font_data);
 	    }
-	    if (cp != NULL) {
-		CopyFontname(cp->fontname, fontname);
-		cp->maxw = maxw;
-		cp->maxh = maxh;
-		cp->max_pixels = max_pixels;
-		cp->targeth = targeth;
-		cp->w = *w;
-		cp->h = *h;
-		cp->xmin = *xmin;
-		cp->ymin = *ymin;
-	    }
+	    CopyFontname(cp->fontname, fontname);
+	    cp->maxw = maxw;
+	    cp->maxh = maxh;
+	    cp->max_pixels = max_pixels;
+	    cp->targeth = targeth;
+	    cp->w = *w;
+	    cp->h = *h;
+	    cp->xmin = *xmin;
+	    cp->ymin = *ymin;
 	}
 	if (cp != NULL) {
 	    cp->font_data = font;

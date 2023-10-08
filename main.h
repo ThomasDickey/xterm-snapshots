@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.83 2023/04/27 08:10:24 tom Exp $ */
+/* $XTermId: main.h,v 1.84 2023/10/08 21:18:54 tom Exp $ */
 
 /*
  * Copyright 2000-2022,2023 by Thomas E. Dickey
@@ -237,6 +237,14 @@
 
 #ifndef DEF_SL_FORMAT
 #define DEF_SL_FORMAT           "%{version%}  %{position%}  %{unixtime%}"
+#endif
+
+#ifndef DEF_STRINGS_MAX
+#if OPT_REGIS_GRAPHICS || OPT_SIXEL_GRAPHICS
+#define DEF_STRINGS_MAX		600000
+#else
+#define DEF_STRINGS_MAX		20000
+#endif
 #endif
 
 #ifndef DEF_TITLE_MODES

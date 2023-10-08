@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1098 2023/09/22 22:00:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1099 2023/10/08 21:05:02 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2357,6 +2357,7 @@ typedef struct {
 	IChar		*unparse_bfr;
 	unsigned	unparse_len;
 	unsigned	unparse_max;	/* limitResponse resource	*/
+	unsigned	strings_max;	/* maxStringParse resource	*/
 
 #if OPT_TCAP_QUERY
 	int		tc_query_code;

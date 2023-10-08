@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.936 2023/09/22 07:53:15 tom Exp $ */
+/* $XTermId: xterm.h,v 1.937 2023/10/08 21:02:00 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -578,6 +578,7 @@ extern char **environ;
 #define XtNmarginBell		"marginBell"
 #define XtNmaxBufSize		"maxBufSize"
 #define XtNmaxGraphicSize	"maxGraphicSize"
+#define XtNmaxStringParse	"maxStringParse"
 #define XtNmaximized		"maximized"
 #define XtNmenuBar		"menuBar"	/* internal */
 #define XtNmenuHeight		"menuHeight"
@@ -834,6 +835,7 @@ extern char **environ;
 #define XtCMarginBell		"MarginBell"
 #define XtCMaxBufSize		"MaxBufSize"
 #define XtCMaxGraphicSize	"MaxGraphicSize"
+#define XtCMaxStringParse	"MaxStringParse"
 #define XtCMaximized		"Maximized"
 #define XtCMenuBar		"MenuBar"	/* internal */
 #define XtCMenuHeight		"MenuHeight"

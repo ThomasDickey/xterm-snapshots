@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.777 2023/07/13 19:57:36 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.778 2023/10/08 23:15:50 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -4571,9 +4571,8 @@ findXftGlyph(XtermWidget xw, XTermXftFonts *fontData, unsigned wc)
 		    TRACE_FALLBACK(xw, "new", wc, result, actual);
 		    break;
 		} else {
-		    Bool ok;
 		    if (defer >= 0
-			&& (ok = !slowXftMissing(xw, check, wc))
+			&& !slowXftMissing(xw, check, wc)
 			&& checkXftGlyph(xw, check, wc)) {
 			XTermFontMap *font_map = &(fontData->font_map);
 			TRACE(("checkrecover2 %d\n", n));
