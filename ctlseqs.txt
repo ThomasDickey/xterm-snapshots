@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #385 (2023/10/01)
+               updated for XTerm Patch #385 (2023/10/09)
 
 
 
@@ -616,7 +616,7 @@ CSI ? Pi ; Pa ; Pv S
               sizes, but disallows modifying those sizes because that is
               done once, using resource-values.
           o   Graphics geometry is not necessarily the same as "window
-              size" (see the dtterm window manipulation extensions).
+              size" (see the XTWINOPS window manipulation extensions).
               XTerm limits the maximum graphics geometry according to
               the maxGraphicSize resource.
               The maxGraphicSize resource can be either an explicit
@@ -1774,13 +1774,15 @@ Operating System Commands
 OSC Ps ; Pt BEL
 
 OSC Ps ; Pt ST
-          Set Text Parameters.  Some control sequences return
+          Set Text Parameters, xterm.  Some control sequences return
           information:
           o   For colors and font, if Pt is a "?", the control sequence
               elicits a response which consists of the control sequence
               which would set the corresponding value.
-          o   The dtterm control sequences allow you to determine the
-              icon name and window title.
+          o   A few of these control sequences began with dtterm (codes
+              0 , 1 , and 2 ).  Code 3  in dtterm sets the working
+              directory for the next session.  XTerm does that with the
+              spawn-new-terminal action.
 
           XTerm accepts either BEL  or ST  for terminating OSC
           sequences, and when returning information, uses the same
@@ -1849,6 +1851,25 @@ OSC Ps ; Pt ST
           list.  The colors are specified by name or RGB specification
           as per XParseColor.
 
+               Resource                 Description
+               -----------------------+-----------------------------
+               foreground             | VT100 text foreground color
+               background             | VT100 text background color
+               cursorColor            | text cursor color
+               pointerColor           | pointer foreground color
+               pointerColorBackground | pointer background
+               (foreground)           | Tektronix foreground color
+               (background)           | Tektronix background color
+               highlightColor         | highlight background color
+               (cursorColor)          | Tektronix cursor color
+               highlightTextColor     | highlight foreground color
+               -----------------------+-----------------------------
+
+
+          The Tektronix colors are initially set from the VT100 colors,
+          but after that can be set independently using these control
+          sequences.
+
           If a "?" is given rather than a name or RGB specification,
           xterm replies with a control sequence of the same form which
           can be used to set the corresponding dynamic color.  Because
@@ -1867,10 +1888,14 @@ OSC Ps ; Pt ST
             Ps = 1 8  -> Change Tektronix cursor color to Pt.
             Ps = 1 9  -> Change highlight foreground color to Pt.
 
-            Ps = 2 2  -> Change pointer cursor to Pt.
+            Ps = 2 2  -> Change pointer cursor shape to Pt.  The
+          parameter Pt sets the pointerShape resource.  If Pt is empty,
+          or does not match any of the standard names, n  uses the
+          resource's default "xterm" shape.
 
-            Ps = 4 6  -> Change Log File to Pt.  This is normally
-          disabled by a compile-time option.
+            Ps = 4 6  -> Change Log File to Pt.  The parameter Pt sets
+          the logFile resource.  Logging is normally disabled by a
+          compile-time option.
 
             Ps = 5 0  -> Set Font to Pt.  These controls may be disabled
           using the allowFontOps resource.  If Pt begins with a "#",
@@ -2014,8 +2039,8 @@ XTerm detects all of these keys via X key-press and key-release events.
 It uses the translations resource to decide what to do with these
 events.
 
-o   Ordinary keys are handled with the insert-seven-bit or insert-eight-
-    bit action.
+o   Ordinary keys are handled with the insert-seven-bit action, or the
+    insert-eight-bit action.
 
 o   Special keys may be handled with other resources.  However, xterm
     also has built-in logic to map commonly-used special keys into
@@ -3436,7 +3461,7 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         Most Dec Private mode settings can be saved away internally
         using \E[?ns, where n is the same number to set or reset the Dec
         Private mode.  The mode can be restored using \E[?nr.  This can
-        be used in termcap for vi, for example, to turn off saving of
+        be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
     while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and

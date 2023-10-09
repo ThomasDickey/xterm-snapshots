@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.680 2023/10/01 20:24:32 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.690 2023/10/09 12:41:18 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #385
-.ds RF 2023/10/01
+.ds RF 2023/10/09
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -126,10 +126,20 @@
 .br
 ..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
-.ie \n(.g .ds `` \(lq
-.el       .ds `` ``
-.ie \n(.g .ds '' \(rq
-.el       .ds '' ''
+.ie \n(.g \{\
+.ds `` \(lq
+.ds '' \(rq
+.ds AQ \(aq
+.\}
+.el \{\
+.ie t .ds `` ``
+.el   .ds `` ""
+.ie t .ds '' ''
+.el   .ds '' ""
+.ie t .ds AQ \(aq
+.el   .ds AQ '
+.\}",
+.
 .ds CH \" as nothing
 .ds LH \*(XT Control Sequences
 .nr s 6*\n(PS/10
@@ -1141,7 +1151,7 @@ but disallows modifying those sizes because that is done once,
 using resource-values.
 .bP
 Graphics geometry is not necessarily the same as \*(``window size\*(''
-(see the \fBdtterm\fP window manipulation extensions).
+(see the \fBXTWINOPS\fP window manipulation extensions).
 \fI\*(XT\fP limits the maximum graphics geometry
 according to the \fBmaxGraphicSize\fP resource.
 .IP
@@ -2478,7 +2488,7 @@ Select status line type (DECSSDT), VT320 and up.
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
 .iP
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
-Set Text Parameters.
+Set Text Parameters, \fI\*(xt\fP.
 Some control sequences return information:
 .RS
 .bP
@@ -2487,11 +2497,13 @@ if \*(Pt is a \*(``?\*('',
 the control sequence elicits a response which consists
 of the control sequence which would set the corresponding value.
 .bP
-The \fIdtterm\fP control sequences allow you to determine the icon name
-and window title.
+A few of these control sequences began with \fIdtterm\fP
+(codes \*0, \*1, and \*2).
+Code \*3 in \fIdtterm\fP sets the working directory for the next session.
+\fI\*(XT\fP does that with the \fBspawn\-new\-terminal\fP action.
 .RE
 .sP
-\*(XT accepts either \*(Be or \*(ST for terminating \*(Os sequences,
+\fI\*(XT\fP accepts either \*(Be or \*(ST for terminating \*(Os sequences,
 and when returning information, uses the same terminator used in a query.
 While the latter is preferred,
 the former is supported for legacy applications:
@@ -2565,6 +2577,29 @@ At least one parameter is expected for \*(Pt.
 Each successive parameter changes the next color in the list.
 The value of \*(Ps tells the starting point in the list.
 The colors are specified by name or RGB specification as per \fIXParseColor\fP.
+.TS H
+center;
+lf3w(2c)	lf3w(2c) .
+Resource	Description
+_
+.TH
+.T&
+l | l .
+\fBforeground\fP	VT100 text foreground color
+\fBbackground\fP	VT100 text background color
+\fBcursorColor\fP	text cursor color
+\fBpointerColor\fP	pointer foreground color
+\fBpointerColorBackground\fP	pointer background
+(\fBforeground\fP)	Tektronix foreground color
+(\fBbackground\fP)	Tektronix background color
+\fBhighlightColor\fP	highlight background color
+(\fBcursorColor\fP)	Tektronix cursor color
+\fBhighlightTextColor\fP	highlight foreground color
+_
+.TE
+.sP
+The Tektronix colors are initially set from the VT100 colors,
+but after that can be set independently using these control sequences.
 .sP
 If a \*(``?\*('' is given rather than a name or RGB specification,
 \fI\*(xt\fP replies with a control sequence of the same form which can be used
@@ -2583,10 +2618,14 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt.
   \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt.
 .sp
-  \*(Ps = \*2\*2 \(-> Change pointer cursor to \*(Pt.
+  \*(Ps = \*2\*2 \(-> Change pointer cursor shape to \*(Pt.
+The parameter \*(Pt sets the \fBpointerShape\fP resource.
+If \*(Pt is empty, or does not match any of the standard names,
+\fI\*n\fP uses the resource's default \*(``xterm\*('' shape.
 .sP
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt.
-This is normally disabled by a compile-time option.
+The parameter \*(Pt sets the \fBlogFile\fP resource.
+Logging is normally disabled by a compile-time option.
 .sP
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt.
 These controls may be disabled using the \fBallowFontOps\fP resource.
@@ -2746,8 +2785,8 @@ special keys, which you would use to tell \fI\*(xt\fP to perform some action.
 It uses the \fBtranslations\fP resource to decide what to do with these events.
 .bP
 Ordinary keys are handled with the
-\fBinsert-seven-bit\fP or
-\fBinsert-eight-bit\fP action.
+\fB\%insert\-seven\-bit\fP action, or the
+\fB\%insert\-eight\-bit\fP action.
 .bP
 Special keys may be handled with other resources.
 However, \fI\*(xt\fP also has built-in logic to map commonly-used
@@ -4523,7 +4562,7 @@ The latter was introduced in X10.4 (December 1986):
 Most Dec Private mode settings can be saved away internally using \\E[?\fIn\fPs,
 where \fIn\fP is the same number to set or reset the Dec Private mode.
 The mode can be restored using \\E[?\fIn\fPr.
-This can be used in termcap for \fBvi\fP,
+This can be used in termcap for \fBvi\fP(1),
 for example, to turn off saving of lines,
 but restore whatever the original state was on exit.
 .ad
