@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1057 2023/09/22 23:18:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.1058 2023/10/11 21:54:32 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -7612,13 +7612,11 @@ xtermInitTitle(TScreen *screen, int which)
 void
 xtermPushTitle(TScreen *screen, int which, SaveTitle * item)
 {
-    if (which-- > 0) {
-	which %= MAX_SAVED_TITLES;
-    } else {
-	screen->saved_titles.used++;
+    if (which-- <= 0) {
+	which = screen->saved_titles.used++;
 	screen->saved_titles.used %= MAX_SAVED_TITLES;
-	which = screen->saved_titles.used;
     }
+    which %= MAX_SAVED_TITLES;
     xtermFreeTitle(&screen->saved_titles.data[which]);
     screen->saved_titles.data[which] = *item;
     TRACE(("xtermPushTitle #%d: icon='%s', window='%s'\n", which,
