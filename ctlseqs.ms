@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.690 2023/10/09 12:41:18 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.693 2023/10/12 08:17:28 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #385
-.ds RF 2023/10/09
+.ds LF Patch #387
+.ds RF 2023/10/12
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -329,6 +329,7 @@
 .ds Pt \fIP\v'.3m'\h'-.2m'\s-2t\s0\v'-.3m'\fP
 .ds Pu \fIP\v'.3m'\h'-.2m'\s-2u\s0\v'-.3m'\fP
 .ds Pv \fIP\v'.3m'\h'-.2m'\s-2v\s0\v'-.3m'\fP
+.ds Pw \fIP\v'.3m'\h'-.2m'\s-2w\s0\v'-.3m'\fP
 .ds Px \fIP\v'.3m'\h'-.2m'\s-2x\s0\v'-.3m'\fP
 .ds Py \fIP\v'.3m'\h'-.2m'\s-2y\s0\v'-.3m'\fP
 .ds Ix \fIx\fP
@@ -2237,6 +2238,21 @@ Set margin-bell volume (DECSMBV), VT520.
   \*(Ps = \*2, \*3 or \*4 \(-> low.
 .
 .iP
+.IP \\*(Cs\\*(Dq\\*v
+Request Displayed Extent (DECRQDE), VT340, VT420.
+.br
+Response is
+.br
+  \*(Cs\*(Ph\*;\*(Pw\*;\*(Pc\*;\*(Pr\*;\*(Pp\*s\*(Dq\*v
+.br
+where
+  \*(Ph is the number of lines of the current page
+  \*(Pw is the number of columns of the current page
+  \*(Pc is the column number at the top-left of the window
+  \*(Pr is the row number at the top-left of the window
+  \*(Pp is the current page number
+.
+.iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pp\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pp\\*s\\*$\\*v
 Copy Rectangular Area (DECCRA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
@@ -4097,8 +4113,11 @@ However long, the technical manuals have problems:
 DEC's manuals did not provide a comprehensive comparison of the features
 in different model.
 .IP
-Peter Sichel's \fIHost Interface Functions Checklist\fP
-spreadsheet is useful for noting
+.\" https://invisible-island.net/xterm/ctlseqs/dec_term_function_checklist.pdf
+\fIHost Interface Functions Checklist\fP
+by Peter Sichel (January 12, 1994)
+is helpful.
+This spreadsheet is useful for noting
 which model introduced a given feature (although there are a few apparent
 errors such as the DECRQSS feature cited for VT320
 whereas the technical manual omits it).

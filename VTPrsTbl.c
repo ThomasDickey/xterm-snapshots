@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.106 2022/11/25 01:19:18 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.107 2023/10/11 22:41:12 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1539,7 +1539,7 @@ CASE_GROUND_STATE,
 /*	t		u		v		w	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECRQDE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
 CASE_GROUND_STATE,
@@ -1699,7 +1699,7 @@ CASE_GROUND_STATE,
 /*      ocircumflex     otilde          odiaeresis      division        */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECRQDE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */
 CASE_GROUND_STATE,

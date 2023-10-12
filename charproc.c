@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1971 2023/10/08 23:12:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1972 2023/10/11 22:58:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -5278,6 +5278,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (value >= 1 && value <= 255) {
 		    RequestResize(xw, value, -1, True);
 		}
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECRQDE:
+	    if (screen->vtXX_level >= 3) {
+		init_reply(ANSI_CSI);
+		count = 0;
+		reply.a_param[count++] = MaxRows(screen);	/* number of lines */
+		reply.a_param[count++] = MaxCols(screen);	/* number of columns */
+		reply.a_param[count++] = 1;	/* current page column */
+		reply.a_param[count++] = 1;	/* current page line */
+		reply.a_param[count++] = 1;	/* current page */
+		reply.a_inters = '"';
+		reply.a_final = 'w';
+		reply.a_nparam = (ParmType) count;
+		unparseseq(xw, &reply);
 	    }
 	    ResetState(sp);
 	    break;
