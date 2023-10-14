@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1099 2023/10/08 21:05:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1102 2023/10/14 00:07:30 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1037,6 +1037,7 @@ typedef enum {
     ,nrc_DEC_Supp		/* vt2xx */
     ,nrc_DEC_Supp_Graphic	/* vt3xx */
     ,nrc_DEC_Technical		/* vt3xx */
+    ,nrc_DEC_UPSS		/* vt3xx */
     ,nrc_Dutch			/* vt2xx */
     ,nrc_Finnish		/* vt2xx */
     ,nrc_Finnish2		/* vt2xx */
@@ -1052,7 +1053,7 @@ typedef enum {
     ,nrc_Hebrew			/* vt5xx */
     ,nrc_ISO_Hebrew_Supp	/* vt5xx */
     ,nrc_Italian		/* vt2xx */
-    ,nrc_ISO_Latin_1_Supp	/* vt5xx */
+    ,nrc_ISO_Latin_1_Supp	/* vt3xx */
     ,nrc_ISO_Latin_2_Supp	/* vt5xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */
     ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
@@ -1070,6 +1071,12 @@ typedef enum {
     ,nrc_Turkish		/* vt5xx */
     ,nrc_Unknown
 } DECNRCM_codes;
+
+/*
+ * Default and alternate codes for user-preferred supplemental set.
+ */
+#define DFT_UPSS nrc_DEC_Supp_Graphic
+#define ALT_UPSS nrc_ISO_Latin_1_Supp
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
@@ -2158,6 +2165,7 @@ typedef struct {
 } ScrnColors;
 
 #define NUM_GSETS 4
+#define NUM_GSETS2 (NUM_GSETS + 1)	/* include user-preferred */
 
 #define SAVED_CURSORS 2
 
@@ -2168,7 +2176,7 @@ typedef struct {
 	IFlags		flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
-	DECNRCM_codes	gsets[NUM_GSETS];
+	DECNRCM_codes	gsets[NUM_GSETS2];
 	Boolean		wrap_flag;
 #if OPT_ISO_COLORS
 	int		cur_foreground;  /* current foreground color	*/
@@ -2719,7 +2727,7 @@ typedef struct {
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	DECNRCM_codes	gsets[NUM_GSETS]; /* G0 through G3.		*/
+	DECNRCM_codes	gsets[NUM_GSETS2]; /* G0 through G3, plus UPSS	*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
@@ -2836,7 +2844,7 @@ typedef struct {
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
-	DECNRCM_codes	vt52_save_gsets[NUM_GSETS];
+	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH

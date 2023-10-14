@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1972 2023/10/11 22:58:34 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1979 2023/10/14 14:27:43 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1219,7 +1219,7 @@ void
 saveCharsets(TScreen *screen, DECNRCM_codes * target)
 {
     int g;
-    for (g = 0; g < NUM_GSETS; ++g) {
+    for (g = 0; g < NUM_GSETS2; ++g) {
 	target[g] = screen->gsets[g];
     }
 }
@@ -1228,7 +1228,7 @@ void
 restoreCharsets(TScreen *screen, DECNRCM_codes * source)
 {
     int g;
-    for (g = 0; g < NUM_GSETS; ++g) {
+    for (g = 0; g < NUM_GSETS2; ++g) {
 	screen->gsets[g] = source[g];
     }
 }
@@ -1236,12 +1236,32 @@ restoreCharsets(TScreen *screen, DECNRCM_codes * source)
 void
 resetCharsets(TScreen *screen)
 {
+    int dft_upss = (screen->vtXX_level >= 2) ? DFT_UPSS : nrc_ASCII;
+
+#if OPT_WIDE_CHARS
+    /*
+     * User-preferred selection set makes a choice between ISO-8859-1 and
+     * a precursor to it.  Those are both single-byte encodings.  Because the
+     * multibyte UTF-8 equates to ISO-8859-1, the default (DEC Supplemental)
+     * cannot be used as a default in UTF-8 mode.  But we cannot use ISO-8859-1
+     * either, because that would break the special case in decodeUtf8() that
+     * checks if NRCS is being used, passing 8-bit characters as is.
+     *
+     * In short, UPSS is not available with UTF-8, but DECRQUPSS will say that
+     * ISO-Latin1 is selected.
+     */
+    if (screen->wide_chars && (screen->utf8_mode || screen->utf8_nrc_mode)) {
+	dft_upss = nrc_ASCII;
+    }
+#endif
+
     TRACE(("resetCharsets\n"));
 
     initCharset(screen, 0, nrc_ASCII);
     initCharset(screen, 1, nrc_ASCII);
-    initCharset(screen, 2, nrc_ASCII);
-    initCharset(screen, 3, nrc_ASCII);
+    initCharset(screen, 2, dft_upss);
+    initCharset(screen, 3, dft_upss);
+    initCharset(screen, 4, dft_upss);
 
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
@@ -1397,6 +1417,7 @@ static const struct {
 	,DATA(cigtable)
 	,DATA(csi2_table)
 	,DATA(csi_ex_table)
+	,DATA(csi_amp_table)
 	,DATA(csi_quo_table)
 	,DATA(csi_table)
 	,DATA(dec2_table)
@@ -1768,7 +1789,7 @@ static const struct {
     { nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
     { nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
     /* VT2xx */
-    { nrc_DEC_Supp,          0,   '<', 2, 9, 0 },
+    { nrc_DEC_Supp,          0,   '<', 2, 2, 0 },
     { nrc_Dutch,             0,   '4', 2, 9, 1 },
     { nrc_Finnish,           0,   '5', 2, 9, 1 },
     { nrc_Finnish2,          0,   'C', 2, 9, 1 },
@@ -1784,6 +1805,7 @@ static const struct {
     { nrc_Swedish2,          0,   'H', 2, 9, 1 },
     { nrc_Swiss,             0,   '=', 2, 9, 1 },
     /* VT3xx */
+    { nrc_DEC_UPSS,          0,   '<', 3, 9, 0 },
     { nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
     { nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
     { nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
@@ -5138,6 +5160,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #endif /* OPT_DEC_LOCATOR */
 
+	case CASE_CSI_AMP_STATE:
+	    TRACE(("CASE_CSI_AMP_STATE\n"));
+	    /* csi ampersand (&) */
+	    if (screen->vtXX_level >= 3)
+		sp->parsestate = csi_amp_table;
+	    else
+		sp->parsestate = eigtable;
+	    break;
+
 #if OPT_DEC_RECTOPS
 	case CASE_CSI_DOLLAR_STATE:
 	    TRACE(("CASE_CSI_DOLLAR_STATE\n"));
@@ -5286,8 +5317,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level >= 3) {
 		init_reply(ANSI_CSI);
 		count = 0;
-		reply.a_param[count++] = MaxRows(screen);	/* number of lines */
-		reply.a_param[count++] = MaxCols(screen);	/* number of columns */
+		reply.a_param[count++] = (ParmType) MaxRows(screen);	/* number of lines */
+		reply.a_param[count++] = (ParmType) MaxCols(screen);	/* number of columns */
 		reply.a_param[count++] = 1;	/* current page column */
 		reply.a_param[count++] = 1;	/* current page line */
 		reply.a_param[count++] = 1;	/* current page */
@@ -5372,6 +5403,26 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		}
 	    }
 	    ResetState(sp);
+	    break;
+
+	case CASE_DECRQUPSS:
+	    TRACE(("CASE_DECRQUPSS\n"));
+	    if (screen->vtXX_level >= 3) {
+		Bool dft_upss = (screen->gsets[4] == DFT_UPSS);
+		init_reply(ANSI_DCS);
+		count = 0;
+		reply_char(count, dft_upss ? '0' : '1');
+		reply_char(count, '!');
+		reply_char(count, 'u');
+		if (dft_upss) {
+		    reply_char(count, '%');
+		    reply_char(count, '5');
+		} else {
+		    reply_char(count, 'A');
+		}
+		reply.a_nparam = (ParmType) count;
+		unparseseq(xw, &reply);
+	    }
 	    break;
 
 	case CASE_RQM:

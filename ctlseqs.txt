@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #387 (2023/10/12)
+               updated for XTerm Patch #387 (2023/10/14)
 
 
 
@@ -315,6 +315,7 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
           There are a few other 94-character sets:
             C = 0  -> DEC Special Character and Line Drawing Set, VT100.
             C = <  -> DEC Supplemental, VT200.
+            C = <  -> User Preferred Selection Set, VT300.
             C = >  -> DEC Technical, VT300.
           These are documented as 94-character sets (like USASCII)
           without NRCS:
@@ -412,6 +413,12 @@ DCS Ps ; Ps | Pt ST
           denoting the key-code separated by a "/" from the hex-encoded
           key value.  The key codes correspond to the DEC function-key
           codes (e.g., F6=17).
+
+DCS Ps! u Pt ST
+          Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320.
+          XTerm ignores this in UTF-8 mode.
+            DCS 0 ! u % 5 ST  -> DEC Supplemental Graphic
+            DCS 1 ! u A ST    -> ISO Latin-1 supplemental
 
 DCS $ q Pt ST
           Request Status String (DECRQSS), VT420 and up.
@@ -1556,6 +1563,11 @@ CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
             Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
+
+CSI & u   User-Preferred Supplemental Set (DECRQUPSS), VT320.  Response
+          is DECAUPSS:
+            DCS 0 ! u % 5 ST  -> DEC Supplemental Graphic
+            DCS 1 ! u A ST    -> ISO Latin-1 supplemental
 
 CSI Ps SP u
           Set margin-bell volume (DECSMBV), VT520.

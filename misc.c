@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1058 2023/10/11 21:54:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.1061 2023/10/14 14:24:47 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4608,7 +4608,6 @@ parse_decdld(ANSI *params, const char *string)
 #define parse_decdld(p,q)	/* nothing */
 #endif
 
-#if OPT_DEC_RECTOPS
 static const char *
 skip_params(const char *cp)
 {
@@ -4617,6 +4616,7 @@ skip_params(const char *cp)
     return cp;
 }
 
+#if OPT_DEC_RECTOPS
 static int
 parse_int_param(const char **cp)
 {
@@ -4765,9 +4765,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     const char *cp = (const char *) dcsbuf;
     Bool okay;
     ANSI params;
-#if OPT_DEC_RECTOPS
     char psarg = '0';
-#endif
 
     TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
 
@@ -5034,8 +5032,28 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #endif
 	}
 	break;
-#if OPT_DEC_RECTOPS
+    case '0':
+	/* FALLTHRU */
     case '1':
+	if (screen->vtXX_level >= 3 && *skip_params(cp) == '!') {
+	    psarg = *cp++;
+	    if (*cp++ == '!') {
+#if OPT_WIDE_CHARS
+		if (screen->wide_chars && screen->utf8_mode) {
+		    ;		/* EMPTY */
+		} else
+#endif
+		if (!strcmp(cp, "u%5") && psarg == '0') {
+		    screen->gsets[4] = DFT_UPSS;
+		    TRACE(("DECAUPSS (default)\n"));
+		} else if (!strcmp(cp, "uA") && psarg == '1') {
+		    TRACE(("DECAUPSS (alternate)\n"));
+		    screen->gsets[4] = ALT_UPSS;
+		}
+	    }
+	    break;
+	}
+#if OPT_DEC_RECTOPS
 	/* FALLTHRU */
     case '2':
 	if (*skip_params(cp) == '$') {

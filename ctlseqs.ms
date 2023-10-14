@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.693 2023/10/12 08:17:28 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.695 2023/10/14 10:24:47 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #387
-.ds RF 2023/10/12
+.ds RF 2023/10/14
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -729,6 +729,7 @@ used by the VT300-control for the 96-character British Latin-1.
 There are a few other 94-character sets:
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set, VT100.
   \*(Cc = \*< \(-> DEC Supplemental, VT200.
+  \*(Cc = \*< \(-> User Preferred Selection Set, VT300.
   \*(Cc = \*> \(-> DEC Technical, VT300.
 .br
 These are documented as 94-character sets (like USASCII) without NRCS:
@@ -874,6 +875,13 @@ The second parameter:
 The third parameter is a \*(``;\*(''-separated list of strings denoting
 the key-code separated by a \*(``/\*('' from the hex-encoded key value.
 The key codes correspond to the DEC function-key codes (e.g., F6=17).
+.
+.iP
+.IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
+Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320.
+\fI\*(XT\fP ignores this in UTF-8 mode.
+  \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic
+  \*(Dc\*1\*!\*u\*A\*(ST	\(-> ISO Latin-1 supplemental
 .
 .iP
 .IP \\*(Dc\\*$\\*q\\*(Pt\\*s\\*(ST
@@ -2229,6 +2237,13 @@ Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
 .iP
 .IP \\*(Cs\\*u
 Restore cursor (SCORC, also ANSI.SYS).
+.
+.iP
+.IP \\*(Cs\\*&\\*u
+User-Preferred Supplemental Set (DECRQUPSS), VT320.
+Response is DECAUPSS:
+  \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic
+  \*(Dc\*1\*!\*u\*A\*(ST	\(-> ISO Latin-1 supplemental
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*u

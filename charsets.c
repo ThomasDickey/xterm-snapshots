@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.113 2020/12/25 15:15:37 tom Exp $ */
+/* $XTermId: charsets.c,v 1.115 2023/10/14 13:38:24 tom Exp $ */
 
 /*
- * Copyright 1998-2019,2020 by Thomas E. Dickey
+ * Copyright 1998-2020,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1419,6 +1419,11 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 
     (void) screen;
     switch (charset) {
+    case nrc_DEC_UPSS:
+	if (screen->gsets[4] == nrc_DEC_Supp)
+	    goto UPSS_DEC;
+	/* ISO-Latin1 needs no special treatment */
+	break;
     case nrc_British:		/* United Kingdom set (or Latin 1)      */
 	if (code == XK_sterling)
 	    code = 0x23;
@@ -1433,6 +1438,7 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
     case nrc_DEC_Spec_Graphic:
 	break;
 
+      UPSS_DEC:
     case nrc_DEC_Supp:
 	map_DEC_Supp_Graphic(code, code &= 0x7f);
 	break;
@@ -1613,6 +1619,10 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    continue;
 
 	switch (cs) {
+	case nrc_DEC_UPSS:
+	    if (screen->gsets[4] == nrc_DEC_Supp)
+		goto UPSS_DEC;
+	    /* FALLTHRU */
 	case nrc_ISO_Latin_1_Supp:
 	    /* FALLTHRU */
 	case nrc_British_Latin_1:
@@ -1656,6 +1666,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    }
 	    break;
 
+	  UPSS_DEC:
 	case nrc_DEC_Supp:
 	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;

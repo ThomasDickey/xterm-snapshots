@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.67 2023/10/11 22:33:14 tom Exp $
+# $XTermId: VTparse.def,v 1.68 2023/10/12 22:05:29 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -222,3 +222,5 @@ CASE_DECSSDT
 CASE_DECSASD
 CASE_XTERM_REPORT_MOD_FKEYS	# XTQMODKEYS
 CASE_DECRQDE
+CASE_DECRQUPSS
+CASE_CSI_AMP_STATE
