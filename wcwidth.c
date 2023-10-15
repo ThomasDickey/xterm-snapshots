@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.64 2023/09/26 07:55:25 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.65 2023/10/15 21:20:12 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -874,8 +874,9 @@ static void do_range(const char *source)
   int lo, hi;
   if (decode_range(source, &lo, &hi)) {
     while (lo <= hi) {
-      int local_rc = opt_wider ? mk_wcwidth_cjk(lo) : mk_wcwidth(lo);
-      int other_rc = wcwidth(lo);
+      wchar_t wlo = (wchar_t) lo;
+      int local_rc = opt_wider ? mk_wcwidth_cjk(wlo) : mk_wcwidth(wlo);
+      int other_rc = wcwidth(wlo);
       ++total_test;
       if (opt_all || (local_rc != other_rc)) {
         if (!opt_quiet)
