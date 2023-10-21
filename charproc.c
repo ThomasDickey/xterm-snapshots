@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1979 2023/10/14 14:27:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1980 2023/10/21 00:30:17 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1257,10 +1257,15 @@ resetCharsets(TScreen *screen)
 
     TRACE(("resetCharsets\n"));
 
+    /*
+     * The assignments for G2/G3 to ASCII differ from the documented DEC
+     * terminal, because xterm also checks GR to decide whether or not to
+     * handle non-Unicode character sets, e.g., NRCS.
+     */
     initCharset(screen, 0, nrc_ASCII);
     initCharset(screen, 1, nrc_ASCII);
-    initCharset(screen, 2, dft_upss);
-    initCharset(screen, 3, dft_upss);
+    initCharset(screen, 2, nrc_ASCII);
+    initCharset(screen, 3, nrc_ASCII);
     initCharset(screen, 4, dft_upss);
 
     screen->curgl = 0;		/* G0 => GL.            */
