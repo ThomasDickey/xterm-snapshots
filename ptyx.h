@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1102 2023/10/14 00:07:30 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1103 2023/10/22 10:26:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1313,6 +1313,7 @@ typedef enum {
     /* aliases */
     , DATA(C0)
     , DATA(DEL)
+    , DATA(STTY)
 #undef DATA
     , epLAST
 } PasteControls;

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.937 2023/10/08 21:02:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.938 2023/10/22 17:26:44 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1246,6 +1246,7 @@ extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */,
 #define ENVP_ARG /**/
 
 extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
+extern int xtermDisabledChar(void);
 extern int GetBytesAvailable (Display *  /* dpy */);
 extern int kill_process_group (int  /* pid */, int  /* sig */);
 extern int nonblocking_wait (void);

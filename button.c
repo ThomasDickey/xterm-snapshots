@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.655 2023/06/13 21:44:29 tom Exp $ */
+/* $XTermId: button.c,v 1.657 2023/10/22 18:28:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -77,6 +77,7 @@ button.c	Handles button events in the terminal emulator.
 #include <menu.h>
 #include <charclass.h>
 #include <xstrings.h>
+#include <xterm_io.h>
 
 #if OPT_SELECT_REGEX
 #if defined(HAVE_PCRE2POSIX_H)
@@ -2547,11 +2548,82 @@ removeControls(XtermWidget xw, char *value)
 	dst = strlen(value);
     } else {
 	size_t src = 0;
+	Boolean *disallowed = screen->disallow_paste_ops;
+	TERMIO_STRUCT data;
+	char current_chars[epLAST];
+
+	if (disallowed[epSTTY] && ttyGetAttr(screen->respond, &data) == 0) {
+	    int n;
+	    int disabled = xtermDisabledChar();
+
+	    TRACE(("disallow(STTY):"));
+	    memcpy(current_chars, disallowed, sizeof(current_chars));
+
+	    for (n = 0; n < NCCS; ++n) {
+		PasteControls nc = (data.c_cc[n] < 32
+				    ? data.c_cc[n]
+				    : (data.c_cc[n] == 127
+				       ? epDEL
+				       : epLAST));
+		if (nc == epNUL || nc == epLAST)
+		    continue;
+		if (CharOf(data.c_cc[n]) == CharOf(disabled))
+		    continue;
+		if ((n == VMIN || n == VTIME) && !(data.c_lflag & ICANON))
+		    continue;
+		switch (n) {
+		/* POSIX */
+		case VEOF:
+		case VEOL:
+		case VERASE:
+		case VINTR:
+		case VKILL:
+		case VQUIT:
+		case VSTART:
+		case VSTOP:
+		case VSUSP:
+		/* system-dependent */
+#ifdef VDISCARD
+		case VDISCARD:
+#endif
+#ifdef VDSUSP
+		case VDSUSP:
+#endif
+#ifdef VEOL2
+		case VEOL2:
+#endif
+#ifdef VLNEXT
+		case VLNEXT:
+#endif
+#ifdef VREPRINT
+		case VREPRINT:
+#endif
+#ifdef VSTATUS
+		case VSTATUS:
+#endif
+#ifdef VSWTC
+		case VSWTC:	/* System V SWTCH */
+#endif
+#ifdef VWERASE
+		case VWERASE:
+#endif
+		    break;
+		default:
+		    continue;
+		}
+		if (nc != epLAST) {
+		    TRACE((" \\%03o", data.c_cc[n]));
+		    current_chars[nc] = 1;
+		}
+	    }
+	    TRACE(("\n"));
+	    disallowed = current_chars;
+	}
 	while ((value[dst] = value[src]) != '\0') {
 	    int ch = CharOf(value[src++]);
 
 #define ReplacePaste(n) \
-	    if (screen->disallow_paste_ops[n]) \
+	    if (disallowed[n]) \
 		value[dst] = ' '
 
 	    if (ch < 32) {

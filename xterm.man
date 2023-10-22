@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.896 2023/10/08 23:28:21 tom Exp $
+.\" $XTermId: xterm.man,v 1.897 2023/10/22 22:19:25 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -572,7 +572,7 @@ It sets the \fBcursorColor\fP resource according to the parameter.
 .TP 8
 .B \-cu
 This option indicates that \fI\*n\fP should work around a bug in the
-.IR more (1)
+.BR more (1)
 program that causes it
 to incorrectly display lines that are exactly the width of the window and
 are followed by a line beginning with a tab
@@ -584,7 +584,7 @@ cursor motion package.
 .TP 8
 .B +cu
 This option indicates that \fI\*n\fP should not work around the
-.IR more (1)
+.BR more (1)
 bug mentioned above.
 .TP 8
 .B "\-dc"
@@ -759,7 +759,7 @@ Turn off the \fBhold\fP resource, i.e.,
 .TP 8
 .B \-ie
 Turn on the \fBptyInitialErase\fP resource, i.e.,
-use the pseudo-terminal's sense of the \fIstty\fP erase value.
+use the pseudo-terminal's sense of the \fBstty\fP(1) erase value.
 .TP 8
 .B +ie
 Turn off the \fBptyInitialErase\fP resource, i.e.,
@@ -1239,8 +1239,8 @@ The \fIterm_id\fP argument specifies the terminal ID to use.
 .TP 8
 .BI \-tm " string"
 This option specifies a series of terminal setting keywords followed by the
-characters that should be bound to those functions, similar to the \fIstty\fP
-program.
+characters that should be bound to those functions,
+similar to the \fBstty\fP(1) program.
 The keywords and their values are described in detail in the \fBttyModes\fP
 resource.
 .TP 8
@@ -1939,7 +1939,7 @@ assigns buttons 4 and 5 with different modifiers to the
 .B ptyHandshake\fP (class\fB PtyHandshake\fP)
 If \*(``true\*('', \fI\*n\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fI__utmp_name__\fP
-and \fIstty\fP state.
+and \fBstty\fP(1) state.
 .IP
 See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
 of the screen size,
@@ -2150,7 +2150,7 @@ Use \fB\\034\fP to represent \fB^\\\fP, since a literal backslash in
 an X resource escapes the next character.
 .IP
 This is very useful for overriding
-the default terminal settings without having to run \fIstty\fP every time
+the default terminal settings without having to run \fBstty\fP(1) every time
 an \fI\*n\fP is started.
 Note, however, that the \fIstty\fP program on a given host may use different
 keywords; \fI\*n\fR's table is built in.
@@ -3251,7 +3251,7 @@ The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
 The default value is
 .NS
-BS,DEL,ENQ,EOT,ESC,NUL
+BS,DEL,ENQ,EOT,ESC,NUL,STTY
 .NE
 .IP
 The names are listed below:
@@ -3270,6 +3270,9 @@ ASCII delete
 .TP 5
 NL
 ASCII line-feed, i.e., \*(``newline\*('' is the same as LF.
+.TP 5
+STTY
+special characters which are set with \fBstty\fP(1).
 .RE
 .TP 8
 .B "disallowedTcapOps\fP (class\fB DisallowedTcapOps\fP)"

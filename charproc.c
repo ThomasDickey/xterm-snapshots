@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1980 2023/10/21 00:30:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1981 2023/10/22 10:26:53 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -9861,6 +9861,7 @@ static const FlagList tblPasteOps[] =
     ,DATA2(NL, LF)
     ,DATA(C0)
     ,DATA(DEL)
+    ,DATA(STTY)
     ,DATA_END
 };
 #undef DATA

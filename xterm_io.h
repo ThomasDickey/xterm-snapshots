@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.67 2020/01/18 18:48:19 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.68 2023/10/22 14:54:29 tom Exp $ */
 
 /*
- * Copyright 2000-2018,2020 by Thomas E. Dickey
+ * Copyright 2000-2020,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -283,5 +283,20 @@
 #endif
 
 typedef unsigned short ttySize_t;
+
+#ifdef USE_ANY_SYSV_TERMIO
+#define TERMIO_STRUCT struct termio
+#define ttySetAttr(fd, datap) ioctl(fd, TCSETA, datap)
+#define ttyGetAttr(fd, datap) ioctl(fd, TCGETA, datap)
+#define ttyFlush(fd)          ioctl(fd, TCFLSH, 1)
+#elif defined(USE_POSIX_TERMIOS)
+#define TERMIO_STRUCT struct termios
+#define ttySetAttr(fd, datap) tcsetattr(fd, TCSANOW, datap)
+#define ttyGetAttr(fd, datap) tcgetattr(fd, datap)
+#define ttyFlush(fd)          tcflush(fd, TCOFLUSH)
+#else
+#error Neither termio or termios is enabled
+#endif /* USE_ANY_SYSV_TERMIO */
+
 
 #endif /* included_xterm_io_h */

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.907 2023/09/22 07:46:08 tom Exp $ */
+/* $XTermId: main.c,v 1.909 2023/10/22 17:28:06 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -595,18 +595,6 @@ static unsigned command_length_with_luit = 0;
 #ifndef CWERASE
 #define CWERASE  CONTROL('W')
 #endif
-
-#ifdef USE_ANY_SYSV_TERMIO
-#define TERMIO_STRUCT struct termio
-#define ttySetAttr(fd, datap) ioctl(fd, TCSETA, datap)
-#define ttyGetAttr(fd, datap) ioctl(fd, TCGETA, datap)
-#define ttyFlush(fd)          ioctl(fd, TCFLSH, 1)
-#elif defined(USE_POSIX_TERMIOS)
-#define TERMIO_STRUCT struct termios
-#define ttySetAttr(fd, datap) tcsetattr(fd, TCSANOW, datap)
-#define ttyGetAttr(fd, datap) tcgetattr(fd, datap)
-#define ttyFlush(fd)          tcflush(fd, TCOFLUSH)
-#endif /* USE_ANY_SYSV_TERMIO */
 
 #ifndef VMS
 #ifdef TERMIO_STRUCT
@@ -1421,14 +1409,37 @@ static OptionHelp xtermOptions[] = {
 { NULL, NULL }};
 /* *INDENT-ON* */
 
-static const char *const message[] =
+static const char *const help_message[] =
 {
     "Fonts should be fixed width and, if both normal and bold are specified, should",
     "have the same size.  If only a normal font is specified, it will be used for",
     "both normal and bold text (by doing overstriking).  The -e option, if given,",
     "must appear at the end of the command line, otherwise the user's default shell",
     "will be started.  Options that start with a plus sign (+) restore the default.",
-    NULL};
+    NULL
+};
+
+int
+xtermDisabledChar(void)
+{
+    int value = -1;
+#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
+    value = _POSIX_VDISABLE;
+#endif
+#if defined(_PC_VDISABLE)
+    if (value == -1) {
+	value = (int) fpathconf(0, _PC_VDISABLE);
+	if (value == -1) {
+	    if (errno == 0)
+		value = 0377;
+	}
+    }
+#elif defined(VDISABLE)
+    if (value == -1)
+	value = VDISABLE;
+#endif
+    return value;
+}
 
 /*
  * Decode a key-definition.  This combines the termcap and ttyModes, for
@@ -1449,23 +1460,7 @@ decode_keyvalue(char **ptr, int termcap)
 	    break;
 	case '-':
 	    if (!termcap) {
-		errno = 0;
-#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
-		value = _POSIX_VDISABLE;
-#endif
-#if defined(_PC_VDISABLE)
-		if (value == -1) {
-		    value = (int) fpathconf(0, _PC_VDISABLE);
-		    if (value == -1) {
-			if (errno != 0)
-			    break;	/* skip this (error) */
-			value = 0377;
-		    }
-		}
-#elif defined(VDISABLE)
-		if (value == -1)
-		    value = VDISABLE;
-#endif
+		value = xtermDisabledChar();
 		break;
 	    }
 	    /* FALLTHRU */
@@ -1750,7 +1745,7 @@ Help(void)
     }
 
     putchar('\n');
-    for (cpp = message; *cpp; cpp++)
+    for (cpp = help_message; *cpp; cpp++)
 	puts(*cpp);
     putchar('\n');
     fflush(stdout);
