@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.909 2023/10/22 17:28:06 tom Exp $ */
+/* $XTermId: main.c,v 1.912 2023/11/14 08:56:47 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -324,6 +324,7 @@ ttyslot(void)
 #endif
 
 #include <stdio.h>
+#include <math.h>
 
 #ifdef __hpux
 #include <sys/utsname.h>
@@ -1439,6 +1440,126 @@ xtermDisabledChar(void)
 	value = VDISABLE;
 #endif
     return value;
+}
+
+/*
+ * Retrieve (possibly allocating) an atom from the server.  Cache the result.
+ */
+Atom
+CachedInternAtom(Display *display, const char *name)
+{
+    /*
+     * Aside from a couple of rarely used atoms, the others are all known.
+     */
+    static const char *const known_atoms[] =
+    {
+	"FONT",
+	"WM_CLASS",
+	"WM_DELETE_WINDOW",
+	"_NET_ACTIVE_WINDOW",
+	"_NET_FRAME_EXTENTS",
+	"_NET_FRAME_EXTENTS",
+	"_NET_SUPPORTED",
+	"_NET_SUPPORTING_WM_CHECK",
+	"_NET_WM_ALLOWED_ACTIONS",
+	"_NET_WM_ICON_NAME",
+	"_NET_WM_NAME",
+	"_NET_WM_PID",
+	"_NET_WM_STATE",
+	"_NET_WM_STATE_ADD",
+	"_NET_WM_STATE_FULLSCREEN",
+	"_NET_WM_STATE_HIDDEN",
+	"_NET_WM_STATE_MAXIMIZED_HORZ",
+	"_NET_WM_STATE_MAXIMIZED_VERT",
+	"_NET_WM_STATE_REMOVE",
+	"_WIN_SUPPORTING_WM_CHECK",
+#if defined(HAVE_XKB_BELL_EXT)
+	XkbBN_Info,
+	XkbBN_MarginBell,
+	XkbBN_MinorError,
+	XkbBN_TerminalBell,
+#endif
+#if defined(HAVE_XKBQUERYEXTENSION)
+	"Num Lock",
+	"Caps Lock",
+	"Scroll Lock",
+#endif
+    };
+
+#define NumKnownAtoms  XtNumber(known_atoms)
+
+    /*
+     * The "+1" entry of the array is used for the occasional atom which is not
+     * predefined.
+     */
+    static struct {
+	Atom atom;
+	const char *name;
+    } AtomCache[NumKnownAtoms + 1];
+
+    Boolean found = False;
+    Atom result = None;
+    Cardinal i;
+
+    TRACE(("intern_atom \"%s\"\n", name));
+
+    /*
+     * This should never happen as it implies xterm is aware of multiple
+     * displays.
+     */
+    if (display != XtDisplay(toplevel)) {
+	SysError(ERROR_GET_ATOM);
+    }
+
+    if (AtomCache[0].name == NULL) {
+	/* pre-load a number of atoms in one request to reduce latency */
+	Atom atom_return[NumKnownAtoms];
+	int code;
+
+	TRACE(("initialising atom list\n"));
+	code = XInternAtoms(display,
+			    (char **) known_atoms,
+			    (int) NumKnownAtoms,
+			    False,
+			    atom_return);
+	/*
+	 * result should be Success, but actually returns BadRequest.
+	 * manpage says XInternAtoms can generate BadAlloc and BadValue errors.
+	 */
+	if (code > BadRequest)
+	    SysError(ERROR_GET_ATOM);
+
+	for (i = 0; i < NumKnownAtoms; ++i) {
+	    AtomCache[i].name = known_atoms[i];
+	    AtomCache[i].atom = atom_return[i];
+	}
+    }
+
+    /* Linear search is probably OK here, due to the small number of atoms */
+    for (i = 0; i < NumKnownAtoms; i++) {
+	if (strcmp(name, AtomCache[i].name) == 0) {
+	    found = True;
+	    result = AtomCache[i].atom;
+	    break;
+	}
+    }
+
+    if (!found) {
+	if (AtomCache[NumKnownAtoms].name == NULL
+	    || strcmp(AtomCache[NumKnownAtoms].name, name)) {
+	    char *actual = x_strdup(name);
+	    free((void *) AtomCache[NumKnownAtoms].name);
+	    result = XInternAtom(display, actual, False);
+	    AtomCache[NumKnownAtoms].atom = result;
+	    AtomCache[NumKnownAtoms].name = actual;
+	    TRACE(("...allocated new atom\n"));
+	} else {
+	    result = AtomCache[NumKnownAtoms].atom;
+	    TRACE(("...reused cached atom\n"));
+	}
+    }
+    TRACE(("...intern_atom -> %ld\n", result));
+    return result;
 }
 
 /*
@@ -4061,8 +4182,8 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     /* avoid double MapWindow requests */
     XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU()), False);
 
-    wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
-				   False);
+    wm_delete_window = CachedInternAtom(XtDisplay(toplevel),
+					"WM_DELETE_WINDOW");
 
     if (!TEK4014_ACTIVE(xw))
 	VTInit(xw);		/* realize now so know window size for tty driver */
@@ -4073,7 +4194,8 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	 * that we are going to steal the console.
 	 */
 	XmuGetHostname(mit_console_name + MIT_CONSOLE_LEN, 255);
-	mit_console = XInternAtom(screen->display, mit_console_name, False);
+	TRACE(("getting for console name property \"%s\"\n", mit_console_name));
+	mit_console = CachedInternAtom(screen->display, mit_console_name);
 	/* the user told us to be the console, so we can use CurrentTime */
 	XtOwnSelection(SHELL_OF(CURRENT_EMU()),
 		       mit_console, CurrentTime,

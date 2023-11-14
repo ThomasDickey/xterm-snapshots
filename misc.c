@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1061 2023/10/14 14:24:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.1063 2023/11/14 01:25:56 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1339,7 +1339,7 @@ AtomBell(XtermWidget xw, int which)
 
     for (n = 0; n < XtNumber(table); ++n) {
 	if (table[n].value == which) {
-	    result = XInternAtom(XtDisplay(xw), table[n].name, False);
+	    result = CachedInternAtom(XtDisplay(xw), table[n].name);
 	    break;
 	}
     }
@@ -1773,10 +1773,11 @@ xtermDeiconify(XtermWidget xw)
     Display *dpy = screen->display;
     Window target = VShellWindow(xw);
     XEvent e;
-    Atom atom_state = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+    Atom atom_state = CachedInternAtom(dpy, "_NET_ACTIVE_WINDOW");
 
     if (xtermIsIconified(xw)) {
 	TRACE(("...de-iconify window %#lx\n", target));
+	ResetHiddenHint(xw);
 	XMapWindow(dpy, target);
 
 	memset(&e, 0, sizeof(e));
@@ -1826,8 +1827,8 @@ xtermIsIconified(XtermWidget xw)
 	unsigned char *prop_return = 0;
 	long long_length = 1024;
 	Atom requested_type = XA_ATOM;
-	Atom is_hidden = XInternAtom(dpy, "_NET_WM_STATE_HIDDEN", False);
-	Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+	Atom is_hidden = CachedInternAtom(dpy, "_NET_WM_STATE_HIDDEN");
+	Atom wm_state = CachedInternAtom(dpy, "_NET_WM_STATE");
 
 	/* this works with non-EWMH */
 	result = (win_attrs.map_state != IsViewable) ? True : False;
@@ -5958,7 +5959,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	const char *propname = (!strcmp(my_attr, XtNtitle)
 				? "_NET_WM_NAME"
 				: "_NET_WM_ICON_NAME");
-	Atom my_atom = XInternAtom(dpy, propname, False);
+	Atom my_atom = CachedInternAtom(dpy, propname);
 
 	if (my_atom != None) {
 	    changed = True;
@@ -6046,7 +6047,7 @@ ChangeXprop(char *buf)
 
     if (pchEndPropName)
 	*pchEndPropName = '\0';
-    aprop = XInternAtom(dpy, buf, False);
+    aprop = CachedInternAtom(dpy, buf);
     if (pchEndPropName == NULL) {
 	/* no "=value" given, so delete the property */
 	XDeleteProperty(dpy, w, aprop);

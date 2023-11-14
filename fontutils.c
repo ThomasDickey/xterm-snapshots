@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.778 2023/10/08 23:15:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.779 2023/11/12 22:07:13 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -393,7 +393,7 @@ get_font_name_props(Display *dpy, XFontStruct *fs, char **result)
      * first get the full font name
      */
     name = 0;
-    fontatom = XInternAtom(dpy, "FONT", False);
+    fontatom = CachedInternAtom(dpy, "FONT");
     if (fontatom != 0) {
 	XFontProp *fp;
 	int i;

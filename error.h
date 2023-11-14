@@ -1,7 +1,7 @@
-/* $XTermId: error.h,v 1.26 2012/10/05 00:17:51 tom Exp $ */
+/* $XTermId: error.h,v 1.27 2023/11/13 00:46:43 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -73,6 +73,7 @@
 #define	ERROR_INIGROUPS 28	/* spawn: initgroups() failed */
 #define	ERROR_FORK	29	/* spawn: fork() failed */
 #define	ERROR_EXEC	30	/* spawn: exec() failed */
+#define	ERROR_GET_ATOM	31	/* intern_atom() failed */
 #define	ERROR_PTYS	32	/* get_pty: not enough ptys */
 #define ERROR_PTY_EXEC	34	/* waiting for initial map */
 #define	ERROR_SETUID	35	/* spawn: setuid() failed */

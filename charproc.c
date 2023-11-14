@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1981 2023/10/22 10:26:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1982 2023/11/12 23:03:49 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -11595,7 +11595,7 @@ getProperty(Display *dpy,
 
     TRACE(("getProperty %s(%s)\n", prop_name,
 	   req_type ? TraceAtomName(dpy, req_type) : "?"));
-    property = XInternAtom(dpy, prop_name, False);
+    property = CachedInternAtom(dpy, prop_name);
 
     if (!xtermGetWinProp(dpy,
 			 w,
@@ -11698,7 +11698,7 @@ discount_frame_extents(XtermWidget xw, int *high, int *wide)
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
 
-    Atom atom_supported = XInternAtom(dpy, "_NET_FRAME_EXTENTS", False);
+    Atom atom_supported = CachedInternAtom(dpy, "_NET_FRAME_EXTENTS");
     Atom actual_type;
     int actual_format;
     long long_offset = 0;
@@ -12017,7 +12017,7 @@ VTRealize(Widget w,
     TRACE(("%s@%d -- ", __FILE__, __LINE__));
     TRACE_WM_HINTS(xw);
 
-    if ((pid_atom = XInternAtom(XtDisplay(xw), "_NET_WM_PID", False)) != None) {
+    if ((pid_atom = CachedInternAtom(XtDisplay(xw), "_NET_WM_PID")) != None) {
 	/* XChangeProperty format 32 really is "long" */
 	unsigned long pid_l = (unsigned long) getpid();
 	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.630 2023/06/13 21:37:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.632 2023/11/14 01:32:08 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2848,7 +2848,7 @@ xtermCheckRect(XtermWidget xw,
 		if_OPT_WIDE_CHARS(screen, {
 		    if (is_UCS_SPECIAL(ch))
 			continue;
-		})
+		});
 		if (!(mode & csBYTE)) {
 		    unsigned c2 = (unsigned) ch;
 		    if (c2 > 0x7f && my_GR != nrc_ASCII) {
@@ -2904,6 +2904,55 @@ xtermCheckRect(XtermWidget xw,
     *result = total;
 }
 #endif /* OPT_DEC_RECTOPS */
+
+static void
+set_ewmh_hint(XtermWidget xw, int operation, _Xconst char *prop)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Window window;
+    XEvent e;
+    Atom atom_fullscreen = CachedInternAtom(dpy, prop);
+    Atom atom_state = CachedInternAtom(dpy, "_NET_WM_STATE");
+
+#if OPT_TRACE
+    const char *what = "?";
+    switch (operation) {
+    case _NET_WM_STATE_ADD:
+	what = "adding";
+	break;
+    case _NET_WM_STATE_REMOVE:
+	what = "removing";
+	break;
+    }
+    TRACE(("set_ewmh_hint %s %s\n", what, prop));
+#endif
+
+#if OPT_TEK4014
+    if (TEK4014_ACTIVE(xw)) {
+	window = TShellWindow;
+    } else
+#endif
+	window = VShellWindow(xw);
+
+    memset(&e, 0, sizeof(e));
+    e.xclient.type = ClientMessage;
+    e.xclient.message_type = atom_state;
+    e.xclient.display = dpy;
+    e.xclient.window = window;
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = operation;
+    e.xclient.data.l[1] = (long) atom_fullscreen;
+
+    XSendEvent(dpy, DefaultRootWindow(dpy), False,
+	       SubstructureRedirectMask, &e);
+}
+
+void
+ResetHiddenHint(XtermWidget xw)
+{
+    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, "_NET_WM_STATE_HIDDEN");
+}
 
 #if OPT_MAXIMIZE
 
@@ -2986,39 +3035,6 @@ unset_resize_increments(XtermWidget xw)
     XFlush(XtDisplay(xw));
 }
 
-static void
-set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
-{
-    XEvent e;
-    Atom atom_fullscreen = XInternAtom(dpy, prop, False);
-    Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-
-#if OPT_TRACE
-    const char *what = "?";
-    switch (operation) {
-    case _NET_WM_STATE_ADD:
-	what = "adding";
-	break;
-    case _NET_WM_STATE_REMOVE:
-	what = "removing";
-	break;
-    }
-    TRACE(("set_ewmh_hint %s %s\n", what, prop));
-#endif
-
-    memset(&e, 0, sizeof(e));
-    e.xclient.type = ClientMessage;
-    e.xclient.message_type = atom_state;
-    e.xclient.display = dpy;
-    e.xclient.window = window;
-    e.xclient.format = 32;
-    e.xclient.data.l[0] = operation;
-    e.xclient.data.l[1] = (long) atom_fullscreen;
-
-    XSendEvent(dpy, DefaultRootWindow(dpy), False,
-	       SubstructureRedirectMask, &e);
-}
-
 /*
  * Check if the given property is supported on the root window.
  *
@@ -3033,8 +3049,8 @@ set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
 static Boolean
 probe_netwm(Display *dpy, _Xconst char *propname)
 {
-    Atom atom_fullscreen = XInternAtom(dpy, propname, False);
-    Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
+    Atom atom_fullscreen = CachedInternAtom(dpy, propname);
+    Atom atom_supported = CachedInternAtom(dpy, "_NET_SUPPORTED");
     Atom actual_type;
     int actual_format;
     long long_offset = 0;
@@ -3111,15 +3127,10 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
     _Xconst char *newprop;
 
     int which = 0;
-    Window window;
-
 #if OPT_TEK4014
-    if (TEK4014_ACTIVE(xw)) {
+    if (TEK4014_ACTIVE(xw))
 	which = 1;
-	window = TShellWindow;
-    } else
 #endif
-	window = VShellWindow(xw);
 
     old_ewmh_mode = xw->work.ewmh[which].mode;
     oldprop = ewmhProperty(old_ewmh_mode);
@@ -3150,15 +3161,15 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 	TRACE(("...new EWMH mode is allowed\n"));
 	if (new_ewmh_mode && !xw->work.ewmh[which].mode) {
 	    unset_resize_increments(xw);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_ADD, newprop);
 	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
 	    if (!xw->misc.resizeByPixel) {
 		set_resize_increments(xw);
 	    }
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, oldprop);
 	} else {
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_REMOVE, oldprop);
+	    set_ewmh_hint(xw, _NET_WM_STATE_ADD, newprop);
 	}
 	xw->work.ewmh[which].mode = new_ewmh_mode;
 	update_fullscreen();
