@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.397 2023/10/08 21:19:03 tom Exp $
+dnl $XTermId: configure.in,v 1.398 2023/11/23 11:29:32 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -165,7 +165,7 @@ cf_name=`echo "$program_transform_name" | sed -e '[s,\\$\\$,$,g]'`
 cf_name=`echo xterm |sed -e "$cf_name"`
 AC_MSG_CHECKING(for symbolic link to create to $cf_name)
 AC_ARG_WITH(xterm-symlink,
-	[  --with-xterm-symlink=XXX make symbolic link to installed xterm],
+	[[  --with-xterm-symlink[=XXX] make symbolic link to installed xterm]],
 	[with_symlink=$withval],
 	[with_symlink=xterm])
 AC_MSG_RESULT($with_symlink)
@@ -202,7 +202,7 @@ AC_MSG_RESULT($disable_setgid)
 
 AC_MSG_CHECKING(if you want to run xterm setuid to a given user)
 AC_ARG_WITH(setuid,
-	[  --with-setuid=XXX       use the given setuid user],
+	[[  --with-setuid[=XXX]     use the given setuid user]],
 	[use_given_setuid=$withval],
 	[use_given_setuid=no])
 AC_MSG_RESULT($use_given_setuid)
@@ -219,7 +219,7 @@ fi
 
 AC_MSG_CHECKING(if you want to run xterm setgid to match utmp/utmpx file)
 AC_ARG_WITH(utmp-setgid,
-	[  --with-utmp-setgid=XXX  use setgid to match utmp/utmpx file],
+	[[  --with-utmp-setgid[=XXX] use setgid to match utmp/utmpx file]],
 	[use_utmp_setgid=$withval],
 	[use_utmp_setgid=no])
 AC_MSG_RESULT($use_utmp_setgid)
@@ -349,6 +349,11 @@ AC_MSG_RESULT($default_termid)
 case $default_termid in
 (vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
+([[1-9]][[0-9]][[0-9]]|[[1-9]][[0-9]])
+	;;
+(*)
+	AC_MSG_ERROR([expected a number, not $default_termid])
+	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid",[default terminal-id])
 AC_SUBST(default_termid)
@@ -421,7 +426,7 @@ if test "$cf_tic_prog" = yes ; then
 	fi
 	AC_MSG_CHECKING(for private terminfo-directory)
 	AC_ARG_WITH(own-terminfo,
-		[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
+		[[  --with-own-terminfo[=P] set default $TERMINFO (default: from environment)]],
 		[TERMINFO_DIR=$withval],
 		[TERMINFO_DIR=${TERMINFO-none}])
 	AC_MSG_RESULT($TERMINFO_DIR)

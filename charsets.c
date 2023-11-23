@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.115 2023/10/14 13:38:24 tom Exp $ */
+/* $XTermId: charsets.c,v 1.117 2023/11/15 22:18:34 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2023 by Thomas E. Dickey
@@ -1394,6 +1394,19 @@
 #define map_NRCS_Turkish(code)	/* nothing */
 #endif /* OPT_WIDE_CHARS */
 
+#define HandleUPSS(charset) \
+    if (charset == nrc_DEC_Supp) { \
+	charset = screen->gsets_upss; \
+	if (screen->vtXX_level >= 5) { \
+	    /* EMPTY */ ; \
+	} else if (screen->vtXX_level >= 3) { \
+	    if (charset != nrc_DEC_Supp) \
+		charset = nrc_ISO_Latin_1_Supp; \
+	} else { \
+	    charset = nrc_ASCII; \
+	} \
+    }
+
 /*
  * Translate an input keysym to the corresponding NRC keysym.
  */
@@ -1417,13 +1430,9 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	   screen->curss,
 	   visibleUChar(code)));
 
-    (void) screen;
+    HandleUPSS(charset);
+
     switch (charset) {
-    case nrc_DEC_UPSS:
-	if (screen->gsets[4] == nrc_DEC_Supp)
-	    goto UPSS_DEC;
-	/* ISO-Latin1 needs no special treatment */
-	break;
     case nrc_British:		/* United Kingdom set (or Latin 1)      */
 	if (code == XK_sterling)
 	    code = 0x23;
@@ -1438,7 +1447,6 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
     case nrc_DEC_Spec_Graphic:
 	break;
 
-      UPSS_DEC:
     case nrc_DEC_Supp:
 	map_DEC_Supp_Graphic(code, code &= 0x7f);
 	break;
@@ -1557,6 +1565,7 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
     case nrc_Russian:
     case nrc_French_Canadian2:
     case nrc_Unknown:
+    case nrc_DEC_UPSS:
     default:			/* any character sets we don't recognize */
 	break;
     }
@@ -1618,15 +1627,14 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	if (*s < 32)
 	    continue;
 
+	HandleUPSS(cs);
+
 	switch (cs) {
 	case nrc_DEC_UPSS:
-	    if (screen->gsets[4] == nrc_DEC_Supp)
-		goto UPSS_DEC;
-	    /* FALLTHRU */
+	    break;
+
 	case nrc_ISO_Latin_1_Supp:
-	    /* FALLTHRU */
 	case nrc_British_Latin_1:
-	    /* FALLTHRU */
 	case nrc_British:	/* United Kingdom set (or Latin 1)      */
 	    if ((xw->flags & NATIONAL)
 		|| (screen->vtXX_level <= 1)) {
@@ -1666,7 +1674,6 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
 	    }
 	    break;
 
-	  UPSS_DEC:
 	case nrc_DEC_Supp:
 	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;

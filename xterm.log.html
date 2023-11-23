@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2568 2023/11/14 01:38:53 tom Exp $
+  $XTermId: xterm.log.html,v 1.2569 2023/11/23 12:31:48 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1059,6 +1059,12 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify <tt>DECRQUPSS</tt> and <tt>DECAUPSS</tt> feature to
+    support VT5xx character sets (report by Thomas Wolff).</li>
+
+    <li>improve usage messages in configure script to make it
+    clearer when an option value is optional.</li>
+
     <li>improve EWMH handling (report/analysis by Edward Rosten)
       <ul>
         <li>reset <tt>_NET_WM_STATE_HIDDEN</tt> flag from

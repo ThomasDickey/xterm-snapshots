@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1103 2023/10/22 10:26:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1104 2023/11/15 21:50:41 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2167,6 +2167,7 @@ typedef struct {
 
 #define NUM_GSETS 4
 #define NUM_GSETS2 (NUM_GSETS + 1)	/* include user-preferred */
+#define gsets_upss	gsets[4]
 
 #define SAVED_CURSORS 2
 

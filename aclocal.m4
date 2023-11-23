@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.516 2023/10/02 21:23:32 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.517 2023/11/23 11:39:27 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2132,7 +2132,7 @@ case ".[$]$1" in
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 12 updated: 2021/10/10 20:18:09
+dnl CF_PKG_CONFIG version: 13 updated: 2023/10/28 11:59:01
 dnl -------------
 dnl Check for the package-config program, unless disabled by command-line.
 dnl
@@ -2141,7 +2141,7 @@ AC_DEFUN([CF_PKG_CONFIG],
 [
 AC_MSG_CHECKING(if you want to use pkg-config)
 AC_ARG_WITH(pkg-config,
-	[  --with-pkg-config{=path} enable/disable use of pkg-config],
+	[[  --with-pkg-config[=CMD] enable/disable use of pkg-config and its name CMD]],
 	[cf_pkg_config=$withval],
 	[cf_pkg_config=yes])
 AC_MSG_RESULT($cf_pkg_config)
@@ -3117,7 +3117,7 @@ AC_DEFUN([CF_TTY_GROUP],
 [AC_REQUIRE([AC_PROG_EGREP])dnl
 AC_MSG_CHECKING(for explicit tty group name)
 AC_ARG_WITH(tty-group,
-	[  --with-tty-group=XXX    use XXX for the tty-group],
+	[[  --with-tty-group[=XXX]  use XXX for the tty-group]],
 	[cf_tty_group=$withval],
 	[cf_tty_group=auto...])
 test -z "$cf_tty_group"    && cf_tty_group=auto...
@@ -3991,7 +3991,7 @@ dnl $1 = default icon name
 AC_DEFUN([CF_WITH_ICON_NAME],[
 AC_MSG_CHECKING(for the icon name)
 AC_ARG_WITH(icon-name,
-	[  --with-icon-name=XXXX   override icon name (default: $1)],
+	[[  --with-icon-name[=XXX]  override icon name (default: $1)]],
 	[ICON_NAME="$withval"],
 	[ICON_NAME=$1])
 case "x$ICON_NAME" in
@@ -4014,7 +4014,7 @@ dnl $1 = default icon name to use if symlink is wanted
 AC_DEFUN([CF_WITH_ICON_SYMLINK],[
 AC_MSG_CHECKING(for icon symlink to use)
 AC_ARG_WITH(icon-symlink,
-	[  --with-icon-symlink=XXX make symbolic link for icon name (default: $1)],
+	[[  --with-icon-symlink[=XXX] make symbolic link for icon name (default: $1)]],
 	[ICON_SYMLINK="$withval"],
 	[ICON_SYMLINK=NONE])
 case "x$ICON_SYMLINK" in
@@ -4061,7 +4061,7 @@ CF_WITH_ICONDIR
 
 AC_MSG_CHECKING(if icon theme should be used)
 AC_ARG_WITH(icon-theme,
-	[  --with-icon-theme=XXX   install icons into desktop theme (hicolor)],
+	[[  --with-icon-theme[=XXX] install icons into desktop theme (hicolor)]],
 	[ICON_THEME=$withval],
 	[ICON_THEME=no])
 
@@ -4322,7 +4322,7 @@ esac
 
 AC_MSG_CHECKING(for program to convert manpage to html)
 AC_ARG_WITH(man2html,
-	[  --with-man2html=XXX     use XXX rather than groff],
+	[[  --with-man2html[=XXX]   use XXX rather than groff]],
 	[cf_man2html=$withval],
 	[cf_man2html=$cf_man2html])
 
@@ -4678,7 +4678,7 @@ cf_save_ldflags="${LDFLAGS}"
 
 AC_MSG_CHECKING(if you want to use the Xpm library for colored icon)
 AC_ARG_WITH(xpm,
-[  --with-xpm=DIR          use Xpm library for colored icon, may specify path],
+[[  --with-xpm[=DIR]        use Xpm library for colored icon, may specify path]],
 	[cf_Xpm_library="$withval"],
 	[cf_Xpm_library=yes])
 AC_MSG_RESULT($cf_Xpm_library)

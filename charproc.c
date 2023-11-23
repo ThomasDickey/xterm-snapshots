@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1982 2023/11/12 23:03:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1986 2023/11/23 17:36:11 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1266,7 +1266,7 @@ resetCharsets(TScreen *screen)
     initCharset(screen, 1, nrc_ASCII);
     initCharset(screen, 2, nrc_ASCII);
     initCharset(screen, 3, nrc_ASCII);
-    initCharset(screen, 4, dft_upss);
+    initCharset(screen, 4, dft_upss);	/* gsets_upss */
 
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
@@ -1841,11 +1841,21 @@ static const struct {
 
 #if OPT_DEC_RECTOPS
 static char *
-encode_scs(DECNRCM_codes value)
+encode_scs(TScreen *screen, DECNRCM_codes value)
 {
     static char buffer[3];
     Cardinal n;
     char *result = buffer;
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars && (screen->utf8_mode || screen->utf8_nrc_mode)) {
+	if (value == nrc_ASCII)
+	    value = nrc_ISO_Latin_1_Supp;
+    }
+#else
+    (void) screen;
+#endif
+
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (scs_table[n].result == value) {
 	    if (scs_table[n].prefix)
@@ -5377,7 +5387,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, 0x4f);	/* assert all 96's */
 		    reply_char(count, ';');
 		    for (item = 0; item < NUM_GSETS; ++item) {
-			char *temp = encode_scs(screen->gsets[item]);
+			char *temp = encode_scs(screen, screen->gsets[item]);
 			while (*temp != '\0') {
 			    reply_char(count, *temp++);
 			}
@@ -5413,18 +5423,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRQUPSS:
 	    TRACE(("CASE_DECRQUPSS\n"));
 	    if (screen->vtXX_level >= 3) {
-		Bool dft_upss = (screen->gsets[4] == DFT_UPSS);
+		char *encoded = encode_scs(screen, screen->gsets_upss);
 		init_reply(ANSI_DCS);
 		count = 0;
-		reply_char(count, dft_upss ? '0' : '1');
+		reply_char(count, encoded[1] == 0 ? '1' : '0');
 		reply_char(count, '!');
 		reply_char(count, 'u');
-		if (dft_upss) {
-		    reply_char(count, '%');
-		    reply_char(count, '5');
-		} else {
-		    reply_char(count, 'A');
-		}
+		/*
+		 * The table in decode_upss() lists DEC character sets which
+		 * use two characters in the selector and ISO character sets
+		 * which use one character in the selector.  Allow for either
+		 * in the response.
+		 */
+		reply_char(count, *encoded++);
+		if (*encoded)
+		    reply_char(count, *encoded);
 		reply.a_nparam = (ParmType) count;
 		unparseseq(xw, &reply);
 	    }

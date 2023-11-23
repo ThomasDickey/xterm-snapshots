@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1063 2023/11/14 01:25:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.1067 2023/11/15 21:51:25 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4758,6 +4758,117 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
 }
 #endif
 
+/*
+ * VT510 and VT520 reference manual have the same explanation for Pn (params),
+ * but it does not agree with the possible values for Dscs because it refers
+ * to "ISO Latin-7" (ISO 8859-13 aka "Baltic Rim"), and omits ISO Greek
+ * (ISO 8859-7):
+ *
+ * ------------------------------------------------------------------------
+ * Pn  Meaning
+ * ------------------------------------------------------------------------
+ * 0   DEC, ISO Latin-1, ISO Latin-2
+ * 1   ISO Latin-5, ISO Latin-7, ISO Cyrillic, ISO Hebrew
+ * ------------------------------------------------------------------------
+ *
+ * versus
+ *
+ * ------------------------------------------------------------------------
+ * Dscs   Character Set
+ * ------------------------------------------------------------------------
+ * %5     DEC Supplemental
+ * "?     DEC Greek
+ * "4     DEC Hebrew
+ * %0     DEC Turkish
+ * &4     DEC Cyrillic
+ * <      User-preferred Supplemental
+ * A      ISO Latin-1 Supplemental
+ * B      ISO Latin-2 Supplemental
+ * F      ISO Greek Supplemental
+ * H      ISO Hebrew Supplemental
+ * M      ISO Latin-5 Supplemental
+ * L      ISO Latin-Cyrillic
+ * ------------------------------------------------------------------------
+ *
+ * DEC 070, page 5-123 explains that Pn ("Ps" in the text) selects 94 or 96
+ * character sets (0 or 1, respectively), and on the next page states that
+ * the valid combinations are 0 (DEC Supplemental) and 1 (ISO Latin-1
+ * supplemental).  The document comments in regard to LS0 that (applications)
+ * should not assume that they can use 96-character sets for G0, but that it
+ * is possible to do this using UPSS.
+ *
+ * The VT510/VT520 reference manuals under SCS Select Character Set show
+ * a list of 94- and 96-character sets with "DEC" and "NRCS" as 94-characters,
+ * and the "ISO" as 96-characters.
+ *
+ * This function assumes that Pn==1 for ISO character sets, and Pn==0 for DEC.
+ * See also CASE_DECRQUPSS, which uses that assumption.
+ */
+static Bool
+decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
+{
+    /* *INDENT-OFF* */
+    static const struct {
+	DECNRCM_codes code;
+	int params;
+	int prefix;
+	int suffix;
+	int min_level;
+	int max_level;
+    } upss_table[] = {
+	{ DFT_UPSS,               0,  '%', '5', 3, 9 },
+	{ nrc_DEC_Greek_Supp,     0,  '"', '?', 5, 9 },
+	{ nrc_DEC_Hebrew_Supp,    0,  '"', '4', 5, 9 },
+	{ nrc_DEC_Turkish_Supp,   0,  '%', '0', 5, 9 },
+	{ nrc_DEC_Cyrillic,       0,  '&', '4', 5, 9 },
+	{ ALT_UPSS,               1,  0,   'A', 3, 9 },
+	{ nrc_ISO_Latin_2_Supp,   1,  0,   'B', 5, 9 },
+	{ nrc_ISO_Greek_Supp,     1,  0,   'F', 5, 9 },
+	{ nrc_ISO_Hebrew_Supp,    1,  0,   'H', 5, 9 },
+	{ nrc_ISO_Latin_5_Supp,   1,  0,   'M', 5, 9 },
+	{ nrc_ISO_Latin_Cyrillic, 1,  0,   'L', 5, 9 },
+    };
+    /* *INDENT-ON* */
+    TScreen *screen = TScreenOf(xw);
+    Bool result = False;
+
+    psarg -= '0';
+    *upss = nrc_ASCII;
+    if (screen->vtXX_level >= 3) {
+	Cardinal n;
+	for (n = 0; n < XtNumber(upss_table); ++n) {
+	    if (psarg != upss_table[n].params)
+		continue;
+	    if (screen->vtXX_level < upss_table[n].min_level)
+		continue;
+
+	    if (psarg) {	/* ISO codes are one-character */
+		if (upss_table[n].suffix != cp[0])
+		    continue;
+		if (cp[1] != '\0')
+		    continue;
+	    } else {		/* DEC codes are two-character */
+		if (upss_table[n].prefix != cp[0])
+		    continue;
+		if (upss_table[n].suffix != cp[1])
+		    continue;
+		if (cp[2] != '\0')
+		    continue;
+	    }
+
+	    result = True;
+	    *upss = upss_table[n].code;
+	    if (*upss == DFT_UPSS) {
+		TRACE(("DECAUPSS (default)\n"));
+	    } else if (*upss == ALT_UPSS) {
+		TRACE(("DECAUPSS (alternate)\n"));
+	    }
+	    break;
+	}
+    }
+    return result;
+}
+
 void
 do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 {
@@ -5037,19 +5148,16 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	/* FALLTHRU */
     case '1':
 	if (screen->vtXX_level >= 3 && *skip_params(cp) == '!') {
+	    DECNRCM_codes upss;
 	    psarg = *cp++;
-	    if (*cp++ == '!') {
+	    if (*cp++ == '!' && *cp++ == 'u') {
 #if OPT_WIDE_CHARS
 		if (screen->wide_chars && screen->utf8_mode) {
 		    ;		/* EMPTY */
 		} else
 #endif
-		if (!strcmp(cp, "u%5") && psarg == '0') {
-		    screen->gsets[4] = DFT_UPSS;
-		    TRACE(("DECAUPSS (default)\n"));
-		} else if (!strcmp(cp, "uA") && psarg == '1') {
-		    TRACE(("DECAUPSS (alternate)\n"));
-		    screen->gsets[4] = ALT_UPSS;
+		if (decode_upss(xw, cp, psarg, &upss)) {
+		    screen->gsets_upss = upss;
 		}
 	    }
 	    break;
