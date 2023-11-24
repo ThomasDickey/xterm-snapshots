@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.372 2023/06/26 22:52:21 tom Exp $ */
+/* $XTermId: menu.c,v 1.374 2023/11/24 10:45:59 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -55,6 +55,7 @@
 
 #include <xterm.h>
 #include <data.h>
+#include <error.h>
 #include <menu.h>
 #include <fontutils.h>
 #include <xstrings.h>
@@ -1434,7 +1435,7 @@ do_quit(Widget gw GCC_UNUSED,
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    Cleanup(SIGHUP);
+    Cleanup(ERROR_MISC);
 }
 
 /*

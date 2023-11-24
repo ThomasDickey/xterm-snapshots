@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.897 2023/10/22 22:19:25 tom Exp $
+.\" $XTermId: xterm.man,v 1.898 2023/11/24 11:59:11 tom Exp $
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
@@ -8843,7 +8843,9 @@ The \fIXXX\fP codes (which are used by \fI\*n\fP as its exit-code)
 are listed below, with a brief explanation.
 .TP 5
 1
-is used for miscellaneous errors, usually accompanied by a specific message,
+ERROR_MISC
+.br
+miscellaneous errors, usually accompanied by a specific message,
 .TP
 11
 ERROR_FIONBIO

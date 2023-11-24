@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.27 2023/11/13 00:46:43 tom Exp $ */
+/* $XTermId: error.h,v 1.28 2023/11/24 00:56:16 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2023 by Thomas E. Dickey
@@ -52,6 +52,8 @@
  */
 
 /* @(#)error.h	X10/6.6	11/6/86 */
+
+#define ERROR_MISC      1	/* miscellaneous errors */
 
 /* main.c */
 #define	ERROR_FIONBIO	11	/* main: ioctl() failed on FIONBIO */

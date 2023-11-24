@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.912 2023/11/14 08:56:47 tom Exp $ */
+/* $XTermId: main.c,v 1.913 2023/11/24 00:58:37 tom Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -1841,7 +1841,7 @@ Syntax(char *badOption)
 
     fprintf(stderr, "\r\n\nType %s -help for a full description.\r\n\n",
 	    ProgramName);
-    exit(1);
+    exit(ERROR_MISC);
 }
 
 static void
@@ -1877,7 +1877,7 @@ NeedParam(XrmOptionDescRec * option_ptr, const char *option_val)
 {
     if (IsEmpty(option_val)) {
 	xtermWarning("option %s requires a value\n", option_ptr->option);
-	exit(1);
+	exit(ERROR_MISC);
     }
 }
 
@@ -2138,7 +2138,7 @@ disableSetUid(void)
     TRACE(("process %d disableSetUid\n", (int) getpid()));
     if (setuid(save_ruid) == -1) {
 	xtermWarning("unable to reset uid\n");
-	exit(1);
+	exit(ERROR_MISC);
     }
     TRACE_IDS;
 }
@@ -2153,7 +2153,7 @@ disableSetGid(void)
     TRACE(("process %d disableSetGid\n", (int) getpid()));
     if (setegid(save_rgid) == -1) {
 	xtermWarning("unable to reset effective gid\n");
-	exit(1);
+	exit(ERROR_MISC);
     }
     TRACE_IDS;
 }
@@ -2435,7 +2435,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
     {
 	xtermWarning("unable to allocate memory for ttydev or ptydev\n");
-	exit(1);
+	exit(ERROR_MISC);
     }
     strcpy(ttydev, TTYDEV);
 #ifdef USE_PTY_DEVICE
@@ -4030,7 +4030,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	set_pty_id(ptydev, passedPty);
 #endif
 	if (xtermResetIds(screen) < 0)
-	    exit(1);
+	    exit(ERROR_MISC);
     } else {
 	Bool tty_got_hung;
 
@@ -4528,12 +4528,12 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 				   sizeof(handshake));
 		    if (i <= 0) {
 			/* parent terminated */
-			exit(1);
+			exit(ERROR_MISC);
 		    }
 
 		    if (handshake.status == PTY_NOMORE) {
 			/* No more ptys, let's shutdown. */
-			exit(1);
+			exit(ERROR_MISC);
 		    }
 
 		    /* We have a new pty to try */

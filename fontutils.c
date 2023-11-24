@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.779 2023/11/12 22:07:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.780 2023/11/24 00:59:16 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2023 by Thomas E. Dickey
@@ -44,6 +44,7 @@
 
 #include <main.h>
 #include <data.h>
+#include <error.h>
 #include <menu.h>
 #include <xstrings.h>
 #include <xterm.h>
@@ -3272,7 +3273,7 @@ checkFontInfo(int value, const char *tag, int failed)
     if (value == 0 || failed) {
 	if (value == 0) {
 	    xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
-	    exit(1);
+	    exit(ERROR_MISC);
 	} else {
 	    xtermWarning("Selected font has no valid %s for ISO-8859-1 encoding\n", tag);
 	}

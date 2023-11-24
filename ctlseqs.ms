@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.695 2023/10/14 10:24:47 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.696 2023/11/24 00:40:18 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #387
-.ds RF 2023/10/14
+.ds LF Patch #389
+.ds RF 2023/11/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1898,10 +1898,6 @@ The response is
 The last two parameters apply to VT300 & up (keyboard ready) and
 VT400 & up (LK01) respectively.
 .iP
-  \*(Ps = \*5\*3 \(-> Report Locator status.
-The response is
-\*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or
-\*(Cs\*?\*5\*0\*n No Locator, if not.
   \*(Ps = \*5\*5 \(-> Report Locator status.
 The response is
 \*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or

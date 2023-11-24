@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1067 2023/11/15 21:51:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.1068 2023/11/24 00:58:37 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -6713,7 +6713,7 @@ xt_error(String message)
     if (x_getenv("DISPLAY") == 0) {
 	xtermWarning("DISPLAY is not set\n");
     }
-    exit(1);
+    exit(ERROR_MISC);
 }
 
 int

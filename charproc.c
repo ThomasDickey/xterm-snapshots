@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1986 2023/11/23 17:36:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1988 2023/11/24 00:56:42 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4259,8 +4259,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    }
 		}
 		break;
-	    case 53:		/* according to existing xterm handling */
-		/* FALLTHRU */
 	    case 55:		/* according to the VT330/VT340 Text Programming Manual */
 		TRACE(("...request locator status\n"));
 		if (sp->private_function
@@ -9350,7 +9348,7 @@ repairColors(XtermWidget target)
 	screen->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultBackground);
 	if (screen->Tcolors[TEXT_FG].resource == 0 ||
 	    screen->Tcolors[TEXT_BG].resource == 0) {
-	    Exit(1);
+	    Exit(ERROR_MISC);
 	}
 	screen->Tcolors[TEXT_FG].value = target->dft_foreground;
 	screen->Tcolors[TEXT_BG].value = target->dft_background;
@@ -11908,7 +11906,7 @@ VTRealize(Widget w,
     /* really screwed if we couldn't open default font */
     if (!GetNormalFont(screen, fNorm)->fs) {
 	xtermWarning("unable to locate a suitable font\n");
-	Exit(1);
+	Exit(ERROR_MISC);
     }
 #if OPT_WIDE_CHARS
     if (screen->utf8_mode) {

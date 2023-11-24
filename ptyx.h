@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1104 2023/11/15 21:50:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1105 2023/11/24 11:55:18 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1674,19 +1674,26 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
-#define NARROW_ICHAR	0xffff
+#define NARROW_ICHAR    0xffff
 #if OPT_WIDER_ICHAR
-#define is_UCS_SPECIAL(c) ((c) >= 0xfff0 && (c) <= 0xffff)
-#define WIDEST_ICHAR	0x1fffff
-typedef unsigned IChar;		/* for 8-21 bit characters */
+#define is_NON_CHAR(c)          (((c) >= 0xffd0 && (c) <= 0xfdef) || \
+                                 ((c) >= 0xfffe && (c) <= 0xffff) || \
+                                 ((c) > 0xffff && \
+                                  (((c) >> 1) & 0xffff) == 0xffff))
+#define is_UCS_SPECIAL(c)       ((c) >= 0xfff0 && (c) <= 0xffff)
+#define WIDEST_ICHAR    0x1fffff
+typedef unsigned IChar;         /* for 8-21 bit characters */
 #else
-#define is_UCS_SPECIAL(c) ((c) >= 0xfff0)
-#define WIDEST_ICHAR	NARROW_ICHAR
+#define is_NON_CHAR(c)          (((c) >= 0xffd0 && (c) <= 0xfdef) || \
+                                 ((c) >= 0xfffe && (c) <= 0xffff))
+#define is_UCS_SPECIAL(c)       ((c) >= 0xfff0)
+#define WIDEST_ICHAR    NARROW_ICHAR
 typedef unsigned short IChar;	/* for 8-16 bit characters */
 #endif
 #else	/* !OPT_WIDE_CHARS */
 #undef OPT_WIDER_ICHAR
 #define OPT_WIDER_ICHAR 0
+#define is_NON_CHAR(c)          ((c) > 255)
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
 typedef unsigned char IChar;	/* for 8-bit characters */
