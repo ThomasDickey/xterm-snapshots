@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.940 2023/11/14 01:24:08 tom Exp $ */
+/* $XTermId: xterm.h,v 1.941 2023/11/29 00:22:24 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1694,6 +1694,8 @@ extern void TabZonk (Tabs /* tabs */);
 extern Bool TabIsSet (Tabs /* tabs */, int /* col */);
 
 /* util.c */
+extern Boolean AssignFgColor (XtermWidget /* xw */, Pixel /* bg */);
+extern Boolean AssignBgColor (XtermWidget /* xw */, Pixel /* bg */);
 extern Boolean isDefaultBackground (const char * /* name */);
 extern Boolean isDefaultForeground (const char * /* name */);
 extern CgsEnum whichXtermCgs (XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);

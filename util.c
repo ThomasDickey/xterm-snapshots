@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.941 2023/09/14 22:55:55 tom Exp $ */
+/* $XTermId: util.c,v 1.942 2023/11/29 00:22:08 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2543,12 +2543,53 @@ GetColors(XtermWidget xw, ScrnColors * pColors)
     }
 }
 
+Boolean
+AssignFgColor(XtermWidget xw, Pixel fg)
+{
+    Boolean repaint = False;
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
+
+    T_COLOR(screen, TEXT_FG) = fg;
+    TRACE(("... TEXT_FG: %#lx\n", fg));
+    if (screen->Vshow) {
+	setCgsFore(xw, win, gcNorm, fg);
+	setCgsBack(xw, win, gcNormReverse, fg);
+	setCgsFore(xw, win, gcBold, fg);
+	setCgsBack(xw, win, gcBoldReverse, fg);
+	repaint = True;
+    }
+    FreeMarkGCs(xw);
+
+    return repaint;
+}
+
+Boolean
+AssignBgColor(XtermWidget xw, Pixel bg)
+{
+    Boolean repaint = False;
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
+
+    T_COLOR(screen, TEXT_BG) = bg;
+    TRACE(("... TEXT_BG: %#lx\n", bg));
+    if (screen->Vshow) {
+	setCgsBack(xw, win, gcNorm, bg);
+	setCgsFore(xw, win, gcNormReverse, bg);
+	setCgsBack(xw, win, gcBold, bg);
+	setCgsFore(xw, win, gcBoldReverse, bg);
+	set_background(xw, -1);
+	repaint = True;
+    }
+
+    return repaint;
+}
+
 void
 ChangeColors(XtermWidget xw, ScrnColors * pNew)
 {
-    Bool repaint = False;
+    Boolean repaint = False;
     TScreen *screen = TScreenOf(xw);
-    VTwin *win = WhichVWin(screen);
 
     TRACE(("ChangeColors\n"));
 
@@ -2568,32 +2609,14 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	FreeMarkGCs(xw);
     }
 
-    if (COLOR_DEFINED(pNew, TEXT_FG)) {
-	Pixel fg = COLOR_VALUE(pNew, TEXT_FG);
-	T_COLOR(screen, TEXT_FG) = fg;
-	TRACE(("... TEXT_FG: %#lx\n", T_COLOR(screen, TEXT_FG)));
-	if (screen->Vshow) {
-	    setCgsFore(xw, win, gcNorm, fg);
-	    setCgsBack(xw, win, gcNormReverse, fg);
-	    setCgsFore(xw, win, gcBold, fg);
-	    setCgsBack(xw, win, gcBoldReverse, fg);
-	    repaint = True;
-	}
-	FreeMarkGCs(xw);
+    if (COLOR_DEFINED(pNew, TEXT_FG)
+	&& AssignFgColor(xw, COLOR_VALUE(pNew, TEXT_FG))) {
+	repaint = True;
     }
 
-    if (COLOR_DEFINED(pNew, TEXT_BG)) {
-	Pixel bg = COLOR_VALUE(pNew, TEXT_BG);
-	T_COLOR(screen, TEXT_BG) = bg;
-	TRACE(("... TEXT_BG: %#lx\n", T_COLOR(screen, TEXT_BG)));
-	if (screen->Vshow) {
-	    setCgsBack(xw, win, gcNorm, bg);
-	    setCgsFore(xw, win, gcNormReverse, bg);
-	    setCgsBack(xw, win, gcBold, bg);
-	    setCgsFore(xw, win, gcBoldReverse, bg);
-	    set_background(xw, -1);
-	    repaint = True;
-	}
+    if (COLOR_DEFINED(pNew, TEXT_BG)
+	&& AssignBgColor(xw, COLOR_VALUE(pNew, TEXT_BG))) {
+	repaint = True;
     }
 #if OPT_HIGHLIGHT_COLOR
     if (COLOR_DEFINED(pNew, HIGHLIGHT_BG)) {

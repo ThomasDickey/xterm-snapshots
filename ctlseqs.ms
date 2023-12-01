@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.696 2023/11/24 00:40:18 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.701 2023/12/01 09:05:52 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #389
-.ds RF 2023/11/23
+.ds RF 2023/12/01
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -218,6 +218,7 @@
 .[] $ $
 .[] # #
 .[] % %
+.[] & &
 .[] (( (
 .[] ) )
 .[] * *
@@ -317,6 +318,7 @@
 .ds Pc \fIP\v'.3m'\h'-.2m'\s-2c\s0\v'-.3m'\fP
 .ds Pd \fIP\v'.3m'\h'-.2m'\s-2d\s0\v'-.3m'\fP
 .ds Pe \fIP\v'.3m'\h'-.2m'\s-2e\s0\v'-.3m'\fP
+.ds Pf \fIP\v'.3m'\h'-.2m'\s-2f\s0\v'-.3m'\fP
 .ds Pg \fIP\v'.3m'\h'-.2m'\s-2g\s0\v'-.3m'\fP
 .ds Ph \fIP\v'.3m'\h'-.2m'\s-2h\s0\v'-.3m'\fP
 .ds Pi \fIP\v'.3m'\h'-.2m'\s-2i\s0\v'-.3m'\fP
@@ -878,10 +880,23 @@ The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .
 .iP
 .IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
-Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320.
+Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
 \fI\*(XT\fP ignores this in UTF-8 mode.
+.IP
+VT320 provides these:
   \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic
   \*(Dc\*1\*!\*u\*A\*(ST	\(-> ISO Latin-1 supplemental
+.IP
+VT510 adds these:
+  \*(Dc\*0\*!\*u\*(Dq\*?\*(ST	\(-> DEC Greek
+  \*(Dc\*0\*!\*u\*(Dq\*4\*(ST	\(-> DEC Hebrew
+  \*(Dc\*0\*!\*u\*%\*0\*(ST	\(-> DEC Turkish
+  \*(Dc\*0\*!\*u\*&\*4\*(ST	\(-> DEC Cyrillic
+  \*(Dc\*0\*!\*u\*(cB\*(ST	\(-> ISO Latin-2 Supplemental
+  \*(Dc\*0\*!\*u\*F\*(ST	\(-> ISO Greek Supplemental
+  \*(Dc\*0\*!\*u\*H\*(ST	\(-> ISO Hebrew Supplemental
+  \*(Dc\*0\*!\*u\*M\*(ST	\(-> ISO Latin-5 Supplemental
+  \*(Dc\*0\*!\*u\*L\*(ST	\(-> ISO Latin-Cyrillic
 .
 .iP
 .IP \\*(Dc\\*$\\*q\\*(Pt\\*s\\*(ST
@@ -900,6 +915,8 @@ The string following the \*(``q\*('' is one of the following:
   \*$\*~	\(-> DECSSDT
   \**\*x	\(-> DECSACE
   \**\*|	\(-> DECSNLS
+  \*,\*|	\(-> DECAC (VT525 only)
+  \*,\*}	\(-> DECATC (VT525 only)
 .br
 \fI\*(xt\fP responds with
 \*(Dc\*1\*$\*r\*(Pt\*s\*(ST
@@ -2236,10 +2253,8 @@ Restore cursor (SCORC, also ANSI.SYS).
 .
 .iP
 .IP \\*(Cs\\*&\\*u
-User-Preferred Supplemental Set (DECRQUPSS), VT320.
-Response is DECAUPSS:
-  \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic
-  \*(Dc\*1\*!\*u\*A\*(ST	\(-> ISO Latin-1 supplemental
+User-Preferred Supplemental Set (DECRQUPSS), VT320, VT510.
+Response is DECAUPSS.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*u
@@ -2485,6 +2500,45 @@ Select number of lines per screen (DECSNLS), VT420 and up.
 Pop video attributes from stack (XTPOPSGR), \fI\*(xt\fP.
 Popping restores the video-attributes which were saved using XTPUSHSGR
 to their previous state.
+.iP
+.IP  \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*|
+Assign Color (DECAC), VT525 only.
+  \*(Ps selects the color item
+  \*(Pf is the foreground color index 0..15
+  \*(Pb is the background color index 0..15
+.IP
+Color items:
+  \*(Ps = \*1 \(-> normal text
+  \*(Ps = \*2 \(-> window frame
+.IP
+\fI\*(xt\fP uses the SGR color palette with DECAC color item 1 to
+update the VT100 window colors,
+like \*(Os \*1\*0 and \*1\*1.
+.iP
+.IP \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*}
+Alternate Text Color (DECATC), VT525 only.
+This feature specifies the colors to use when \%DECSTGLT is selected to 1 or 2.
+  \*(Ps selects attribute combinations
+  \*(Pf is the foreground color index 0..15
+  \*(Pb is the background color index 0..15
+.IP
+Attribute combinations:
+  \*(Ps = \*0 \(-> normal text
+  \*(Ps = \*1 \(-> bold
+  \*(Ps = \*2 \(-> reverse
+  \*(Ps = \*3 \(-> underline
+  \*(Ps = \*4 \(-> blink
+  \*(Ps = \*5 \(-> bold reverse
+  \*(Ps = \*6 \(-> bold underline
+  \*(Ps = \*7 \(-> bold blink
+  \*(Ps = \*8 \(-> reverse underline
+  \*(Ps = \*9 \(-> reverse blink
+  \*(Ps = \*10 \(-> bold underline blink
+  \*(Ps = \*11 \(-> bold reverse underline
+  \*(Ps = \*12 \(-> bold reverse blink
+  \*(Ps = \*13 \(-> bold underline blink
+  \*(Ps = \*14 \(-> reverse underline blink
+  \*(Ps = \*15 \(-> bold reverse underline blink
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*}

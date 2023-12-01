@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1105 2023/11/24 11:55:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1112 2023/12/01 00:56:07 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -839,6 +839,10 @@ typedef enum {
 #define OPT_WIDE_ATTRS  1 /* true if xterm supports 16-bit attributes */
 #endif
 
+#ifndef OPT_VT525_COLORS
+#define OPT_VT525_COLORS 1 /* true if xterm is configured for VT525 colors */
+#endif
+
 #ifndef OPT_WIDE_CHARS
 #define OPT_WIDE_CHARS  1 /* true if xterm supports 16-bit characters */
 #endif
@@ -1083,14 +1087,14 @@ typedef enum {
  * restoremodes() and do_dec_rqm().
  */
 typedef enum {
-    srm_DECCKM = 1
-    ,srm_DECANM = 2
-    ,srm_DECCOLM = 3
-    ,srm_DECSCLM = 4
-    ,srm_DECSCNM = 5
-    ,srm_DECOM = 6
-    ,srm_DECAWM = 7
-    ,srm_DECARM = 8
+    srm_DECCKM = 1		/* Cursor Keys Mode */
+    ,srm_DECANM = 2		/* ANSI Mode */
+    ,srm_DECCOLM = 3		/* Column Mode */
+    ,srm_DECSCLM = 4		/* Scrolling Mode */
+    ,srm_DECSCNM = 5		/* Screen Mode */
+    ,srm_DECOM = 6		/* Origin Mode */
+    ,srm_DECAWM = 7		/* Autowrap Mode */
+    ,srm_DECARM = 8		/* Autorepeat Mode */
     ,srm_X10_MOUSE = SET_X10_MOUSE
 #if OPT_TOOLBAR
     ,srm_RXVT_TOOLBAR = 10
@@ -1100,19 +1104,21 @@ typedef enum {
     ,srm_CURSOR_BLINK_OPS = 13
     ,srm_XOR_CURSOR_BLINKS = 14
 #endif
-    ,srm_DECPFF = 18
-    ,srm_DECPEX = 19
-    ,srm_DECTCEM = 25
+    ,srm_DECPFF = 18		/* Print Form Feed Mode */
+    ,srm_DECPEX = 19		/* Printer Extent Mode */
+    ,srm_DECTCEM = 25		/* Text Cursor Enable Mode */
     ,srm_RXVT_SCROLLBAR = 30
+    ,srm_DECRLM = 34		/* vt510:Cursor Right to Left Mode */
 #if OPT_SHIFT_FONTS
-    ,srm_RXVT_FONTSIZE = 35
+    ,srm_RXVT_FONTSIZE = 35	/* also vt520:DECHEBM */
 #endif
+    ,srm_DECHEM = 36		/* vt510:Hebrew Encoding Mode */
 #if OPT_TEK4014
     ,srm_DECTEK = 38
 #endif
     ,srm_132COLS = 40
     ,srm_CURSES_HACK = 41
-    ,srm_DECNRCM = 42
+    ,srm_DECNRCM = 42		/* National Replacement Character Set Mode */
 #if OPT_PRINT_GRAPHICS
     ,srm_DECGEPM = 43		/* Graphics Expanded Print Mode */
 #endif
@@ -1124,13 +1130,40 @@ typedef enum {
     ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
 #endif
     ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
-    ,srm_DECNKM = 66
-    ,srm_DECBKM = 67
-    ,srm_DECLRMM = 69
+    ,srm_DECNAKB = 57		/* vt510:Greek/N-A Keyboard Mapping */
+    ,srm_DECIPEM = 58		/* vt510:IBM ProPrinter Emulation Mode */
+    ,srm_DECHCCM = 60		/* vt420:Horizontal Cursor-Coupling Mode */
+    ,srm_DECVCCM = 61		/* vt420:Vertical Cursor-Coupling Mode */
+    ,srm_DECPCCM = 64		/* vt420:Page Cursor-Coupling Mode */
+    ,srm_DECNKM = 66		/* vt420:Numeric Keypad Mode */
+    ,srm_DECBKM = 67		/* vt420:Backarrow Key mode */
+    ,srm_DECKBUM = 68		/* vt420:Keyboard Usage mode */
+    ,srm_DECLRMM = 69		/* vt420:Vertical Split Screen Mode (DECVSSM) */
+    ,srm_DECXRLM = 73		/* vt420:Transmit Rate Limiting */
 #if OPT_SIXEL_GRAPHICS
     ,srm_DECSDM = 80		/* Sixel Display Mode */
 #endif
-    ,srm_DECNCSM = 95
+    ,srm_DECKPM = 81		/* vt420:Key Position Mode */
+    ,srm_DECNCSM = 95		/* vt510:No Clearing Screen On Column Change */
+    ,srm_DECRLCM = 96		/* vt510:Right-to-Left Copy */
+    ,srm_DECCRTSM = 97		/* vt510:CRT Save Mode */
+    ,srm_DECARSM = 98		/* vt510:Auto Resize Mode */
+    ,srm_DECMCM = 99		/* vt510:Modem Control Mode */
+    ,srm_DECCAAM = 100		/* vt510:Auto Answerback Mode */
+    ,srm_DECCANSM = 101		/* vt510:Conceal Answerback Message Mode */
+    ,srm_DECNULM = 102		/* vt510:Ignoring Null Mode */
+    ,srm_DECHDPXM = 103		/* vt510:Half-Duplex Mode */
+    ,srm_DECOSCNM = 106		/* vt510:Overscan Mode */
+    ,srm_DECNUMLK = 108		/* vt510:Num Lock Mode */
+    ,srm_DECCAPSLK = 109	/* vt510:Caps Lock Mode */
+    ,srm_DECKLHIM = 110		/* vt510:Keyboard LEDs Host Indicator Mode */
+    ,srm_DECFWM = 111		/* vt520:Framed Windows Mode */
+    ,srm_DECRPL = 112		/* vt520:Review Previous Lines */
+    ,srm_DECHWUM = 113		/* vt520:Host Wake-Up */
+    ,srm_DECATCUM = 114		/* vt520:Alternate Text Color Underline */
+    ,srm_DECATCBM = 115		/* vt520:Alternate Text Color Blink */
+    ,srm_DECBBSM = 116		/* vt520:Bold and Blink Style Mode */
+    ,srm_DECECM = 117		/* vt520:Erase Color Mode */
     ,srm_VT200_MOUSE = SET_VT200_MOUSE
     ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
     ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
@@ -2410,6 +2443,14 @@ typedef struct {
 #if OPT_WIDE_ATTRS && OPT_SGR2_HASH
 	Boolean		faint_relative;	/* faint is relative?		*/
 #endif
+#if OPT_VT525_COLORS
+	int		assigned_fg;	/* DECAC			*/
+	int		assigned_bg;
+	struct {
+	    int fg;			/* 0..15			*/
+	    int bg;			/* 0..15			*/
+	} alt_colors[16];		/* DECATC if DECSTGLT is 1 or 2	*/
+#endif
 #endif /* OPT_ISO_COLORS */
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
@@ -2742,6 +2783,7 @@ typedef struct {
 	Char		curss;		/* Current single shift.	*/
 	String		term_id;	/* resource for terminal_id	*/
 	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
+	int		display_da1;	/* 100=vt100, 220=vt220, etc.	*/
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
 	int		ansi_level;	/* dpANSI levels 1,2,3		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/

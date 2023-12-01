@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1988 2023/11/24 00:56:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2000 2023/12/01 00:34:50 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1446,16 +1446,19 @@ static const struct {
 	,DATA(csi_star_table)
 	,DATA(csi_dec_dollar_table)
 #endif
+#if OPT_VT52_MODE
+	,DATA(vt52_table)
+	,DATA(vt52_esc_table)
+	,DATA(vt52_ignore_table)
+#endif
+#if OPT_VT525_COLORS
+	,DATA(csi_comma_table)
+#endif
 #if OPT_WIDE_CHARS
 	,DATA(esc_pct_table)
 	,DATA(scs_amp_table)
 	,DATA(scs_pct_table)
 	,DATA(scs_2qt_table)
-#endif
-#if OPT_VT52_MODE
-	,DATA(vt52_table)
-	,DATA(vt52_esc_table)
-	,DATA(vt52_ignore_table)
 #endif
 #if OPT_XTERM_SGR
 	,DATA(csi_hash_table)
@@ -1513,6 +1516,10 @@ check_tables(void)
 	}
 	/*
 	 * All of the tables should have their GL/GR parts encoded the same.
+	 *
+	 * Originally reported by Paul Williams (patch #171), this is a
+	 * standard feature of DEC's terminals, documented in DEC 070 section
+	 * 3.5.4.5 "GR Graphic Characters Within Control Strings".
 	 */
 	for (ch = 32; ch < 127; ++ch) {
 	    PARSE_T st_l = table[ch];
@@ -3728,8 +3735,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * response, but there's no control sequence that modifies
 		 * this.  We set it via a resource.
 		 */
-		if (screen->terminal_id < 200) {
-		    switch (screen->terminal_id) {
+		if (screen->display_da1 < 200) {
+		    switch (screen->display_da1) {
 		    case 132:
 			reply.a_param[count++] = 4;	/* VT132 */
 #if OPT_REGIS_GRAPHICS
@@ -3765,7 +3772,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    }
 		} else {
 		    reply.a_param[count++] = (ParmType) (60
-							 + screen->terminal_id
+							 + screen->display_da1
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
@@ -3787,7 +3794,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
 		    reply.a_param[count++] = 16;	/* locator port */
-		    if (screen->terminal_id >= 400) {
+		    if (screen->display_da1 >= 400) {
 			reply.a_param[count++] = 17;	/* terminal state interrogation */
 			reply.a_param[count++] = 18;	/* windowing extension */
 			reply.a_param[count++] = 21;	/* horizontal scrolling */
@@ -5474,6 +5481,101 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = eigtable;
 	    break;
 #endif /* OPT_DEC_RECTOPS */
+
+#if OPT_VT525_COLORS
+	case CASE_CSI_COMMA_STATE:
+	    TRACE(("CASE_CSI_COMMA_STATE\n"));
+	    /* csi comma (,) */
+	    if (screen->vtXX_level >= 5)
+		sp->parsestate = csi_comma_table;
+	    else
+		sp->parsestate = eigtable;
+	    break;
+
+	case CASE_DECAC:
+	    TRACE(("CASE_DECAC\n"));
+#if OPT_ISO_COLORS
+	    if (screen->terminal_id >= 525) {
+		int fg, bg;
+
+		switch (GetParam(0)) {
+		case 1:
+		    fg = GetParam(1);
+		    bg = GetParam(2);
+		    if (fg >= 0 && fg < 16 && bg >= 0 && bg < 16) {
+			Boolean repaint = False;
+
+			if (AssignFgColor(xw,
+					  GET_COLOR_RES(xw, screen->Acolors[fg])))
+			    repaint = True;
+			if (AssignBgColor(xw,
+					  GET_COLOR_RES(xw, screen->Acolors[bg])))
+			    repaint = True;
+			if (repaint)
+			    xtermRepaint(xw);
+			screen->assigned_fg = fg;
+			screen->assigned_bg = bg;
+		    }
+		    break;
+		case 2:
+		    /* window frames: not implemented */
+		    break;
+		}
+	    }
+#endif
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECATC:
+#if OPT_ISO_COLORS
+	    TRACE(("CASE_DECATC\n"));
+	    if (screen->terminal_id >= 525) {
+		int ps = GetParam(0);
+		int fg = GetParam(1);
+		int bg = GetParam(2);
+		if (ps >= 0 && ps < 16
+		    && fg >= 0 && fg < 16
+		    && bg >= 0 && bg < 16) {
+		    screen->alt_colors[ps].fg = fg;
+		    screen->alt_colors[ps].bg = bg;
+		}
+	    }
+#endif
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECTID:
+	    TRACE(("CASE_DECTID\n"));
+	    switch (GetParam(0)) {
+	    case 0:
+		screen->display_da1 = 100;
+		break;
+	    case 1:
+		screen->display_da1 = 101;
+		break;
+	    case 2:
+		screen->display_da1 = 102;
+		break;
+	    case 5:
+		screen->display_da1 = 220;
+		break;
+	    case 7:
+		screen->display_da1 = 320;
+		break;
+	    case 9:
+		screen->display_da1 = 420;
+		break;
+	    case 10:
+		screen->display_da1 = 520;
+		break;
+	    }
+	    ResetState(sp);
+	    break;
+#else
+	case CASE_CSI_COMMA_STATE:
+	    sp->parsestate = eigtable;
+	    break;
+#endif
 
 	case CASE_DECSASD:
 #if OPT_STATUS_LINE
@@ -7493,6 +7595,35 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #endif
+	case srm_DECARSM:	/* ignore */
+	case srm_DECATCBM:	/* ignore */
+	case srm_DECATCUM:	/* ignore */
+	case srm_DECBBSM:	/* ignore */
+	case srm_DECCAAM:	/* ignore */
+	case srm_DECCANSM:	/* ignore */
+	case srm_DECCAPSLK:	/* ignore */
+	case srm_DECCRTSM:	/* ignore */
+	case srm_DECECM:	/* ignore */
+	case srm_DECFWM:	/* ignore */
+	case srm_DECHDPXM:	/* ignore */
+	case srm_DECHEM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
+	case srm_DECHWUM:	/* ignore */
+	case srm_DECIPEM:	/* ignore */
+	case srm_DECKBUM:	/* ignore */
+	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKPM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
+	case srm_DECMCM:	/* ignore */
+	case srm_DECNAKB:	/* ignore */
+	case srm_DECNULM:	/* ignore */
+	case srm_DECNUMLK:	/* ignore */
+	case srm_DECOSCNM:	/* ignore */
+	case srm_DECPCCM:	/* ignore */
+	case srm_DECRLCM:	/* ignore */
+	case srm_DECRPL:	/* ignore */
+	case srm_DECVCCM:	/* ignore */
+	case srm_DECXRLM:	/* ignore */
 	default:
 	    TRACE(("DATA_ERROR: unknown private code %d\n", code));
 	    break;
@@ -7792,6 +7923,37 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    break;
 #endif
+	case srm_DECARSM:	/* ignore */
+	case srm_DECATCBM:	/* ignore */
+	case srm_DECATCUM:	/* ignore */
+	case srm_DECBBSM:	/* ignore */
+	case srm_DECCAAM:	/* ignore */
+	case srm_DECCANSM:	/* ignore */
+	case srm_DECCAPSLK:	/* ignore */
+	case srm_DECCRTSM:	/* ignore */
+	case srm_DECECM:	/* ignore */
+	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
+	case srm_DECHDPXM:	/* ignore */
+	case srm_DECHEM:	/* ignore */
+	case srm_DECHWUM:	/* ignore */
+	case srm_DECIPEM:	/* ignore */
+	case srm_DECKBUM:	/* ignore */
+	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKPM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
+	case srm_DECMCM:	/* ignore */
+	case srm_DECNAKB:	/* ignore */
+	case srm_DECNULM:	/* ignore */
+	case srm_DECNUMLK:	/* ignore */
+	case srm_DECOSCNM:	/* ignore */
+	case srm_DECPCCM:	/* ignore */
+	case srm_DECRLCM:	/* ignore */
+	case srm_DECRPL:	/* ignore */
+	case srm_DECVCCM:	/* ignore */
+	case srm_DECXRLM:	/* ignore */
+	default:
+	    break;
 	}
     }
 }
@@ -8182,6 +8344,37 @@ restoremodes(XtermWidget xw)
 		   BtoS(screen->sixel_scrolls_right)));
 	    break;
 #endif
+	case srm_DECARSM:	/* ignore */
+	case srm_DECATCBM:	/* ignore */
+	case srm_DECATCUM:	/* ignore */
+	case srm_DECBBSM:	/* ignore */
+	case srm_DECCAAM:	/* ignore */
+	case srm_DECCANSM:	/* ignore */
+	case srm_DECCAPSLK:	/* ignore */
+	case srm_DECCRTSM:	/* ignore */
+	case srm_DECECM:	/* ignore */
+	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
+	case srm_DECHDPXM:	/* ignore */
+	case srm_DECHEM:	/* ignore */
+	case srm_DECHWUM:	/* ignore */
+	case srm_DECIPEM:	/* ignore */
+	case srm_DECKBUM:	/* ignore */
+	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKPM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
+	case srm_DECMCM:	/* ignore */
+	case srm_DECNAKB:	/* ignore */
+	case srm_DECNULM:	/* ignore */
+	case srm_DECNUMLK:	/* ignore */
+	case srm_DECOSCNM:	/* ignore */
+	case srm_DECPCCM:	/* ignore */
+	case srm_DECRLCM:	/* ignore */
+	case srm_DECRPL:	/* ignore */
+	case srm_DECVCCM:	/* ignore */
+	case srm_DECXRLM:	/* ignore */
+	default:
+	    break;
 	}
     }
 }
@@ -10249,6 +10442,7 @@ VTInitialize(Widget wrequest,
 
     init_Sres(screen.term_id);
     screen->terminal_id = decodeTerminalID(TScreenOf(request)->term_id);
+    screen->display_da1 = screen->terminal_id;
     /*
      * (1) If a known terminal model, and not a graphical terminal, preserve
      *     the terminal id.
@@ -10281,6 +10475,7 @@ VTInitialize(Widget wrequest,
 	    break;
 #endif
 	screen->terminal_id = limitedTerminalID(screen->terminal_id);
+	screen->display_da1 = screen->terminal_id;
 	break;
     }
     TRACE(("term_id '%s' -> terminal_id %d\n",
@@ -10629,6 +10824,21 @@ VTInitialize(Widget wrequest,
 #endif
 #if OPT_WIDE_ATTRS && OPT_SGR2_HASH
     init_Bres(screen.faint_relative);
+#endif
+
+#if OPT_VT525_COLORS
+    screen->assigned_fg = 7;
+    screen->assigned_bg = 0;
+#if MIN_ANSI_COLORS >= 16
+    /*
+     * VT520-RM does not define the initial palette, but this is preferable
+     * to black-on-black.
+     */
+    for (i = 0; i < 16; i++) {
+	screen->alt_colors[i].fg = screen->assigned_fg;
+	screen->alt_colors[i].bg = screen->assigned_bg;
+    }
+#endif
 #endif
 
     TRACE(("...will fake resources for color%d to color%d\n",

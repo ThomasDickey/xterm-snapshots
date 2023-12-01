@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1068 2023/11/24 00:58:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.1074 2023/12/01 00:35:15 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4617,10 +4617,11 @@ skip_params(const char *cp)
     return cp;
 }
 
-#if OPT_DEC_RECTOPS
+#if OPT_DEC_RECTOPS || OPT_VT525_COLORS
 static int
 parse_int_param(const char **cp)
 {
+    Boolean found = False;
     int result = 0;
     const char *s = *cp;
     while (*s != '\0') {
@@ -4629,15 +4630,18 @@ parse_int_param(const char **cp)
 	    break;
 	} else if (*s >= '0' && *s <= '9') {
 	    result = (result * 10) + (*s++ - '0');
+	    found = True;
 	} else {
 	    s += strlen(s);
 	}
     }
-    TRACE(("parse-int %s ->%d, %#x->%s\n", *cp, result, result, s));
+    TRACE(("parse-int \"%s\" ->%d, %#x->\"%s\"\n", *cp, result, result, s));
     *cp = s;
-    return result;
+    return found ? result : -1;
 }
+#endif
 
+#if OPT_DEC_RECTOPS
 static int
 parse_chr_param(const char **cp)
 {
@@ -4875,6 +4879,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
     const char *cp = (const char *) dcsbuf;
+    const char *cp2;
     Bool okay;
     ANSI params;
     char psarg = '0';
@@ -4980,7 +4985,40 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s",
 			screen->max_row + 1,
 			cp);
-	    } else {
+	    } else
+#if OPT_VT525_COLORS && OPT_ISO_COLORS
+		if (screen->terminal_id == 525
+		    && !strcmp((cp2 = skip_params(cp)), ",}")) {	/* DECATC */
+		int value = parse_int_param(&cp);
+		TRACE(("reply DECATC:%s\n", cp));
+		if (value >= 0 && value < 16 && *cp2 == ',') {
+		    sprintf(reply, "%d;%d;%d%s", value,
+			    screen->alt_colors[value].fg,
+			    screen->alt_colors[value].bg,
+			    cp2);
+		} else {
+		    okay = False;
+		}
+	    } else if (screen->terminal_id == 525
+		       && !strcmp((cp2 = skip_params(cp)), ",|")) {	/* DECAC */
+		int value = parse_int_param(&cp);
+		TRACE(("reply DECAC\n"));
+		switch (value) {
+		case 1:	/* normal text */
+		    sprintf(reply, "%d,%d%s",
+			    screen->assigned_fg,
+			    screen->assigned_bg,
+			    cp2);
+		    break;
+		case 2:	/* window frame (not implemented) */
+		    /* FALLTHRU */
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else
+#endif
+	    {
 		okay = False;
 	    }
 
@@ -5624,6 +5662,35 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->sixel_scrolls_right);
 	    break;
 #endif
+	case srm_DECARSM:	/* ignore */
+	case srm_DECATCBM:	/* ignore */
+	case srm_DECATCUM:	/* ignore */
+	case srm_DECBBSM:	/* ignore */
+	case srm_DECCAAM:	/* ignore */
+	case srm_DECCANSM:	/* ignore */
+	case srm_DECCAPSLK:	/* ignore */
+	case srm_DECCRTSM:	/* ignore */
+	case srm_DECECM:	/* ignore */
+	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
+	case srm_DECHDPXM:	/* ignore */
+	case srm_DECHEM:	/* ignore */
+	case srm_DECHWUM:	/* ignore */
+	case srm_DECIPEM:	/* ignore */
+	case srm_DECKBUM:	/* ignore */
+	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKPM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
+	case srm_DECMCM:	/* ignore */
+	case srm_DECNAKB:	/* ignore */
+	case srm_DECNULM:	/* ignore */
+	case srm_DECNUMLK:	/* ignore */
+	case srm_DECOSCNM:	/* ignore */
+	case srm_DECPCCM:	/* ignore */
+	case srm_DECRLCM:	/* ignore */
+	case srm_DECRPL:	/* ignore */
+	case srm_DECVCCM:	/* ignore */
+	case srm_DECXRLM:	/* ignore */
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));

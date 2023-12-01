@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #389 (2023/11/23)
+               updated for XTerm Patch #389 (2023/12/01)
 
 
 
@@ -415,10 +415,21 @@ DCS Ps ; Ps | Pt ST
           codes (e.g., F6=17).
 
 DCS Ps! u Pt ST
-          Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320.
-          XTerm ignores this in UTF-8 mode.
+          Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320,
+          VT510.  XTerm ignores this in UTF-8 mode.
+          VT320 provides these:
             DCS 0 ! u % 5 ST  -> DEC Supplemental Graphic
             DCS 1 ! u A ST    -> ISO Latin-1 supplemental
+          VT510 adds these:
+            DCS 0 ! u " ? ST  -> DEC Greek
+            DCS 0 ! u " 4 ST  -> DEC Hebrew
+            DCS 0 ! u % 0 ST  -> DEC Turkish
+            DCS 0 ! u & 4 ST  -> DEC Cyrillic
+            DCS 0 ! u B ST    -> ISO Latin-2 Supplemental
+            DCS 0 ! u F ST    -> ISO Greek Supplemental
+            DCS 0 ! u H ST    -> ISO Hebrew Supplemental
+            DCS 0 ! u M ST    -> ISO Latin-5 Supplemental
+            DCS 0 ! u L ST    -> ISO Latin-Cyrillic
 
 DCS $ q Pt ST
           Request Status String (DECRQSS), VT420 and up.
@@ -435,6 +446,8 @@ DCS $ q Pt ST
             $ ~     -> DECSSDT
             * x     -> DECSACE
             * |     -> DECSNLS
+            , |     -> DECAC (VT525 only)
+            , }     -> DECATC (VT525 only)
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r  ST for invalid requests.
@@ -1561,10 +1574,8 @@ CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
 
 CSI u     Restore cursor (SCORC, also ANSI.SYS).
 
-CSI & u   User-Preferred Supplemental Set (DECRQUPSS), VT320.  Response
-          is DECAUPSS:
-            DCS 0 ! u % 5 ST  -> DEC Supplemental Graphic
-            DCS 1 ! u A ST    -> ISO Latin-1 supplemental
+CSI & u   User-Preferred Supplemental Set (DECRQUPSS), VT320, VT510.
+          Response is DECAUPSS.
 
 CSI Ps SP u
           Set margin-bell volume (DECSMBV), VT520.
@@ -1769,6 +1780,42 @@ CSI Ps * |
 CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
           restores the video-attributes which were saved using XTPUSHSGR
           to their previous state.
+
+CSI Ps; Pf; Pb, |
+          Assign Color (DECAC), VT525 only.
+            Ps selects the color item
+            Pf is the foreground color index 0..15
+            Pb is the background color index 0..15
+          Color items:
+            Ps = 1  -> normal text
+            Ps = 2  -> window frame
+          xterm uses the SGR color palette with DECAC color item 1 to
+          update the VT100 window colors, like OSC  1 0  and 1 1 .
+
+CSI Ps; Pf; Pb, }
+          Alternate Text Color (DECATC), VT525 only.  This feature
+          specifies the colors to use when DECSTGLT is selected to 1 or
+          2.
+            Ps selects attribute combinations
+            Pf is the foreground color index 0..15
+            Pb is the background color index 0..15
+          Attribute combinations:
+            Ps = 0  -> normal text
+            Ps = 1  -> bold
+            Ps = 2  -> reverse
+            Ps = 3  -> underline
+            Ps = 4  -> blink
+            Ps = 5  -> bold reverse
+            Ps = 6  -> bold underline
+            Ps = 7  -> bold blink
+            Ps = 8  -> reverse underline
+            Ps = 9  -> reverse blink
+            Ps = 1 0 -> bold underline blink
+            Ps = 1 1 -> bold reverse underline
+            Ps = 1 2 -> bold reverse blink
+            Ps = 1 3 -> bold underline blink
+            Ps = 1 4 -> reverse underline blink
+            Ps = 1 5 -> bold reverse underline blink
 
 CSI Ps ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
@@ -3484,44 +3531,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
+    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
 
-    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
-    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
-    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
+    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
+    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
+    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
     supported by SCO and other vendors.
 
-    The  SCOSC/SCORC pair is considered a private mode because the final
+    The SCOSC/SCORC pair is considered a private mode because the  final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to  octal 0176).  Other private control sequences can be constructed
+    to octal 0176).  Other private control sequences can be  constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals  may  behave differently.  For example, DEC (a contributor
-    to the early xterm as well as a manufacturer of terminals)  used  an
-    incompatible  private control in one of its terminals more than five
+    terminals may behave differently.  For example, DEC  (a  contributor
+    to  the  early xterm as well as a manufacturer of terminals) used an
+    incompatible private control in one of its terminals more than  five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In that model of the VT420, CSI ? Pm;  Pc  r  selects  the  PC  TERM
-    emulation  mode.  When this mode is enabled, the keyboard sends scan
-    codes rather than characters (analogous to X keyboard events).   The
-    first  parameter of this private control enables or disables PC TERM
+    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
+    emulation mode.  When this mode is enabled, the keyboard sends  scan
+    codes  rather than characters (analogous to X keyboard events).  The
+    first parameter of this private control enables or disables PC  TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
+    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
     into account when designing the feature.
 
-    If  there  were  potential  users, xterm could accommodate this by a
-    resource setting.  In retrospect (thirty years  later),  there  have
-    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
+    If there were potential users, xterm could  accommodate  this  by  a
+    resource  setting.   In  retrospect (thirty years later), there have
+    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3531,7 +3578,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.
