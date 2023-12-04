@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1074 2023/12/01 00:35:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.1076 2023/12/02 00:47:57 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2478,9 +2478,11 @@ GenerateLogPath(void)
 	}
     }
 #else
-    static const char log_def_name[] = "XtermLog.XXXXXX";
-    if ((log_default = x_strdup(log_def_name)) != NULL) {
-	MakeTemp(log_default);
+    {
+	static const char log_def_name[] = "XtermLog.XXXXXX";
+	if ((log_default = x_strdup(log_def_name)) != NULL) {
+	    MakeTemp(log_default);
+	}
     }
 #endif
 
@@ -4617,7 +4619,7 @@ skip_params(const char *cp)
     return cp;
 }
 
-#if OPT_DEC_RECTOPS || OPT_VT525_COLORS
+#if OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
 static int
 parse_int_param(const char **cp)
 {
@@ -4879,10 +4881,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
     const char *cp = (const char *) dcsbuf;
-    const char *cp2;
     Bool okay;
     ANSI params;
     char psarg = '0';
+#if OPT_VT525_COLORS && OPT_ISO_COLORS
+    const char *cp2;
+#endif
 
     TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
 

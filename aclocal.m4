@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.517 2023/11/23 11:39:27 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.523 2023/12/04 00:56:22 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -567,7 +567,7 @@ if test "x$ifelse([$2],,CLANG_COMPILER,[$2])" = "xyes" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_CONST_X_STRING version: 7 updated: 2021/06/07 17:39:17
+dnl CF_CONST_X_STRING version: 8 updated: 2023/12/01 17:22:50
 dnl -----------------
 dnl The X11R4-X11R6 Xt specification uses an ambiguous String type for most
 dnl character-strings.
@@ -602,6 +602,7 @@ AC_TRY_COMPILE(
 AC_CACHE_CHECK(for X11/Xt const-feature,cf_cv_const_x_string,[
 	AC_TRY_COMPILE(
 		[
+#undef  _CONST_X_STRING
 #define _CONST_X_STRING	/* X11R7.8 (perhaps) */
 #undef  XTSTRINGDEFINES	/* X11R5 and later */
 #include <stdlib.h>
@@ -1004,7 +1005,29 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 26 updated: 2023/02/10 04:11:55
+dnl CF_FUNC_STRFTIME version: 2 updated: 2023/12/01 20:44:51
+dnl ----------------
+AC_DEFUN([CF_FUNC_STRFTIME],
+[
+AC_CACHE_CHECK(for strftime function,cf_cv_func_strftime,[
+AC_TRY_LINK([
+$ac_includes_default
+#include <time.h>
+],[
+	time_t now = time((time_t*)0);
+	struct tm *tm = localtime(&now);
+	char buffer[80];
+	size_t result = strftime(buffer, sizeof(buffer), "%c", tm);
+
+	(void)result;
+	(void)buffer;
+],[cf_cv_func_strftime=yes],[cf_cv_func_strftime=no])
+])
+
+test "$cf_cv_func_strftime" = yes && AC_DEFINE(HAVE_STRFTIME,1,[Define to 1 to indicate that strftime function is present])
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_FUNC_TGETENT version: 27 updated: 2023/12/01 17:22:50
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1116,7 +1139,7 @@ if test "x$cf_cv_lib_tgetent" != xno ; then
 		AC_TRY_COMPILE([
 #include <termcap.h>],[
 #ifdef NCURSES_VERSION
-make an error
+#error do not use ncurses termcap.h
 #endif],[AC_DEFINE(HAVE_TERMCAP_H)])
 	fi
 else
@@ -1735,7 +1758,7 @@ cf_save_CFLAGS="$cf_save_CFLAGS -we147"
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_LASTLOG version: 7 updated: 2021/01/02 09:31:20
+dnl CF_LASTLOG version: 8 updated: 2023/12/01 17:22:50
 dnl ----------
 dnl Check for header defining _PATH_LASTLOG, or failing that, see if the lastlog
 dnl file exists.
@@ -1751,7 +1774,7 @@ AC_TRY_COMPILE([
 #ifdef HAVE_PATHS_H
 #include <paths.h>
 #endif
-#endif],[char *path = _PATH_LASTLOG; (void)path],
+#endif],[static char path[] = _PATH_LASTLOG; (void)path],
 	[cf_cv_path_lastlog="_PATH_LASTLOG"],
 	[if test -f /usr/adm/lastlog ; then
 	 	cf_cv_path_lastlog=/usr/adm/lastlog
@@ -1935,7 +1958,7 @@ fi
 test "$cf_cv_mixedcase" = yes && AC_DEFINE(MIXEDCASE_FILENAMES,1,[Define to 1 if filesystem supports mixed-case filenames.])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_MKSTEMP version: 12 updated: 2023/01/05 17:53:11
+dnl CF_MKSTEMP version: 13 updated: 2023/12/01 17:22:50
 dnl ----------
 dnl Check for a working mkstemp.  This creates two files, checks that they are
 dnl successfully created and distinct (AmigaOS apparently fails on the last).
@@ -1950,7 +1973,7 @@ $ac_includes_default
 
 int main(void)
 {
-	char *tmpl = "conftestXXXXXX";
+	static char tmpl[] = "conftestXXXXXX";
 	char name[2][80];
 	int n;
 	int result = 0;
@@ -2249,7 +2272,7 @@ fi # cf_cv_posix_visible
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_SAVED_IDS version: 10 updated: 2023/01/05 17:53:42
+dnl CF_POSIX_SAVED_IDS version: 12 updated: 2023/12/03 19:55:51
 dnl ------------------
 dnl
 dnl Check first if saved-ids are always supported.  Some systems
@@ -2269,16 +2292,15 @@ AC_TRY_LINK(
 #endif
 ],[
 #if defined(_POSIX_SAVED_IDS) && (_POSIX_SAVED_IDS > 0)
-	void *p = (void *) seteuid;
-	int x = seteuid(geteuid());
-	(void)p;
+	int (*my_seteuid)(uid_t) = seteuid;
+	int x = my_seteuid(geteuid());
 	(void)x;
 #elif defined(BSD) && (BSD >= 199103)
 /* The BSD's may implement the runtime check - and it fails.
  * However, saved-ids work almost like POSIX (close enough for most uses).
  */
 #else
-make an error
+#error no saved-ids found
 #endif
 ],[cf_cv_posix_saved_ids=yes
 ],[
@@ -2851,7 +2873,7 @@ cf_cv_struct_lastlog=unknown])])
 test $cf_cv_struct_lastlog != no && AC_DEFINE(USE_STRUCT_LASTLOG,1,[Define to 1 if we have struct lastlog])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SVR4 version: 5 updated: 2012/10/04 05:24:07
+dnl CF_SVR4 version: 6 updated: 2023/12/01 17:22:50
 dnl -------
 dnl Check if this is an SVR4 system.  We need the definition for xterm
 AC_DEFUN([CF_SVR4],
@@ -2860,7 +2882,7 @@ AC_CHECK_LIB(elf, elf_begin,[
 AC_CACHE_CHECK(if this is an SVR4 system, cf_cv_svr4,[
 AC_TRY_COMPILE([
 #if defined(__CYGWIN__)
-make an error
+#error Cygwin is not SVr4
 #endif
 #include <elf.h>
 #include <sys/termio.h>
@@ -3104,7 +3126,7 @@ if test "$cf_cv_xopen_source" != no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 15 updated: 2023/01/05 17:57:39
+dnl CF_TTY_GROUP version: 17 updated: 2023/12/01 17:22:50
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
@@ -3196,6 +3218,7 @@ $ac_includes_default
 
 int main(void)
 {
+	static char default_tty[] = "/dev/tty";
 	struct stat sb;
 	struct group *ttygrp;
 	int fd;
@@ -3206,7 +3229,7 @@ int main(void)
 			break;
 	}
 	if (name == 0)
-		name = "/dev/tty";
+		name = default_tty;
 
 	ttygrp = getgrnam(TTY_GROUP_NAME);
 	endgrent();
@@ -3816,7 +3839,7 @@ if test "$with_dbmalloc" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_DESKTOP_CATEGORY version: 9 updated: 2021/01/03 18:30:50
+dnl CF_WITH_DESKTOP_CATEGORY version: 10 updated: 2023/12/02 06:55:40
 dnl ------------------------
 dnl Taking into account the absence of standardization of desktop categories
 dnl take a look to see whether other applications on the current system are
@@ -3839,7 +3862,7 @@ if test -z "$desktop_utils"
 then
 	AC_MSG_CHECKING(for requested desktop-category)
 	AC_ARG_WITH(desktop-category,
-		[  --with-desktop-category=XXX  one or more desktop catgories or auto],
+		[  --with-desktop-category=XXX  one or more desktop categories or auto],
 		[cf_desktop_want=$withval],
 		[cf_desktop_want=auto])
 	AC_MSG_RESULT($cf_desktop_want)
@@ -3984,7 +4007,7 @@ fi
 AC_SUBST(no_icondir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_NAME version: 3 updated: 2015/04/12 15:39:00
+dnl CF_WITH_ICON_NAME version: 4 updated: 2023/11/23 06:40:35
 dnl -----------------
 dnl Allow a default icon-name to be overridden.
 dnl $1 = default icon name
@@ -4003,7 +4026,7 @@ AC_SUBST(ICON_NAME)
 AC_MSG_RESULT($ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_SYMLINK version: 2 updated: 2015/04/12 15:39:00
+dnl CF_WITH_ICON_SYMLINK version: 3 updated: 2023/11/23 06:40:35
 dnl --------------------
 dnl Workaround for systems which are (mis)configured to map all icon references
 dnl for xterm into "xterm" name.  For instance, recent (2013) KDE ignores both
@@ -4029,7 +4052,7 @@ AC_SUBST(ICON_SYMLINK)
 AC_MSG_RESULT($ICON_SYMLINK)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_THEME version: 13 updated: 2020/12/31 10:54:15
+dnl CF_WITH_ICON_THEME version: 14 updated: 2023/11/23 06:40:35
 dnl ------------------
 dnl If asked, check for prerequisites and setup symbols to permit installing
 dnl one or more application icons in the Red Hat icon-theme directory
@@ -4280,7 +4303,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 12 updated: 2021/01/03 18:30:50
+dnl CF_WITH_MAN2HTML version: 13 updated: 2023/11/23 06:40:35
 dnl ----------------
 dnl Check for man2html and groff.  Prefer man2html over groff, but use groff
 dnl as a fallback.  See
@@ -4663,7 +4686,7 @@ if test "$cf_with_xinerama" = yes; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_XPM version: 3 updated: 2012/10/04 06:57:36
+dnl CF_WITH_XPM version: 4 updated: 2023/11/23 06:40:35
 dnl -----------
 dnl Test for Xpm library, update compiler/loader flags if it is wanted and
 dnl found.
@@ -4742,7 +4765,7 @@ CF_TRY_PKG_CONFIG(xinerama,[
 	])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_XKB_BELL_EXT version: 6 updated: 2020/03/10 18:53:47
+dnl CF_XKB_BELL_EXT version: 7 updated: 2023/12/01 17:22:50
 dnl ---------------
 dnl Check for XKB bell extension
 AC_DEFUN([CF_XKB_BELL_EXT],[
@@ -4759,7 +4782,7 @@ AC_TRY_LINK([
 	int x = (XkbBI_Info |XkbBI_MinorError |XkbBI_MajorError |XkbBI_TerminalBell |XkbBI_MarginBell);
 	Atom y = 0;
 	(void)x;
-	XkbBell((Display *)0, (Widget)0, 0, y);
+	XkbBell((Display *)0, (Window)0, 0, y);
 ],[cf_cv_xkb_bell_ext=yes],[cf_cv_xkb_bell_ext=no])
 ])
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT,1,[Define 1 if we have XKB Bell extension])

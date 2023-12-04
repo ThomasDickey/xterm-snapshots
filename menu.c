@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.374 2023/11/24 10:45:59 tom Exp $ */
+/* $XTermId: menu.c,v 1.375 2023/12/01 21:39:31 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -697,7 +697,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 				 toplevel,
 				 NULL, 0);
     TRACE(("created popupShell(%s) widget %p, window %#lx\n",
-	   data->internal_name, list->w, XtWindow(list->w)));
+	   data->internal_name, (void *) list->w, XtWindow(list->w)));
 #endif
     if (list->w != 0) {
 	Boolean *unused = unusedEntries(xw, num);
