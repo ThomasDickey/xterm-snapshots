@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.632 2023/11/14 01:32:08 tom Exp $ */
+/* $XTermId: screen.c,v 1.633 2023/12/06 08:58:59 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2859,6 +2859,22 @@ xtermCheckRect(XtermWidget xw,
 		    ch = (c2 & 0xff);
 		}
 		if (!(mode & csATTRIBS)) {
+#if OPT_VT525_COLORS
+		    if (screen->terminal_id == 525) {
+			if (screen->assigned_bg >= 0 &&
+			    screen->assigned_bg < 16)
+			    ch += screen->assigned_bg;
+			if (screen->assigned_fg >= 0 &&
+			    screen->assigned_fg < 16)
+			    ch += (screen->assigned_fg << 4);
+		    }
+#endif
+		    if (ld->attribs[col] & PROTECTED)
+			ch += 0x2;
+#if OPT_WIDE_ATTRS
+		    if (ld->attribs[col] & INVISIBLE)
+			ch += 0x8;
+#endif
 		    if (ld->attribs[col] & UNDERLINE)
 			ch += 0x10;
 		    if (ld->attribs[col] & INVERSE)

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2000 2023/12/01 00:34:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2001 2023/12/06 00:19:51 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1579,6 +1579,7 @@ check_bitmasks(void)
 	    DATA(DGRP(2), FG_COLOR),
 	    DATA(DGRP(2), PROTECTED),
 	    DATA(DGRP(4), CHARDRAWN),
+	    DATA(DGRP(2), INVISIBLE),
 #if OPT_WIDE_ATTRS
 	    DATA(DGRP(2), ATR_FAINT),
 	    DATA(DGRP(2), ATR_ITALIC),
@@ -1588,7 +1589,6 @@ check_bitmasks(void)
 	    DATA(DGRP(2), ATR_DIRECT_BG),
 #endif
 	    DATA(DMSK(DGRP(2)), SGR_MASK2),
-	    DATA(DGRP(3), INVISIBLE),
 	    DATA(DMSK(DGRP(3)), ATTRIBUTES),
 	    DATA(DGRP(3), REVERSE_VIDEO),
 	    DATA(DGRP(3), WRAPAROUND),

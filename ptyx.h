@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1112 2023/12/01 00:56:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1113 2023/12/06 00:18:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3521,37 +3521,47 @@ typedef struct _TekWidgetRec {
 					   the screen.  Used to distinguish
 					   blanks from empty parts of the
 					   screen when selecting */
+/*
+ * This does not fit in a byte with the other (more important) attributes, but
+ * if wide-attributes are configured, it is possible to maintain it there.
+ */
+#define INVISIBLE	AttrBIT(8)	/* true if writing invisible text */
 
 #if OPT_WIDE_ATTRS
-#define ATR_FAINT	AttrBIT(8)
-#define ATR_ITALIC	AttrBIT(9)
-#define ATR_STRIKEOUT	AttrBIT(10)
-#define ATR_DBL_UNDER	AttrBIT(11)
-#define ATR_DIRECT_FG	AttrBIT(12)
-#define ATR_DIRECT_BG	AttrBIT(13)
+#define ATR_FAINT	AttrBIT(9)
+#define ATR_ITALIC	AttrBIT(10)
+#define ATR_STRIKEOUT	AttrBIT(11)
+#define ATR_DBL_UNDER	AttrBIT(12)
+#define ATR_DIRECT_FG	AttrBIT(13)
+#define ATR_DIRECT_BG	AttrBIT(14)
 #define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER | ATR_DIRECT_FG | ATR_DIRECT_BG)
+#define AttrEND         15
 #else
 #define SGR_MASK2       0
+#define AttrEND         9
 #endif
 
 /*
  * Other flags
  */
-#define INVISIBLE	MiscBIT(0)	/* true if writing invisible text */
-#define REVERSE_VIDEO	MiscBIT(1)	/* true if screen white on black */
-#define WRAPAROUND	MiscBIT(2)	/* true if auto wraparound mode */
-#define	REVERSEWRAP	MiscBIT(3)	/* true if reverse wraparound mode */
-#define	REVERSEWRAP2	MiscBIT(4)	/* true if extended reverse wraparound */
-#define LINEFEED	MiscBIT(5)	/* true if in auto linefeed mode */
-#define ORIGIN		MiscBIT(6)	/* true if in origin mode */
-#define INSERT		MiscBIT(7)	/* true if in insert mode */
-#define SMOOTHSCROLL	MiscBIT(8)	/* true if in smooth scroll mode */
-#define IN132COLUMNS	MiscBIT(9)	/* true if in 132 column mode */
-#define NATIONAL        MiscBIT(10)	/* true if writing national charset */
-#define LEFT_RIGHT      MiscBIT(11)	/* true if left/right margin mode */
-#define NOCLEAR_COLM    MiscBIT(12)	/* true if no clear on DECCOLM change */
+#define REVERSE_VIDEO	MiscBIT(0)	/* true if screen white on black */
+#define WRAPAROUND	MiscBIT(1)	/* true if auto wraparound mode */
+#define	REVERSEWRAP	MiscBIT(2)	/* true if reverse wraparound mode */
+#define	REVERSEWRAP2	MiscBIT(3)	/* true if extended reverse wraparound */
+#define LINEFEED	MiscBIT(4)	/* true if in auto linefeed mode */
+#define ORIGIN		MiscBIT(5)	/* true if in origin mode */
+#define INSERT		MiscBIT(6)	/* true if in insert mode */
+#define SMOOTHSCROLL	MiscBIT(7)	/* true if in smooth scroll mode */
+#define IN132COLUMNS	MiscBIT(8)	/* true if in 132 column mode */
+#define NATIONAL        MiscBIT(9)	/* true if writing national charset */
+#define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
+#define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
-#define DrawBIT(n)	xBIT(n + 8)	/* XTermDraw.draw_flags */
+/*
+ * Drawing-bits start after the video/color attributes, and are independent
+ * of the miscellaneous flags.
+ */
+#define DrawBIT(n)	xBIT(n + AttrEND) /* XTermDraw.draw_flags */
 /* The following attributes are used in the argument of drawXtermText()  */
 #define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
 #define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
