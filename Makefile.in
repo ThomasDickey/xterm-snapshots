@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.265 2023/09/04 16:27:43 tom Exp $
+## $XTermId: Makefile.in,v 1.266 2023/12/10 19:32:38 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -212,6 +212,8 @@ graphics_regis$o : $(VTPARSE_H)
 graphics_sixel$o : $(VTPARSE_H)
 misc$o : $(VTPARSE_H)
 VTPrsTbl$o : $(VTPARSE_H)
+
+charsets$o : charsets.h
 
 charproc$o \
 graphics$o \

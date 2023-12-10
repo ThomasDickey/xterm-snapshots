@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.633 2023/12/06 08:58:59 tom Exp $ */
+/* $XTermId: screen.c,v 1.634 2023/12/08 15:06:10 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2837,14 +2837,15 @@ xtermCheckRect(XtermWidget xw,
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
 	    int right = (target.right - 1);
+	    int ch;
 
 	    ld = getLineData(screen, row);
 	    if (ld == 0)
 		continue;
 	    for (col = left; col <= right && col < (int) ld->lineSize; ++col) {
-		int ch = ((ld->attribs[col] & CHARDRAWN)
-			  ? (int) ld->charData[col]
-			  : ' ');
+		if (!(ld->attribs[col] & CHARDRAWN))
+		    continue;
+		ch = (int) ld->charData[col];
 		if_OPT_WIDE_CHARS(screen, {
 		    if (is_UCS_SPECIAL(ch))
 			continue;
@@ -2891,21 +2892,17 @@ xtermCheckRect(XtermWidget xw,
 		    if ((mode & csNOTRIM))
 			embedded += ch;
 		}
-		if ((ld->attribs[col] & CHARDRAWN)) {
-		    total += ch;
-		    if_OPT_WIDE_CHARS(screen, {
-			/* FIXME - not counted if trimming blanks */
-			if (!(mode & csBYTE)) {
-			    size_t off;
-			    for_each_combData(off, ld) {
-				total += (int) ld->combData[off][col];
-			    }
+		total += ch;
+		if_OPT_WIDE_CHARS(screen, {
+		    /* FIXME - not counted if trimming blanks */
+		    if (!(mode & csBYTE)) {
+			size_t off;
+			for_each_combData(off, ld) {
+			    total += (int) ld->combData[off][col];
 			}
-		    })
-		} else if (!(mode & csDRAWN)) {
-		    total += ch;
-		}
-		first = ((mode & csNOTRIM) != 0) ? True : False;
+		    }
+		})
+		    first = ((mode & csNOTRIM) != 0) ? True : False;
 	    }
 	    if (!(mode & csNOTRIM)) {
 		embedded = 0;
