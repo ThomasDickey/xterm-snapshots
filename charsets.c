@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.119 2023/12/09 11:32:33 tom Exp $ */
+/* $XTermId: charsets.c,v 1.120 2023/12/19 21:52:13 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2023 by Thomas E. Dickey
@@ -78,12 +78,12 @@ unsigned
 xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 {
     TScreen *screen = TScreenOf(xw);
-#define MAP(to, from) case from: code = to; break
+#define MAP(to, from) case from: code = to; break;
 
 #if OPT_WIDE_CHARS
-#define UNI(to, from) case from: if (screen->utf8_nrc_mode) code = to; break
+#define UNI(to, from) case from: if (screen->utf8_nrc_mode) code = to; break;
 #else
-#define UNI(to, from) case from: break
+#define UNI(to, from) case from: break;
 #endif
 
 #define XXX(to, from)		/* no defined mapping to 0..255 */
@@ -254,13 +254,13 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, DECNRCM_codes leftset)
     int count = 0;
     DECNRCM_codes rightset = screen->gsets[(int) (screen->curgr)];
 
-#define MAP(from, to) case from: chr = to; break
+#define MAP(from, to) case from: chr = to; break;
 
 #if OPT_WIDE_CHARS
-#define UNI(from, to) case from: if (screen->utf8_nrc_mode) chr = to; break
+#define UNI(from, to) case from: if (screen->utf8_nrc_mode) chr = to; break;
 #define XXX(from, to) UNI(from, to)
 #else
-#define UNI(old, new) chr = old; break
+#define UNI(old, new) case new: chr = old; break;
 #define XXX(from, to)		/* nothing */
 #endif
 

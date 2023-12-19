@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-388g
+MANIFEST for xterm, version xterm-388h
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -33,6 +33,7 @@ charclass.c                     compact character-class module
 charclass.h                     interface of charclass.c
 charproc.c                      VT100 parser functions
 charsets.c                      module to translate character-sets
+charsets.dat                    raw data to transform into charsets.h
 charsets.h                      charset definitions for xterm
 config.guess                    configure script: guess the system type
 config.sub                      configure script: validate system type
