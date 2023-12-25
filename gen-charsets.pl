@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# $XTermId: gen-charsets.pl,v 1.28 2023/12/19 21:56:13 tom Exp $
+# $XTermId: gen-charsets.pl,v 1.35 2023/12/25 18:46:14 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -207,11 +207,16 @@ sub add_unmap($$) {
     my %unmap = %{ $_[1] };
     my %noted = %{ $_[2] };
     my $title = $_[3];
+    my $macro = "un$title";
+    $macro .= "(code,dft)" unless ( $macro =~ /\(code/ );
+    $macro =~ s/code\)/code,dft\)/;
+    @head = &add( \@head, "" );
+
     if (%unmap) {
         my @codes = sort keys %unmap;
+
         if ( $#codes > 0 ) {
-            @head = &add( \@head, "" );
-            @head = &add( \@head, "#define un$title(code) \\" );
+            @head = &add( \@head, "#define $macro \\" );
             @head = &add( \@head, "\tswitch (code) { \\" );
             for my $code ( sort keys %unmap ) {
                 my $note = $noted{$code};
@@ -228,8 +233,15 @@ sub add_unmap($$) {
                     )
                 );
             }
+            @head = &add( \@head, "\t    default: dft; break; \\" );
             @head = &add( \@head, "\t}" );
         }
+        else {
+            @head = &add( \@head, "#define $macro /* nothing? */" );
+        }
+    }
+    else {
+        @head = &add( \@head, "#define $macro /* nothing */" );
     }
     return @head;
 }
@@ -329,17 +341,23 @@ sub do_update($) {
             if ( $target ne $source ) {
                 $intern = $source unless ($intern);
             }
-            @head = &add(
-                \@head,
-                sprintf(
-                    "\t    %s(%s, %s)%s \\",
-                    $macros, $source, $target, $note
-                )
-            );
+            my $item = sprintf( "    %s(%s, %s)", $macros, $source, $target );
+
+            # fix formatting for the XK_-based VT220 definitions
+            if (    $codep == 0
+                and $title !~ /(Greek|Hebrew|Turkish)/
+                and index( $note, "\t/*" ) == 0 )
+            {
+                my $pads = 24 - length($item);
+                $item .= "\t" if ( $pads > 0 );
+            }
+            @head = &add( \@head, sprintf( "\t%s%s \\", $item, $note ) );
 
             if ( defined $intern ) {
-                $unmap{$target} = $intern;
-                $noted{$target} = $note;
+                if ( $source ne $intern ) {
+                    $unmap{$source} = $intern;
+                    $noted{$source} = $note;
+                }
             }
         }
         else {
@@ -355,6 +373,7 @@ sub do_update($) {
     foreach my $key ( sort keys %wide_chars ) {
         @head =
           &add( \@head, sprintf( "#define %s(code)\t/* nothing */", $key ) );
+        @head = &add( \@head, sprintf( "#define un%s(code,dft) dft", $key ) );
     }
     @head = &add( \@head, "#endif /* OPT_WIDE_CHARS */" );
     @head = &add( \@head, "" );

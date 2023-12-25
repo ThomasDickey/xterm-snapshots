@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1113 2023/12/06 00:18:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1115 2023/12/25 18:54:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1636,6 +1636,14 @@ typedef enum {
 
 /***====================================================================***/
 
+#if OPT_DEC_RECTOPS
+#define if_OPT_DEC_RECTOPS(stmt) stmt
+#else
+#define if_OPT_DEC_RECTOPS(stmt) /* nothing */
+#endif
+
+/***====================================================================***/
+
 #if OPT_EBCDIC
 extern int E2A(int);
 extern int A2E(int);
@@ -1877,14 +1885,18 @@ typedef IChar CharData;
  */
 typedef struct {
 	Dimension lineSize;	/* number of columns in this row */
-	RowData bufHead;	/* flag for wrapped lines */
+	RowData	 bufHead;	/* flag for wrapped lines */
 #if OPT_WIDE_CHARS
-	Char combSize;		/* number of items in combData[] */
+	Char	 combSize;	/* number of items in combData[] */
 #endif
-	IAttr *attribs;		/* video attributes */
+#if OPT_DEC_RECTOPS
+	Char	 *charSets;	/* SCS code (DECNRCM_codes) */
+#endif
+	IAttr	 *attribs;	/* video attributes */
 #if OPT_ISO_COLORS
 	CellColor *color;	/* foreground+background color numbers */
 #endif
+	Char     *charSeen;	/* pre-SCS value */
 	CharData *charData;	/* cell's base character */
 	CharData *combData[1];	/* first enum past fixed-offsets */
 } LineData;
@@ -1896,13 +1908,17 @@ typedef const LineData CLineData;
  * variable.
  */
 typedef struct {
-	IAttr attribs;
+	IAttr    attribs;	/* video attributes */
 #if OPT_WIDE_CHARS
-	Char combSize;		/* number of items in combData[] */
+	Char     combSize;	/* number of items in combData[] */
+#endif
+#if OPT_DEC_RECTOPS
+	Char     charSets;	/* SCS code (DECNRCM_codes) */
 #endif
 #if OPT_ISO_COLORS
-	CellColor color;	/* color-array */
+	CellColor color;	/* foreground+background color numbers */
 #endif
+	Char     charSeen;	/* pre-SCS value */
 	CharData charData;	/* cell's base character */
 	CharData combData[1];	/* array of combining chars */
 } CellData;
@@ -3378,6 +3394,14 @@ typedef struct _Work {
     ScrnColors *oldColors;
     Boolean palette_changed;
     Boolean broken_box_chars;
+    /* data write dotext/WriteText */
+    IChar *write_text;		/* points to print_area */
+#if OPT_DEC_RECTOPS
+    Char *write_sums;		/* if non-null, points to buffer_sums */
+    Char *buffer_sums;		/* data for ->charSeen[] */
+    Char *buffer_sets;		/* data for ->charSets[] */
+    size_t sizeof_sums;		/* allocated size of buffer_sums */
+#endif
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;

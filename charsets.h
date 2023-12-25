@@ -1,5 +1,5 @@
 /*
- * $XTermId: charsets.h,v 1.25 2023/12/19 21:57:10 tom Exp $
+ * $XTermId: charsets.h,v 1.28 2023/12/25 18:57:23 tom Exp $
  */
 
 /*
@@ -88,61 +88,125 @@
 	    XXX(0xFF, UNDEF) \
 	}
 
-#define map_Latin_1(code) \
+#define unmap_ASCII(code,dft) \
 	switch (code) { \
+	    MAP(0xA0, 0x1B) \
+	    MAP(0xFF, 0x10000) \
+	    default: dft; break; \
 	}
+
+#define map_DEC_Spec_Graphic(code) \
+	begin_CODEPAGE(94) \
+	switch (code) { \
+	    XXX(0x5F, UNDEF) \
+	    UNI(0x60, 0x0020)	/* nbsp, treat as blank */ \
+	    UNI(0x61, 0x0020)	/* reserved, treat as blank */ \
+	    UNI(0x62, 0x25AE)	/* black vertical rectangle */ \
+	    UNI(0x63, 0x215F)	/* "1/" */ \
+	    UNI(0x64, 0x0020)	/* "3/", not in Unicode, ignore */ \
+	    UNI(0x65, 0x0020)	/* "5/", not in Unicode, ignore */ \
+	    UNI(0x66, 0x0020)	/* "7/", not in Unicode, ignore */ \
+	    UNI(0x67, 0x00B0)	/* degree sign */ \
+	    UNI(0x68, 0x00B1)	/* plus-minus sign */ \
+	    UNI(0x69, 0x2192)	/* right-arrow */ \
+	    UNI(0x6A, 0x2026)	/* ellipsis */ \
+	    UNI(0x6B, 0x00F7)	/* divide by */ \
+	    UNI(0x6C, 0x2193)	/* down arrow */ \
+	    UNI(0x6D, 0x23BA)	/* bar at scan 0 */ \
+	    UNI(0x6E, 0x23BA)	/* bar at scan 1 */ \
+	    UNI(0x6F, 0x23BB)	/* bar at scan 2 */ \
+	    UNI(0x70, 0x23BB)	/* bar at scan 3 */ \
+	    UNI(0x71, 0x23BC)	/* bar at scan 4 */ \
+	    UNI(0x72, 0x23BC)	/* bar at scan 5 */ \
+	    UNI(0x73, 0x23BD)	/* bar at scan 6 */ \
+	    UNI(0x74, 0x23BD)	/* bar at scan 7 */ \
+	    UNI(0x75, 0x2080)	/* subscript 0 */ \
+	    UNI(0x76, 0x2081)	/* subscript 1 */ \
+	    UNI(0x77, 0x2082)	/* subscript 2 */ \
+	    UNI(0x78, 0x2083)	/* subscript 3 */ \
+	    UNI(0x79, 0x2084)	/* subscript 4 */ \
+	    UNI(0x7A, 0x2085)	/* subscript 5 */ \
+	    UNI(0x7B, 0x2086)	/* subscript 6 */ \
+	    UNI(0x7C, 0x2087)	/* subscript 7 */ \
+	    UNI(0x7D, 0x2088)	/* subscript 8 */ \
+	    UNI(0x7E, 0x2089)	/* subscript 9 */ \
+	} \
+	end_CODEPAGE()
+
+#define unmap_DEC_Spec_Graphic(code,dft) \
+	switch (code) { \
+	    MAP(0x5F, 0x10000) \
+	    MAP(0x60, 0x14)	/* nbsp, treat as blank */ \
+	    MAP(0x61, 0x78)	/* reserved, treat as blank */ \
+	    MAP(0x62, 0x0A)	/* black vertical rectangle */ \
+	    MAP(0x63, 0x0D)	/* "1/" */ \
+	    MAP(0x64, 0x0E)	/* "3/", not in Unicode, ignore */ \
+	    MAP(0x65, 0x0B)	/* "5/", not in Unicode, ignore */ \
+	    MAP(0x66, 0xB0)	/* "7/", not in Unicode, ignore */ \
+	    MAP(0x67, 0xB1)	/* degree sign */ \
+	    MAP(0x68, 0x15)	/* plus-minus sign */ \
+	    MAP(0x69, 0x0C)	/* right-arrow */ \
+	    MAP(0x6A, 0x16)	/* ellipsis */ \
+	    MAP(0x6B, 0x17)	/* divide by */ \
+	    MAP(0x6C, 0x18)	/* down arrow */ \
+	    MAP(0x6D, 0x19)	/* bar at scan 0 */ \
+	    MAP(0x6E, 0x1A)	/* bar at scan 1 */ \
+	    MAP(0x6F, 0x1B)	/* bar at scan 2 */ \
+	    MAP(0x70, 0x1C)	/* bar at scan 3 */ \
+	    MAP(0x71, 0x1D)	/* bar at scan 4 */ \
+	    MAP(0x72, 0x1E)	/* bar at scan 5 */ \
+	    MAP(0x73, 0x1F)	/* bar at scan 6 */ \
+	    MAP(0x74, 0x80)	/* bar at scan 7 */ \
+	    MAP(0x75, 0x81)	/* subscript 0 */ \
+	    MAP(0x76, 0x82)	/* subscript 1 */ \
+	    MAP(0x77, 0x83)	/* subscript 2 */ \
+	    MAP(0x78, 0x84)	/* subscript 3 */ \
+	    MAP(0x79, 0x85)	/* subscript 4 */ \
+	    MAP(0x7A, 0x86)	/* subscript 5 */ \
+	    MAP(0x7B, 0xC6)	/* subscript 6 */ \
+	    MAP(0x7C, 0x87)	/* subscript 7 */ \
+	    MAP(0x7D, 0xA3)	/* subscript 8 */ \
+	    MAP(0x7E, 0xB7)	/* subscript 9 */ \
+	    default: dft; break; \
+	}
+
+#define map_ISO_Latin_1(code) \
+	begin_CODEPAGE(96) \
+	switch (code) { \
+	} \
+	end_CODEPAGE()
+
+#define unmap_ISO_Latin_1(code,dft)	/* nothing */
 
 #define map_NRCS_Dutch(code) \
 	switch (code) { \
 	    MAP(0x23, XK_sterling)	/* U+00A3 POUND SIGN */ \
 	    MAP(0x40, XK_threequarters)	/* U+00BE VULGAR FRACTION THREE QUARTERS */ \
-	    UNI(0x5B, 0x0133)	/* LATIN SMALL LIGATURE IJ */ \
+	    UNI(0x5B, 0x0133)		/* LATIN SMALL LIGATURE IJ */ \
 	    MAP(0x5C, XK_onehalf)	/* U+00BD VULGAR FRACTION ONE HALF */ \
-	    MAP(0x5D, XK_bar)	/* U+007C VERTICAL LINE */ \
+	    MAP(0x5D, XK_bar)		/* U+007C VERTICAL LINE */ \
 	    MAP(0x7B, XK_diaeresis)	/* U+00A8 DIAERESIS */ \
-	    UNI(0x7C, 0x0192)	/* LATIN SMALL LETTER F WITH HOOK (florin) */ \
+	    UNI(0x7C, 0x0192)		/* LATIN SMALL LETTER F WITH HOOK (florin) */ \
 	    MAP(0x7D, XK_onequarter)	/* U+00BC VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x7E, XK_acute)	/* U+00B4 ACUTE ACCENT */ \
+	    MAP(0x7E, XK_acute)		/* U+00B4 ACUTE ACCENT */ \
 	}
 
-#define unmap_NRCS_Dutch(code) \
-	switch (code) { \
-	    MAP(0x0133,           0x5B) /* LATIN SMALL LIGATURE IJ */ \
-	    MAP(0x0192,           0x7C) /* LATIN SMALL LETTER F WITH HOOK (florin) */ \
-	    MAP(XK_acute,         0x7E) /* U+00B4 ACUTE ACCENT */ \
-	    MAP(XK_bar,           0x5D) /* U+007C VERTICAL LINE */ \
-	    MAP(XK_diaeresis,     0x7B) /* U+00A8 DIAERESIS */ \
-	    MAP(XK_onehalf,       0x5C) /* U+00BD VULGAR FRACTION ONE HALF */ \
-	    MAP(XK_onequarter,    0x7D) /* U+00BC VULGAR FRACTION ONE QUARTER */ \
-	    MAP(XK_sterling,      0x23) /* U+00A3 POUND SIGN */ \
-	    MAP(XK_threequarters, 0x40) /* U+00BE VULGAR FRACTION THREE QUARTERS */ \
-	}
+#define unmap_NRCS_Dutch(code,dft)	/* nothing */
 
 #define map_NRCS_Finnish(code) \
 	switch (code) { \
 	    MAP(0x5B, XK_Adiaeresis)	/* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
 	    MAP(0x5C, XK_Odiaeresis)	/* U+00D6 LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x5D, XK_Aring)	/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
+	    MAP(0x5D, XK_Aring)		/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
 	    MAP(0x5E, XK_Udiaeresis)	/* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
 	    MAP(0x60, XK_eacute)	/* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
 	    MAP(0x7B, XK_adiaeresis)	/* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
 	    MAP(0x7C, XK_odiaeresis)	/* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x7D, XK_aring)	/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
+	    MAP(0x7D, XK_aring)		/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Finnish(code) \
-	switch (code) { \
-	    MAP(XK_Adiaeresis,    0x5B) /* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_Aring,         0x5D) /* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_Odiaeresis,    0x5C) /* U+00D6 LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_Udiaeresis,    0x5E) /* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(XK_adiaeresis,    0x7B) /* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_aring,         0x7D) /* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_eacute,        0x60) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_odiaeresis,    0x7C) /* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_udiaeresis,    0x7E) /* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
-	}
+#define unmap_NRCS_Finnish(code,dft)	/* nothing */
 
 #define map_NRCS_French(code) \
 	switch (code) { \
@@ -157,18 +221,7 @@
 	    MAP(0x7E, XK_diaeresis)	/* U+00A8 DIAERESIS */ \
 	}
 
-#define unmap_NRCS_French(code) \
-	switch (code) { \
-	    MAP(XK_agrave,        0x40) /* U+00E0 LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(XK_ccedilla,      0x5C) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_degree,        0x5B) /* U+00B0 DEGREE SIGN */ \
-	    MAP(XK_diaeresis,     0x7E) /* U+00A8 DIAERESIS */ \
-	    MAP(XK_eacute,        0x7B) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_egrave,        0x7D) /* U+00E8 LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(XK_section,       0x5D) /* U+00A7 SECTION SIGN */ \
-	    MAP(XK_sterling,      0x23) /* U+00A3 POUND SIGN */ \
-	    MAP(XK_ugrave,        0x7C) /* U+00F9 LATIN SMALL LETTER U WITH GRAVE */ \
-	}
+#define unmap_NRCS_French(code,dft)	/* nothing */
 
 #define map_NRCS_French_Canadian(code) \
 	switch (code) { \
@@ -184,19 +237,7 @@
 	    MAP(0x7E, XK_ucircumflex)	/* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
 	}
 
-#define unmap_NRCS_French_Canadian(code) \
-	switch (code) { \
-	    MAP(XK_acircumflex,   0x5B) /* U+00E2 LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(XK_agrave,        0x40) /* U+00E0 LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(XK_ccedilla,      0x5C) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_eacute,        0x7B) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_ecircumflex,   0x5D) /* U+00EA LATIN SMALL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(XK_egrave,        0x7D) /* U+00E8 LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(XK_icircumflex,   0x5E) /* U+00EE LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(XK_ocircumflex,   0x60) /* U+00F4 LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(XK_ucircumflex,   0x7E) /* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(XK_ugrave,        0x7C) /* U+00F9 LATIN SMALL LETTER U WITH GRAVE */ \
-	}
+#define unmap_NRCS_French_Canadian(code,dft)	/* nothing */
 
 #define map_NRCS_German(code) \
 	switch (code) { \
@@ -210,17 +251,7 @@
 	    MAP(0x7E, XK_ssharp)	/* U+00DF LATIN SMALL LETTER SHARP S */ \
 	}
 
-#define unmap_NRCS_German(code) \
-	switch (code) { \
-	    MAP(XK_Adiaeresis,    0x5B) /* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_Odiaeresis,    0x5C) /* U+00D6 LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_Udiaeresis,    0x5D) /* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(XK_adiaeresis,    0x7B) /* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_odiaeresis,    0x7C) /* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_section,       0x40) /* U+00A7 SECTION SIGN */ \
-	    MAP(XK_ssharp,        0x7E) /* U+00DF LATIN SMALL LETTER SHARP S */ \
-	    MAP(XK_udiaeresis,    0x7D) /* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
-	}
+#define unmap_NRCS_German(code,dft)	/* nothing */
 
 #define map_NRCS_Italian(code) \
 	switch (code) { \
@@ -236,47 +267,23 @@
 	    MAP(0x7E, XK_igrave)	/* U+00EC LATIN SMALL LETTER I WITH GRAVE */ \
 	}
 
-#define unmap_NRCS_Italian(code) \
-	switch (code) { \
-	    MAP(XK_agrave,        0x7B) /* U+00E0 LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(XK_ccedilla,      0x5C) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_degree,        0x5B) /* U+00B0 DEGREE SIGN */ \
-	    MAP(XK_eacute,        0x5D) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_egrave,        0x7D) /* U+00E8 LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(XK_igrave,        0x7E) /* U+00EC LATIN SMALL LETTER I WITH GRAVE */ \
-	    MAP(XK_ograve,        0x7C) /* U+00F2 LATIN SMALL LETTER O WITH GRAVE */ \
-	    MAP(XK_section,       0x40) /* U+00A7 SECTION SIGN */ \
-	    MAP(XK_sterling,      0x23) /* U+00A3 POUND SIGN */ \
-	    MAP(XK_ugrave,        0x60) /* U+00F9 LATIN SMALL LETTER U WITH GRAVE */ \
-	}
+#define unmap_NRCS_Italian(code,dft)	/* nothing */
 
 #define map_NRCS_Norwegian_Danish(code) \
 	switch (code) { \
 	    MAP(0x40, XK_Adiaeresis)	/* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(0x5B, XK_AE)	/* U+00C6 LATIN CAPITAL LETTER AE */ \
+	    MAP(0x5B, XK_AE)		/* U+00C6 LATIN CAPITAL LETTER AE */ \
 	    MAP(0x5C, XK_Ooblique)	/* U+00D8 LATIN CAPITAL LETTER O WITH STROKE */ \
-	    MAP(0x5D, XK_Aring)	/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
+	    MAP(0x5D, XK_Aring)		/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
 	    MAP(0x5E, XK_Udiaeresis)	/* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
 	    MAP(0x60, XK_adiaeresis)	/* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(0x7B, XK_ae)	/* U+00E6 LATIN SMALL LETTER AE */ \
+	    MAP(0x7B, XK_ae)		/* U+00E6 LATIN SMALL LETTER AE */ \
 	    MAP(0x7C, XK_oslash)	/* U+00F8 LATIN SMALL LETTER O WITH STROKE */ \
-	    MAP(0x7D, XK_aring)	/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
+	    MAP(0x7D, XK_aring)		/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Norwegian_Danish(code) \
-	switch (code) { \
-	    MAP(XK_AE,            0x5B) /* U+00C6 LATIN CAPITAL LETTER AE */ \
-	    MAP(XK_Adiaeresis,    0x40) /* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_Aring,         0x5D) /* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_Ooblique,      0x5C) /* U+00D8 LATIN CAPITAL LETTER O WITH STROKE */ \
-	    MAP(XK_Udiaeresis,    0x5E) /* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(XK_adiaeresis,    0x60) /* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_ae,            0x7B) /* U+00E6 LATIN SMALL LETTER AE */ \
-	    MAP(XK_aring,         0x7D) /* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_oslash,        0x7C) /* U+00F8 LATIN SMALL LETTER O WITH STROKE */ \
-	    MAP(XK_udiaeresis,    0x7E) /* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
-	}
+#define unmap_NRCS_Norwegian_Danish(code,dft)	/* nothing */
 
 #define map_NRCS_Portuguese(code) \
 	switch (code) { \
@@ -288,15 +295,7 @@
 	    MAP(0x7D, XK_otilde)	/* U+00F5 LATIN SMALL LETTER O WITH TILDE */ \
 	}
 
-#define unmap_NRCS_Portuguese(code) \
-	switch (code) { \
-	    MAP(XK_Atilde,        0x5B) /* U+00C3 LATIN CAPITAL LETTER A WITH TILDE */ \
-	    MAP(XK_Ccedilla,      0x5C) /* U+00C7 LATIN CAPITAL LETTER C WITH CEDILLA */ \
-	    MAP(XK_Otilde,        0x5D) /* U+00D5 LATIN CAPITAL LETTER O WITH TILDE */ \
-	    MAP(XK_atilde,        0x7B) /* U+00E3 LATIN SMALL LETTER A WITH TILDE */ \
-	    MAP(XK_ccedilla,      0x7C) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_otilde,        0x7D) /* U+00F5 LATIN SMALL LETTER O WITH TILDE */ \
-	}
+#define unmap_NRCS_Portuguese(code,dft)		/* nothing */
 
 #define map_NRCS_Spanish(code) \
 	switch (code) { \
@@ -310,45 +309,23 @@
 	    MAP(0x7D, XK_ccedilla)	/* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
 	}
 
-#define unmap_NRCS_Spanish(code) \
-	switch (code) { \
-	    MAP(XK_Ntilde,        0x5C) /* U+00D1 LATIN CAPITAL LETTER N WITH TILDE */ \
-	    MAP(XK_ccedilla,      0x7D) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_degree,        0x7B) /* U+00B0 DEGREE SIGN */ \
-	    MAP(XK_exclamdown,    0x5B) /* U+00A1 INVERTED EXCLAMATION MARK */ \
-	    MAP(XK_ntilde,        0x7C) /* U+00F1 LATIN SMALL LETTER N WITH TILDE */ \
-	    MAP(XK_questiondown,  0x5D) /* U+00BF INVERTED QUESTION MARK */ \
-	    MAP(XK_section,       0x40) /* U+00A7 SECTION SIGN */ \
-	    MAP(XK_sterling,      0x23) /* U+00A3 POUND SIGN */ \
-	}
+#define unmap_NRCS_Spanish(code,dft)	/* nothing */
 
 #define map_NRCS_Swedish(code) \
 	switch (code) { \
 	    MAP(0x40, XK_Eacute) \
 	    MAP(0x5B, XK_Adiaeresis)	/* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
 	    MAP(0x5C, XK_Odiaeresis)	/* U+00D6 LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x5D, XK_Aring)	/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
+	    MAP(0x5D, XK_Aring)		/* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
 	    MAP(0x5E, XK_Udiaeresis)	/* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
 	    MAP(0x60, XK_eacute)	/* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
 	    MAP(0x7B, XK_adiaeresis)	/* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
 	    MAP(0x7C, XK_odiaeresis)	/* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x7D, XK_aring)	/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
+	    MAP(0x7D, XK_aring)		/* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Swedish(code) \
-	switch (code) { \
-	    MAP(XK_Adiaeresis,    0x5B) /* U+00C4 LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_Aring,         0x5D) /* U+00C5 LATIN CAPITAL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_Eacute,        0x40) \
-	    MAP(XK_Odiaeresis,    0x5C) /* U+00D6 LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_Udiaeresis,    0x5E) /* U+00DC LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(XK_adiaeresis,    0x7B) /* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_aring,         0x7D) /* U+00E5 LATIN SMALL LETTER A WITH RING ABOVE */ \
-	    MAP(XK_eacute,        0x60) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_odiaeresis,    0x7C) /* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_udiaeresis,    0x7E) /* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
-	}
+#define unmap_NRCS_Swedish(code,dft)	/* nothing */
 
 #define map_NRCS_Swiss(code) \
 	switch (code) { \
@@ -366,21 +343,7 @@
 	    MAP(0x7E, XK_ucircumflex)	/* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
 	}
 
-#define unmap_NRCS_Swiss(code) \
-	switch (code) { \
-	    MAP(XK_adiaeresis,    0x7B) /* U+00E4 LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(XK_agrave,        0x40) /* U+00E0 LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(XK_ccedilla,      0x5C) /* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(XK_eacute,        0x5B) /* U+00E9 LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(XK_ecircumflex,   0x5D) /* U+00EA LATIN SMALL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(XK_egrave,        0x5F) /* U+00E8 LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(XK_icircumflex,   0x5E) /* U+00EE LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(XK_ocircumflex,   0x60) /* U+00F4 LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(XK_odiaeresis,    0x7C) /* U+00F6 LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(XK_ucircumflex,   0x7E) /* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(XK_udiaeresis,    0x7D) /* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
-	    MAP(XK_ugrave,        0x23) /* U+00F9 LATIN SMALL LETTER U WITH GRAVE */ \
-	}
+#define unmap_NRCS_Swiss(code,dft)	/* nothing */
 
 /*
  * Unlike NRCS, which splices a few characters onto ISO-8859-1, the
@@ -412,23 +375,37 @@
 	    UNI(0x57, 0x0152)	/* LATIN CAPITAL LIGATURE OE */ \
 	    UNI(0x5D, 0x0178)	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
 	    XXX(0x5E, UNDEF) \
+	    UNI(0x5F, 0x005F) \
 	    XXX(0x70, UNDEF) \
 	    UNI(0x77, 0x0153)	/* LATIN SMALL LIGATURE OE */ \
 	    UNI(0x7D, 0x00FF)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
 	    XXX(0x7E, UNDEF) \
-	    XXX(0x7F, UNDEF) \
 	    default: dft; break; \
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Supp_Graphic(code,dft)(code) \
+#define unmap_DEC_Supp_Graphic(code,dft) \
 	switch (code) { \
-	    MAP(0x00A4, 0x28)	/* CURRENCY SIGN */ \
-	    MAP(0x00FF, 0x7D)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
-	    MAP(0x0152, 0x57)	/* LATIN CAPITAL LIGATURE OE */ \
-	    MAP(0x0153, 0x77)	/* LATIN SMALL LIGATURE OE */ \
-	    MAP(0x0178, 0x5D)	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
-	    MAP(UNDEF, 0x1B) \
+	    MAP(0x24, 0x1B) \
+	    MAP(0x26, 0x1B) \
+	    MAP(0x28, 0xA4)	/* CURRENCY SIGN */ \
+	    MAP(0x2C, 0x1B) \
+	    MAP(0x2D, 0x1B) \
+	    MAP(0x2E, 0x1B) \
+	    MAP(0x2F, 0x1B) \
+	    MAP(0x34, 0x1B) \
+	    MAP(0x38, 0x1B) \
+	    MAP(0x3E, 0x1B) \
+	    MAP(0x50, 0x1B) \
+	    MAP(0x57, 0x97)	/* LATIN CAPITAL LIGATURE OE */ \
+	    MAP(0x5D, 0x98)	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
+	    MAP(0x5E, 0x1B) \
+	    MAP(0x5F, 0xDF) \
+	    MAP(0x70, 0x1B) \
+	    MAP(0x77, 0x99)	/* LATIN SMALL LIGATURE OE */ \
+	    MAP(0x7D, 0xFF)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
+	    MAP(0x7E, 0x1B) \
+	    default: dft; break; \
 	}
 
 #if OPT_WIDE_CHARS
@@ -536,94 +513,103 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Technical(code) \
+#define unmap_DEC_Technical(code,dft) \
 	switch (code) { \
-	    MAP(0x00AC, 0xAC)	/* NOT SIGN */ \
-	    MAP(0x00D7, 0xD7)	/* MULTIPLICATION SIGN */ \
-	    MAP(0x00F7, 0xF7)	/* DIVISION SIGN */ \
-	    MAP(0x0192, 0xFD)	/* LATIN SMALL LETTER F WITH HOOK Probably chosen for its meaning of "function" */ \
-	    MAP(0x0393, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
-	    MAP(0x0394, 0xEE)	/* GREEK CAPITAL DELTA */ \
-	    MAP(0x0398, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
-	    MAP(0x039B, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
-	    MAP(0x039E, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
-	    MAP(0x03A0, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
-	    MAP(0x03A3, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
-	    MAP(0x03A5, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
-	    MAP(0x03A6, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
-	    MAP(0x03A8, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
-	    MAP(0x03A9, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
-	    MAP(0x03B1, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
-	    MAP(0x03B2, 0xB8)	/* GREEK SMALL LETTER BETA */ \
-	    MAP(0x03B3, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
-	    MAP(0x03B4, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
-	    MAP(0x03B5, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
-	    MAP(0x03B6, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
-	    MAP(0x03B7, 0xBD)	/* GREEK SMALL LETTER ETA */ \
-	    MAP(0x03B8, 0xBE)	/* GREEK SMALL LETTER THETA */ \
-	    MAP(0x03B9, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
-	    MAP(0x03BA, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
-	    MAP(0x03BB, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
-	    MAP(0x03BD, 0xC3)	/* GREEK SMALL LETTER NU */ \
-	    MAP(0x03BE, 0xC4)	/* GREEK SMALL LETTER XI */ \
-	    MAP(0x03C0, 0xC6)	/* GREEK SMALL LETTER PI */ \
-	    MAP(0x03C1, 0xC7)	/* GREEK SMALL LETTER RHO */ \
-	    MAP(0x03C3, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
-	    MAP(0x03C4, 0xCA)	/* GREEK SMALL LETTER TAU */ \
-	    MAP(0x03C5, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
-	    MAP(0x03C6, 0xCC)	/* GREEK SMALL LETTER PHI */ \
-	    MAP(0x03C7, 0xCD)	/* GREEK SMALL LETTER CHI */ \
-	    MAP(0x03C8, 0xCE)	/* GREEK SMALL LETTER PSI */ \
-	    MAP(0x03C9, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
-	    MAP(0x2190, 0xFE)	/* LEFTWARDS ARROW */ \
-	    MAP(0x2191, 0xFF)	/* UPWARDS ARROW */ \
-	    MAP(0x2192, 0x100)	/* RIGHTWARDS ARROW */ \
-	    MAP(0x2193, 0x02)	/* DOWNWARDS ARROW */ \
-	    MAP(0x21D2, 0xF3)	/* RIGHTWARDS DOUBLE ARROW */ \
-	    MAP(0x21D4, 0xF2)	/* LEFT RIGHT DOUBLE ARROW */ \
-	    MAP(0x2202, 0xFC)	/* PARTIAL DIFFERENTIAL */ \
-	    MAP(0x2207, 0xEF)	/* NABLA */ \
-	    MAP(0x221A, 0xF5)	/* SQUARE ROOT */ \
-	    MAP(0x221D, 0xEC)	/* PROPORTIONAL TO */ \
-	    MAP(0x221E, 0xED)	/* INFINITY */ \
-	    MAP(0x2227, 0xFA)	/* LOGICAL AND */ \
-	    MAP(0x2228, 0xFB)	/* LOGICAL OR */ \
-	    MAP(0x2229, 0xF8)	/* INTERSECTION */ \
-	    MAP(0x222A, 0xF9)	/* UNION */ \
-	    MAP(0x222B, 0xEA)	/* INTEGRAL */ \
-	    MAP(0x2234, 0xEB)	/* THEREFORE */ \
-	    MAP(0x223C, 0xF0)	/* TILDE OPERATOR */ \
-	    MAP(0x2243, 0xF1)	/* ASYMPTOTICALLY EQUAL TO */ \
-	    MAP(0x2260, 0x87)	/* NOT EQUAL TO */ \
-	    MAP(0x2261, 0xF4)	/* IDENTICAL TO */ \
-	    MAP(0x2264, 0x85)	/* LESS-THAN OR EQUAL TO */ \
-	    MAP(0x2265, 0x86)	/* GREATER-THAN OR EQUAL TO */ \
-	    MAP(0x2282, 0xF6)	/* SUBSET OF */ \
-	    MAP(0x2283, 0xF7)	/* SUPERSET OF */ \
-	    MAP(0x2320, 0xD7)	/* TOP HALF INTEGRAL with the proviso that the stem is vertical, to join with 02/06 */ \
-	    MAP(0x2321, 0xD8)	/* BOTTOM HALF INTEGRAL with the proviso above. */ \
-	    MAP(0x23A1, 0xD9)	/* LEFT SQUARE BRACKET UPPER CORNER Joins vertically to 02/06, 02/08. Doesn't join to its right. */ \
-	    MAP(0x23A3, 0xDA)	/* LEFT SQUARE BRACKET LOWER CORNER Joins vertically to 02/06, 02/07. Doesn't join to its right. */ \
-	    MAP(0x23A4, 0xDB)	/* RIGHT SQUARE BRACKET UPPER CORNER Joins vertically to 026, 02a. Doesn't join to its left. */ \
-	    MAP(0x23A6, 0xDC)	/* RIGHT SQUARE BRACKET LOWER CORNER Joins vertically to 026, 029. Doesn't join to its left. */ \
-	    MAP(0x23A7, 0xDD)	/* LEFT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02c, 02/15. Doesn't join to its right. */ \
-	    MAP(0x23A8, 0xE1)	/* LEFT CURLY BRACKET MIDDLE PIECE Joins vertically to 026, 02b, 02c. */ \
-	    MAP(0x23A9, 0xDE)	/* LEFT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02b, 02/15. Doesn't join to its right. */ \
-	    MAP(0x23AB, 0xDF)	/* RIGHT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02e, 03/00. Doesn't join to its left. */ \
-	    MAP(0x23AC, 0xE2)	/* RIGHT CURLY BRACKET MIDDLE PIECE Joins vertically to 02/06, 02d, 02e. */ \
-	    MAP(0x23AD, 0xE0)	/* RIGHT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02d, 03/00. Doesn't join to its left. */ \
-	    MAP(0x23B7, 0xD5)	/* RADICAL SYMBOL BOTTOM Centred left to right, so that it joins up with 02/02 */ \
-	    MAP(0x2500, 0x1D)	/* BOX DRAWINGS LIGHT HORIZONTAL */ \
-	    MAP(0x2502, 0x84)	/* BOX DRAWINGS LIGHT VERTICAL */ \
-	    MAP(0x250C, 0xD6)	/* BOX DRAWINGS LIGHT DOWN AND RIGHT */ \
-	    MAP(PUA(0), 0xE3)	/* Top Left Sigma. Joins to right with 02/03, 03/05. Joins diagonally below right with 03/03, 03/07. */ \
-	    MAP(PUA(1), 0xE4)	/* Bottom Left Sigma. Joins to right with 02/03, 03/06. Joins diagonally above right with 03/04, 03/07. */ \
-	    MAP(PUA(2), 0xE5)	/* Top Diagonal Sigma. Line for joining 03/01 to 03/04 or 03/07. */ \
-	    MAP(PUA(3), 0xE6)	/* Bottom Diagonal Sigma. Line for joining 03/02 to 03/03 or 03/07. */ \
-	    MAP(PUA(4), 0xE7)	/* Top Right Sigma. Joins to left with 02/03, 03/01. */ \
-	    MAP(PUA(5), 0xE8)	/* Bottom Right Sigma. Joins to left with 02/03, 03/02. */ \
-	    MAP(PUA(6), 0xE9)	/* Middle Sigma. Joins diagonally with 03/01, 03/02, 03/03, 03/04. */ \
-	    MAP(UNDEF, 0x1B)	/* undefined */ \
+	    MAP(0x21, 0xD5)	/* RADICAL SYMBOL BOTTOM Centred left to right, so that it joins up with 02/02 */ \
+	    MAP(0x22, 0xD6)	/* BOX DRAWINGS LIGHT DOWN AND RIGHT */ \
+	    MAP(0x23, 0x1D)	/* BOX DRAWINGS LIGHT HORIZONTAL */ \
+	    MAP(0x24, 0xD7)	/* TOP HALF INTEGRAL with the proviso that the stem is vertical, to join with 02/06 */ \
+	    MAP(0x25, 0xD8)	/* BOTTOM HALF INTEGRAL with the proviso above. */ \
+	    MAP(0x26, 0x84)	/* BOX DRAWINGS LIGHT VERTICAL */ \
+	    MAP(0x27, 0xD9)	/* LEFT SQUARE BRACKET UPPER CORNER Joins vertically to 02/06, 02/08. Doesn't join to its right. */ \
+	    MAP(0x28, 0xDA)	/* LEFT SQUARE BRACKET LOWER CORNER Joins vertically to 02/06, 02/07. Doesn't join to its right. */ \
+	    MAP(0x29, 0xDB)	/* RIGHT SQUARE BRACKET UPPER CORNER Joins vertically to 026, 02a. Doesn't join to its left. */ \
+	    MAP(0x2A, 0xDC)	/* RIGHT SQUARE BRACKET LOWER CORNER Joins vertically to 026, 029. Doesn't join to its left. */ \
+	    MAP(0x2B, 0xDD)	/* LEFT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02c, 02/15. Doesn't join to its right. */ \
+	    MAP(0x2C, 0xDE)	/* LEFT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02b, 02/15. Doesn't join to its right. */ \
+	    MAP(0x2D, 0xDF)	/* RIGHT CURLY BRACKET UPPER HOOK Joins vertically to 026, 02e, 03/00. Doesn't join to its left. */ \
+	    MAP(0x2E, 0xE0)	/* RIGHT CURLY BRACKET LOWER HOOK Joins vertically to 026, 02d, 03/00. Doesn't join to its left. */ \
+	    MAP(0x2F, 0xE1)	/* LEFT CURLY BRACKET MIDDLE PIECE Joins vertically to 026, 02b, 02c. */ \
+	    MAP(0x30, 0xE2)	/* RIGHT CURLY BRACKET MIDDLE PIECE Joins vertically to 02/06, 02d, 02e. */ \
+	    MAP(0x31, 0xE3)	/* Top Left Sigma. Joins to right with 02/03, 03/05. Joins diagonally below right with 03/03, 03/07. */ \
+	    MAP(0x32, 0xE4)	/* Bottom Left Sigma. Joins to right with 02/03, 03/06. Joins diagonally above right with 03/04, 03/07. */ \
+	    MAP(0x33, 0xE5)	/* Top Diagonal Sigma. Line for joining 03/01 to 03/04 or 03/07. */ \
+	    MAP(0x34, 0xE6)	/* Bottom Diagonal Sigma. Line for joining 03/02 to 03/03 or 03/07. */ \
+	    MAP(0x35, 0xE7)	/* Top Right Sigma. Joins to left with 02/03, 03/01. */ \
+	    MAP(0x36, 0xE8)	/* Bottom Right Sigma. Joins to left with 02/03, 03/02. */ \
+	    MAP(0x37, 0xE9)	/* Middle Sigma. Joins diagonally with 03/01, 03/02, 03/03, 03/04. */ \
+	    MAP(0x38, 0x1B)	/* undefined */ \
+	    MAP(0x39, 0x1B)	/* undefined */ \
+	    MAP(0x3A, 0x1B)	/* undefined */ \
+	    MAP(0x3B, 0x1B)	/* undefined */ \
+	    MAP(0x3C, 0x85)	/* LESS-THAN OR EQUAL TO */ \
+	    MAP(0x3D, 0x87)	/* NOT EQUAL TO */ \
+	    MAP(0x3E, 0x86)	/* GREATER-THAN OR EQUAL TO */ \
+	    MAP(0x3F, 0xEA)	/* INTEGRAL */ \
+	    MAP(0x40, 0xEB)	/* THEREFORE */ \
+	    MAP(0x41, 0xEC)	/* PROPORTIONAL TO */ \
+	    MAP(0x42, 0xED)	/* INFINITY */ \
+	    MAP(0x43, 0xF7)	/* DIVISION SIGN */ \
+	    MAP(0x44, 0xEE)	/* GREEK CAPITAL DELTA */ \
+	    MAP(0x45, 0xEF)	/* NABLA */ \
+	    MAP(0x46, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
+	    MAP(0x47, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
+	    MAP(0x48, 0xF0)	/* TILDE OPERATOR */ \
+	    MAP(0x49, 0xF1)	/* ASYMPTOTICALLY EQUAL TO */ \
+	    MAP(0x4A, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
+	    MAP(0x4B, 0xD7)	/* MULTIPLICATION SIGN */ \
+	    MAP(0x4C, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
+	    MAP(0x4D, 0xF2)	/* LEFT RIGHT DOUBLE ARROW */ \
+	    MAP(0x4E, 0xF3)	/* RIGHTWARDS DOUBLE ARROW */ \
+	    MAP(0x4F, 0xF4)	/* IDENTICAL TO */ \
+	    MAP(0x50, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
+	    MAP(0x51, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
+	    MAP(0x52, 0x1B)	/* undefined */ \
+	    MAP(0x53, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
+	    MAP(0x54, 0x1B)	/* undefined */ \
+	    MAP(0x55, 0x1B)	/* undefined */ \
+	    MAP(0x56, 0xF5)	/* SQUARE ROOT */ \
+	    MAP(0x57, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
+	    MAP(0x58, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
+	    MAP(0x59, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
+	    MAP(0x5A, 0xF6)	/* SUBSET OF */ \
+	    MAP(0x5B, 0xF7)	/* SUPERSET OF */ \
+	    MAP(0x5C, 0xF8)	/* INTERSECTION */ \
+	    MAP(0x5D, 0xF9)	/* UNION */ \
+	    MAP(0x5E, 0xFA)	/* LOGICAL AND */ \
+	    MAP(0x5F, 0xFB)	/* LOGICAL OR */ \
+	    MAP(0x60, 0xAC)	/* NOT SIGN */ \
+	    MAP(0x61, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
+	    MAP(0x62, 0xB8)	/* GREEK SMALL LETTER BETA */ \
+	    MAP(0x63, 0xCD)	/* GREEK SMALL LETTER CHI */ \
+	    MAP(0x64, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
+	    MAP(0x65, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
+	    MAP(0x66, 0xCC)	/* GREEK SMALL LETTER PHI */ \
+	    MAP(0x67, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
+	    MAP(0x68, 0xBD)	/* GREEK SMALL LETTER ETA */ \
+	    MAP(0x69, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
+	    MAP(0x6A, 0xBE)	/* GREEK SMALL LETTER THETA */ \
+	    MAP(0x6B, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
+	    MAP(0x6C, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
+	    MAP(0x6D, 0x1B)	/* undefined */ \
+	    MAP(0x6E, 0xC3)	/* GREEK SMALL LETTER NU */ \
+	    MAP(0x6F, 0xFC)	/* PARTIAL DIFFERENTIAL */ \
+	    MAP(0x70, 0xC6)	/* GREEK SMALL LETTER PI */ \
+	    MAP(0x71, 0xCE)	/* GREEK SMALL LETTER PSI */ \
+	    MAP(0x72, 0xC7)	/* GREEK SMALL LETTER RHO */ \
+	    MAP(0x73, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
+	    MAP(0x74, 0xCA)	/* GREEK SMALL LETTER TAU */ \
+	    MAP(0x75, 0x1B)	/* undefined */ \
+	    MAP(0x76, 0xFD)	/* LATIN SMALL LETTER F WITH HOOK Probably chosen for its meaning of "function" */ \
+	    MAP(0x77, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
+	    MAP(0x78, 0xC4)	/* GREEK SMALL LETTER XI */ \
+	    MAP(0x79, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
+	    MAP(0x7A, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
+	    MAP(0x7B, 0xFE)	/* LEFTWARDS ARROW */ \
+	    MAP(0x7C, 0xFF)	/* UPWARDS ARROW */ \
+	    MAP(0x7D, 0x100)	/* RIGHTWARDS ARROW */ \
+	    MAP(0x7E, 0x02)	/* DOWNWARDS ARROW */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -731,104 +717,103 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Latin_Cyrillic(code) \
+#define unmap_ISO_Latin_Cyrillic(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A7, 0x7D)	/* SECTION SIGN */ \
-	    MAP(0x00AD, 0x2D)	/* SOFT HYPHEN */ \
-	    MAP(0x0401, 0x21)	/* CYRILLIC CAPITAL LETTER IO */ \
-	    MAP(0x0402, 0x22)	/* CYRILLIC CAPITAL LETTER DJE */ \
-	    MAP(0x0403, 0x23)	/* CYRILLIC CAPITAL LETTER GJE */ \
-	    MAP(0x0404, 0x24)	/* CYRILLIC CAPITAL LETTER UKRAINIAN IE */ \
-	    MAP(0x0405, 0x25)	/* CYRILLIC CAPITAL LETTER DZE */ \
-	    MAP(0x0406, 0x26)	/* CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I */ \
-	    MAP(0x0407, 0x27)	/* CYRILLIC CAPITAL LETTER YI */ \
-	    MAP(0x0408, 0x28)	/* CYRILLIC CAPITAL LETTER JE */ \
-	    MAP(0x0409, 0x29)	/* CYRILLIC CAPITAL LETTER LJE */ \
-	    MAP(0x040A, 0x2A)	/* CYRILLIC CAPITAL LETTER NJE */ \
-	    MAP(0x040B, 0x2B)	/* CYRILLIC CAPITAL LETTER TSHE */ \
-	    MAP(0x040C, 0x2C)	/* CYRILLIC CAPITAL LETTER KJE */ \
-	    MAP(0x040E, 0x2E)	/* CYRILLIC CAPITAL LETTER SHORT U */ \
-	    MAP(0x040F, 0x2F)	/* CYRILLIC CAPITAL LETTER DZHE */ \
-	    MAP(0x0410, 0x30)	/* CYRILLIC CAPITAL LETTER A */ \
-	    MAP(0x0411, 0x31)	/* CYRILLIC CAPITAL LETTER BE */ \
-	    MAP(0x0412, 0x32)	/* CYRILLIC CAPITAL LETTER VE */ \
-	    MAP(0x0413, 0x33)	/* CYRILLIC CAPITAL LETTER GHE */ \
-	    MAP(0x0414, 0x34)	/* CYRILLIC CAPITAL LETTER DE */ \
-	    MAP(0x0415, 0x35)	/* CYRILLIC CAPITAL LETTER IE */ \
-	    MAP(0x0416, 0x36)	/* CYRILLIC CAPITAL LETTER ZHE */ \
-	    MAP(0x0417, 0x37)	/* CYRILLIC CAPITAL LETTER ZE */ \
-	    MAP(0x0418, 0x38)	/* CYRILLIC CAPITAL LETTER I */ \
-	    MAP(0x0419, 0x39)	/* CYRILLIC CAPITAL LETTER SHORT I */ \
-	    MAP(0x041A, 0x3A)	/* CYRILLIC CAPITAL LETTER KA */ \
-	    MAP(0x041B, 0x3B)	/* CYRILLIC CAPITAL LETTER EL */ \
-	    MAP(0x041C, 0x3C)	/* CYRILLIC CAPITAL LETTER EM */ \
-	    MAP(0x041D, 0x3D)	/* CYRILLIC CAPITAL LETTER EN */ \
-	    MAP(0x041E, 0x3E)	/* CYRILLIC CAPITAL LETTER O */ \
-	    MAP(0x041F, 0x3F)	/* CYRILLIC CAPITAL LETTER PE */ \
-	    MAP(0x0420, 0x40)	/* CYRILLIC CAPITAL LETTER ER */ \
-	    MAP(0x0421, 0x41)	/* CYRILLIC CAPITAL LETTER ES */ \
-	    MAP(0x0422, 0x42)	/* CYRILLIC CAPITAL LETTER TE */ \
-	    MAP(0x0423, 0x43)	/* CYRILLIC CAPITAL LETTER U */ \
-	    MAP(0x0424, 0x44)	/* CYRILLIC CAPITAL LETTER EF */ \
-	    MAP(0x0425, 0x45)	/* CYRILLIC CAPITAL LETTER HA */ \
-	    MAP(0x0426, 0x46)	/* CYRILLIC CAPITAL LETTER TSE */ \
-	    MAP(0x0427, 0x47)	/* CYRILLIC CAPITAL LETTER CHE */ \
-	    MAP(0x0428, 0x48)	/* CYRILLIC CAPITAL LETTER SHA */ \
-	    MAP(0x0429, 0x49)	/* CYRILLIC CAPITAL LETTER SHCHA */ \
-	    MAP(0x042A, 0x4A)	/* CYRILLIC CAPITAL LETTER HARD SIGN */ \
-	    MAP(0x042B, 0x4B)	/* CYRILLIC CAPITAL LETTER YERU */ \
-	    MAP(0x042C, 0x4C)	/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
-	    MAP(0x042D, 0x4D)	/* CYRILLIC CAPITAL LETTER E */ \
-	    MAP(0x042E, 0x4E)	/* CYRILLIC CAPITAL LETTER YU */ \
-	    MAP(0x042F, 0x4F)	/* CYRILLIC CAPITAL LETTER YA */ \
-	    MAP(0x0430, 0x50)	/* CYRILLIC SMALL LETTER A */ \
-	    MAP(0x0431, 0x51)	/* CYRILLIC SMALL LETTER BE */ \
-	    MAP(0x0432, 0x52)	/* CYRILLIC SMALL LETTER VE */ \
-	    MAP(0x0433, 0x53)	/* CYRILLIC SMALL LETTER GHE */ \
-	    MAP(0x0434, 0x54)	/* CYRILLIC SMALL LETTER DE */ \
-	    MAP(0x0435, 0x55)	/* CYRILLIC SMALL LETTER IE */ \
-	    MAP(0x0436, 0x56)	/* CYRILLIC SMALL LETTER ZHE */ \
-	    MAP(0x0437, 0x57)	/* CYRILLIC SMALL LETTER ZE */ \
-	    MAP(0x0438, 0x58)	/* CYRILLIC SMALL LETTER I */ \
-	    MAP(0x0439, 0x59)	/* CYRILLIC SMALL LETTER SHORT I */ \
-	    MAP(0x043A, 0x5A)	/* CYRILLIC SMALL LETTER KA */ \
-	    MAP(0x043B, 0x5B)	/* CYRILLIC SMALL LETTER EL */ \
-	    MAP(0x043C, 0x5C)	/* CYRILLIC SMALL LETTER EM */ \
-	    MAP(0x043D, 0x5D)	/* CYRILLIC SMALL LETTER EN */ \
-	    MAP(0x043E, 0x5E)	/* CYRILLIC SMALL LETTER O */ \
-	    MAP(0x043F, 0x5F)	/* CYRILLIC SMALL LETTER PE */ \
-	    MAP(0x0440, 0x60)	/* CYRILLIC SMALL LETTER ER */ \
-	    MAP(0x0441, 0x61)	/* CYRILLIC SMALL LETTER ES */ \
-	    MAP(0x0442, 0x62)	/* CYRILLIC SMALL LETTER TE */ \
-	    MAP(0x0443, 0x63)	/* CYRILLIC SMALL LETTER U */ \
-	    MAP(0x0444, 0x64)	/* CYRILLIC SMALL LETTER EF */ \
-	    MAP(0x0445, 0x65)	/* CYRILLIC SMALL LETTER HA */ \
-	    MAP(0x0446, 0x66)	/* CYRILLIC SMALL LETTER TSE */ \
-	    MAP(0x0447, 0x67)	/* CYRILLIC SMALL LETTER CHE */ \
-	    MAP(0x0448, 0x68)	/* CYRILLIC SMALL LETTER SHA */ \
-	    MAP(0x0449, 0x69)	/* CYRILLIC SMALL LETTER SHCHA */ \
-	    MAP(0x044A, 0x6A)	/* CYRILLIC SMALL LETTER HARD SIGN */ \
-	    MAP(0x044B, 0x6B)	/* CYRILLIC SMALL LETTER YERU */ \
-	    MAP(0x044C, 0x6C)	/* CYRILLIC SMALL LETTER SOFT SIGN */ \
-	    MAP(0x044D, 0x6D)	/* CYRILLIC SMALL LETTER E */ \
-	    MAP(0x044E, 0x6E)	/* CYRILLIC SMALL LETTER YU */ \
-	    MAP(0x044F, 0x6F)	/* CYRILLIC SMALL LETTER YA */ \
-	    MAP(0x0451, 0x71)	/* CYRILLIC SMALL LETTER IO */ \
-	    MAP(0x0452, 0x72)	/* CYRILLIC SMALL LETTER DJE */ \
-	    MAP(0x0453, 0x73)	/* CYRILLIC SMALL LETTER GJE */ \
-	    MAP(0x0454, 0x74)	/* CYRILLIC SMALL LETTER UKRAINIAN IE */ \
-	    MAP(0x0455, 0x75)	/* CYRILLIC SMALL LETTER DZE */ \
-	    MAP(0x0456, 0x76)	/* CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I */ \
-	    MAP(0x0457, 0x77)	/* CYRILLIC SMALL LETTER YI */ \
-	    MAP(0x0458, 0x78)	/* CYRILLIC SMALL LETTER JE */ \
-	    MAP(0x0459, 0x79)	/* CYRILLIC SMALL LETTER LJE */ \
-	    MAP(0x045A, 0x7A)	/* CYRILLIC SMALL LETTER NJE */ \
-	    MAP(0x045B, 0x7B)	/* CYRILLIC SMALL LETTER TSHE */ \
-	    MAP(0x045C, 0x7C)	/* CYRILLIC SMALL LETTER KJE */ \
-	    MAP(0x045E, 0x7E)	/* CYRILLIC SMALL LETTER SHORT U */ \
-	    MAP(0x045F, 0x7F)	/* CYRILLIC SMALL LETTER DZHE */ \
-	    MAP(0x2116, 0x70)	/* NUMERO SIGN */ \
+	    MAP(0x21, 0x03)	/* CYRILLIC CAPITAL LETTER IO */ \
+	    MAP(0x22, 0x04)	/* CYRILLIC CAPITAL LETTER DJE */ \
+	    MAP(0x23, 0x05)	/* CYRILLIC CAPITAL LETTER GJE */ \
+	    MAP(0x24, 0x06)	/* CYRILLIC CAPITAL LETTER UKRAINIAN IE */ \
+	    MAP(0x25, 0x07)	/* CYRILLIC CAPITAL LETTER DZE */ \
+	    MAP(0x26, 0x08)	/* CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I */ \
+	    MAP(0x27, 0x09)	/* CYRILLIC CAPITAL LETTER YI */ \
+	    MAP(0x28, 0x0A)	/* CYRILLIC CAPITAL LETTER JE */ \
+	    MAP(0x29, 0x0B)	/* CYRILLIC CAPITAL LETTER LJE */ \
+	    MAP(0x2A, 0x0C)	/* CYRILLIC CAPITAL LETTER NJE */ \
+	    MAP(0x2B, 0x0D)	/* CYRILLIC CAPITAL LETTER TSHE */ \
+	    MAP(0x2C, 0x0E)	/* CYRILLIC CAPITAL LETTER KJE */ \
+	    MAP(0x2E, 0x0F)	/* CYRILLIC CAPITAL LETTER SHORT U */ \
+	    MAP(0x2F, 0x10)	/* CYRILLIC CAPITAL LETTER DZHE */ \
+	    MAP(0x30, 0x11)	/* CYRILLIC CAPITAL LETTER A */ \
+	    MAP(0x31, 0x12)	/* CYRILLIC CAPITAL LETTER BE */ \
+	    MAP(0x32, 0x13)	/* CYRILLIC CAPITAL LETTER VE */ \
+	    MAP(0x33, 0x14)	/* CYRILLIC CAPITAL LETTER GHE */ \
+	    MAP(0x34, 0x15)	/* CYRILLIC CAPITAL LETTER DE */ \
+	    MAP(0x35, 0x16)	/* CYRILLIC CAPITAL LETTER IE */ \
+	    MAP(0x36, 0x17)	/* CYRILLIC CAPITAL LETTER ZHE */ \
+	    MAP(0x37, 0x18)	/* CYRILLIC CAPITAL LETTER ZE */ \
+	    MAP(0x38, 0x19)	/* CYRILLIC CAPITAL LETTER I */ \
+	    MAP(0x39, 0x1A)	/* CYRILLIC CAPITAL LETTER SHORT I */ \
+	    MAP(0x3A, 0x1B)	/* CYRILLIC CAPITAL LETTER KA */ \
+	    MAP(0x3B, 0x1C)	/* CYRILLIC CAPITAL LETTER EL */ \
+	    MAP(0x3C, 0x1D)	/* CYRILLIC CAPITAL LETTER EM */ \
+	    MAP(0x3D, 0x1E)	/* CYRILLIC CAPITAL LETTER EN */ \
+	    MAP(0x3E, 0x1F)	/* CYRILLIC CAPITAL LETTER O */ \
+	    MAP(0x3F, 0x20)	/* CYRILLIC CAPITAL LETTER PE */ \
+	    MAP(0x40, 0x21)	/* CYRILLIC CAPITAL LETTER ER */ \
+	    MAP(0x41, 0x22)	/* CYRILLIC CAPITAL LETTER ES */ \
+	    MAP(0x42, 0x23)	/* CYRILLIC CAPITAL LETTER TE */ \
+	    MAP(0x43, 0x24)	/* CYRILLIC CAPITAL LETTER U */ \
+	    MAP(0x44, 0x25)	/* CYRILLIC CAPITAL LETTER EF */ \
+	    MAP(0x45, 0x26)	/* CYRILLIC CAPITAL LETTER HA */ \
+	    MAP(0x46, 0x27)	/* CYRILLIC CAPITAL LETTER TSE */ \
+	    MAP(0x47, 0x28)	/* CYRILLIC CAPITAL LETTER CHE */ \
+	    MAP(0x48, 0x29)	/* CYRILLIC CAPITAL LETTER SHA */ \
+	    MAP(0x49, 0x2A)	/* CYRILLIC CAPITAL LETTER SHCHA */ \
+	    MAP(0x4A, 0x2B)	/* CYRILLIC CAPITAL LETTER HARD SIGN */ \
+	    MAP(0x4B, 0x2C)	/* CYRILLIC CAPITAL LETTER YERU */ \
+	    MAP(0x4C, 0x2D)	/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
+	    MAP(0x4D, 0x2E)	/* CYRILLIC CAPITAL LETTER E */ \
+	    MAP(0x4E, 0x2F)	/* CYRILLIC CAPITAL LETTER YU */ \
+	    MAP(0x4F, 0x30)	/* CYRILLIC CAPITAL LETTER YA */ \
+	    MAP(0x50, 0x31)	/* CYRILLIC SMALL LETTER A */ \
+	    MAP(0x51, 0x32)	/* CYRILLIC SMALL LETTER BE */ \
+	    MAP(0x52, 0x33)	/* CYRILLIC SMALL LETTER VE */ \
+	    MAP(0x53, 0x34)	/* CYRILLIC SMALL LETTER GHE */ \
+	    MAP(0x54, 0x35)	/* CYRILLIC SMALL LETTER DE */ \
+	    MAP(0x55, 0x36)	/* CYRILLIC SMALL LETTER IE */ \
+	    MAP(0x56, 0x37)	/* CYRILLIC SMALL LETTER ZHE */ \
+	    MAP(0x57, 0x38)	/* CYRILLIC SMALL LETTER ZE */ \
+	    MAP(0x58, 0x39)	/* CYRILLIC SMALL LETTER I */ \
+	    MAP(0x59, 0x3A)	/* CYRILLIC SMALL LETTER SHORT I */ \
+	    MAP(0x5A, 0x3B)	/* CYRILLIC SMALL LETTER KA */ \
+	    MAP(0x5B, 0x3C)	/* CYRILLIC SMALL LETTER EL */ \
+	    MAP(0x5C, 0x3D)	/* CYRILLIC SMALL LETTER EM */ \
+	    MAP(0x5D, 0x3E)	/* CYRILLIC SMALL LETTER EN */ \
+	    MAP(0x5E, 0x3F)	/* CYRILLIC SMALL LETTER O */ \
+	    MAP(0x5F, 0x40)	/* CYRILLIC SMALL LETTER PE */ \
+	    MAP(0x60, 0x41)	/* CYRILLIC SMALL LETTER ER */ \
+	    MAP(0x61, 0x42)	/* CYRILLIC SMALL LETTER ES */ \
+	    MAP(0x62, 0x43)	/* CYRILLIC SMALL LETTER TE */ \
+	    MAP(0x63, 0x44)	/* CYRILLIC SMALL LETTER U */ \
+	    MAP(0x64, 0x45)	/* CYRILLIC SMALL LETTER EF */ \
+	    MAP(0x65, 0x46)	/* CYRILLIC SMALL LETTER HA */ \
+	    MAP(0x66, 0x47)	/* CYRILLIC SMALL LETTER TSE */ \
+	    MAP(0x67, 0x48)	/* CYRILLIC SMALL LETTER CHE */ \
+	    MAP(0x68, 0x49)	/* CYRILLIC SMALL LETTER SHA */ \
+	    MAP(0x69, 0x4A)	/* CYRILLIC SMALL LETTER SHCHA */ \
+	    MAP(0x6A, 0x4B)	/* CYRILLIC SMALL LETTER HARD SIGN */ \
+	    MAP(0x6B, 0x4C)	/* CYRILLIC SMALL LETTER YERU */ \
+	    MAP(0x6C, 0x4D)	/* CYRILLIC SMALL LETTER SOFT SIGN */ \
+	    MAP(0x6D, 0x4E)	/* CYRILLIC SMALL LETTER E */ \
+	    MAP(0x6E, 0x4F)	/* CYRILLIC SMALL LETTER YU */ \
+	    MAP(0x6F, 0x50)	/* CYRILLIC SMALL LETTER YA */ \
+	    MAP(0x70, 0x51)	/* NUMERO SIGN */ \
+	    MAP(0x71, 0x52)	/* CYRILLIC SMALL LETTER IO */ \
+	    MAP(0x72, 0x53)	/* CYRILLIC SMALL LETTER DJE */ \
+	    MAP(0x73, 0x54)	/* CYRILLIC SMALL LETTER GJE */ \
+	    MAP(0x74, 0x55)	/* CYRILLIC SMALL LETTER UKRAINIAN IE */ \
+	    MAP(0x75, 0x56)	/* CYRILLIC SMALL LETTER DZE */ \
+	    MAP(0x76, 0x57)	/* CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I */ \
+	    MAP(0x77, 0x58)	/* CYRILLIC SMALL LETTER YI */ \
+	    MAP(0x78, 0x59)	/* CYRILLIC SMALL LETTER JE */ \
+	    MAP(0x79, 0x5A)	/* CYRILLIC SMALL LETTER LJE */ \
+	    MAP(0x7A, 0x5B)	/* CYRILLIC SMALL LETTER NJE */ \
+	    MAP(0x7B, 0x5C)	/* CYRILLIC SMALL LETTER TSHE */ \
+	    MAP(0x7C, 0x5D)	/* CYRILLIC SMALL LETTER KJE */ \
+	    MAP(0x7D, 0xA7)	/* SECTION SIGN */ \
+	    MAP(0x7E, 0x5E)	/* CYRILLIC SMALL LETTER SHORT U */ \
+	    MAP(0x7F, 0x5F)	/* CYRILLIC SMALL LETTER DZHE */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -932,102 +917,93 @@
 	    UNI(0x7C, 0x03CC)	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
 	    UNI(0x7D, 0x03CD)	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
 	    UNI(0x7E, 0x03CE)	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
+	    XXX(0x7F, UNDEF)	/* undefined */ \
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Greek_Supp(code) \
+#define unmap_ISO_Greek_Supp(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A6, 0x26)	/* BROKEN BAR */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0x28)	/* DIAERESIS */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00AC, 0x2C)	/* NOT SIGN */ \
-	    MAP(0x00AD, 0x2D)	/* SOFT HYPHEN */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x0384, 0x96)	/* GREEK TONOS */ \
-	    MAP(0x0385, 0x95)	/* GREEK DIALYTIKA TONOS */ \
-	    MAP(0x0386, 0x6E)	/* GREEK CAPITAL LETTER ALPHA WITH TONOS */ \
-	    MAP(0x0388, 0x6F)	/* GREEK CAPITAL LETTER EPSILON WITH TONOS */ \
-	    MAP(0x0389, 0x70)	/* GREEK CAPITAL LETTER ETA WITH TONOS */ \
-	    MAP(0x038A, 0x71)	/* GREEK CAPITAL LETTER IOTA WITH TONOS */ \
-	    MAP(0x038C, 0x72)	/* GREEK CAPITAL LETTER OMICRON WITH TONOS */ \
-	    MAP(0x038E, 0x73)	/* GREEK CAPITAL LETTER UPSILON WITH TONOS */ \
-	    MAP(0x038F, 0x74)	/* GREEK CAPITAL LETTER OMEGA WITH TONOS */ \
-	    MAP(0x0390, 0x75)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS */ \
-	    MAP(0x0391, 0x76)	/* GREEK CAPITAL LETTER ALPHA */ \
-	    MAP(0x0392, 0x77)	/* GREEK CAPITAL LETTER BETA */ \
-	    MAP(0x0393, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
-	    MAP(0x0394, 0x79)	/* GREEK CAPITAL LETTER DELTA */ \
-	    MAP(0x0395, 0x7A)	/* GREEK CAPITAL LETTER EPSILON */ \
-	    MAP(0x0396, 0x7B)	/* GREEK CAPITAL LETTER ZETA */ \
-	    MAP(0x0397, 0x7C)	/* GREEK CAPITAL LETTER ETA */ \
-	    MAP(0x0398, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
-	    MAP(0x0399, 0x7E)	/* GREEK CAPITAL LETTER IOTA */ \
-	    MAP(0x039A, 0x7F)	/* GREEK CAPITAL LETTER KAPPA */ \
-	    MAP(0x039B, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
-	    MAP(0x039C, 0xA3)	/* GREEK CAPITAL LETTER MU */ \
-	    MAP(0x039D, 0xA4)	/* GREEK CAPITAL LETTER NU */ \
-	    MAP(0x039E, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
-	    MAP(0x039F, 0xA6)	/* GREEK CAPITAL LETTER OMICRON */ \
-	    MAP(0x03A0, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
-	    MAP(0x03A1, 0xA8)	/* GREEK CAPITAL LETTER RHO */ \
-	    MAP(0x03A3, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
-	    MAP(0x03A4, 0xAA)	/* GREEK CAPITAL LETTER TAU */ \
-	    MAP(0x03A5, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
-	    MAP(0x03A6, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
-	    MAP(0x03A7, 0xAD)	/* GREEK CAPITAL LETTER CHI */ \
-	    MAP(0x03A8, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
-	    MAP(0x03A9, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
-	    MAP(0x03AA, 0xB0)	/* GREEK CAPITAL LETTER IOTA WITH DIALYTIKA */ \
-	    MAP(0x03AB, 0xB1)	/* GREEK CAPITAL LETTER UPSILON WITH DIALYTIKA */ \
-	    MAP(0x03AC, 0xB2)	/* GREEK SMALL LETTER ALPHA WITH TONOS */ \
-	    MAP(0x03AD, 0xB3)	/* GREEK SMALL LETTER EPSILON WITH TONOS */ \
-	    MAP(0x03AE, 0xB4)	/* GREEK SMALL LETTER ETA WITH TONOS */ \
-	    MAP(0x03AF, 0xB5)	/* GREEK SMALL LETTER IOTA WITH TONOS */ \
-	    MAP(0x03B0, 0xB6)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS */ \
-	    MAP(0x03B1, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
-	    MAP(0x03B2, 0xB8)	/* GREEK SMALL LETTER BETA */ \
-	    MAP(0x03B3, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
-	    MAP(0x03B4, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
-	    MAP(0x03B5, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
-	    MAP(0x03B6, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
-	    MAP(0x03B7, 0xBD)	/* GREEK SMALL LETTER ETA */ \
-	    MAP(0x03B8, 0xBE)	/* GREEK SMALL LETTER THETA */ \
-	    MAP(0x03B9, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
-	    MAP(0x03BA, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
-	    MAP(0x03BB, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
-	    MAP(0x03BC, 0xC2)	/* GREEK SMALL LETTER MU */ \
-	    MAP(0x03BD, 0xC3)	/* GREEK SMALL LETTER NU */ \
-	    MAP(0x03BE, 0xC4)	/* GREEK SMALL LETTER XI */ \
-	    MAP(0x03BF, 0xC5)	/* GREEK SMALL LETTER OMICRON */ \
-	    MAP(0x03C0, 0xC6)	/* GREEK SMALL LETTER PI */ \
-	    MAP(0x03C1, 0xC7)	/* GREEK SMALL LETTER RHO */ \
-	    MAP(0x03C2, 0xC8)	/* GREEK SMALL LETTER FINAL SIGMA */ \
-	    MAP(0x03C3, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
-	    MAP(0x03C4, 0xCA)	/* GREEK SMALL LETTER TAU */ \
-	    MAP(0x03C5, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
-	    MAP(0x03C6, 0xCC)	/* GREEK SMALL LETTER PHI */ \
-	    MAP(0x03C7, 0xCD)	/* GREEK SMALL LETTER CHI */ \
-	    MAP(0x03C8, 0xCE)	/* GREEK SMALL LETTER PSI */ \
-	    MAP(0x03C9, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
-	    MAP(0x03CA, 0xD0)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA */ \
-	    MAP(0x03CB, 0xD1)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA */ \
-	    MAP(0x03CC, 0xD2)	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
-	    MAP(0x03CD, 0xD3)	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
-	    MAP(0x03CE, 0xD4)	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
-	    MAP(0x2015, 0x2D)	/* HORIZONTAL BAR */ \
-	    MAP(0x2018, 0x60)	/* LEFT SINGLE QUOTATION MARK */ \
-	    MAP(0x2019, 0x27)	/* RIGHT SINGLE QUOTATION MARK */ \
-	    MAP(UNDEF, 0x1B)	/* undefined */ \
+	    MAP(0x21, 0x60)	/* LEFT SINGLE QUOTATION MARK */ \
+	    MAP(0x22, 0x27)	/* RIGHT SINGLE QUOTATION MARK */ \
+	    MAP(0x24, 0x1B)	/* undefined */ \
+	    MAP(0x25, 0x1B)	/* undefined */ \
+	    MAP(0x2A, 0x1B)	/* undefined */ \
+	    MAP(0x2E, 0x1B)	/* undefined */ \
+	    MAP(0x2F, 0x2D)	/* HORIZONTAL BAR */ \
+	    MAP(0x34, 0x96)	/* GREEK TONOS */ \
+	    MAP(0x35, 0x95)	/* GREEK DIALYTIKA TONOS */ \
+	    MAP(0x36, 0x6E)	/* GREEK CAPITAL LETTER ALPHA WITH TONOS */ \
+	    MAP(0x38, 0x6F)	/* GREEK CAPITAL LETTER EPSILON WITH TONOS */ \
+	    MAP(0x39, 0x70)	/* GREEK CAPITAL LETTER ETA WITH TONOS */ \
+	    MAP(0x3A, 0x71)	/* GREEK CAPITAL LETTER IOTA WITH TONOS */ \
+	    MAP(0x3C, 0x72)	/* GREEK CAPITAL LETTER OMICRON WITH TONOS */ \
+	    MAP(0x3E, 0x73)	/* GREEK CAPITAL LETTER UPSILON WITH TONOS */ \
+	    MAP(0x3F, 0x74)	/* GREEK CAPITAL LETTER OMEGA WITH TONOS */ \
+	    MAP(0x40, 0x75)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS */ \
+	    MAP(0x41, 0x76)	/* GREEK CAPITAL LETTER ALPHA */ \
+	    MAP(0x42, 0x77)	/* GREEK CAPITAL LETTER BETA */ \
+	    MAP(0x43, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
+	    MAP(0x44, 0x79)	/* GREEK CAPITAL LETTER DELTA */ \
+	    MAP(0x45, 0x7A)	/* GREEK CAPITAL LETTER EPSILON */ \
+	    MAP(0x46, 0x7B)	/* GREEK CAPITAL LETTER ZETA */ \
+	    MAP(0x47, 0x7C)	/* GREEK CAPITAL LETTER ETA */ \
+	    MAP(0x48, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
+	    MAP(0x49, 0x7E)	/* GREEK CAPITAL LETTER IOTA */ \
+	    MAP(0x4A, 0x7F)	/* GREEK CAPITAL LETTER KAPPA */ \
+	    MAP(0x4B, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
+	    MAP(0x4C, 0xA3)	/* GREEK CAPITAL LETTER MU */ \
+	    MAP(0x4D, 0xA4)	/* GREEK CAPITAL LETTER NU */ \
+	    MAP(0x4E, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
+	    MAP(0x4F, 0xA6)	/* GREEK CAPITAL LETTER OMICRON */ \
+	    MAP(0x50, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
+	    MAP(0x51, 0xA8)	/* GREEK CAPITAL LETTER RHO */ \
+	    MAP(0x52, 0x1B)	/* undefined */ \
+	    MAP(0x53, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
+	    MAP(0x54, 0xAA)	/* GREEK CAPITAL LETTER TAU */ \
+	    MAP(0x55, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
+	    MAP(0x56, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
+	    MAP(0x57, 0xAD)	/* GREEK CAPITAL LETTER CHI */ \
+	    MAP(0x58, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
+	    MAP(0x59, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
+	    MAP(0x5A, 0xB0)	/* GREEK CAPITAL LETTER IOTA WITH DIALYTIKA */ \
+	    MAP(0x5B, 0xB1)	/* GREEK CAPITAL LETTER UPSILON WITH DIALYTIKA */ \
+	    MAP(0x5C, 0xB2)	/* GREEK SMALL LETTER ALPHA WITH TONOS */ \
+	    MAP(0x5D, 0xB3)	/* GREEK SMALL LETTER EPSILON WITH TONOS */ \
+	    MAP(0x5E, 0xB4)	/* GREEK SMALL LETTER ETA WITH TONOS */ \
+	    MAP(0x5F, 0xB5)	/* GREEK SMALL LETTER IOTA WITH TONOS */ \
+	    MAP(0x60, 0xB6)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS */ \
+	    MAP(0x61, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
+	    MAP(0x62, 0xB8)	/* GREEK SMALL LETTER BETA */ \
+	    MAP(0x63, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
+	    MAP(0x64, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
+	    MAP(0x65, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
+	    MAP(0x66, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
+	    MAP(0x67, 0xBD)	/* GREEK SMALL LETTER ETA */ \
+	    MAP(0x68, 0xBE)	/* GREEK SMALL LETTER THETA */ \
+	    MAP(0x69, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
+	    MAP(0x6A, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
+	    MAP(0x6B, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
+	    MAP(0x6C, 0xC2)	/* GREEK SMALL LETTER MU */ \
+	    MAP(0x6D, 0xC3)	/* GREEK SMALL LETTER NU */ \
+	    MAP(0x6E, 0xC4)	/* GREEK SMALL LETTER XI */ \
+	    MAP(0x6F, 0xC5)	/* GREEK SMALL LETTER OMICRON */ \
+	    MAP(0x70, 0xC6)	/* GREEK SMALL LETTER PI */ \
+	    MAP(0x71, 0xC7)	/* GREEK SMALL LETTER RHO */ \
+	    MAP(0x72, 0xC8)	/* GREEK SMALL LETTER FINAL SIGMA */ \
+	    MAP(0x73, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
+	    MAP(0x74, 0xCA)	/* GREEK SMALL LETTER TAU */ \
+	    MAP(0x75, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
+	    MAP(0x76, 0xCC)	/* GREEK SMALL LETTER PHI */ \
+	    MAP(0x77, 0xCD)	/* GREEK SMALL LETTER CHI */ \
+	    MAP(0x78, 0xCE)	/* GREEK SMALL LETTER PSI */ \
+	    MAP(0x79, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
+	    MAP(0x7A, 0xD0)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA */ \
+	    MAP(0x7B, 0xD1)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA */ \
+	    MAP(0x7C, 0xD2)	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
+	    MAP(0x7D, 0xD3)	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
+	    MAP(0x7E, 0xD4)	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
+	    MAP(0x7F, 0x1B)	/* undefined */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -1131,70 +1107,81 @@
 	    XXX(0x7C, UNDEF)	/* undefined */ \
 	    XXX(0x7D, UNDEF)	/* undefined */ \
 	    XXX(0x7E, UNDEF)	/* undefined */ \
+	    XXX(0x7F, UNDEF)	/* undefined */ \
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Hebrew(code) \
+#define unmap_ISO_Hebrew(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A2, 0x22)	/* CENT SIGN */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A4, 0x24)	/* CURRENCY SIGN */ \
-	    MAP(0x00A5, 0x25)	/* YEN SIGN */ \
-	    MAP(0x00A6, 0x26)	/* BROKEN BAR */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0x28)	/* DIAERESIS */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00AC, 0x2C)	/* NOT SIGN */ \
-	    MAP(0x00AD, 0x2D)	/* SOFT HYPHEN */ \
-	    MAP(0x00AE, 0x2E)	/* REGISTERED SIGN */ \
-	    MAP(0x00AF, 0x2F)	/* MACRON */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B4, 0x34)	/* ACUTE ACCENT */ \
-	    MAP(0x00B5, 0x35)	/* MICRO SIGN */ \
-	    MAP(0x00B6, 0x36)	/* PILCROW SIGN */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00B8, 0x38)	/* CEDILLA */ \
-	    MAP(0x00B9, 0x39)	/* SUPERSCRIPT ONE */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BC, 0x3C)	/* VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x00BE, 0x3E)	/* VULGAR FRACTION THREE QUARTERS */ \
-	    MAP(0x00D7, 0xD7)	/* MULTIPLICATION SIGN */ \
-	    MAP(0x00F7, 0xF7)	/* DIVISION SIGN */ \
-	    MAP(0x05D0, 0x53)	/* HEBREW LETTER ALEF */ \
-	    MAP(0x05D1, 0x54)	/* HEBREW LETTER BET */ \
-	    MAP(0x05D2, 0x55)	/* HEBREW LETTER GIMEL */ \
-	    MAP(0x05D3, 0x56)	/* HEBREW LETTER DALET */ \
-	    MAP(0x05D4, 0x57)	/* HEBREW LETTER HE */ \
-	    MAP(0x05D5, 0x58)	/* HEBREW LETTER VAV */ \
-	    MAP(0x05D6, 0x59)	/* HEBREW LETTER ZAYIN */ \
-	    MAP(0x05D7, 0x5A)	/* HEBREW LETTER HET */ \
-	    MAP(0x05D8, 0x5B)	/* HEBREW LETTER TET */ \
-	    MAP(0x05D9, 0x5C)	/* HEBREW LETTER YOD */ \
-	    MAP(0x05DA, 0x5D)	/* HEBREW LETTER FINAL KAF */ \
-	    MAP(0x05DB, 0x5E)	/* HEBREW LETTER KAF */ \
-	    MAP(0x05DC, 0x5F)	/* HEBREW LETTER LAMED */ \
-	    MAP(0x05DD, 0x60)	/* HEBREW LETTER FINAL MEM */ \
-	    MAP(0x05DE, 0x61)	/* HEBREW LETTER MEM */ \
-	    MAP(0x05DF, 0x62)	/* HEBREW LETTER FINAL NUN */ \
-	    MAP(0x05E0, 0x63)	/* HEBREW LETTER NUN */ \
-	    MAP(0x05E1, 0x64)	/* HEBREW LETTER SAMEKH */ \
-	    MAP(0x05E2, 0x65)	/* HEBREW LETTER AYIN */ \
-	    MAP(0x05E3, 0x66)	/* HEBREW LETTER FINAL PE */ \
-	    MAP(0x05E4, 0x67)	/* HEBREW LETTER PE */ \
-	    MAP(0x05E5, 0x68)	/* HEBREW LETTER FINAL TSADI */ \
-	    MAP(0x05E6, 0x69)	/* HEBREW LETTER TSADI */ \
-	    MAP(0x05E7, 0x6A)	/* HEBREW LETTER QOF */ \
-	    MAP(0x05E8, 0x6B)	/* HEBREW LETTER RESH */ \
-	    MAP(0x05E9, 0x6C)	/* HEBREW LETTER SHIN */ \
-	    MAP(0x05EA, 0x6D)	/* HEBREW LETTER TAV */ \
-	    MAP(0x2017, 0x52)	/* DOUBLE LOW LINE */ \
-	    MAP(UNDEF, 0x1B)	/* undefined */ \
+	    MAP(0x21, 0x1B)	/* undefined */ \
+	    MAP(0x2A, 0xD7)	/* MULTIPLICATION SIGN */ \
+	    MAP(0x3A, 0xF7)	/* DIVISION SIGN */ \
+	    MAP(0x3F, 0x1B)	/* undefined */ \
+	    MAP(0x40, 0x1B)	/* undefined */ \
+	    MAP(0x41, 0x1B)	/* undefined */ \
+	    MAP(0x42, 0x1B)	/* undefined */ \
+	    MAP(0x43, 0x1B)	/* undefined */ \
+	    MAP(0x44, 0x1B)	/* undefined */ \
+	    MAP(0x45, 0x1B)	/* undefined */ \
+	    MAP(0x46, 0x1B)	/* undefined */ \
+	    MAP(0x47, 0x1B)	/* undefined */ \
+	    MAP(0x48, 0x1B)	/* undefined */ \
+	    MAP(0x49, 0x1B)	/* undefined */ \
+	    MAP(0x4A, 0x1B)	/* undefined */ \
+	    MAP(0x4B, 0x1B)	/* undefined */ \
+	    MAP(0x4C, 0x1B)	/* undefined */ \
+	    MAP(0x4D, 0x1B)	/* undefined */ \
+	    MAP(0x4E, 0x1B)	/* undefined */ \
+	    MAP(0x4F, 0x1B)	/* undefined */ \
+	    MAP(0x50, 0x1B)	/* undefined */ \
+	    MAP(0x51, 0x1B)	/* undefined */ \
+	    MAP(0x52, 0x1B)	/* undefined */ \
+	    MAP(0x53, 0x1B)	/* undefined */ \
+	    MAP(0x54, 0x1B)	/* undefined */ \
+	    MAP(0x55, 0x1B)	/* undefined */ \
+	    MAP(0x56, 0x1B)	/* undefined */ \
+	    MAP(0x57, 0x1B)	/* undefined */ \
+	    MAP(0x58, 0x1B)	/* undefined */ \
+	    MAP(0x59, 0x1B)	/* undefined */ \
+	    MAP(0x5A, 0x1B)	/* undefined */ \
+	    MAP(0x5B, 0x1B)	/* undefined */ \
+	    MAP(0x5C, 0x1B)	/* undefined */ \
+	    MAP(0x5D, 0x1B)	/* undefined */ \
+	    MAP(0x5E, 0x1B)	/* undefined */ \
+	    MAP(0x5F, 0x52)	/* DOUBLE LOW LINE */ \
+	    MAP(0x60, 0x53)	/* HEBREW LETTER ALEF */ \
+	    MAP(0x61, 0x54)	/* HEBREW LETTER BET */ \
+	    MAP(0x62, 0x55)	/* HEBREW LETTER GIMEL */ \
+	    MAP(0x63, 0x56)	/* HEBREW LETTER DALET */ \
+	    MAP(0x64, 0x57)	/* HEBREW LETTER HE */ \
+	    MAP(0x65, 0x58)	/* HEBREW LETTER VAV */ \
+	    MAP(0x66, 0x59)	/* HEBREW LETTER ZAYIN */ \
+	    MAP(0x67, 0x5A)	/* HEBREW LETTER HET */ \
+	    MAP(0x68, 0x5B)	/* HEBREW LETTER TET */ \
+	    MAP(0x69, 0x5C)	/* HEBREW LETTER YOD */ \
+	    MAP(0x6A, 0x5D)	/* HEBREW LETTER FINAL KAF */ \
+	    MAP(0x6B, 0x5E)	/* HEBREW LETTER KAF */ \
+	    MAP(0x6C, 0x5F)	/* HEBREW LETTER LAMED */ \
+	    MAP(0x6D, 0x60)	/* HEBREW LETTER FINAL MEM */ \
+	    MAP(0x6E, 0x61)	/* HEBREW LETTER MEM */ \
+	    MAP(0x6F, 0x62)	/* HEBREW LETTER FINAL NUN */ \
+	    MAP(0x70, 0x63)	/* HEBREW LETTER NUN */ \
+	    MAP(0x71, 0x64)	/* HEBREW LETTER SAMEKH */ \
+	    MAP(0x72, 0x65)	/* HEBREW LETTER AYIN */ \
+	    MAP(0x73, 0x66)	/* HEBREW LETTER FINAL PE */ \
+	    MAP(0x74, 0x67)	/* HEBREW LETTER PE */ \
+	    MAP(0x75, 0x68)	/* HEBREW LETTER FINAL TSADI */ \
+	    MAP(0x76, 0x69)	/* HEBREW LETTER TSADI */ \
+	    MAP(0x77, 0x6A)	/* HEBREW LETTER QOF */ \
+	    MAP(0x78, 0x6B)	/* HEBREW LETTER RESH */ \
+	    MAP(0x79, 0x6C)	/* HEBREW LETTER SHIN */ \
+	    MAP(0x7A, 0x6D)	/* HEBREW LETTER TAV */ \
+	    MAP(0x7B, 0x1B)	/* undefined */ \
+	    MAP(0x7C, 0x1B)	/* undefined */ \
+	    MAP(0x7D, 0x1B)	/* undefined */ \
+	    MAP(0x7E, 0x1B)	/* undefined */ \
+	    MAP(0x7F, 0x1B)	/* undefined */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -1302,104 +1289,65 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Latin_2(code) \
+#define unmap_ISO_Latin_2(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A4, 0x24)	/* CURRENCY SIGN */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0x28)	/* DIAERESIS */ \
-	    MAP(0x00AD, 0x2D)	/* SOFT HYPHEN */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B4, 0x34)	/* ACUTE ACCENT */ \
-	    MAP(0x00B8, 0x38)	/* CEDILLA */ \
-	    MAP(0x00C1, 0x41)	/* LATIN CAPITAL LETTER A WITH ACUTE */ \
-	    MAP(0x00C2, 0x42)	/* LATIN CAPITAL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00C4, 0x44)	/* LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00C7, 0x47)	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
-	    MAP(0x00C9, 0x49)	/* LATIN CAPITAL LETTER E WITH ACUTE */ \
-	    MAP(0x00CB, 0x4B)	/* LATIN CAPITAL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00CD, 0x4D)	/* LATIN CAPITAL LETTER I WITH ACUTE */ \
-	    MAP(0x00CE, 0x4E)	/* LATIN CAPITAL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00D3, 0x53)	/* LATIN CAPITAL LETTER O WITH ACUTE */ \
-	    MAP(0x00D4, 0x54)	/* LATIN CAPITAL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00D6, 0x56)	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00D7, 0x57)	/* MULTIPLICATION SIGN */ \
-	    MAP(0x00DA, 0x5A)	/* LATIN CAPITAL LETTER U WITH ACUTE */ \
-	    MAP(0x00DC, 0x5C)	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00DD, 0x5D)	/* LATIN CAPITAL LETTER Y WITH ACUTE */ \
-	    MAP(0x00DF, 0x5F)	/* LATIN SMALL LETTER SHARP S */ \
-	    MAP(0x00E1, 0x61)	/* LATIN SMALL LETTER A WITH ACUTE */ \
-	    MAP(0x00E2, 0x62)	/* LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00E4, 0x64)	/* LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00E7, 0x67)	/* LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(0x00E9, 0x69)	/* LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(0x00EB, 0x6B)	/* LATIN SMALL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00ED, 0x6D)	/* LATIN SMALL LETTER I WITH ACUTE */ \
-	    MAP(0x00EE, 0x6E)	/* LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00F3, 0x73)	/* LATIN SMALL LETTER O WITH ACUTE */ \
-	    MAP(0x00F4, 0x74)	/* LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00F6, 0x76)	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00F7, 0x77)	/* DIVISION SIGN */ \
-	    MAP(0x00FA, 0x7A)	/* LATIN SMALL LETTER U WITH ACUTE */ \
-	    MAP(0x00FC, 0x7C)	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00FD, 0x7D)	/* LATIN SMALL LETTER Y WITH ACUTE */ \
-	    MAP(0x0102, 0x43)	/* LATIN CAPITAL LETTER A WITH BREVE */ \
-	    MAP(0x0103, 0x63)	/* LATIN SMALL LETTER A WITH BREVE */ \
-	    MAP(0x0104, 0x21)	/* LATIN CAPITAL LETTER A WITH OGONEK */ \
-	    MAP(0x0105, 0x31)	/* LATIN SMALL LETTER A WITH OGONEK */ \
-	    MAP(0x0106, 0x46)	/* LATIN CAPITAL LETTER C WITH ACUTE */ \
-	    MAP(0x0107, 0x66)	/* LATIN SMALL LETTER C WITH ACUTE */ \
-	    MAP(0x010C, 0x48)	/* LATIN CAPITAL LETTER C WITH CARON */ \
-	    MAP(0x010D, 0x68)	/* LATIN SMALL LETTER C WITH CARON */ \
-	    MAP(0x010E, 0x4F)	/* LATIN CAPITAL LETTER D WITH CARON */ \
-	    MAP(0x010F, 0x6F)	/* LATIN SMALL LETTER D WITH CARON */ \
-	    MAP(0x0110, 0x50)	/* LATIN CAPITAL LETTER D WITH STROKE */ \
-	    MAP(0x0111, 0x70)	/* LATIN SMALL LETTER D WITH STROKE */ \
-	    MAP(0x0118, 0x4A)	/* LATIN CAPITAL LETTER E WITH OGONEK */ \
-	    MAP(0x0119, 0x6A)	/* LATIN SMALL LETTER E WITH OGONEK */ \
-	    MAP(0x011A, 0x4C)	/* LATIN CAPITAL LETTER E WITH CARON */ \
-	    MAP(0x011B, 0x6C)	/* LATIN SMALL LETTER E WITH CARON */ \
-	    MAP(0x0139, 0x45)	/* LATIN CAPITAL LETTER L WITH ACUTE */ \
-	    MAP(0x013A, 0x65)	/* LATIN SMALL LETTER L WITH ACUTE */ \
-	    MAP(0x013D, 0x25)	/* LATIN CAPITAL LETTER L WITH CARON */ \
-	    MAP(0x013E, 0x35)	/* LATIN SMALL LETTER L WITH CARON */ \
-	    MAP(0x0141, 0x23)	/* LATIN CAPITAL LETTER L WITH STROKE */ \
-	    MAP(0x0142, 0x33)	/* LATIN SMALL LETTER L WITH STROKE */ \
-	    MAP(0x0143, 0x51)	/* LATIN CAPITAL LETTER N WITH ACUTE */ \
-	    MAP(0x0144, 0x71)	/* LATIN SMALL LETTER N WITH ACUTE */ \
-	    MAP(0x0147, 0x52)	/* LATIN CAPITAL LETTER N WITH CARON */ \
-	    MAP(0x0148, 0x72)	/* LATIN SMALL LETTER N WITH CARON */ \
-	    MAP(0x0150, 0x55)	/* LATIN CAPITAL LETTER O WITH DOUBLE ACUTE */ \
-	    MAP(0x0151, 0x75)	/* LATIN SMALL LETTER O WITH DOUBLE ACUTE */ \
-	    MAP(0x0154, 0x40)	/* LATIN CAPITAL LETTER R WITH ACUTE */ \
-	    MAP(0x0155, 0x60)	/* LATIN SMALL LETTER R WITH ACUTE */ \
-	    MAP(0x0158, 0x58)	/* LATIN CAPITAL LETTER R WITH CARON */ \
-	    MAP(0x0159, 0x78)	/* LATIN SMALL LETTER R WITH CARON */ \
-	    MAP(0x015A, 0x26)	/* LATIN CAPITAL LETTER S WITH ACUTE */ \
-	    MAP(0x015B, 0x36)	/* LATIN SMALL LETTER S WITH ACUTE */ \
-	    MAP(0x015E, 0x2A)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
-	    MAP(0x015F, 0x3A)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
-	    MAP(0x0160, 0x29)	/* LATIN CAPITAL LETTER S WITH CARON */ \
-	    MAP(0x0161, 0x39)	/* LATIN SMALL LETTER S WITH CARON */ \
-	    MAP(0x0162, 0x5E)	/* LATIN CAPITAL LETTER T WITH CEDILLA */ \
-	    MAP(0x0163, 0x7E)	/* LATIN SMALL LETTER T WITH CEDILLA */ \
-	    MAP(0x0164, 0x2B)	/* LATIN CAPITAL LETTER T WITH CARON */ \
-	    MAP(0x0165, 0x3B)	/* LATIN SMALL LETTER T WITH CARON */ \
-	    MAP(0x016E, 0x59)	/* LATIN CAPITAL LETTER U WITH RING ABOVE */ \
-	    MAP(0x016F, 0x79)	/* LATIN SMALL LETTER U WITH RING ABOVE */ \
-	    MAP(0x0170, 0x5B)	/* LATIN CAPITAL LETTER U WITH DOUBLE ACUTE */ \
-	    MAP(0x0171, 0x7B)	/* LATIN SMALL LETTER U WITH DOUBLE ACUTE */ \
-	    MAP(0x0179, 0x2C)	/* LATIN CAPITAL LETTER Z WITH ACUTE */ \
-	    MAP(0x017A, 0x3C)	/* LATIN SMALL LETTER Z WITH ACUTE */ \
-	    MAP(0x017B, 0x2F)	/* LATIN CAPITAL LETTER Z WITH DOT ABOVE */ \
-	    MAP(0x017C, 0x3F)	/* LATIN SMALL LETTER Z WITH DOT ABOVE */ \
-	    MAP(0x017D, 0x2E)	/* LATIN CAPITAL LETTER Z WITH CARON */ \
-	    MAP(0x017E, 0x3E)	/* LATIN SMALL LETTER Z WITH CARON */ \
-	    MAP(0x02C7, 0x37)	/* CARON */ \
-	    MAP(0x02D8, 0x22)	/* BREVE */ \
-	    MAP(0x02D9, 0x7F)	/* DOT ABOVE */ \
-	    MAP(0x02DB, 0x32)	/* OGONEK */ \
-	    MAP(0x02DD, 0x3D)	/* DOUBLE ACUTE ACCENT */ \
+	    MAP(0x21, 0x9A)	/* LATIN CAPITAL LETTER A WITH OGONEK */ \
+	    MAP(0x22, 0x90)	/* BREVE */ \
+	    MAP(0x23, 0x9B)	/* LATIN CAPITAL LETTER L WITH STROKE */ \
+	    MAP(0x25, 0x9C)	/* LATIN CAPITAL LETTER L WITH CARON */ \
+	    MAP(0x26, 0x9D)	/* LATIN CAPITAL LETTER S WITH ACUTE */ \
+	    MAP(0x29, 0x9E)	/* LATIN CAPITAL LETTER S WITH CARON */ \
+	    MAP(0x2A, 0x9F)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    MAP(0x2B, 0x21)	/* LATIN CAPITAL LETTER T WITH CARON */ \
+	    MAP(0x2C, 0x22)	/* LATIN CAPITAL LETTER Z WITH ACUTE */ \
+	    MAP(0x2E, 0x23)	/* LATIN CAPITAL LETTER Z WITH CARON */ \
+	    MAP(0x2F, 0x24)	/* LATIN CAPITAL LETTER Z WITH DOT ABOVE */ \
+	    MAP(0x31, 0x25)	/* LATIN SMALL LETTER A WITH OGONEK */ \
+	    MAP(0x32, 0x91)	/* OGONEK */ \
+	    MAP(0x33, 0x26)	/* LATIN SMALL LETTER L WITH STROKE */ \
+	    MAP(0x35, 0x27)	/* LATIN SMALL LETTER L WITH CARON */ \
+	    MAP(0x36, 0x28)	/* LATIN SMALL LETTER S WITH ACUTE */ \
+	    MAP(0x37, 0x92)	/* CARON */ \
+	    MAP(0x39, 0x29)	/* LATIN SMALL LETTER S WITH CARON */ \
+	    MAP(0x3A, 0x2A)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    MAP(0x3B, 0x2B)	/* LATIN SMALL LETTER T WITH CARON */ \
+	    MAP(0x3C, 0x2C)	/* LATIN SMALL LETTER Z WITH ACUTE */ \
+	    MAP(0x3D, 0x93)	/* DOUBLE ACUTE ACCENT */ \
+	    MAP(0x3E, 0x2D)	/* LATIN SMALL LETTER Z WITH CARON */ \
+	    MAP(0x3F, 0x2E)	/* LATIN SMALL LETTER Z WITH DOT ABOVE */ \
+	    MAP(0x40, 0x2F)	/* LATIN CAPITAL LETTER R WITH ACUTE */ \
+	    MAP(0x43, 0x30)	/* LATIN CAPITAL LETTER A WITH BREVE */ \
+	    MAP(0x45, 0x31)	/* LATIN CAPITAL LETTER L WITH ACUTE */ \
+	    MAP(0x46, 0x32)	/* LATIN CAPITAL LETTER C WITH ACUTE */ \
+	    MAP(0x48, 0x33)	/* LATIN CAPITAL LETTER C WITH CARON */ \
+	    MAP(0x4A, 0x34)	/* LATIN CAPITAL LETTER E WITH OGONEK */ \
+	    MAP(0x4C, 0x35)	/* LATIN CAPITAL LETTER E WITH CARON */ \
+	    MAP(0x4F, 0x36)	/* LATIN CAPITAL LETTER D WITH CARON */ \
+	    MAP(0x51, 0x37)	/* LATIN CAPITAL LETTER N WITH ACUTE */ \
+	    MAP(0x52, 0x38)	/* LATIN CAPITAL LETTER N WITH CARON */ \
+	    MAP(0x55, 0x39)	/* LATIN CAPITAL LETTER O WITH DOUBLE ACUTE */ \
+	    MAP(0x58, 0x3A)	/* LATIN CAPITAL LETTER R WITH CARON */ \
+	    MAP(0x59, 0x3B)	/* LATIN CAPITAL LETTER U WITH RING ABOVE */ \
+	    MAP(0x5B, 0x3C)	/* LATIN CAPITAL LETTER U WITH DOUBLE ACUTE */ \
+	    MAP(0x5E, 0x3D)	/* LATIN CAPITAL LETTER T WITH CEDILLA */ \
+	    MAP(0x60, 0x3E)	/* LATIN SMALL LETTER R WITH ACUTE */ \
+	    MAP(0x63, 0x3F)	/* LATIN SMALL LETTER A WITH BREVE */ \
+	    MAP(0x65, 0x40)	/* LATIN SMALL LETTER L WITH ACUTE */ \
+	    MAP(0x66, 0x41)	/* LATIN SMALL LETTER C WITH ACUTE */ \
+	    MAP(0x68, 0x42)	/* LATIN SMALL LETTER C WITH CARON */ \
+	    MAP(0x6A, 0x43)	/* LATIN SMALL LETTER E WITH OGONEK */ \
+	    MAP(0x6C, 0x44)	/* LATIN SMALL LETTER E WITH CARON */ \
+	    MAP(0x6F, 0x45)	/* LATIN SMALL LETTER D WITH CARON */ \
+	    MAP(0x70, 0x46)	/* LATIN SMALL LETTER D WITH STROKE */ \
+	    MAP(0x71, 0x47)	/* LATIN SMALL LETTER N WITH ACUTE */ \
+	    MAP(0x72, 0x48)	/* LATIN SMALL LETTER N WITH CARON */ \
+	    MAP(0x75, 0x49)	/* LATIN SMALL LETTER O WITH DOUBLE ACUTE */ \
+	    MAP(0x78, 0x4A)	/* LATIN SMALL LETTER R WITH CARON */ \
+	    MAP(0x79, 0x4B)	/* LATIN SMALL LETTER U WITH RING ABOVE */ \
+	    MAP(0x7B, 0x4C)	/* LATIN SMALL LETTER U WITH DOUBLE ACUTE */ \
+	    MAP(0x7E, 0x4D)	/* LATIN SMALL LETTER T WITH CEDILLA */ \
+	    MAP(0x7F, 0x94)	/* DOT ABOVE */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -1507,104 +1455,15 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Latin_5(code) \
+#define unmap_ISO_Latin_5(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A1, 0x21)	/* INVERTED EXCLAMATION MARK */ \
-	    MAP(0x00A2, 0x22)	/* CENT SIGN */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A4, 0x24)	/* CURRENCY SIGN */ \
-	    MAP(0x00A5, 0x25)	/* YEN SIGN */ \
-	    MAP(0x00A6, 0x26)	/* BROKEN BAR */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0x28)	/* DIAERESIS */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AA, 0x2A)	/* FEMININE ORDINAL INDICATOR */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00AC, 0x2C)	/* NOT SIGN */ \
-	    MAP(0x00AD, 0x2D)	/* SOFT HYPHEN */ \
-	    MAP(0x00AE, 0x2E)	/* REGISTERED SIGN */ \
-	    MAP(0x00AF, 0x2F)	/* MACRON */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B4, 0x34)	/* ACUTE ACCENT */ \
-	    MAP(0x00B5, 0x35)	/* MICRO SIGN */ \
-	    MAP(0x00B6, 0x36)	/* PILCROW SIGN */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00B8, 0x38)	/* CEDILLA */ \
-	    MAP(0x00B9, 0x39)	/* SUPERSCRIPT ONE */ \
-	    MAP(0x00BA, 0x3A)	/* MASCULINE ORDINAL INDICATOR */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BC, 0x3C)	/* VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x00BE, 0x3E)	/* VULGAR FRACTION THREE QUARTERS */ \
-	    MAP(0x00BF, 0x3F)	/* INVERTED QUESTION MARK */ \
-	    MAP(0x00C0, 0x40)	/* LATIN CAPITAL LETTER A WITH GRAVE */ \
-	    MAP(0x00C1, 0x41)	/* LATIN CAPITAL LETTER A WITH ACUTE */ \
-	    MAP(0x00C2, 0x42)	/* LATIN CAPITAL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00C3, 0x43)	/* LATIN CAPITAL LETTER A WITH TILDE */ \
-	    MAP(0x00C4, 0x44)	/* LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00C5, 0x45)	/* LATIN CAPITAL LETTER A WITH RING ABOVE */ \
-	    MAP(0x00C6, 0x46)	/* LATIN CAPITAL LETTER AE */ \
-	    MAP(0x00C7, 0x47)	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
-	    MAP(0x00C8, 0x48)	/* LATIN CAPITAL LETTER E WITH GRAVE */ \
-	    MAP(0x00C9, 0x49)	/* LATIN CAPITAL LETTER E WITH ACUTE */ \
-	    MAP(0x00CA, 0x4A)	/* LATIN CAPITAL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(0x00CB, 0x4B)	/* LATIN CAPITAL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00CC, 0x4C)	/* LATIN CAPITAL LETTER I WITH GRAVE */ \
-	    MAP(0x00CD, 0x4D)	/* LATIN CAPITAL LETTER I WITH ACUTE */ \
-	    MAP(0x00CE, 0x4E)	/* LATIN CAPITAL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00CF, 0x4F)	/* LATIN CAPITAL LETTER I WITH DIAERESIS */ \
-	    MAP(0x00D1, 0x51)	/* LATIN CAPITAL LETTER N WITH TILDE */ \
-	    MAP(0x00D2, 0x52)	/* LATIN CAPITAL LETTER O WITH GRAVE */ \
-	    MAP(0x00D3, 0x53)	/* LATIN CAPITAL LETTER O WITH ACUTE */ \
-	    MAP(0x00D4, 0x54)	/* LATIN CAPITAL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00D5, 0x55)	/* LATIN CAPITAL LETTER O WITH TILDE */ \
-	    MAP(0x00D6, 0x56)	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00D7, 0x57)	/* MULTIPLICATION SIGN */ \
-	    MAP(0x00D8, 0x58)	/* LATIN CAPITAL LETTER O WITH STROKE */ \
-	    MAP(0x00D9, 0x59)	/* LATIN CAPITAL LETTER U WITH GRAVE */ \
-	    MAP(0x00DA, 0x5A)	/* LATIN CAPITAL LETTER U WITH ACUTE */ \
-	    MAP(0x00DB, 0x5B)	/* LATIN CAPITAL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(0x00DC, 0x5C)	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00DF, 0x5F)	/* LATIN SMALL LETTER SHARP S */ \
-	    MAP(0x00E0, 0x60)	/* LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(0x00E1, 0x61)	/* LATIN SMALL LETTER A WITH ACUTE */ \
-	    MAP(0x00E2, 0x62)	/* LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00E3, 0x63)	/* LATIN SMALL LETTER A WITH TILDE */ \
-	    MAP(0x00E4, 0x64)	/* LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00E5, 0x65)	/* LATIN SMALL LETTER A WITH RING ABOVE */ \
-	    MAP(0x00E6, 0x66)	/* LATIN SMALL LETTER AE */ \
-	    MAP(0x00E7, 0x67)	/* LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(0x00E8, 0x68)	/* LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(0x00E9, 0x69)	/* LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(0x00EA, 0x6A)	/* LATIN SMALL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(0x00EB, 0x6B)	/* LATIN SMALL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00EC, 0x6C)	/* LATIN SMALL LETTER I WITH GRAVE */ \
-	    MAP(0x00ED, 0x6D)	/* LATIN SMALL LETTER I WITH ACUTE */ \
-	    MAP(0x00EE, 0x6E)	/* LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00EF, 0x6F)	/* LATIN SMALL LETTER I WITH DIAERESIS */ \
-	    MAP(0x00F1, 0x71)	/* LATIN SMALL LETTER N WITH TILDE */ \
-	    MAP(0x00F2, 0x72)	/* LATIN SMALL LETTER O WITH GRAVE */ \
-	    MAP(0x00F3, 0x73)	/* LATIN SMALL LETTER O WITH ACUTE */ \
-	    MAP(0x00F4, 0x74)	/* LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00F5, 0x75)	/* LATIN SMALL LETTER O WITH TILDE */ \
-	    MAP(0x00F6, 0x76)	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00F7, 0x77)	/* DIVISION SIGN */ \
-	    MAP(0x00F8, 0x78)	/* LATIN SMALL LETTER O WITH STROKE */ \
-	    MAP(0x00F9, 0x79)	/* LATIN SMALL LETTER U WITH GRAVE */ \
-	    MAP(0x00FA, 0x7A)	/* LATIN SMALL LETTER U WITH ACUTE */ \
-	    MAP(0x00FB, 0x7B)	/* LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(0x00FC, 0x7C)	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00FF, 0x7F)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
-	    MAP(0x011E, 0x50)	/* LATIN CAPITAL LETTER G WITH BREVE */ \
-	    MAP(0x011F, 0x70)	/* LATIN SMALL LETTER G WITH BREVE */ \
-	    MAP(0x0130, 0x5D)	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
-	    MAP(0x0131, 0x7D)	/* LATIN SMALL LETTER DOTLESS I */ \
-	    MAP(0x015E, 0x5E)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
-	    MAP(0x015F, 0x7E)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    MAP(0x50, 0x4E)	/* LATIN CAPITAL LETTER G WITH BREVE */ \
+	    MAP(0x5D, 0x4F)	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
+	    MAP(0x5E, 0x9F)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    MAP(0x70, 0x50)	/* LATIN SMALL LETTER G WITH BREVE */ \
+	    MAP(0x7D, 0x51)	/* LATIN SMALL LETTER DOTLESS I */ \
+	    MAP(0x7E, 0x2A)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -1613,7 +1472,6 @@
 #define map_DEC_Cyrillic(code) \
 	begin_CODEPAGE(94) \
 	switch (code) { \
-	    UNI(0x20, 0x00A0)	/* NO-BREAK SPACE */ \
 	    XXX(0x21, UNDEF)	/* undefined */ \
 	    XXX(0x22, UNDEF)	/* undefined */ \
 	    XXX(0x23, UNDEF)	/* undefined */ \
@@ -1708,77 +1566,106 @@
 	    UNI(0x7C, 0x042D)	/* CYRILLIC CAPITAL LETTER E */ \
 	    UNI(0x7D, 0x0429)	/* CYRILLIC CAPITAL LETTER SHCHA */ \
 	    UNI(0x7E, 0x0427)	/* CYRILLIC CAPITAL LETTER CHE */ \
-	    XXX(0x7F, UNDEF) \
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Cyrillic(code) \
+#define unmap_DEC_Cyrillic(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x0410, 0x61)	/* CYRILLIC CAPITAL LETTER A */ \
-	    MAP(0x0411, 0x62)	/* CYRILLIC CAPITAL LETTER BE */ \
-	    MAP(0x0412, 0x77)	/* CYRILLIC CAPITAL LETTER VE */ \
-	    MAP(0x0413, 0x67)	/* CYRILLIC CAPITAL LETTER GHE */ \
-	    MAP(0x0414, 0x64)	/* CYRILLIC CAPITAL LETTER DE */ \
-	    MAP(0x0415, 0x65)	/* CYRILLIC CAPITAL LETTER IE */ \
-	    MAP(0x0416, 0x76)	/* CYRILLIC CAPITAL LETTER ZHE */ \
-	    MAP(0x0417, 0x7A)	/* CYRILLIC CAPITAL LETTER ZE */ \
-	    MAP(0x0418, 0x69)	/* CYRILLIC CAPITAL LETTER I */ \
-	    MAP(0x0419, 0x6A)	/* CYRILLIC CAPITAL LETTER SHORT I */ \
-	    MAP(0x041A, 0x6B)	/* CYRILLIC CAPITAL LETTER KA */ \
-	    MAP(0x041B, 0x6C)	/* CYRILLIC CAPITAL LETTER EL */ \
-	    MAP(0x041C, 0x6D)	/* CYRILLIC CAPITAL LETTER EM */ \
-	    MAP(0x041D, 0x6E)	/* CYRILLIC CAPITAL LETTER EN */ \
-	    MAP(0x041E, 0x6F)	/* CYRILLIC CAPITAL LETTER O */ \
-	    MAP(0x041F, 0x70)	/* CYRILLIC CAPITAL LETTER PE */ \
-	    MAP(0x0420, 0x72)	/* CYRILLIC CAPITAL LETTER ER */ \
-	    MAP(0x0421, 0x73)	/* CYRILLIC CAPITAL LETTER ES */ \
-	    MAP(0x0422, 0x74)	/* CYRILLIC CAPITAL LETTER TE */ \
-	    MAP(0x0423, 0x75)	/* CYRILLIC CAPITAL LETTER U */ \
-	    MAP(0x0424, 0x66)	/* CYRILLIC CAPITAL LETTER EF */ \
-	    MAP(0x0425, 0x68)	/* CYRILLIC CAPITAL LETTER HA */ \
-	    MAP(0x0426, 0x63)	/* CYRILLIC CAPITAL LETTER TSE */ \
-	    MAP(0x0427, 0x7E)	/* CYRILLIC CAPITAL LETTER CHE */ \
-	    MAP(0x0428, 0x7B)	/* CYRILLIC CAPITAL LETTER SHA */ \
-	    MAP(0x0429, 0x7D)	/* CYRILLIC CAPITAL LETTER SHCHA */ \
-	    MAP(0x042B, 0x79)	/* CYRILLIC CAPITAL LETTER YERU */ \
-	    MAP(0x042C, 0x78)	/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
-	    MAP(0x042D, 0x7C)	/* CYRILLIC CAPITAL LETTER E */ \
-	    MAP(0x042E, 0x60)	/* CYRILLIC CAPITAL LETTER YU */ \
-	    MAP(0x042F, 0x71)	/* CYRILLIC CAPITAL LETTER YA */ \
-	    MAP(0x0430, 0x41)	/* CYRILLIC SMALL LETTER A */ \
-	    MAP(0x0431, 0x42)	/* CYRILLIC SMALL LETTER BE */ \
-	    MAP(0x0432, 0x57)	/* CYRILLIC SMALL LETTER VE */ \
-	    MAP(0x0433, 0x47)	/* CYRILLIC SMALL LETTER GHE */ \
-	    MAP(0x0434, 0x44)	/* CYRILLIC SMALL LETTER DE */ \
-	    MAP(0x0435, 0x45)	/* CYRILLIC SMALL LETTER IE */ \
-	    MAP(0x0436, 0x56)	/* CYRILLIC SMALL LETTER ZHE */ \
-	    MAP(0x0437, 0x5A)	/* CYRILLIC SMALL LETTER ZE */ \
-	    MAP(0x0438, 0x49)	/* CYRILLIC SMALL LETTER I */ \
-	    MAP(0x0439, 0x4A)	/* CYRILLIC SMALL LETTER SHORT I */ \
-	    MAP(0x043A, 0x4B)	/* CYRILLIC SMALL LETTER KA */ \
-	    MAP(0x043B, 0x4C)	/* CYRILLIC SMALL LETTER EL */ \
-	    MAP(0x043C, 0x4D)	/* CYRILLIC SMALL LETTER EM */ \
-	    MAP(0x043D, 0x4E)	/* CYRILLIC SMALL LETTER EN */ \
-	    MAP(0x043E, 0x4F)	/* CYRILLIC SMALL LETTER O */ \
-	    MAP(0x043F, 0x50)	/* CYRILLIC SMALL LETTER PE */ \
-	    MAP(0x0440, 0x52)	/* CYRILLIC SMALL LETTER ER */ \
-	    MAP(0x0441, 0x53)	/* CYRILLIC SMALL LETTER ES */ \
-	    MAP(0x0442, 0x54)	/* CYRILLIC SMALL LETTER TE */ \
-	    MAP(0x0443, 0x55)	/* CYRILLIC SMALL LETTER U */ \
-	    MAP(0x0444, 0x46)	/* CYRILLIC SMALL LETTER EF */ \
-	    MAP(0x0445, 0x48)	/* CYRILLIC SMALL LETTER HA */ \
-	    MAP(0x0446, 0x43)	/* CYRILLIC SMALL LETTER TSE */ \
-	    MAP(0x0447, 0x5E)	/* CYRILLIC SMALL LETTER CHE */ \
-	    MAP(0x0448, 0x5B)	/* CYRILLIC SMALL LETTER SHA */ \
-	    MAP(0x0449, 0x5D)	/* CYRILLIC SMALL LETTER SHCHA */ \
-	    MAP(0x044A, 0x5F)	/* CYRILLIC SMALL LETTER HARD SIGN */ \
-	    MAP(0x044B, 0x59)	/* CYRILLIC SMALL LETTER YERU */ \
-	    MAP(0x044C, 0x58)	/* CYRILLIC SMALL LETTER SOFT SIGN */ \
-	    MAP(0x044D, 0x5C)	/* CYRILLIC SMALL LETTER E */ \
-	    MAP(0x044E, 0x40)	/* CYRILLIC SMALL LETTER YU */ \
-	    MAP(0x044F, 0x51)	/* CYRILLIC SMALL LETTER YA */ \
-	    MAP(UNDEF, 0x1B) \
+	    MAP(0x21, 0x1B)	/* undefined */ \
+	    MAP(0x22, 0x1B)	/* undefined */ \
+	    MAP(0x23, 0x1B)	/* undefined */ \
+	    MAP(0x24, 0x1B)	/* undefined */ \
+	    MAP(0x25, 0x1B)	/* undefined */ \
+	    MAP(0x26, 0x1B)	/* undefined */ \
+	    MAP(0x27, 0x1B)	/* undefined */ \
+	    MAP(0x28, 0x1B)	/* undefined */ \
+	    MAP(0x29, 0x1B)	/* undefined */ \
+	    MAP(0x2A, 0x1B)	/* undefined */ \
+	    MAP(0x2B, 0x1B)	/* undefined */ \
+	    MAP(0x2C, 0x1B)	/* undefined */ \
+	    MAP(0x2D, 0x1B)	/* undefined */ \
+	    MAP(0x2E, 0x1B)	/* undefined */ \
+	    MAP(0x2F, 0x1B)	/* undefined */ \
+	    MAP(0x30, 0x1B)	/* undefined */ \
+	    MAP(0x31, 0x1B)	/* undefined */ \
+	    MAP(0x32, 0x1B)	/* undefined */ \
+	    MAP(0x33, 0x1B)	/* undefined */ \
+	    MAP(0x34, 0x1B)	/* undefined */ \
+	    MAP(0x35, 0x1B)	/* undefined */ \
+	    MAP(0x36, 0x1B)	/* undefined */ \
+	    MAP(0x37, 0x1B)	/* undefined */ \
+	    MAP(0x38, 0x1B)	/* undefined */ \
+	    MAP(0x39, 0x1B)	/* undefined */ \
+	    MAP(0x3A, 0x1B)	/* undefined */ \
+	    MAP(0x3B, 0x1B)	/* undefined */ \
+	    MAP(0x3C, 0x1B)	/* undefined */ \
+	    MAP(0x3D, 0x1B)	/* undefined */ \
+	    MAP(0x3E, 0x1B)	/* undefined */ \
+	    MAP(0x3F, 0x1B)	/* undefined */ \
+	    MAP(0x40, 0x4F)	/* CYRILLIC SMALL LETTER YU */ \
+	    MAP(0x41, 0x31)	/* CYRILLIC SMALL LETTER A */ \
+	    MAP(0x42, 0x32)	/* CYRILLIC SMALL LETTER BE */ \
+	    MAP(0x43, 0x47)	/* CYRILLIC SMALL LETTER TSE */ \
+	    MAP(0x44, 0x35)	/* CYRILLIC SMALL LETTER DE */ \
+	    MAP(0x45, 0x36)	/* CYRILLIC SMALL LETTER IE */ \
+	    MAP(0x46, 0x45)	/* CYRILLIC SMALL LETTER EF */ \
+	    MAP(0x47, 0x34)	/* CYRILLIC SMALL LETTER GHE */ \
+	    MAP(0x48, 0x46)	/* CYRILLIC SMALL LETTER HA */ \
+	    MAP(0x49, 0x39)	/* CYRILLIC SMALL LETTER I */ \
+	    MAP(0x4A, 0x3A)	/* CYRILLIC SMALL LETTER SHORT I */ \
+	    MAP(0x4B, 0x3B)	/* CYRILLIC SMALL LETTER KA */ \
+	    MAP(0x4C, 0x3C)	/* CYRILLIC SMALL LETTER EL */ \
+	    MAP(0x4D, 0x3D)	/* CYRILLIC SMALL LETTER EM */ \
+	    MAP(0x4E, 0x3E)	/* CYRILLIC SMALL LETTER EN */ \
+	    MAP(0x4F, 0x3F)	/* CYRILLIC SMALL LETTER O */ \
+	    MAP(0x50, 0x40)	/* CYRILLIC SMALL LETTER PE */ \
+	    MAP(0x51, 0x50)	/* CYRILLIC SMALL LETTER YA */ \
+	    MAP(0x52, 0x41)	/* CYRILLIC SMALL LETTER ER */ \
+	    MAP(0x53, 0x42)	/* CYRILLIC SMALL LETTER ES */ \
+	    MAP(0x54, 0x43)	/* CYRILLIC SMALL LETTER TE */ \
+	    MAP(0x55, 0x44)	/* CYRILLIC SMALL LETTER U */ \
+	    MAP(0x56, 0x37)	/* CYRILLIC SMALL LETTER ZHE */ \
+	    MAP(0x57, 0x33)	/* CYRILLIC SMALL LETTER VE */ \
+	    MAP(0x58, 0x4D)	/* CYRILLIC SMALL LETTER SOFT SIGN */ \
+	    MAP(0x59, 0x4C)	/* CYRILLIC SMALL LETTER YERU */ \
+	    MAP(0x5A, 0x38)	/* CYRILLIC SMALL LETTER ZE */ \
+	    MAP(0x5B, 0x49)	/* CYRILLIC SMALL LETTER SHA */ \
+	    MAP(0x5C, 0x4E)	/* CYRILLIC SMALL LETTER E */ \
+	    MAP(0x5D, 0x4A)	/* CYRILLIC SMALL LETTER SHCHA */ \
+	    MAP(0x5E, 0x48)	/* CYRILLIC SMALL LETTER CHE */ \
+	    MAP(0x5F, 0x4B)	/* CYRILLIC SMALL LETTER HARD SIGN */ \
+	    MAP(0x60, 0x2F)	/* CYRILLIC CAPITAL LETTER YU */ \
+	    MAP(0x61, 0x11)	/* CYRILLIC CAPITAL LETTER A */ \
+	    MAP(0x62, 0x12)	/* CYRILLIC CAPITAL LETTER BE */ \
+	    MAP(0x63, 0x27)	/* CYRILLIC CAPITAL LETTER TSE */ \
+	    MAP(0x64, 0x15)	/* CYRILLIC CAPITAL LETTER DE */ \
+	    MAP(0x65, 0x16)	/* CYRILLIC CAPITAL LETTER IE */ \
+	    MAP(0x66, 0x25)	/* CYRILLIC CAPITAL LETTER EF */ \
+	    MAP(0x67, 0x14)	/* CYRILLIC CAPITAL LETTER GHE */ \
+	    MAP(0x68, 0x26)	/* CYRILLIC CAPITAL LETTER HA */ \
+	    MAP(0x69, 0x19)	/* CYRILLIC CAPITAL LETTER I */ \
+	    MAP(0x6A, 0x1A)	/* CYRILLIC CAPITAL LETTER SHORT I */ \
+	    MAP(0x6B, 0x1B)	/* CYRILLIC CAPITAL LETTER KA */ \
+	    MAP(0x6C, 0x1C)	/* CYRILLIC CAPITAL LETTER EL */ \
+	    MAP(0x6D, 0x1D)	/* CYRILLIC CAPITAL LETTER EM */ \
+	    MAP(0x6E, 0x1E)	/* CYRILLIC CAPITAL LETTER EN */ \
+	    MAP(0x6F, 0x1F)	/* CYRILLIC CAPITAL LETTER O */ \
+	    MAP(0x70, 0x20)	/* CYRILLIC CAPITAL LETTER PE */ \
+	    MAP(0x71, 0x30)	/* CYRILLIC CAPITAL LETTER YA */ \
+	    MAP(0x72, 0x21)	/* CYRILLIC CAPITAL LETTER ER */ \
+	    MAP(0x73, 0x22)	/* CYRILLIC CAPITAL LETTER ES */ \
+	    MAP(0x74, 0x23)	/* CYRILLIC CAPITAL LETTER TE */ \
+	    MAP(0x75, 0x24)	/* CYRILLIC CAPITAL LETTER U */ \
+	    MAP(0x76, 0x17)	/* CYRILLIC CAPITAL LETTER ZHE */ \
+	    MAP(0x77, 0x13)	/* CYRILLIC CAPITAL LETTER VE */ \
+	    MAP(0x78, 0x2D)	/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
+	    MAP(0x79, 0x2C)	/* CYRILLIC CAPITAL LETTER YERU */ \
+	    MAP(0x7A, 0x18)	/* CYRILLIC CAPITAL LETTER ZE */ \
+	    MAP(0x7B, 0x29)	/* CYRILLIC CAPITAL LETTER SHA */ \
+	    MAP(0x7C, 0x2E)	/* CYRILLIC CAPITAL LETTER E */ \
+	    MAP(0x7D, 0x2A)	/* CYRILLIC CAPITAL LETTER SHCHA */ \
+	    MAP(0x7E, 0x28)	/* CYRILLIC CAPITAL LETTER CHE */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -1787,7 +1674,6 @@
 #define map_DEC_Greek_Supp(code) \
 	begin_CODEPAGE(94) \
 	switch (code) { \
-	    UNI(0x20, 0x00A0)	/* NO-BREAK SPACE */ \
 	    UNI(0x21, 0x00A1)	/* LEFT SINGLE QUOTATION MARK */ \
 	    UNI(0x22, 0x00A2)	/* RIGHT SINGLE QUOTATION MARK */ \
 	    UNI(0x23, 0x00A3)	/* POUND SIGN */ \
@@ -1885,91 +1771,82 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Greek_Supp(code) \
+#define unmap_DEC_Greek_Supp(code,dft) \
 	switch (code) { \
-	    MAP(0x00A0, 0x20)	/* NO-BREAK SPACE */ \
-	    MAP(0x00A1, 0x21)	/* LEFT SINGLE QUOTATION MARK */ \
-	    MAP(0x00A2, 0x22)	/* RIGHT SINGLE QUOTATION MARK */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A4, 0xA4)	/* CURRENCY SIGN */ \
-	    MAP(0x00A5, 0x25)	/* YEN SIGN */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AA, 0x2A)	/* FEMININE ORDINAL INDICATOR */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B5, 0x35)	/* MICRO SIGN */ \
-	    MAP(0x00B6, 0x36)	/* PILCROW SIGN */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00B9, 0x39)	/* SUPERSCRIPT ONE */ \
-	    MAP(0x00BA, 0x3A)	/* MASCULINE ORDINAL INDICATOR */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BC, 0x3C)	/* VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x00BF, 0x3F)	/* INVERTED QUESTION MARK */ \
-	    MAP(0x0384, 0x96)	/* GREEK TONOS */ \
-	    MAP(0x0391, 0x76)	/* GREEK CAPITAL LETTER ALPHA */ \
-	    MAP(0x0392, 0x77)	/* GREEK CAPITAL LETTER BETA */ \
-	    MAP(0x0393, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
-	    MAP(0x0394, 0x79)	/* GREEK CAPITAL LETTER DELTA */ \
-	    MAP(0x0395, 0x7A)	/* GREEK CAPITAL LETTER EPSILON */ \
-	    MAP(0x0396, 0x7B)	/* GREEK CAPITAL LETTER ZETA */ \
-	    MAP(0x0397, 0x7C)	/* GREEK CAPITAL LETTER ETA */ \
-	    MAP(0x0398, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
-	    MAP(0x0399, 0x7E)	/* GREEK CAPITAL LETTER IOTA */ \
-	    MAP(0x039A, 0x7F)	/* GREEK CAPITAL LETTER KAPPA */ \
-	    MAP(0x039B, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
-	    MAP(0x039C, 0xA3)	/* GREEK CAPITAL LETTER MU */ \
-	    MAP(0x039D, 0xA4)	/* GREEK CAPITAL LETTER NU */ \
-	    MAP(0x039E, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
-	    MAP(0x039F, 0xA6)	/* GREEK CAPITAL LETTER OMICRON */ \
-	    MAP(0x03A0, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
-	    MAP(0x03A1, 0xA8)	/* GREEK CAPITAL LETTER RHO */ \
-	    MAP(0x03A3, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
-	    MAP(0x03A4, 0xAA)	/* GREEK CAPITAL LETTER TAU */ \
-	    MAP(0x03A5, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
-	    MAP(0x03A6, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
-	    MAP(0x03A7, 0xAD)	/* GREEK CAPITAL LETTER CHI */ \
-	    MAP(0x03A8, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
-	    MAP(0x03A9, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
-	    MAP(0x03AC, 0xB2)	/* GREEK SMALL LETTER ALPHA WITH TONOS */ \
-	    MAP(0x03AD, 0xB3)	/* GREEK SMALL LETTER EPSILON WITH TONOS */ \
-	    MAP(0x03AE, 0xB4)	/* GREEK SMALL LETTER ETA WITH TONOS */ \
-	    MAP(0x03AF, 0xB5)	/* GREEK SMALL LETTER IOTA WITH TONOS */ \
-	    MAP(0x03B1, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
-	    MAP(0x03B2, 0xB8)	/* GREEK SMALL LETTER BETA */ \
-	    MAP(0x03B3, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
-	    MAP(0x03B4, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
-	    MAP(0x03B5, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
-	    MAP(0x03B6, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
-	    MAP(0x03B7, 0xBD)	/* GREEK SMALL LETTER ETA */ \
-	    MAP(0x03B8, 0xBE)	/* GREEK SMALL LETTER THETA */ \
-	    MAP(0x03B9, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
-	    MAP(0x03BA, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
-	    MAP(0x03BB, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
-	    MAP(0x03BC, 0xC2)	/* GREEK SMALL LETTER MU */ \
-	    MAP(0x03BD, 0xC3)	/* GREEK SMALL LETTER NU */ \
-	    MAP(0x03BE, 0xC4)	/* GREEK SMALL LETTER XI */ \
-	    MAP(0x03BF, 0xC5)	/* GREEK SMALL LETTER OMICRON */ \
-	    MAP(0x03C0, 0xC6)	/* GREEK SMALL LETTER PI */ \
-	    MAP(0x03C1, 0xC7)	/* GREEK SMALL LETTER RHO */ \
-	    MAP(0x03C2, 0xC8)	/* GREEK SMALL LETTER FINAL SIGMA */ \
-	    MAP(0x03C3, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
-	    MAP(0x03C4, 0xCA)	/* GREEK SMALL LETTER TAU */ \
-	    MAP(0x03C5, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
-	    MAP(0x03C6, 0xCC)	/* GREEK SMALL LETTER PHI */ \
-	    MAP(0x03C7, 0xCD)	/* GREEK SMALL LETTER CHI */ \
-	    MAP(0x03C8, 0xCE)	/* GREEK SMALL LETTER PSI */ \
-	    MAP(0x03C9, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
-	    MAP(0x03CA, 0xD0)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA */ \
-	    MAP(0x03CB, 0xD1)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA */ \
-	    MAP(0x03CC, 0xD2)	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
-	    MAP(0x03CD, 0xD3)	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
-	    MAP(0x03CE, 0xD4)	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
-	    MAP(UNDEF, 0x1B)	/* reserved */ \
+	    MAP(0x24, 0x1B)	/* EURO SIGN */ \
+	    MAP(0x26, 0x1B)	/* BROKEN BAR */ \
+	    MAP(0x28, 0xA4)	/* CURRENCY SIGN */ \
+	    MAP(0x2C, 0x1B)	/* reserved */ \
+	    MAP(0x2D, 0x1B)	/* reserved */ \
+	    MAP(0x2E, 0x1B)	/* reserved */ \
+	    MAP(0x2F, 0x1B)	/* reserved */ \
+	    MAP(0x34, 0x1B)	/* reserved */ \
+	    MAP(0x38, 0x1B)	/* reserved */ \
+	    MAP(0x3E, 0x1B)	/* reserved */ \
+	    MAP(0x40, 0xD0)	/* GREEK SMALL LETTER IOTA WITH DIALYTIKA */ \
+	    MAP(0x41, 0x76)	/* GREEK CAPITAL LETTER ALPHA */ \
+	    MAP(0x42, 0x77)	/* GREEK CAPITAL LETTER BETA */ \
+	    MAP(0x43, 0x78)	/* GREEK CAPITAL LETTER GAMMA */ \
+	    MAP(0x44, 0x79)	/* GREEK CAPITAL LETTER DELTA */ \
+	    MAP(0x45, 0x7A)	/* GREEK CAPITAL LETTER EPSILON */ \
+	    MAP(0x46, 0x7B)	/* GREEK CAPITAL LETTER ZETA */ \
+	    MAP(0x47, 0x7C)	/* GREEK CAPITAL LETTER ETA */ \
+	    MAP(0x48, 0x7D)	/* GREEK CAPITAL LETTER THETA */ \
+	    MAP(0x49, 0x7E)	/* GREEK CAPITAL LETTER IOTA */ \
+	    MAP(0x4A, 0x7F)	/* GREEK CAPITAL LETTER KAPPA */ \
+	    MAP(0x4B, 0xA2)	/* GREEK CAPITAL LETTER LAMDA */ \
+	    MAP(0x4C, 0xA3)	/* GREEK CAPITAL LETTER MU */ \
+	    MAP(0x4D, 0xA4)	/* GREEK CAPITAL LETTER NU */ \
+	    MAP(0x4E, 0xA5)	/* GREEK CAPITAL LETTER XI */ \
+	    MAP(0x4F, 0xA6)	/* GREEK CAPITAL LETTER OMICRON */ \
+	    MAP(0x50, 0x1B)	/* reserved */ \
+	    MAP(0x51, 0xA7)	/* GREEK CAPITAL LETTER PI */ \
+	    MAP(0x52, 0xA8)	/* GREEK CAPITAL LETTER RHO */ \
+	    MAP(0x53, 0xA9)	/* GREEK CAPITAL LETTER SIGMA */ \
+	    MAP(0x54, 0xAA)	/* GREEK CAPITAL LETTER TAU */ \
+	    MAP(0x55, 0xAB)	/* GREEK CAPITAL LETTER UPSILON */ \
+	    MAP(0x56, 0xAC)	/* GREEK CAPITAL LETTER PHI */ \
+	    MAP(0x57, 0xAD)	/* GREEK CAPITAL LETTER CHI */ \
+	    MAP(0x58, 0xAE)	/* GREEK CAPITAL LETTER PSI */ \
+	    MAP(0x59, 0xAF)	/* GREEK CAPITAL LETTER OMEGA */ \
+	    MAP(0x5A, 0xB2)	/* GREEK SMALL LETTER ALPHA WITH TONOS */ \
+	    MAP(0x5B, 0xB3)	/* GREEK SMALL LETTER EPSILON WITH TONOS */ \
+	    MAP(0x5C, 0xB4)	/* GREEK SMALL LETTER ETA WITH TONOS */ \
+	    MAP(0x5D, 0xB5)	/* GREEK SMALL LETTER IOTA WITH TONOS */ \
+	    MAP(0x5E, 0x1B)	/* reserved */ \
+	    MAP(0x5F, 0xD2)	/* GREEK SMALL LETTER OMICRON WITH TONOS */ \
+	    MAP(0x60, 0xD1)	/* GREEK SMALL LETTER UPSILON WITH DIALYTIKA */ \
+	    MAP(0x61, 0xB7)	/* GREEK SMALL LETTER ALPHA */ \
+	    MAP(0x62, 0xB8)	/* GREEK SMALL LETTER BETA */ \
+	    MAP(0x63, 0xB9)	/* GREEK SMALL LETTER GAMMA */ \
+	    MAP(0x64, 0xBA)	/* GREEK SMALL LETTER DELTA */ \
+	    MAP(0x65, 0xBB)	/* GREEK SMALL LETTER EPSILON */ \
+	    MAP(0x66, 0xBC)	/* GREEK SMALL LETTER ZETA */ \
+	    MAP(0x67, 0xBD)	/* GREEK SMALL LETTER ETA */ \
+	    MAP(0x68, 0xBE)	/* GREEK SMALL LETTER THETA */ \
+	    MAP(0x69, 0xBF)	/* GREEK SMALL LETTER IOTA */ \
+	    MAP(0x6A, 0xC0)	/* GREEK SMALL LETTER KAPPA */ \
+	    MAP(0x6B, 0xC1)	/* GREEK SMALL LETTER LAMDA */ \
+	    MAP(0x6C, 0xC2)	/* GREEK SMALL LETTER MU */ \
+	    MAP(0x6D, 0xC3)	/* GREEK SMALL LETTER NU */ \
+	    MAP(0x6E, 0xC4)	/* GREEK SMALL LETTER XI */ \
+	    MAP(0x6F, 0xC5)	/* GREEK SMALL LETTER OMICRON */ \
+	    MAP(0x70, 0x1B)	/* reserved */ \
+	    MAP(0x71, 0xC6)	/* GREEK SMALL LETTER PI */ \
+	    MAP(0x72, 0xC7)	/* GREEK SMALL LETTER RHO */ \
+	    MAP(0x73, 0xC9)	/* GREEK SMALL LETTER SIGMA */ \
+	    MAP(0x74, 0xCA)	/* GREEK SMALL LETTER TAU */ \
+	    MAP(0x75, 0xCB)	/* GREEK SMALL LETTER UPSILON */ \
+	    MAP(0x76, 0xCC)	/* GREEK SMALL LETTER PHI */ \
+	    MAP(0x77, 0xCD)	/* GREEK SMALL LETTER CHI */ \
+	    MAP(0x78, 0xCE)	/* GREEK SMALL LETTER PSI */ \
+	    MAP(0x79, 0xCF)	/* GREEK SMALL LETTER OMEGA */ \
+	    MAP(0x7A, 0xC8)	/* GREEK SMALL LETTER FINAL SIGMA */ \
+	    MAP(0x7B, 0xD3)	/* GREEK SMALL LETTER UPSILON WITH TONOS */ \
+	    MAP(0x7C, 0xD4)	/* GREEK SMALL LETTER OMEGA WITH TONOS */ \
+	    MAP(0x7D, 0x96)	/* GREEK TONOS */ \
+	    MAP(0x7E, 0x1B)	/* reserved */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -2075,58 +1952,82 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Hebrew_Supp(code) \
+#define unmap_DEC_Hebrew_Supp(code,dft) \
 	switch (code) { \
-	    MAP(0x00A1, 0x21)	/* INVERTED EXCLAMATION MARK */ \
-	    MAP(0x00A2, 0x22)	/* CENT SIGN */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A5, 0x25)	/* YEN SIGN */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0xA4)	/* DIAERESIS */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B5, 0x35)	/* MICRO SIGN */ \
-	    MAP(0x00B6, 0x36)	/* PILCROW SIGN */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00B9, 0x39)	/* SUPERSCRIPT ONE */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BC, 0x3C)	/* VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x00BF, 0x3F)	/* INVERTED QUESTION MARK */ \
-	    MAP(0x00D7, 0x2A)	/* MULTIPLICATION SIGN */ \
-	    MAP(0x00F7, 0x3A)	/* DIVISION SIGN */ \
-	    MAP(0x05D0, 0x53)	/* HEBREW LETTER ALEF */ \
-	    MAP(0x05D1, 0x54)	/* HEBREW LETTER BET */ \
-	    MAP(0x05D2, 0x55)	/* HEBREW LETTER GIMEL */ \
-	    MAP(0x05D3, 0x56)	/* HEBREW LETTER DALET */ \
-	    MAP(0x05D4, 0x57)	/* HEBREW LETTER HE */ \
-	    MAP(0x05D5, 0x58)	/* HEBREW LETTER VAV */ \
-	    MAP(0x05D6, 0x59)	/* HEBREW LETTER ZAYIN */ \
-	    MAP(0x05D7, 0x5A)	/* HEBREW LETTER HET */ \
-	    MAP(0x05D8, 0x5B)	/* HEBREW LETTER TET */ \
-	    MAP(0x05D9, 0x5C)	/* HEBREW LETTER YOD */ \
-	    MAP(0x05DA, 0x5D)	/* HEBREW LETTER FINAL KAF */ \
-	    MAP(0x05DB, 0x5E)	/* HEBREW LETTER KAF */ \
-	    MAP(0x05DC, 0x5F)	/* HEBREW LETTER LAMED */ \
-	    MAP(0x05DD, 0x60)	/* HEBREW LETTER FINAL MEM */ \
-	    MAP(0x05DE, 0x61)	/* HEBREW LETTER MEM */ \
-	    MAP(0x05DF, 0x62)	/* HEBREW LETTER FINAL NUN */ \
-	    MAP(0x05E0, 0x63)	/* HEBREW LETTER NUN */ \
-	    MAP(0x05E1, 0x64)	/* HEBREW LETTER SAMEKH */ \
-	    MAP(0x05E2, 0x65)	/* HEBREW LETTER AYIN */ \
-	    MAP(0x05E3, 0x66)	/* HEBREW LETTER FINAL PE */ \
-	    MAP(0x05E4, 0x67)	/* HEBREW LETTER PE */ \
-	    MAP(0x05E5, 0x68)	/* HEBREW LETTER FINAL TSADI */ \
-	    MAP(0x05E6, 0x69)	/* HEBREW LETTER TSADI */ \
-	    MAP(0x05E7, 0x6A)	/* HEBREW LETTER QOF */ \
-	    MAP(0x05E8, 0x6B)	/* HEBREW LETTER RESH */ \
-	    MAP(0x05E9, 0x6C)	/* HEBREW LETTER SHIN */ \
-	    MAP(0x05EA, 0x6D)	/* HEBREW LETTER TAV */ \
-	    MAP(UNDEF, 0x1B)	/* reserved */ \
+	    MAP(0x24, 0x1B)	/* CURRENCY SIGN */ \
+	    MAP(0x26, 0x1B)	/* BROKEN BAR */ \
+	    MAP(0x28, 0xA4)	/* DIAERESIS */ \
+	    MAP(0x2C, 0x1B)	/* NOT SIGN */ \
+	    MAP(0x2D, 0x1B)	/* SOFT HYPHEN */ \
+	    MAP(0x2E, 0x1B)	/* REGISTERED SIGN */ \
+	    MAP(0x2F, 0x1B)	/* MACRON */ \
+	    MAP(0x34, 0x1B)	/* ACUTE ACCENT */ \
+	    MAP(0x38, 0x1B)	/* CEDILLA */ \
+	    MAP(0x3E, 0x1B)	/* VULGAR FRACTION THREE QUARTERS */ \
+	    MAP(0x40, 0x1B)	/* reserved */ \
+	    MAP(0x41, 0x1B)	/* reserved */ \
+	    MAP(0x42, 0x1B)	/* reserved */ \
+	    MAP(0x43, 0x1B)	/* reserved */ \
+	    MAP(0x44, 0x1B)	/* reserved */ \
+	    MAP(0x45, 0x1B)	/* reserved */ \
+	    MAP(0x46, 0x1B)	/* reserved */ \
+	    MAP(0x47, 0x1B)	/* reserved */ \
+	    MAP(0x48, 0x1B)	/* reserved */ \
+	    MAP(0x49, 0x1B)	/* reserved */ \
+	    MAP(0x4A, 0x1B)	/* reserved */ \
+	    MAP(0x4B, 0x1B)	/* reserved */ \
+	    MAP(0x4C, 0x1B)	/* reserved */ \
+	    MAP(0x4D, 0x1B)	/* reserved */ \
+	    MAP(0x4E, 0x1B)	/* reserved */ \
+	    MAP(0x4F, 0x1B)	/* reserved */ \
+	    MAP(0x50, 0x1B)	/* reserved */ \
+	    MAP(0x51, 0x1B)	/* reserved */ \
+	    MAP(0x52, 0x1B)	/* reserved */ \
+	    MAP(0x53, 0x1B)	/* reserved */ \
+	    MAP(0x54, 0x1B)	/* reserved */ \
+	    MAP(0x55, 0x1B)	/* reserved */ \
+	    MAP(0x56, 0x1B)	/* reserved */ \
+	    MAP(0x57, 0x1B)	/* reserved */ \
+	    MAP(0x58, 0x1B)	/* reserved */ \
+	    MAP(0x59, 0x1B)	/* reserved */ \
+	    MAP(0x5A, 0x1B)	/* reserved */ \
+	    MAP(0x5B, 0x1B)	/* reserved */ \
+	    MAP(0x5C, 0x1B)	/* reserved */ \
+	    MAP(0x5D, 0x1B)	/* reserved */ \
+	    MAP(0x5E, 0x1B)	/* reserved */ \
+	    MAP(0x5F, 0x1B)	/* reserved */ \
+	    MAP(0x60, 0x53)	/* HEBREW LETTER ALEF */ \
+	    MAP(0x61, 0x54)	/* HEBREW LETTER BET */ \
+	    MAP(0x62, 0x55)	/* HEBREW LETTER GIMEL */ \
+	    MAP(0x63, 0x56)	/* HEBREW LETTER DALET */ \
+	    MAP(0x64, 0x57)	/* HEBREW LETTER HE */ \
+	    MAP(0x65, 0x58)	/* HEBREW LETTER VAV */ \
+	    MAP(0x66, 0x59)	/* HEBREW LETTER ZAYIN */ \
+	    MAP(0x67, 0x5A)	/* HEBREW LETTER HET */ \
+	    MAP(0x68, 0x5B)	/* HEBREW LETTER TET */ \
+	    MAP(0x69, 0x5C)	/* HEBREW LETTER YOD */ \
+	    MAP(0x6A, 0x5D)	/* HEBREW LETTER FINAL KAF */ \
+	    MAP(0x6B, 0x5E)	/* HEBREW LETTER KAF */ \
+	    MAP(0x6C, 0x5F)	/* HEBREW LETTER LAMED */ \
+	    MAP(0x6D, 0x60)	/* HEBREW LETTER FINAL MEM */ \
+	    MAP(0x6E, 0x61)	/* HEBREW LETTER MEM */ \
+	    MAP(0x6F, 0x62)	/* HEBREW LETTER FINAL NUN */ \
+	    MAP(0x70, 0x63)	/* HEBREW LETTER NUN */ \
+	    MAP(0x71, 0x64)	/* HEBREW LETTER SAMEKH */ \
+	    MAP(0x72, 0x65)	/* HEBREW LETTER AYIN */ \
+	    MAP(0x73, 0x66)	/* HEBREW LETTER FINAL PE */ \
+	    MAP(0x74, 0x67)	/* HEBREW LETTER PE */ \
+	    MAP(0x75, 0x68)	/* HEBREW LETTER FINAL TSADI */ \
+	    MAP(0x76, 0x69)	/* HEBREW LETTER TSADI */ \
+	    MAP(0x77, 0x6A)	/* HEBREW LETTER QOF */ \
+	    MAP(0x78, 0x6B)	/* HEBREW LETTER RESH */ \
+	    MAP(0x79, 0x6C)	/* HEBREW LETTER SHIN */ \
+	    MAP(0x7A, 0x6D)	/* HEBREW LETTER TAV */ \
+	    MAP(0x7B, 0x1B)	/* reserved */ \
+	    MAP(0x7C, 0x1B)	/* reserved */ \
+	    MAP(0x7D, 0x1B)	/* reserved */ \
+	    MAP(0x7E, 0x1B)	/* reserved */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -2232,96 +2133,27 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_DEC_Turkish_Supp(code) \
+#define unmap_DEC_Turkish_Supp(code,dft) \
 	switch (code) { \
-	    MAP(0x00A1, 0x21)	/* INVERTED EXCLAMATION MARK */ \
-	    MAP(0x00A2, 0x22)	/* CENT SIGN */ \
-	    MAP(0x00A3, 0x23)	/* POUND SIGN */ \
-	    MAP(0x00A5, 0x25)	/* YEN SIGN */ \
-	    MAP(0x00A7, 0x27)	/* SECTION SIGN */ \
-	    MAP(0x00A8, 0xA4)	/* DIAERESIS */ \
-	    MAP(0x00A9, 0x29)	/* COPYRIGHT SIGN */ \
-	    MAP(0x00AA, 0x2A)	/* FEMININE ORDINAL INDICATOR */ \
-	    MAP(0x00AB, 0x2B)	/* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00B0, 0x30)	/* DEGREE SIGN */ \
-	    MAP(0x00B1, 0x31)	/* PLUS-MINUS SIGN */ \
-	    MAP(0x00B2, 0x32)	/* SUPERSCRIPT TWO */ \
-	    MAP(0x00B3, 0x33)	/* SUPERSCRIPT THREE */ \
-	    MAP(0x00B5, 0x35)	/* MICRO SIGN */ \
-	    MAP(0x00B6, 0x36)	/* PILCROW SIGN */ \
-	    MAP(0x00B7, 0x37)	/* MIDDLE DOT */ \
-	    MAP(0x00B9, 0x39)	/* SUPERSCRIPT ONE */ \
-	    MAP(0x00BA, 0x3A)	/* MASCULINE ORDINAL INDICATOR */ \
-	    MAP(0x00BB, 0x3B)	/* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */ \
-	    MAP(0x00BC, 0x3C)	/* VULGAR FRACTION ONE QUARTER */ \
-	    MAP(0x00BD, 0x3D)	/* VULGAR FRACTION ONE HALF */ \
-	    MAP(0x00BF, 0x3F)	/* INVERTED QUESTION MARK */ \
-	    MAP(0x00C0, 0x40)	/* LATIN CAPITAL LETTER A WITH GRAVE */ \
-	    MAP(0x00C1, 0x41)	/* LATIN CAPITAL LETTER A WITH ACUTE */ \
-	    MAP(0x00C2, 0x42)	/* LATIN CAPITAL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00C3, 0x43)	/* LATIN CAPITAL LETTER A WITH TILDE */ \
-	    MAP(0x00C4, 0x44)	/* LATIN CAPITAL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00C5, 0x45)	/* LATIN CAPITAL LETTER A WITH RING ABOVE */ \
-	    MAP(0x00C6, 0x46)	/* LATIN CAPITAL LETTER AE */ \
-	    MAP(0x00C7, 0x47)	/* LATIN CAPITAL LETTER C WITH CEDILLA */ \
-	    MAP(0x00C8, 0x48)	/* LATIN CAPITAL LETTER E WITH GRAVE */ \
-	    MAP(0x00C9, 0x49)	/* LATIN CAPITAL LETTER E WITH ACUTE */ \
-	    MAP(0x00CA, 0x4A)	/* LATIN CAPITAL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(0x00CB, 0x4B)	/* LATIN CAPITAL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00CC, 0x4C)	/* LATIN CAPITAL LETTER I WITH GRAVE */ \
-	    MAP(0x00CD, 0x4D)	/* LATIN CAPITAL LETTER I WITH ACUTE */ \
-	    MAP(0x00CE, 0x4E)	/* LATIN CAPITAL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00CF, 0x4F)	/* LATIN CAPITAL LETTER I WITH DIAERESIS */ \
-	    MAP(0x00D1, 0x51)	/* LATIN CAPITAL LETTER N WITH TILDE */ \
-	    MAP(0x00D2, 0x52)	/* LATIN CAPITAL LETTER O WITH GRAVE */ \
-	    MAP(0x00D3, 0x53)	/* LATIN CAPITAL LETTER O WITH ACUTE */ \
-	    MAP(0x00D4, 0x54)	/* LATIN CAPITAL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00D5, 0x55)	/* LATIN CAPITAL LETTER O WITH TILDE */ \
-	    MAP(0x00D6, 0x56)	/* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00D8, 0x58)	/* LATIN CAPITAL LETTER O WITH STROKE */ \
-	    MAP(0x00D9, 0x59)	/* LATIN CAPITAL LETTER U WITH GRAVE */ \
-	    MAP(0x00DA, 0x5A)	/* LATIN CAPITAL LETTER U WITH ACUTE */ \
-	    MAP(0x00DB, 0x5B)	/* LATIN CAPITAL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(0x00DC, 0x5C)	/* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00DF, 0x5F)	/* LATIN SMALL LETTER SHARP S */ \
-	    MAP(0x00E0, 0x60)	/* LATIN SMALL LETTER A WITH GRAVE */ \
-	    MAP(0x00E1, 0x61)	/* LATIN SMALL LETTER A WITH ACUTE */ \
-	    MAP(0x00E2, 0x62)	/* LATIN SMALL LETTER A WITH CIRCUMFLEX */ \
-	    MAP(0x00E3, 0x63)	/* LATIN SMALL LETTER A WITH TILDE */ \
-	    MAP(0x00E4, 0x64)	/* LATIN SMALL LETTER A WITH DIAERESIS */ \
-	    MAP(0x00E5, 0x65)	/* LATIN SMALL LETTER A WITH RING ABOVE */ \
-	    MAP(0x00E6, 0x66)	/* LATIN SMALL LETTER AE */ \
-	    MAP(0x00E7, 0x67)	/* LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(0x00E8, 0x68)	/* LATIN SMALL LETTER E WITH GRAVE */ \
-	    MAP(0x00E9, 0x69)	/* LATIN SMALL LETTER E WITH ACUTE */ \
-	    MAP(0x00EA, 0x6A)	/* LATIN SMALL LETTER E WITH CIRCUMFLEX */ \
-	    MAP(0x00EB, 0x6B)	/* LATIN SMALL LETTER E WITH DIAERESIS */ \
-	    MAP(0x00EC, 0x6C)	/* LATIN SMALL LETTER I WITH GRAVE */ \
-	    MAP(0x00ED, 0x6D)	/* LATIN SMALL LETTER I WITH ACUTE */ \
-	    MAP(0x00EE, 0x6E)	/* LATIN SMALL LETTER I WITH CIRCUMFLEX */ \
-	    MAP(0x00EF, 0x6F)	/* LATIN SMALL LETTER I WITH DIAERESIS */ \
-	    MAP(0x00F1, 0x71)	/* LATIN SMALL LETTER N WITH TILDE */ \
-	    MAP(0x00F2, 0x72)	/* LATIN SMALL LETTER O WITH GRAVE */ \
-	    MAP(0x00F3, 0x73)	/* LATIN SMALL LETTER O WITH ACUTE */ \
-	    MAP(0x00F4, 0x74)	/* LATIN SMALL LETTER O WITH CIRCUMFLEX */ \
-	    MAP(0x00F5, 0x75)	/* LATIN SMALL LETTER O WITH TILDE */ \
-	    MAP(0x00F6, 0x76)	/* LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00F8, 0x78)	/* LATIN SMALL LETTER O WITH STROKE */ \
-	    MAP(0x00F9, 0x79)	/* LATIN SMALL LETTER U WITH GRAVE */ \
-	    MAP(0x00FA, 0x7A)	/* LATIN SMALL LETTER U WITH ACUTE */ \
-	    MAP(0x00FB, 0x7B)	/* LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
-	    MAP(0x00FC, 0x7C)	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00FF, 0xFF)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
-	    MAP(0x011E, 0x4E)	/* LATIN CAPITAL LETTER G WITH BREVE */ \
-	    MAP(0x011F, 0x50)	/* LATIN SMALL LETTER G WITH BREVE */ \
-	    MAP(0x0130, 0x4F)	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
-	    MAP(0x0131, 0x51)	/* LATIN SMALL LETTER DOTLESS I */ \
-	    MAP(0x0152, 0x97)	/* LATIN CAPITAL LIGATURE OE */ \
-	    MAP(0x0153, 0x99)	/* LATIN SMALL LIGATURE OE */ \
-	    MAP(0x015E, 0x9F)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
-	    MAP(0x015F, 0x2A)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
-	    MAP(0x0178, 0x98)	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
-	    MAP(UNDEF, 0x1B)	/* reserved */ \
+	    MAP(0x24, 0x1B)	/* reserved */ \
+	    MAP(0x26, 0x1B)	/* reserved */ \
+	    MAP(0x28, 0xA4)	/* DIAERESIS */ \
+	    MAP(0x2C, 0x1B)	/* reserved */ \
+	    MAP(0x2D, 0x1B)	/* reserved */ \
+	    MAP(0x2E, 0x4F)	/* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
+	    MAP(0x2F, 0x1B)	/* reserved */ \
+	    MAP(0x34, 0x1B)	/* reserved */ \
+	    MAP(0x38, 0x1B)	/* reserved */ \
+	    MAP(0x3E, 0x51)	/* LATIN SMALL LETTER DOTLESS I */ \
+	    MAP(0x50, 0x4E)	/* LATIN CAPITAL LETTER G WITH BREVE */ \
+	    MAP(0x57, 0x97)	/* LATIN CAPITAL LIGATURE OE */ \
+	    MAP(0x5D, 0x98)	/* LATIN CAPITAL LETTER Y WITH DIAERESIS */ \
+	    MAP(0x5E, 0x9F)	/* LATIN CAPITAL LETTER S WITH CEDILLA */ \
+	    MAP(0x70, 0x50)	/* LATIN SMALL LETTER G WITH BREVE */ \
+	    MAP(0x77, 0x99)	/* LATIN SMALL LIGATURE OE */ \
+	    MAP(0x7D, 0xFF)	/* LATIN SMALL LETTER Y WITH DIAERESIS */ \
+	    MAP(0x7E, 0x2A)	/* LATIN SMALL LETTER S WITH CEDILLA */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -2358,33 +2190,11 @@
 	    XXX(0x7a, UNDEF)	/* unused */ \
 	}
 
-#define unmap_NRCS_Greek(code) \
+#define unmap_NRCS_Greek(code,dft) \
 	switch (code) { \
-	    MAP(0x0391,           0x61) /* CAPITAL GREEK LETTER ALPHA */ \
-	    MAP(0x0392,           0x62) /* CAPITAL GREEK LETTER BETA */ \
-	    MAP(0x0393,           0x63) /* CAPITAL GREEK LETTER GAMMA */ \
-	    MAP(0x0394,           0x64) /* CAPITAL GREEK LETTER DELTA */ \
-	    MAP(0x0395,           0x65) /* CAPITAL GREEK LETTER EPSILON */ \
-	    MAP(0x0396,           0x66) /* CAPITAL GREEK LETTER ZETA */ \
-	    MAP(0x0397,           0x67) /* CAPITAL GREEK LETTER ETA */ \
-	    MAP(0x0398,           0x68) /* CAPITAL GREEK LETTER THETA */ \
-	    MAP(0x0399,           0x69) /* CAPITAL GREEK LETTER IOTA */ \
-	    MAP(0x039A,           0x6a) /* CAPITAL GREEK LETTER KAPPA */ \
-	    MAP(0x039B,           0x6b) /* CAPITAL GREEK LETTER LAMDA */ \
-	    MAP(0x039C,           0x6c) /* CAPITAL GREEK LETTER MU */ \
-	    MAP(0x039D,           0x6d) /* CAPITAL GREEK LETTER NU */ \
-	    MAP(0x039E,           0x76) /* CAPITAL GREEK LETTER XI */ \
-	    MAP(0x039F,           0x6f) /* CAPITAL GREEK LETTER OMICRON */ \
-	    MAP(0x03A0,           0x70) /* CAPITAL GREEK LETTER PI */ \
-	    MAP(0x03A1,           0x71) /* CAPITAL GREEK LETTER RHO */ \
-	    MAP(0x03A3,           0x72) /* CAPITAL GREEK LETTER SIGMA */ \
-	    MAP(0x03A4,           0x73) /* CAPITAL GREEK LETTER TAU */ \
-	    MAP(0x03A5,           0x74) /* CAPITAL GREEK LETTER UPSILON */ \
-	    MAP(0x03A6,           0x75) /* CAPITAL GREEK LETTER FI (PHI) */ \
-	    MAP(0x03A7,           0x6e) /* CAPITAL GREEK LETTER KSI (CHI) */ \
-	    MAP(0x03A8,           0x77) /* CAPITAL GREEK LETTER PSI */ \
-	    MAP(0x03A9,           0x78) /* CAPITAL GREEK LETTER OMEGA */ \
-	    MAP(UNDEF,            0x1B) /* unused */ \
+	    MAP(0x79,             0x1B) /* unused */ \
+	    MAP(0x7a,             0x1B) /* unused */ \
+	    default: dft; break; \
 	}
 
 /*
@@ -2421,36 +2231,7 @@
 	    UNI(0x7a, 0x05EA)	/* HEBREW LETTER TAV */ \
 	}
 
-#define unmap_NRCS_Hebrew(code) \
-	switch (code) { \
-	    MAP(0x05D0,           0x60) /* HEBREW LETTER ALEF */ \
-	    MAP(0x05D1,           0x61) /* HEBREW LETTER BET */ \
-	    MAP(0x05D2,           0x62) /* HEBREW LETTER GIMEL */ \
-	    MAP(0x05D3,           0x63) /* HEBREW LETTER DALET */ \
-	    MAP(0x05D4,           0x64) /* HEBREW LETTER HE */ \
-	    MAP(0x05D5,           0x65) /* HEBREW LETTER VAV */ \
-	    MAP(0x05D6,           0x66) /* HEBREW LETTER ZAYIN */ \
-	    MAP(0x05D7,           0x67) /* HEBREW LETTER HET */ \
-	    MAP(0x05D8,           0x68) /* HEBREW LETTER TET */ \
-	    MAP(0x05D9,           0x69) /* HEBREW LETTER YOD */ \
-	    MAP(0x05DA,           0x6a) /* HEBREW LETTER FINAL KAF */ \
-	    MAP(0x05DB,           0x6b) /* HEBREW LETTER KAF */ \
-	    MAP(0x05DC,           0x6c) /* HEBREW LETTER LAMED */ \
-	    MAP(0x05DD,           0x6d) /* HEBREW LETTER FINAL MEM */ \
-	    MAP(0x05DE,           0x6e) /* HEBREW LETTER MEM */ \
-	    MAP(0x05DF,           0x6f) /* HEBREW LETTER FINAL NUN */ \
-	    MAP(0x05E0,           0x70) /* HEBREW LETTER NUN */ \
-	    MAP(0x05E1,           0x71) /* HEBREW LETTER SAMEKH */ \
-	    MAP(0x05E2,           0x72) /* HEBREW LETTER AYIN */ \
-	    MAP(0x05E3,           0x73) /* HEBREW LETTER FINAL PE */ \
-	    MAP(0x05E4,           0x74) /* HEBREW LETTER PE */ \
-	    MAP(0x05E5,           0x75) /* HEBREW LETTER FINAL TSADI */ \
-	    MAP(0x05E6,           0x76) /* HEBREW LETTER TSADI */ \
-	    MAP(0x05E7,           0x77) /* HEBREW LETTER QOF */ \
-	    MAP(0x05E8,           0x78) /* HEBREW LETTER RESH */ \
-	    MAP(0x05E9,           0x79) /* HEBREW LETTER SHIN */ \
-	    MAP(0x05EA,           0x7a) /* HEBREW LETTER TAV */ \
-	}
+#define unmap_NRCS_Hebrew(code,dft)	/* nothing */
 
 /*
  * figure A-26 "DEC 7-Bit Turkish Character Set"
@@ -2470,34 +2251,34 @@
 	    UNI(0x7e, 0x00FC)	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Turkish(code) \
-	switch (code) { \
-	    MAP(0x00C7,           0x5d) /* LATIN CAPITAL LETTER C WITH CEDILLA */ \
-	    MAP(0x00D6,           0x5c) /* LATIN CAPITAL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00E7,           0x7d) /* LATIN SMALL LETTER C WITH CEDILLA */ \
-	    MAP(0x00F6,           0x7c) /* LATIN SMALL LETTER O WITH DIAERESIS */ \
-	    MAP(0x00FC,           0x7e) /* LATIN SMALL LETTER U WITH DIAERESIS */ \
-	    MAP(0x00dC,           0x5e) /* LATIN CAPITAL LETTER U WITH DIAERESIS */ \
-	    MAP(0x011E,           0x60) /* LATIN CAPITAL LETTER G WITH BREVE */ \
-	    MAP(0x011F,           0x26) /* LATIN SMALL LETTER G WITH BREVE */ \
-	    MAP(0x0130,           0x40) /* LATIN CAPITAL LETTER I WITH DOT ABOVE */ \
-	    MAP(0x015E,           0x5b) /* LATIN CAPITAL LETTER S WITH CEDILLA */ \
-	    MAP(0x015F,           0x7b) /* LATIN SMALL LETTER S WITH CEDILLA */ \
-	}
+#define unmap_NRCS_Turkish(code,dft)	/* nothing */
 #else
 #define map_DEC_Cyrillic(code)	/* nothing */
+#define unmap_DEC_Cyrillic(code,dft) dft
 #define map_DEC_Greek_Supp(code)	/* nothing */
+#define unmap_DEC_Greek_Supp(code,dft) dft
 #define map_DEC_Hebrew_Supp(code)	/* nothing */
+#define unmap_DEC_Hebrew_Supp(code,dft) dft
 #define map_DEC_Technical(code)	/* nothing */
+#define unmap_DEC_Technical(code,dft) dft
 #define map_DEC_Turkish_Supp(code)	/* nothing */
+#define unmap_DEC_Turkish_Supp(code,dft) dft
 #define map_ISO_Greek_Supp(code)	/* nothing */
+#define unmap_ISO_Greek_Supp(code,dft) dft
 #define map_ISO_Hebrew(code)	/* nothing */
+#define unmap_ISO_Hebrew(code,dft) dft
 #define map_ISO_Latin_2(code)	/* nothing */
+#define unmap_ISO_Latin_2(code,dft) dft
 #define map_ISO_Latin_5(code)	/* nothing */
+#define unmap_ISO_Latin_5(code,dft) dft
 #define map_ISO_Latin_Cyrillic(code)	/* nothing */
+#define unmap_ISO_Latin_Cyrillic(code,dft) dft
 #define map_NRCS_Greek(code)	/* nothing */
+#define unmap_NRCS_Greek(code,dft) dft
 #define map_NRCS_Hebrew(code)	/* nothing */
+#define unmap_NRCS_Hebrew(code,dft) dft
 #define map_NRCS_Turkish(code)	/* nothing */
+#define unmap_NRCS_Turkish(code,dft) dft
 #endif /* OPT_WIDE_CHARS */
 
 #endif /* included_charsets_h */

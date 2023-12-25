@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.942 2023/11/29 00:22:08 tom Exp $ */
+/* $XTermId: util.c,v 1.944 2023/12/25 21:16:35 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1093,25 +1093,26 @@ resetZIconBeep(XtermWidget xw)
 #endif /* OPT_ZICONBEEP */
 
 /*
- * write a string str of length len onto the screen at
- * the current cursor position.  update cursor position.
+ * Write a string onto the screen at the current cursor position.
+ * Update cursor position.
  */
 void
-WriteText(XtermWidget xw, IChar *str, Cardinal len)
+WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
 {
+    IChar *str = xw->work.write_text + offset;
     TScreen *screen = TScreenOf(xw);
     XTermDraw params;
     CLineData *ld = 0;
     unsigned attr_flags = xw->flags;
     CellColor fg_bg = xtermColorPair(xw);
-    unsigned cells = visual_width(str, len);
+    unsigned cells = visual_width(str, length);
     GC currentGC;
 
     TRACE(("WriteText %d (%2d,%2d) %3d:%s\n",
 	   screen->topline,
 	   screen->cur_row,
 	   screen->cur_col,
-	   len, visibleIChars(str, len)));
+	   length, visibleIChars(str, length)));
 
     if (cells + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
 	cells = (unsigned) (MaxCols(screen) - screen->cur_col);
@@ -1198,12 +1199,12 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 		      currentGC,
 		      LineCursorX(screen, ld, screen->cur_col),
 		      CursorY(screen, screen->cur_row),
-		      str, len);
+		      str, length);
 
 	resetXtermGC(xw, attr_flags, False);
     }
 
-    ScrnWriteText(xw, str, attr_flags, fg_bg, len);
+    ScrnWriteText(xw, offset, length, attr_flags, fg_bg);
     CursorForward(xw, (int) cells);
 
     if (screen->cur_row <= screen->max_row) {
@@ -4726,6 +4727,7 @@ drawXtermText(XTermDraw * params,
 		for (src = 0; src < dst; src++) {
 		    IChar ch = mapped[src];
 
+		    (void) ch;
 		    noBold = IsXtermMissingChar(screen, ch, bold);
 		    if (noBold) {
 			noNorm = IsXtermMissingChar(screen, ch, norm);

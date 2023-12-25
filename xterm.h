@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.941 2023/11/29 00:22:24 tom Exp $ */
+/* $XTermId: xterm.h,v 1.942 2023/12/23 01:39:45 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1167,7 +1167,8 @@ extern void noleaks_charproc (void);
 
 /* charsets.c */
 extern unsigned xtermCharSetIn (XtermWidget /* xw */, unsigned /* code */, DECNRCM_codes /* charset */);
-extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, DECNRCM_codes /* charset */);
+extern Cardinal xtermCharSetOut (XtermWidget /* xw */, Cardinal /* length */, DECNRCM_codes /* charset */);
+extern int xtermCharSetDec (XtermWidget /* xw */, IChar /* ch */, DECNRCM_codes /* cs */);
 
 /* cursor.c */
 extern int CursorCol (XtermWidget /* xw */);
@@ -1580,7 +1581,7 @@ extern void ScrnInsertCol (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int /* last */, int /* where */, unsigned /* n */);
 extern void ScrnRefresh (XtermWidget /* xw */, int /* toprow */, int /* leftcol */, int /* nrows */, int /* ncols */, Bool /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int /* toprow */, int /* leftcol */, int /* nrows */, int /* ncols */, Bool /* force */);
-extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned /* flags */, CellColor /* cur_fg_bg */, unsigned /* length */);
+extern void ScrnWriteText (XtermWidget /* xw */, Cardinal /* offset */, Cardinal /* length */, unsigned /* flags */, CellColor /* cur_fg_bg */);
 extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
 extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
@@ -1720,7 +1721,7 @@ extern void InsertChar (XtermWidget /* xw */, unsigned /* n */);
 extern void InsertLine (XtermWidget /* xw */, int /* n */);
 extern void RevScroll (XtermWidget /* xw */, int /* amount */);
 extern void ReverseVideo (XtermWidget /* xw */);
-extern void WriteText (XtermWidget /* xw */, IChar * /* str */, Cardinal /* len */);
+extern void WriteText (XtermWidget /* xw */, Cardinal /* offset */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
 extern void decode_wcwidth (XtermWidget /* xw */);
 extern void do_cd_xtra_scroll (XtermWidget /* xw */, int /* param */);

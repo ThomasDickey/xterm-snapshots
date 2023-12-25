@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2001 2023/12/06 00:19:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2002 2023/12/22 23:19:33 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -6627,15 +6627,20 @@ dotext(XtermWidget xw,
     Cardinal offset;
     int rmargin = ScrnRightMargin(xw);
 
+    xw->work.write_text = buf;
+#if OPT_DEC_RECTOPS
+    xw->work.write_sums = NULL;
+#endif
 #if OPT_WIDE_CHARS
     if (screen->vt100_graphics)
 #endif
     {
 	DECNRCM_codes rightset = screen->gsets[(int) (screen->curgr)];
-	if ((charset != nrc_ASCII
-	     || rightset != nrc_ASCII)
-	    && !(len = (Cardinal) xtermCharSetOut(xw, buf, buf + len, charset)))
-	    return;
+	if (charset != nrc_ASCII || rightset != nrc_ASCII) {
+	    len = xtermCharSetOut(xw, len, charset);
+	    if (len == 0)
+		return;
+	}
     }
 
     if_OPT_XMC_GLITCH(screen, {
@@ -6775,7 +6780,7 @@ dotext(XtermWidget xw,
 	    }
 
 	    if (chars_chomped != 0 && next_col <= last_col) {
-		WriteText(xw, buf + offset, chars_chomped);
+		WriteText(xw, offset, chars_chomped);
 	    } else if (!did_wrap
 		       && len > 0
 		       && (xw->flags & WRAPAROUND)
@@ -6821,7 +6826,7 @@ dotext(XtermWidget xw,
 	}
 	next_col = screen->cur_col + this_col;
 
-	WriteText(xw, buf + offset, (unsigned) this_col);
+	WriteText(xw, offset, (unsigned) this_col);
 
 	/*
 	 * The call to WriteText updates screen->cur_col.

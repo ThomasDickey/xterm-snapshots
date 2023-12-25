@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.634 2023/12/08 15:06:10 tom Exp $ */
+/* $XTermId: screen.c,v 1.639 2023/12/25 21:14:09 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -192,6 +192,7 @@ setupLineData(TScreen *screen,
 #endif
     /* these names are based on types */
     unsigned skipNcolIAttr;
+    unsigned skipNcolChar;
     unsigned skipNcolCharData;
 #if OPT_ISO_COLORS
     unsigned skipNcolCellColor;
@@ -208,6 +209,7 @@ setupLineData(TScreen *screen,
 #endif
 
     skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
+    skipNcolChar = (ncol * SizeofScrnPtr(charSeen));
     skipNcolCharData = (ncol * SizeofScrnPtr(charData));
 #if OPT_ISO_COLORS
     skipNcolCellColor = (ncol * SizeofScrnPtr(color));
@@ -225,7 +227,9 @@ setupLineData(TScreen *screen,
 #if OPT_ISO_COLORS
 	SetupScrnPtr(ptr->color, data, CellColor);
 #endif
+	SetupScrnPtr(ptr->charSeen, data, Char);
 	SetupScrnPtr(ptr->charData, data, CharData);
+	if_OPT_DEC_RECTOPS(SetupScrnPtr(ptr->charSets, data, Char));
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    unsigned extra = (unsigned) screen->max_combining;
@@ -302,10 +306,14 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 
     (void) screen;
 
-    result = (ncol * (unsigned) sizeof(CharData));
+    result = (ncol * (unsigned) sizeof(CharData));	/* ->charData */
+    AlignValue(result);
+
+    result += (ncol * (unsigned) sizeof(Char));		/* ->charSeen */
     AlignValue(result);
 
 #if OPT_WIDE_CHARS
+    result += (ncol * (unsigned) sizeof(Char));		/* ->charSets */
     if (screen->wide_chars) {
 	result *= (unsigned) (1 + screen->max_combining);
     }
@@ -800,6 +808,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	flags = (int) ((unsigned) flags | TERM_COLOR_FLAGS(xw));
 
 	for (n = 0; n < len; ++n) {
+	    ld->charSeen[(unsigned) col + n] = ' ';
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
 	}
 
@@ -867,16 +876,18 @@ ScrnDisownSelection(XtermWidget xw)
  */
 void
 ScrnWriteText(XtermWidget xw,
-	      IChar *str,
+	      Cardinal offset,
+	      Cardinal length,
 	      unsigned flags,
-	      CellColor cur_fg_bg,
-	      unsigned length)
+	      CellColor cur_fg_bg)
 {
+    IChar *str = xw->work.write_text + offset;
     TScreen *screen = TScreenOf(xw);
     LineData *ld;
     IAttr *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
     IChar *chars;
+    Char *seens;
 #if OPT_WIDE_CHARS
     IChar starcol1;
 #endif
@@ -898,6 +909,7 @@ ScrnWriteText(XtermWidget xw,
 
     ld = getLineData(screen, screen->cur_row);
 
+    seens = ld->charSeen + screen->cur_col;
     chars = ld->charData + screen->cur_col;
     attrs = ld->attribs + screen->cur_col;
 
@@ -905,12 +917,25 @@ ScrnWriteText(XtermWidget xw,
     starcol1 = *chars;
 #endif
 
-    /* write blanks if we're writing invisible text */
+    /*
+     * Copy the string onto the line,
+     * writing blanks if we're writing invisible text.
+     */
     for (n = 0; n < length; ++n) {
-	if ((flags & INVISIBLE))
-	    chars[n] = ' ';
-	else
-	    chars[n] = str[n];
+#if OPT_DEC_RECTOPS
+	if (xw->work.write_sums != NULL) {
+	    ld->charSeen[screen->cur_col + (int) n] = xw->work.buffer_sums[n];
+	    ld->charSets[screen->cur_col + (int) n] = xw->work.buffer_sets[n];
+	} else
+#endif
+	{
+#if OPT_WIDE_CHARS
+	    seens[n] = (str[n] < 32 || str[n] > 255) ? ANSI_ESC : (Char) str[n];
+#else
+	    seens[n] = (str[n] < 32) ? ANSI_ESC : (Char) str[n];
+#endif
+	}
+	chars[n] = (flags & INVISIBLE) ? ' ' : str[n];
     }
 
 #if OPT_BLINK_TEXT
@@ -1032,6 +1057,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	SetLineDblCS(work, 0);
 #endif
 
+	memset(work->charSeen, 0, size * sizeof(Char));
 	memset(work->charData, 0, size * sizeof(CharData));
 	if (TERM_COLOR_FLAGS(xw)) {
 	    FillIAttr(work->attribs, flags, (size_t) size);
@@ -1049,6 +1075,8 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    memset(work->color, 0, size * sizeof(work->color[0]));
 #endif
 	}
+	if_OPT_DEC_RECTOPS(memset(work->charSets, 0,
+				  size * sizeof(work->charSets[0])));
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    size_t off;
@@ -1919,8 +1947,10 @@ allocLineData(TScreen *screen, LineData *source)
 #if OPT_ISO_COLORS
 	ALLOC_IT(color);
 #endif
+	ALLOC_IT(charSeen);
 	ALLOC_IT(charData);
 #if OPT_WIDE_CHARS
+	ALLOC_IT(charSets);
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    for_each_combData(off, source) {
@@ -2796,6 +2826,8 @@ ScrnWipeRectangle(XtermWidget xw,
     }
 }
 
+#define FIXME_389 1
+
 /*
  * Compute a checksum, ignoring the page number (since we have only one page).
  */
@@ -2832,7 +2864,9 @@ xtermCheckRect(XtermWidget xw,
 	int row, col;
 	Boolean first = True;
 	int embedded = 0;
+#if !FIXME_389
 	DECNRCM_codes my_GR = screen->gsets[(int) screen->curgr];
+#endif
 
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
@@ -2850,6 +2884,11 @@ xtermCheckRect(XtermWidget xw,
 		    if (is_UCS_SPECIAL(ch))
 			continue;
 		});
+#if FIXME_389
+		ch = xtermCharSetDec(xw,
+				     ld->charSeen[col],
+				     ld->charSets[col]);
+#else
 		if (!(mode & csBYTE)) {
 		    unsigned c2 = (unsigned) ch;
 		    if (c2 > 0x7f && my_GR != nrc_ASCII) {
@@ -2859,8 +2898,9 @@ xtermCheckRect(XtermWidget xw,
 		    }
 		    ch = (c2 & 0xff);
 		}
+#endif
 		if (!(mode & csATTRIBS)) {
-#if OPT_VT525_COLORS
+#if OPT_ISO_COLORS && OPT_VT525_COLORS
 		    if (screen->terminal_id == 525) {
 			if (screen->assigned_bg >= 0 &&
 			    screen->assigned_bg < 16)
