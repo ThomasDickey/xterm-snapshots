@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.639 2023/12/25 21:14:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.643 2023/12/26 22:15:54 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -2902,16 +2902,30 @@ xtermCheckRect(XtermWidget xw,
 		if (!(mode & csATTRIBS)) {
 #if OPT_ISO_COLORS && OPT_VT525_COLORS
 		    if (screen->terminal_id == 525) {
-			if (screen->assigned_bg >= 0 &&
-			    screen->assigned_bg < 16)
-			    ch += screen->assigned_bg;
-			if (screen->assigned_fg >= 0 &&
-			    screen->assigned_fg < 16)
-			    ch += (screen->assigned_fg << 4);
+			IAttr flags = ld->attribs[col];
+			CellColor fg_bg = ld->color[col];
+			int fg = (int) extract_fg(xw, fg_bg, flags);
+			int bg = (int) extract_bg(xw, fg_bg, flags);
+			Boolean dft_bg = (bg < 0);
+			Boolean dft_fg = (fg < 0);
+
+			if (dft_bg)
+			    bg = screen->assigned_bg;
+			if (bg >= 0 && bg < 16)
+			    ch += bg;
+
+			if (dft_fg)
+			    fg = screen->assigned_fg;
+			if (fg >= 0 && fg < 16)
+			    ch += (fg << 4);
+
+			/* special case to match VT525 behavior */
+			if (dft_bg && !dft_fg && (ld->attribs[col] & BOLD))
+			    ch -= 0x80;
 		    }
 #endif
 		    if (ld->attribs[col] & PROTECTED)
-			ch += 0x2;
+			ch += 0x4;
 #if OPT_WIDE_ATTRS
 		    if (ld->attribs[col] & INVISIBLE)
 			ch += 0x8;

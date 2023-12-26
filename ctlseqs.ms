@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.701 2023/12/01 09:05:52 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.702 2023/12/26 21:12:45 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #389
-.ds RF 2023/12/01
+.ds RF 2023/12/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -136,7 +136,7 @@
 .el   .ds `` ""
 .ie t .ds '' ''
 .el   .ds '' ""
-.ie t .ds AQ \(aq
+.ie \n(.g .ds AQ \(aq
 .el   .ds AQ '
 .\}",
 .
@@ -882,11 +882,11 @@ The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
 Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
 \fI\*(XT\fP ignores this in UTF-8 mode.
-.IP
+.sp 0.3
 VT320 provides these:
   \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic
   \*(Dc\*1\*!\*u\*A\*(ST	\(-> ISO Latin-1 supplemental
-.IP
+.sp 0.3
 VT510 adds these:
   \*(Dc\*0\*!\*u\*(Dq\*?\*(ST	\(-> DEC Greek
   \*(Dc\*0\*!\*u\*(Dq\*4\*(ST	\(-> DEC Hebrew
@@ -897,6 +897,11 @@ VT510 adds these:
   \*(Dc\*0\*!\*u\*H\*(ST	\(-> ISO Hebrew Supplemental
   \*(Dc\*0\*!\*u\*M\*(ST	\(-> ISO Latin-5 Supplemental
   \*(Dc\*0\*!\*u\*L\*(ST	\(-> ISO Latin-Cyrillic
+.sp 0.3
+VT520 accepts a few others (undocumented); xterm adds these:
+  \*(Dc\*0\*!\*u\*(cB\*(ST	\(-> United States (USASCII).
+  \*(Dc\*0\*!\*u\*0\*(ST	\(-> DEC Special Character and Line Drawing Set.
+  \*(Dc\*0\*!\*u\*>\*(ST	\(-> DEC Technical.
 .
 .iP
 .IP \\*(Dc\\*$\\*q\\*(Pt\\*s\\*(ST
@@ -4512,7 +4517,7 @@ Here are the relevant standards:
 .\" https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub86.pdf
 \fIAdditional Controls for Use with American National Standard Code for Information Interchange, ANSI X3.64-1979\fP
 .br
-FIPS Publication 86. July 18, 1979.
+FIPS Publication 86.\ July 18, 1979.
 .br
 American National Standards Institute, Inc.
 .bP

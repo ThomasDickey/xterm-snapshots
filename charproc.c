@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2002 2023/12/22 23:19:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2004 2023/12/26 20:42:00 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1794,61 +1794,62 @@ static const struct {
     int min_level;
     int max_level;
     int need_nrc;
+    int sized_96;
 } scs_table[] = {
-    { nrc_ASCII,             0,   'B', 1, 9, 0 },
-    { nrc_British,           0,   'A', 1, 9, 0 },
-    { nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0 },
-    { nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
-    { nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
+    { nrc_ASCII,             0,   'B', 1, 9, 0, 0 },
+    { nrc_British,           0,   'A', 1, 9, 0, 0 },
+    { nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0, 0 },
+    { nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0, 0 },
+    { nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0, 0 },
     /* VT2xx */
-    { nrc_DEC_Supp,          0,   '<', 2, 2, 0 },
-    { nrc_Dutch,             0,   '4', 2, 9, 1 },
-    { nrc_Finnish,           0,   '5', 2, 9, 1 },
-    { nrc_Finnish2,          0,   'C', 2, 9, 1 },
-    { nrc_French,            0,   'R', 2, 9, 1 },
-    { nrc_French2,           0,   'f', 2, 9, 1 },
-    { nrc_French_Canadian,   0,   'Q', 2, 9, 1 },
-    { nrc_German,            0,   'K', 2, 9, 1 },
-    { nrc_Italian,           0,   'Y', 2, 9, 1 },
-    { nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1 },
-    { nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1 },
-    { nrc_Spanish,           0,   'Z', 2, 9, 1 },
-    { nrc_Swedish,           0,   '7', 2, 9, 1 },
-    { nrc_Swedish2,          0,   'H', 2, 9, 1 },
-    { nrc_Swiss,             0,   '=', 2, 9, 1 },
+    { nrc_DEC_Supp,          0,   '<', 2, 2, 0, 0 },
+    { nrc_Dutch,             0,   '4', 2, 9, 1, 0 },
+    { nrc_Finnish,           0,   '5', 2, 9, 1, 0 },
+    { nrc_Finnish2,          0,   'C', 2, 9, 1, 0 },
+    { nrc_French,            0,   'R', 2, 9, 1, 0 },
+    { nrc_French2,           0,   'f', 2, 9, 1, 0 },
+    { nrc_French_Canadian,   0,   'Q', 2, 9, 1, 0 },
+    { nrc_German,            0,   'K', 2, 9, 1, 0 },
+    { nrc_Italian,           0,   'Y', 2, 9, 1, 0 },
+    { nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1, 0 },
+    { nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1, 0 },
+    { nrc_Spanish,           0,   'Z', 2, 9, 1, 0 },
+    { nrc_Swedish,           0,   '7', 2, 9, 1, 0 },
+    { nrc_Swedish2,          0,   'H', 2, 9, 1, 0 },
+    { nrc_Swiss,             0,   '=', 2, 9, 1, 0 },
     /* VT3xx */
-    { nrc_DEC_UPSS,          0,   '<', 3, 9, 0 },
-    { nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
-    { nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
-    { nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
-    { nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
-    { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
-    { nrc_Portugese,         '%', '6', 3, 9, 1 },
-    { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0 },
+    { nrc_DEC_UPSS,          0,   '<', 3, 9, 0, 1 },
+    { nrc_British_Latin_1,   0,   'A', 3, 9, 1, 0 },
+    { nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0, 0 },
+    { nrc_DEC_Technical,     0,   '>', 3, 9, 0, 0 },
+    { nrc_French_Canadian2,  0,   '9', 3, 9, 1, 0 },
+    { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1, 0 },
+    { nrc_Portugese,         '%', '6', 3, 9, 1, 0 },
+    { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0, 1 },
     /* VT5xx */
-    { nrc_Greek,             '"', '>', 5, 9, 1 },
-    { nrc_Hebrew,            '%', '=', 5, 9, 1 },
-    { nrc_Turkish,	     '%', '2', 5, 9, 1 },
-    { nrc_DEC_Cyrillic,      '&', '4', 5, 9, 0 },
-    { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0 },
-    { nrc_DEC_Hebrew_Supp,   '"', '4', 5, 9, 0 },
-    { nrc_DEC_Turkish_Supp,  '%', '0', 5, 9, 0 },
-    { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0 },
-    { nrc_ISO_Hebrew_Supp,   0,   'H', 5, 9, 0 },
-    { nrc_ISO_Latin_2_Supp,  0,   'B', 5, 9, 0 },
-    { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0 },
-    { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0 },
+    { nrc_Greek,             '"', '>', 5, 9, 1, 0 },
+    { nrc_Hebrew,            '%', '=', 5, 9, 1, 0 },
+    { nrc_Turkish,	     '%', '2', 5, 9, 1, 0 },
+    { nrc_DEC_Cyrillic,      '&', '4', 5, 9, 0, 0 },
+    { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0, 0 },
+    { nrc_DEC_Hebrew_Supp,   '"', '4', 5, 9, 0, 0 },
+    { nrc_DEC_Turkish_Supp,  '%', '0', 5, 9, 0, 0 },
+    { nrc_ISO_Greek_Supp,    0,   'F', 5, 9, 0, 1 },
+    { nrc_ISO_Hebrew_Supp,   0,   'H', 5, 9, 0, 1 },
+    { nrc_ISO_Latin_2_Supp,  0,   'B', 5, 9, 0, 1 },
+    { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0, 1 },
+    { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0, 1 },
     /* VT5xx (not implemented) */
 #if 0
-    { nrc_Russian,           '&', '5', 5, 9, 1 },
-    { nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
+    { nrc_Russian,           '&', '5', 5, 9, 1, 0 },
+    { nrc_SCS_NRCS,          '%', '3', 5, 9, 0, 0 },
 #endif
 };
 /* *INDENT-ON* */
 
 #if OPT_DEC_RECTOPS
 static char *
-encode_scs(TScreen *screen, DECNRCM_codes value)
+encode_scs(TScreen *screen, DECNRCM_codes value, int *psize)
 {
     static char buffer[3];
     Cardinal n;
@@ -1869,6 +1870,7 @@ encode_scs(TScreen *screen, DECNRCM_codes value)
 		*result++ = (char) scs_table[n].prefix;
 	    if (scs_table[n].suffix)
 		*result++ = (char) scs_table[n].suffix;
+	    *psize = scs_table[n].sized_96;
 	    break;
 	}
     }
@@ -1888,7 +1890,7 @@ xtermDecodeSCS(XtermWidget xw, int which, int sgroup, int prefix, int suffix)
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (prefix == scs_table[n].prefix
 	    && suffix == scs_table[n].suffix
-	    && sgroup == scs_table[n].min_level
+	    && sgroup <= scs_table[n].min_level
 	    && screen->vtXX_level >= scs_table[n].min_level
 	    && screen->vtXX_level <= scs_table[n].max_level
 	    && (scs_table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
@@ -5392,7 +5394,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, 0x4f);	/* assert all 96's */
 		    reply_char(count, ';');
 		    for (item = 0; item < NUM_GSETS; ++item) {
-			char *temp = encode_scs(screen, screen->gsets[item]);
+			int ps;
+			char *temp = encode_scs(screen, screen->gsets[item], &ps);
 			while (*temp != '\0') {
 			    reply_char(count, *temp++);
 			}
@@ -5428,18 +5431,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRQUPSS:
 	    TRACE(("CASE_DECRQUPSS\n"));
 	    if (screen->vtXX_level >= 3) {
-		char *encoded = encode_scs(screen, screen->gsets_upss);
+		int psize;
+		char *encoded = encode_scs(screen, screen->gsets_upss, &psize);
 		init_reply(ANSI_DCS);
 		count = 0;
-		reply_char(count, encoded[1] == 0 ? '1' : '0');
+		reply_char(count, psize ? '1' : '0');
 		reply_char(count, '!');
 		reply_char(count, 'u');
-		/*
-		 * The table in decode_upss() lists DEC character sets which
-		 * use two characters in the selector and ISO character sets
-		 * which use one character in the selector.  Allow for either
-		 * in the response.
-		 */
 		reply_char(count, *encoded++);
 		if (*encoded)
 		    reply_char(count, *encoded);

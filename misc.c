@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1076 2023/12/02 00:47:57 tom Exp $ */
+/* $XTermId: misc.c,v 1.1079 2023/12/26 20:49:39 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4805,10 +4805,8 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
  *
  * The VT510/VT520 reference manuals under SCS Select Character Set show
  * a list of 94- and 96-character sets with "DEC" and "NRCS" as 94-characters,
- * and the "ISO" as 96-characters.
- *
- * This function assumes that Pn==1 for ISO character sets, and Pn==0 for DEC.
- * See also CASE_DECRQUPSS, which uses that assumption.
+ * and the "ISO" as 96-characters.  A few 94-character sets are added, based
+ * on testing VT520/VT525 that shows that DEC Special Graphics also is allowed.
  */
 static Bool
 decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
@@ -4816,13 +4814,16 @@ decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
     /* *INDENT-OFF* */
     static const struct {
 	DECNRCM_codes code;
-	int params;
+	int params;	/* 0 for 94-characters, 1 for 96-characters */
 	int prefix;
 	int suffix;
 	int min_level;
 	int max_level;
     } upss_table[] = {
 	{ DFT_UPSS,               0,  '%', '5', 3, 9 },
+    	{ nrc_ASCII,              0,  0,   'A', 1, 9 },	/* undocumented */
+    	{ nrc_DEC_Spec_Graphic,   0,  0,   '0', 1, 9 },	/* undocumented */
+    	{ nrc_DEC_Technical,      0,  0,   '>', 3, 9 },	/* undocumented */
 	{ nrc_DEC_Greek_Supp,     0,  '"', '?', 5, 9 },
 	{ nrc_DEC_Hebrew_Supp,    0,  '"', '4', 5, 9 },
 	{ nrc_DEC_Turkish_Supp,   0,  '%', '0', 5, 9 },
@@ -4845,21 +4846,17 @@ decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
 	for (n = 0; n < XtNumber(upss_table); ++n) {
 	    if (psarg != upss_table[n].params)
 		continue;
-	    if (screen->vtXX_level < upss_table[n].min_level)
-		continue;
 
-	    if (psarg) {	/* ISO codes are one-character */
+	    if (cp[1] == '\0') {
 		if (upss_table[n].suffix != cp[0])
 		    continue;
-		if (cp[1] != '\0')
-		    continue;
-	    } else {		/* DEC codes are two-character */
+	    } else if (cp[2] == '\0') {
 		if (upss_table[n].prefix != cp[0])
 		    continue;
 		if (upss_table[n].suffix != cp[1])
 		    continue;
-		if (cp[2] != '\0')
-		    continue;
+	    } else {
+		continue;
 	    }
 
 	    result = True;

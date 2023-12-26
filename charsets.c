@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.123 2023/12/25 21:19:18 tom Exp $ */
+/* $XTermId: charsets.c,v 1.124 2023/12/26 11:49:05 tom Exp $ */
 
 /*
  * Copyright 1998-2020,2023 by Thomas E. Dickey
@@ -618,9 +618,9 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 
 	if (chr == 0xa0 && isSeven) {
 	    result = ANSI_ESC;
-	} else if (chr == 0x20 && isSeven) {
+	} else if (chr == ANSI_SPA && isSeven) {
 	    result = ANSI_SPA;
-	} else if ((chr == 0x7f || chr == 0xff) && isSeven) {
+	} else if ((chr == ANSI_DEL || chr == 0xff) && isSeven) {
 	    result = 0;
 	} else {
 	    int actual = (int) chr;
