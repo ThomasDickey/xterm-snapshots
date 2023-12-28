@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.702 2023/12/26 21:12:45 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.703 2023/12/28 01:34:24 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #389
-.ds RF 2023/12/26
+.ds RF 2023/12/27
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1233,6 +1233,9 @@ by compiling a different default for the title modes into \fI\*(xt\fP.
   \*(Ps = \*3 \(-> Do not query window/icon labels using UTF-8.
 .iP
 (See discussion of \fBTitle Modes\fP).
+.iP
+.IP \\*(Cs\\*?\\*5\\*W
+Reset tab stops to start with column 9, every 8 columns (DECST8C), VT510.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(XX

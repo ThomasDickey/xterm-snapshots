@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.71 2023/11/24 14:43:44 tom Exp $
+# $XTermId: VTparse.def,v 1.72 2023/12/27 22:45:19 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -228,3 +228,4 @@ CASE_CSI_COMMA_STATE
 CASE_DECAC
 CASE_DECATC
 CASE_DECTID
+CASE_DECST8C

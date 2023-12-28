@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1115 2023/12/25 18:54:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1116 2023/12/28 01:22:07 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -3442,7 +3442,7 @@ extern WidgetClass tekWidgetClass;
 #define TAB_ARRAY_SIZE	(1024 / TAB_BITS_WIDTH)
 #define MAX_TABS	(TAB_BITS_WIDTH * TAB_ARRAY_SIZE)
 
-#define OkTAB(c)	((c) >= 0 && (c) < MAX_TABS)
+#define OkTAB(c)	((c) > 0 && (c) < MAX_TABS)
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];
 

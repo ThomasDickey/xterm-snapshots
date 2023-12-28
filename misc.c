@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1079 2023/12/26 20:49:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.1082 2023/12/28 01:26:34 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4658,10 +4658,16 @@ parse_chr_param(const char **cp)
 	    }
 	}
     }
-    TRACE(("parse-chr %s ->%d, %#x->%s\n", *cp, result, result, s));
+    TRACE(("parse-chr %s ->%#x, %#x->%s\n", *cp, result, result, s));
     *cp = s;
     return result;
 }
+
+#if OPT_TRACE
+#define done_DECCIR()	do { TRACE(("...quit DECCIR @%d\n", __LINE__)); return; } while(0)
+#else
+#define done_DECCIR()	return
+#endif
 
 static void
 restore_DECCIR(XtermWidget xw, const char *cp)
@@ -4671,22 +4677,33 @@ restore_DECCIR(XtermWidget xw, const char *cp)
 
     /* row */
     if ((value = parse_int_param(&cp)) <= 0 || value > MaxRows(screen))
-	return;
+	done_DECCIR();
     screen->cur_row = (value - 1);
 
     /* column */
     if ((value = parse_int_param(&cp)) <= 0 || value > MaxCols(screen))
-	return;
+	done_DECCIR();
     screen->cur_col = (value - 1);
 
     /* page */
     if (parse_int_param(&cp) != 1)
-	return;
+	done_DECCIR();
 
     /* rendition */
-    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
-	return;
+    if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40) {
+	if (value & 0x10) {
+	    /*
+	     * VT420 is documented for bit 5 always reset; VT520/VT525 are not
+	     * documented, but do use the bit for setting invisible mode.
+	     */
+	    if (screen->vtXX_level <= 4)
+		done_DECCIR();
+	} else if (!(value & 0x40)) {
+	    done_DECCIR();
+	}
+    }
     UIntClr(xw->flags, (INVERSE | BLINK | UNDERLINE | BOLD));
+    xw->flags |= (value & 16) ? INVISIBLE : 0;
     xw->flags |= (value & 8) ? INVERSE : 0;
     xw->flags |= (value & 4) ? BLINK : 0;
     xw->flags |= (value & 2) ? UNDERLINE : 0;
@@ -4694,38 +4711,39 @@ restore_DECCIR(XtermWidget xw, const char *cp)
 
     /* attributes */
     if (((value = parse_chr_param(&cp)) & 0xfe) != 0x40)
-	return;
+	done_DECCIR();
     screen->protected_mode &= ~DEC_PROTECT;
     screen->protected_mode |= (value & 1) ? DEC_PROTECT : 0;
 
     /* flags */
     if (((value = parse_chr_param(&cp)) & 0xf0) != 0x40)
-	return;
+	done_DECCIR();
     screen->do_wrap = (value & 8) ? True : False;
     screen->curss = (Char) ((value & 4) ? 3 : ((value & 2) ? 2 : 0));
     UIntClr(xw->flags, ORIGIN);
     xw->flags |= (value & 1) ? ORIGIN : 0;
 
     if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
-	return;
+	done_DECCIR();
     screen->curgl = (Char) value;
 
     if ((value = (parse_chr_param(&cp) - '0')) < 0 || value >= NUM_GSETS)
-	return;
+	done_DECCIR();
     screen->curgr = (Char) value;
 
     /* character-set size */
-    if (parse_chr_param(&cp) != 0x4f)	/* works for xterm */
-	return;
+    if (parse_chr_param(&cp) == 0xffff)		/* FIXME: limit SCS? */
+	done_DECCIR();
 
     /* SCS designators */
     for (value = 0; value < NUM_GSETS; ++value) {
-	if (*cp == '%') {
-	    xtermDecodeSCS(xw, value, 0, '%', *++cp);
-	} else if (*cp != '\0') {
-	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
+	if (*cp == '\0') {
+	    done_DECCIR();
+	} else if (strchr("%&\"", *cp) != NULL) {
+	    int prefix = *cp++;
+	    xtermDecodeSCS(xw, value, 0, prefix, *cp);
 	} else {
-	    return;
+	    xtermDecodeSCS(xw, value, 0, '\0', *cp);
 	}
 	cp++;
     }
@@ -4747,10 +4765,8 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
 	    --stop;
 	    if (OkTAB(stop)) {
 		TabSet(xw->tabs, stop);
-		stop = 0;
-	    } else {
-		fail = True;
 	    }
+	    stop = 0;
 	} else {
 	    fail = True;
 	}

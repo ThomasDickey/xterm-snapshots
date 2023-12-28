@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2004 2023/12/26 20:42:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2007 2023/12/28 01:00:52 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1876,6 +1876,21 @@ encode_scs(TScreen *screen, DECNRCM_codes value, int *psize)
     }
     *result = '\0';
     return buffer;
+}
+
+static int
+is_96charset(DECNRCM_codes value)
+{
+    Cardinal n;
+    int result = 0;
+
+    for (n = 0; n < XtNumber(scs_table); ++n) {
+	if (scs_table[n].result == value) {
+	    result = scs_table[n].sized_96 ? 1 : 0;
+	    break;
+	}
+    }
+    return result;
 }
 #endif
 
@@ -5391,7 +5406,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply.a_param[count++] = screen->curgl;
 		    reply.a_param[count++] = screen->curgr;
 		    reply_char(count, ';');
-		    reply_char(count, 0x4f);	/* assert all 96's */
+		    value = 0x40;
+		    for (item = 0; item < NUM_GSETS; ++item) {
+			value |= (is_96charset(screen->gsets[item]) << item);
+		    }
+		    reply_char(count, value);	/* encoded charset sizes */
 		    reply_char(count, ';');
 		    for (item = 0; item < NUM_GSETS; ++item) {
 			int ps;
@@ -5414,11 +5433,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    for (item = 0; item < MAX_TABS; ++item) {
 			if (count + 1 >= NPARAM)
 			    break;
-			if (TabIsSet(xw->tabs, item)) {
-			    reply.a_param[count++] = (ParmType) (item + 1);
-			}
 			if (item > screen->max_col)
 			    break;
+			if (TabIsSet(xw->tabs, item))
+			    reply.a_param[count++] = (ParmType) (item + 1);
 		    }
 		    reply.a_nparam = (ParmType) count;
 		    unparseseq(xw, &reply);
@@ -5463,6 +5481,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* csi ? dollar ($) */
 	    sp->parsestate = csi_dec_dollar_table;
 	    break;
+
+	case CASE_DECST8C:
+	    TRACE(("CASE_DECST8C\n"));
+	    if (screen->vtXX_level >= 5
+		&& (GetParam(0) == 5 || GetParam(0) <= 0)) {
+		TabZonk(xw->tabs);
+		for (count = 0; count < MAX_TABS; ++count) {
+		    item = (count + 1) * 8;
+		    if (item > screen->max_col)
+			break;
+		    TabSet(xw->tabs, item);
+		}
+	    }
+	    ResetState(sp);
+	    break;
 #else
 	case CASE_CSI_DOLLAR_STATE:
 	    /* csi dollar ($) */
@@ -5477,6 +5510,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_CSI_DEC_DOLLAR_STATE:
 	    /* csi ? dollar ($) */
 	    sp->parsestate = eigtable;
+	    break;
+
+	case CASE_DECST8C:
+	    /* csi ? 5 W */
+	    ResetState(sp);
 	    break;
 #endif /* OPT_DEC_RECTOPS */
 
