@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #389 (2023/12/27)
+               updated for XTerm Patch #389 (2023/12/28)
 
 
 
@@ -453,6 +453,7 @@ DCS $ q Pt ST
             * |     -> DECSNLS
             , |     -> DECAC (VT525 only)
             , }     -> DECATC (VT525 only)
+            > Pm m  -> XTQMODKEYS (xterm)
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r  ST for invalid requests.

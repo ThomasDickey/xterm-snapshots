@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.703 2023/12/28 01:34:24 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.704 2023/12/28 23:33:16 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #389
-.ds RF 2023/12/27
+.ds RF 2023/12/28
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -922,6 +922,7 @@ The string following the \*(``q\*('' is one of the following:
   \**\*|	\(-> DECSNLS
   \*,\*|	\(-> DECAC (VT525 only)
   \*,\*}	\(-> DECATC (VT525 only)
+  \*>\*(Pm\*s\*m \(-> XTQMODKEYS (xterm)
 .br
 \fI\*(xt\fP responds with
 \*(Dc\*1\*$\*r\*(Pt\*s\*(ST

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1082 2023/12/28 01:26:34 tom Exp $ */
+/* $XTermId: misc.c,v 1.1083 2023/12/29 00:42:12 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -4897,8 +4897,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     Bool okay;
     ANSI params;
     char psarg = '0';
-#if OPT_VT525_COLORS && OPT_ISO_COLORS
+#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
     const char *cp2;
+    int ival;
 #endif
 
     TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
@@ -5006,21 +5007,21 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #if OPT_VT525_COLORS && OPT_ISO_COLORS
 		if (screen->terminal_id == 525
 		    && !strcmp((cp2 = skip_params(cp)), ",}")) {	/* DECATC */
-		int value = parse_int_param(&cp);
+		ival = parse_int_param(&cp);
 		TRACE(("reply DECATC:%s\n", cp));
-		if (value >= 0 && value < 16 && *cp2 == ',') {
-		    sprintf(reply, "%d;%d;%d%s", value,
-			    screen->alt_colors[value].fg,
-			    screen->alt_colors[value].bg,
+		if (ival >= 0 && ival < 16 && *cp2 == ',') {
+		    sprintf(reply, "%d;%d;%d%s", ival,
+			    screen->alt_colors[ival].fg,
+			    screen->alt_colors[ival].bg,
 			    cp2);
 		} else {
 		    okay = False;
 		}
 	    } else if (screen->terminal_id == 525
 		       && !strcmp((cp2 = skip_params(cp)), ",|")) {	/* DECAC */
-		int value = parse_int_param(&cp);
+		ival = parse_int_param(&cp);
 		TRACE(("reply DECAC\n"));
-		switch (value) {
+		switch (ival) {
 		case 1:	/* normal text */
 		    sprintf(reply, "%d,%d%s",
 			    screen->assigned_fg,
@@ -5029,6 +5030,32 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    break;
 		case 2:	/* window frame (not implemented) */
 		    /* FALLTHRU */
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else
+#endif
+#if OPT_MOD_FKEYS
+	    if (*cp == '>' && !strcmp((cp2 = skip_params(1 + cp)), "m")) {	/* XTQMODKEYS */
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
+#define FMT_MOD_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_MOD_FKEYS(field))
+		switch (ival) {
+		case 0:
+		    FMT_MOD_FKEYS(allow_keys);
+		    break;
+		case 1:
+		    FMT_MOD_FKEYS(cursor_keys);
+		    break;
+		case 2:
+		    FMT_MOD_FKEYS(function_keys);
+		    break;
+		case 4:
+		    FMT_MOD_FKEYS(other_keys);
+		    break;
 		default:
 		    okay = False;
 		    break;
