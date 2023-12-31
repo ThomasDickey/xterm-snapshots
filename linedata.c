@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.105 2023/12/25 21:07:08 tom Exp $ */
+/* $XTermId: linedata.c,v 1.106 2023/12/31 20:12:06 tom Exp $ */
 
 /*
  * Copyright 2009-2022,2023 by Thomas E. Dickey
@@ -88,12 +88,12 @@ copyLineData(LineData *dst, CLineData *src)
 #if OPT_ISO_COLORS
 		       + sizeof(dst->color[0])
 #endif
-		       + sizeof(dst->charSeen[0])
 		       + sizeof(dst->charData[0])
 #if OPT_WIDE_CHARS
 		       + sizeof(dst->combData[0][0]) * dst->combSize
 #endif
 #if OPT_DEC_RECTOPS
+		       + sizeof(dst->charSeen[0])
 		       + sizeof(dst->charSets[0])
 #endif
 	);
@@ -113,9 +113,11 @@ copyLineData(LineData *dst, CLineData *src)
 #if OPT_ISO_COLORS
 	    dst->color[col] = src->color[col];
 #endif
-	    dst->charSeen[col] = src->charSeen[col];
 	    dst->charData[col] = src->charData[col];
-	    if_OPT_DEC_RECTOPS(dst->charSets[col] = src->charSets[col]);
+#if OPT_DEC_RECTOPS
+	    dst->charSeen[col] = src->charSeen[col];
+	    dst->charSets[col] = src->charSets[col];
+#endif
 #if OPT_WIDE_CHARS
 	    for (comb = 0; comb < dst->combSize; ++comb) {
 		dst->combData[comb][col] = src->combData[comb][col];
@@ -127,9 +129,11 @@ copyLineData(LineData *dst, CLineData *src)
 #if OPT_ISO_COLORS
 	    dst->color[col] = initCColor;
 #endif
-	    dst->charSeen[col] = 0;
 	    dst->charData[col] = 0;
-	    if_OPT_DEC_RECTOPS(dst->charSets[col] = 0);
+#if OPT_DEC_RECTOPS
+	    dst->charSeen[col] = 0;
+	    dst->charSets[col] = 0;
+#endif
 #if OPT_WIDE_CHARS
 	    for (comb = 0; comb < dst->combSize; ++comb) {
 		dst->combData[comb][col] = 0;
@@ -184,13 +188,13 @@ initLineData(XtermWidget xw)
     TRACE(("   offset(combSize)  %lu\n", (unsigned long) offsetof(LineData, combSize)));
 #endif
 #if OPT_DEC_RECTOPS
-    TRACE(("   offset(charSets)  %lu\n", (unsigned long) offsetof(LineData, charSets)));
+    TRACE(("   offset(*charSeen) %lu\n", (unsigned long) offsetof(LineData, charSeen)));
+    TRACE(("   offset(*charSets) %lu\n", (unsigned long) offsetof(LineData, charSets)));
 #endif
     TRACE(("   offset(*attribs)  %lu\n", (unsigned long) offsetof(LineData, attribs)));
 #if OPT_ISO_COLORS
     TRACE(("   offset(*color)    %lu\n", (unsigned long) offsetof(LineData, color)));
 #endif
-    TRACE(("   offset(*charSeen) %lu\n", (unsigned long) offsetof(LineData, charSeen)));
     TRACE(("   offset(*charData) %lu\n", (unsigned long) offsetof(LineData, charData)));
     TRACE(("   offset(*combData) %lu\n", (unsigned long) offsetof(LineData, combData)));
 
@@ -203,12 +207,12 @@ initLineData(XtermWidget xw)
     TRACE(("   offset(combSize)  %lu\n", (unsigned long) offsetof(CellData, combSize)));
 #endif
 #if OPT_DEC_RECTOPS
+    TRACE(("   offset(charSeen)  %lu\n", (unsigned long) offsetof(CellData, charSeen)));
     TRACE(("   offset(charSets)  %lu\n", (unsigned long) offsetof(CellData, charSets)));
 #endif
 #if OPT_ISO_COLORS
     TRACE(("   offset(color)     %lu\n", (unsigned long) offsetof(CellData, color)));
 #endif
-    TRACE(("   offset(charSeen)  %lu\n", (unsigned long) offsetof(CellData, charSeen)));
     TRACE(("   offset(charData)  %lu\n", (unsigned long) offsetof(CellData, charData)));
     TRACE(("   offset(combData)  %lu\n", (unsigned long) offsetof(CellData, combData)));
 
@@ -250,8 +254,10 @@ saveCellData(TScreen *screen,
 	if_OPT_ISO_COLORS(screen, {
 	    item->color = ld->color[column];
 	});
-	item->charSeen = ld->charSeen[column];
-	item->charData = ld->charData[column];
+	if_OPT_DEC_RECTOPS({
+	    item->charSeen = ld->charSeen[column];
+	    item->charData = ld->charData[column];
+	});
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    Bool blank = (((item->charData == HIDDEN_CHAR)
@@ -262,7 +268,7 @@ saveCellData(TScreen *screen,
 			      && (limits == NULL
 				  || (column + 1) >= limits->right)));
 	    if (blank) {
-		item->charSeen = ' ';
+		if_OPT_DEC_RECTOPS(item->charSeen = ' ');
 		item->charData = (CharData) ' ';
 	    }
 	    item->combSize = blank ? 0 : ld->combSize;
@@ -294,7 +300,10 @@ restoreCellData(TScreen *screen,
 	if_OPT_ISO_COLORS(screen, {
 	    ld->color[column] = item->color;
 	});
-	ld->charSeen[column] = item->charSeen;
+	if_OPT_DEC_RECTOPS({
+	    ld->charSeen[column] = item->charSeen;
+	    ld->charSets[column] = item->charSets;
+	});
 	ld->charData[column] = item->charData;
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;

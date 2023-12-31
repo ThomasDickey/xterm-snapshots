@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.643 2023/12/26 22:15:54 tom Exp $ */
+/* $XTermId: screen.c,v 1.647 2023/12/31 23:03:33 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -208,9 +208,12 @@ setupLineData(TScreen *screen,
     }
 #endif
 
-    skipNcolIAttr = (ncol * SizeofScrnPtr(attribs));
-    skipNcolChar = (ncol * SizeofScrnPtr(charSeen));
-    skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+    /* *INDENT-EQLS* */
+    skipNcolIAttr     = (ncol * SizeofScrnPtr(attribs));
+    skipNcolCharData  = (ncol * SizeofScrnPtr(charData));
+#if OPT_DEC_RECTOPS
+    skipNcolChar      = (ncol * SizeofScrnPtr(charSeen));	/* = charSets */
+#endif
 #if OPT_ISO_COLORS
     skipNcolCellColor = (ncol * SizeofScrnPtr(color));
 #endif
@@ -227,9 +230,11 @@ setupLineData(TScreen *screen,
 #if OPT_ISO_COLORS
 	SetupScrnPtr(ptr->color, data, CellColor);
 #endif
-	SetupScrnPtr(ptr->charSeen, data, Char);
 	SetupScrnPtr(ptr->charData, data, CharData);
-	if_OPT_DEC_RECTOPS(SetupScrnPtr(ptr->charSets, data, Char));
+#if OPT_DEC_RECTOPS
+	SetupScrnPtr(ptr->charSeen, data, Char);
+	SetupScrnPtr(ptr->charSets, data, Char);
+#endif
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    unsigned extra = (unsigned) screen->max_combining;
@@ -309,11 +314,14 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
     result = (ncol * (unsigned) sizeof(CharData));	/* ->charData */
     AlignValue(result);
 
+#if OPT_DEC_RECTOPS
     result += (ncol * (unsigned) sizeof(Char));		/* ->charSeen */
     AlignValue(result);
+    result += (ncol * (unsigned) sizeof(Char));		/* ->charSets */
+    AlignValue(result);
+#endif
 
 #if OPT_WIDE_CHARS
-    result += (ncol * (unsigned) sizeof(Char));		/* ->charSets */
     if (screen->wide_chars) {
 	result *= (unsigned) (1 + screen->max_combining);
     }
@@ -1057,7 +1065,6 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	SetLineDblCS(work, 0);
 #endif
 
-	memset(work->charSeen, 0, size * sizeof(Char));
 	memset(work->charData, 0, size * sizeof(CharData));
 	if (TERM_COLOR_FLAGS(xw)) {
 	    FillIAttr(work->attribs, flags, (size_t) size);
@@ -1075,8 +1082,10 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    memset(work->color, 0, size * sizeof(work->color[0]));
 #endif
 	}
-	if_OPT_DEC_RECTOPS(memset(work->charSets, 0,
-				  size * sizeof(work->charSets[0])));
+	if_OPT_DEC_RECTOPS({
+	    memset(work->charSeen, 0, size * sizeof(Char));
+	    memset(work->charSets, 0, size * sizeof(work->charSets[0]));
+	});
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
 	    size_t off;
@@ -1658,13 +1667,12 @@ ScrnRefresh(XtermWidget xw,
 	    wideness = isWide((int) chars[col]);
 	});
 
-	if_OPT_ISO_COLORS(screen, {
+	if (screen->colorMode) {
 	    fb = ld->color;
 	    fg_bg = ColorOf(col);
 	    fg = extract_fg(xw, fg_bg, flags);
 	    bg = extract_bg(xw, fg_bg, flags);
-	});
-
+	}
 #if OPT_WIDE_ATTRS
 	old_attrs = xtermUpdateItalics(xw, flags, old_attrs);
 #endif
@@ -1947,8 +1955,10 @@ allocLineData(TScreen *screen, LineData *source)
 #if OPT_ISO_COLORS
 	ALLOC_IT(color);
 #endif
+#if OPT_DEC_RECTOPS
 	ALLOC_IT(charSeen);
 	ALLOC_IT(charData);
+#endif
 #if OPT_WIDE_CHARS
 	ALLOC_IT(charSets);
 	if_OPT_WIDE_CHARS(screen, {
@@ -2826,8 +2836,6 @@ ScrnWipeRectangle(XtermWidget xw,
     }
 }
 
-#define FIXME_389 1
-
 /*
  * Compute a checksum, ignoring the page number (since we have only one page).
  */
@@ -2844,14 +2852,13 @@ xtermCheckRect(XtermWidget xw,
     int trimmed = 0;
     int mode = screen->checksum_ext;
 
-    TRACE(("xtermCheckRect: %s%s%s%s%s%s%s\n",
+    TRACE(("xtermCheckRect: %s%s%s%s%s%s\n",
 	   (mode == csDEC) ? "DEC" : "checksumExtension",
 	   (mode & csPOSITIVE) ? " !negative" : "",
 	   (mode & csATTRIBS) ? " !attribs" : "",
 	   (mode & csNOTRIM) ? " !trimmed" : "",
 	   (mode & csDRAWN) ? " !drawn" : "",
-	   (mode & csBYTE) ? " !byte" : "",
-	   (mode & cs8TH) ? " !7bit" : ""));
+	   (mode & csBYTE) ? " !byte" : ""));
 
     if (nparam > 2) {
 	nparam -= 2;
@@ -2864,9 +2871,6 @@ xtermCheckRect(XtermWidget xw,
 	int row, col;
 	Boolean first = True;
 	int embedded = 0;
-#if !FIXME_389
-	DECNRCM_codes my_GR = screen->gsets[(int) screen->curgr];
-#endif
 
 	for (row = top; row <= bottom; ++row) {
 	    int left = (target.left - 1);
@@ -2877,28 +2881,21 @@ xtermCheckRect(XtermWidget xw,
 	    if (ld == 0)
 		continue;
 	    for (col = left; col <= right && col < (int) ld->lineSize; ++col) {
-		if (!(ld->attribs[col] & CHARDRAWN))
-		    continue;
-		ch = (int) ld->charData[col];
-		if_OPT_WIDE_CHARS(screen, {
-		    if (is_UCS_SPECIAL(ch))
+		if (!(ld->attribs[col] & CHARDRAWN)) {
+		    if (!(mode & (csNOTRIM | csDRAWN)))
 			continue;
-		});
-#if FIXME_389
-		ch = xtermCharSetDec(xw,
-				     ld->charSeen[col],
-				     ld->charSets[col]);
-#else
-		if (!(mode & csBYTE)) {
-		    unsigned c2 = (unsigned) ch;
-		    if (c2 > 0x7f && my_GR != nrc_ASCII) {
-			c2 = xtermCharSetIn(xw, c2, my_GR);
-			if (!(mode & cs8TH) && (c2 < 0x80))
-			    c2 |= 0x80;
-		    }
-		    ch = (c2 & 0xff);
+		    ch = ' ';
+		} else if (!(mode & csBYTE)) {
+		    ch = xtermCharSetDec(xw,
+					 ld->charSeen[col],
+					 ld->charSets[col]);
+		} else {
+		    ch = (int) ld->charData[col];
+		    if_OPT_WIDE_CHARS(screen, {
+			if (is_UCS_SPECIAL(ch))
+			    continue;
+		    });
 		}
-#endif
 		if (!(mode & csATTRIBS)) {
 #if OPT_ISO_COLORS && OPT_VT525_COLORS
 		    if (screen->terminal_id == 525) {
@@ -2955,8 +2952,8 @@ xtermCheckRect(XtermWidget xw,
 			    total += (int) ld->combData[off][col];
 			}
 		    }
-		})
-		    first = ((mode & csNOTRIM) != 0) ? True : False;
+		});
+		first = ((mode & csNOTRIM) != 0) ? True : False;
 	    }
 	    if (!(mode & csNOTRIM)) {
 		embedded = 0;

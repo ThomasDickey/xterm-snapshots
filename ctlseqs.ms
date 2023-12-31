@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.704 2023/12/28 23:33:16 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.705 2023/12/31 17:11:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2022,2023 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #389
-.ds RF 2023/12/28
+.ds RF 2023/12/31
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2367,7 +2367,6 @@ The bits of \*(Ps modify the calculation of the checksum returned by DECRQCRA:
   \*2 \(-> do not omit checksum for blanks.
   \*3 \(-> omit checksum for cells not explicitly initialized.
   \*4 \(-> do not mask cell value to 8 bits or ignore combining characters.
-  \*5 \(-> do not mask cell value to 7 bits.
 .
 .iP
 .IP \\*(Cs\\*(Pi\\*s\\*;\\*(Pg\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\**\\*y

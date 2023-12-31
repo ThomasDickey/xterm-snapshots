@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1116 2023/12/28 01:22:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1118 2023/12/31 20:56:46 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -494,15 +494,14 @@ typedef struct {
 	int height;
 } BitmapBits;
 
-/* bit-assignments for extensions to DECRQCRA */
+/* bit-assignments for extensions to DECRQCRA, to omit DEC features */
 typedef enum {
     csDEC = 0
-    ,csPOSITIVE = xBIT(0)
-    ,csATTRIBS = xBIT(1)
-    ,csNOTRIM = xBIT(2)
-    ,csDRAWN = xBIT(3)
-    ,csBYTE = xBIT(4)
-    ,cs8TH = xBIT(5)
+    ,csPOSITIVE = xBIT(0)	/* do not negate the result */
+    ,csATTRIBS = xBIT(1)	/* do not report the VT100 video attributes */
+    ,csNOTRIM = xBIT(2)		/* do not omit checksum for blanks */
+    ,csDRAWN = xBIT(3)		/* do not skip uninitialized cells */
+    ,csBYTE = xBIT(4)		/* do not mask cell value to 8 bits or ignore combining chars */
 } CSBITS;
 
 #define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp
@@ -1891,14 +1890,14 @@ typedef struct {
 #endif
 #if OPT_DEC_RECTOPS
 	Char	 *charSets;	/* SCS code (DECNRCM_codes) */
+	Char     *charSeen;	/* pre-SCS value */
 #endif
 	IAttr	 *attribs;	/* video attributes */
 #if OPT_ISO_COLORS
 	CellColor *color;	/* foreground+background color numbers */
 #endif
-	Char     *charSeen;	/* pre-SCS value */
 	CharData *charData;	/* cell's base character */
-	CharData *combData[1];	/* first enum past fixed-offsets */
+	CharData *combData[1];	/* first field past fixed-offsets */
 } LineData;
 
 typedef const LineData CLineData;
@@ -1914,11 +1913,11 @@ typedef struct {
 #endif
 #if OPT_DEC_RECTOPS
 	Char     charSets;	/* SCS code (DECNRCM_codes) */
+	Char     charSeen;	/* pre-SCS value */
 #endif
 #if OPT_ISO_COLORS
 	CellColor color;	/* foreground+background color numbers */
 #endif
-	Char     charSeen;	/* pre-SCS value */
 	CharData charData;	/* cell's base character */
 	CharData combData[1];	/* array of combining chars */
 } CellData;

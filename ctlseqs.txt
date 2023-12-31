@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2023)
-               updated for XTerm Patch #389 (2023/12/28)
+               updated for XTerm Patch #389 (2023/12/31)
 
 
 
@@ -1667,7 +1667,6 @@ CSI Ps # y
             3  -> omit checksum for cells not explicitly initialized.
             4  -> do not mask cell value to 8 bits or ignore combining
           characters.
-            5  -> do not mask cell value to 7 bits.
 
 CSI Pi ; Pg ; Pt ; Pl ; Pb ; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
