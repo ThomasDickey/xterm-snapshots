@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2007 2023/12/28 01:00:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2008 2024/01/01 16:08:35 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -8816,11 +8816,20 @@ window_ops(XtermWidget xw)
 	}
 	break;
 
+#define WhichTitle(n) \
+	((n) == 0 \
+	 ? "window/icon titles" \
+	 : ((n) == 1 \
+	    ? "icon title" \
+	    : ((n) == 2 \
+	       ? "window title" \
+	       : "no titles")))
+
     case ewPushTitle:		/* save the window's title(s) on stack */
 	if (AllowWindowOps(xw, ewPushTitle)) {
 	    SaveTitle item;
 
-	    TRACE(("...push title onto stack\n"));
+	    TRACE(("...push %s onto stack\n", WhichTitle(zero_if_default(1))));
 	    memset(&item, 0, sizeof(item));
 	    switch (zero_if_default(1)) {
 	    case 0:
@@ -8842,10 +8851,12 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewPopTitle)) {
 	    SaveTitle item;
 
-	    TRACE(("...%s title off stack\n",
+	    TRACE(("...%s %s off stack\n",
 		   (zero_if_default(2)
 		    ? "get"
-		    : "pop")));
+		    : "pop"),
+		   WhichTitle(zero_if_default(1))));
+
 	    if (xtermPopTitle(screen, zero_if_default(2), &item)) {
 		switch (zero_if_default(1)) {
 		case 0:

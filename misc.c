@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1083 2023/12/29 00:42:12 tom Exp $ */
+/* $XTermId: misc.c,v 1.1084 2024/01/01 18:36:09 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -6160,7 +6160,9 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	char *buf = 0;
 	XtSetArg(args[0], my_attr, &buf);
 	XtGetValues(top, args, 1);
-	TRACE(("...comparing{%s}\n", NonNull(buf)));
+	TRACE(("...comparing resource{%s} to new value{%s}\n",
+	       NonNull(buf),
+	       NonNull(value)));
 	if (buf != 0 && strcmp(value, buf) == 0)
 	    changed = False;
     }
@@ -7874,7 +7876,7 @@ xtermPopTitle(TScreen *screen, int which, SaveTitle * item)
     if (which-- > 0) {
 	which %= MAX_SAVED_TITLES;
     } else if (screen->saved_titles.used > 0) {
-	which = (--(screen->saved_titles.used) % MAX_SAVED_TITLES);
+	which = ((--(screen->saved_titles.used) + MAX_SAVED_TITLES) % MAX_SAVED_TITLES);
 	popped = True;
     } else {
 	result = False;
@@ -7884,6 +7886,22 @@ xtermPopTitle(TScreen *screen, int which, SaveTitle * item)
 	TRACE(("xtermPopTitle #%d: icon='%s', window='%s'\n", which,
 	       NonNull(item->iconName),
 	       NonNull(item->windowName)));
+
+	/* if the data is incomplete, try to get it from the next levels */
+#define TryHigher(name) \
+	if (item->name == NULL) { \
+	    int n; \
+	    for (n = 1; n < MAX_SAVED_TITLES; ++n) { \
+		int nw = ((which - n) + MAX_SAVED_TITLES) % MAX_SAVED_TITLES; \
+		if ((item->name = screen->saved_titles.data[nw].name) != NULL) { \
+		    item->name = x_strdup(item->name); \
+		    break; \
+		} \
+	    } \
+	}
+	TryHigher(iconName);
+	TryHigher(windowName);
+
 	if (popped) {
 	    xtermInitTitle(screen, which);
 	}
