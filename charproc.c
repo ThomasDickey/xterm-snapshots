@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.2008 2024/01/01 16:08:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2009 2024/01/01 19:59:02 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

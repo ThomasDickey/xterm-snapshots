@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1084 2024/01/01 18:36:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.1086 2024/01/01 20:23:51 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4619,7 +4619,7 @@ skip_params(const char *cp)
     return cp;
 }
 
-#if OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
+#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
 static int
 parse_int_param(const char **cp)
 {
@@ -4778,7 +4778,7 @@ restore_DECTABSR(XtermWidget xw, const char *cp)
 
     TRACE(("...done DECTABSR\n"));
 }
-#endif
+#endif /* OPT_DEC_RECTOPS */
 
 /*
  * VT510 and VT520 reference manual have the same explanation for Pn (params),

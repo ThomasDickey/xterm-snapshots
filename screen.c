@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.647 2023/12/31 23:03:33 tom Exp $ */
+/* $XTermId: screen.c,v 1.650 2024/01/01 19:59:40 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -192,8 +192,10 @@ setupLineData(TScreen *screen,
 #endif
     /* these names are based on types */
     unsigned skipNcolIAttr;
-    unsigned skipNcolChar;
     unsigned skipNcolCharData;
+#if OPT_DEC_RECTOPS
+    unsigned skipNcolChar;
+#endif
 #if OPT_ISO_COLORS
     unsigned skipNcolCellColor;
 #endif
@@ -816,7 +818,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	flags = (int) ((unsigned) flags | TERM_COLOR_FLAGS(xw));
 
 	for (n = 0; n < len; ++n) {
-	    ld->charSeen[(unsigned) col + n] = ' ';
+	    if_OPT_DEC_RECTOPS(ld->charSeen[(unsigned) col + n] = ' ');
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
 	}
 
@@ -895,7 +897,9 @@ ScrnWriteText(XtermWidget xw,
     IAttr *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
     IChar *chars;
+#if OPT_DEC_RECTOPS
     Char *seens;
+#endif
 #if OPT_WIDE_CHARS
     IChar starcol1;
 #endif
@@ -917,7 +921,7 @@ ScrnWriteText(XtermWidget xw,
 
     ld = getLineData(screen, screen->cur_row);
 
-    seens = ld->charSeen + screen->cur_col;
+    if_OPT_DEC_RECTOPS(seens = ld->charSeen + screen->cur_col);
     chars = ld->charData + screen->cur_col;
     attrs = ld->attribs + screen->cur_col;
 
@@ -934,15 +938,16 @@ ScrnWriteText(XtermWidget xw,
 	if (xw->work.write_sums != NULL) {
 	    ld->charSeen[screen->cur_col + (int) n] = xw->work.buffer_sums[n];
 	    ld->charSets[screen->cur_col + (int) n] = xw->work.buffer_sets[n];
-	} else
-#endif
-	{
+	} else {
+	    seens[n] = (str[n] < 32
 #if OPT_WIDE_CHARS
-	    seens[n] = (str[n] < 32 || str[n] > 255) ? ANSI_ESC : (Char) str[n];
-#else
-	    seens[n] = (str[n] < 32) ? ANSI_ESC : (Char) str[n];
+			|| str[n] > 255
 #endif
+		)
+		? ANSI_ESC
+		: (Char) str[n];
 	}
+#endif /* OPT_DEC_RECTOPS */
 	chars[n] = (flags & INVISIBLE) ? ' ' : str[n];
     }
 
@@ -1667,12 +1672,12 @@ ScrnRefresh(XtermWidget xw,
 	    wideness = isWide((int) chars[col]);
 	});
 
-	if (screen->colorMode) {
+	if_OPT_ISO_COLORS(screen, {
 	    fb = ld->color;
 	    fg_bg = ColorOf(col);
 	    fg = extract_fg(xw, fg_bg, flags);
 	    bg = extract_bg(xw, fg_bg, flags);
-	}
+	});
 #if OPT_WIDE_ATTRS
 	old_attrs = xtermUpdateItalics(xw, flags, old_attrs);
 #endif
