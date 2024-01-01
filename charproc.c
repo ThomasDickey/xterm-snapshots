@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2009 2024/01/01 19:59:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2010 2024/01/01 21:55:34 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1969,27 +1969,6 @@ subparam_index(int p, int s)
 }
 
 /*
- * Check if the given item in the parameter array has subparameters.
- * If so, return the number of subparameters to use as a loop limit, etc.
- */
-static int
-param_has_subparams(int item)
-{
-    int result = 0;
-    if (parms.has_subparams) {
-	int n = subparam_index(item, 0);
-	if (n >= 0 && parms.is_sub[n]) {
-	    while (++n < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
-		result++;
-	    }
-	}
-    }
-    TRACE(("...param_has_subparams(%d) ->%d\n", item, result));
-    return result;
-}
-
-#if OPT_DIRECT_COLOR || OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
-/*
  * Given an index into the parameter array, return the corresponding parameter
  * number (starting from zero).
  */
@@ -2000,8 +1979,8 @@ param_number(int item)
     int j, p;
 
     for (j = p = 0; j < nparam; ++j, ++p) {
-	if (p >= item) {
-	    result = j;
+	if (j >= item) {
+	    result = p;
 	    break;
 	}
 	if (parms.is_sub[j]) {
@@ -2015,6 +1994,29 @@ param_number(int item)
     TRACE2(("...param_number(%d) = %d\n", item, result));
     return result;
 }
+
+/*
+ * Check if the given index in the parameter array has subparameters.
+ * If so, return the number of subparameters to use as a loop limit, etc.
+ */
+static int
+param_has_subparams(int item)
+{
+    int result = 0;
+    if (parms.has_subparams) {
+	int p = param_number(item);
+	int n = subparam_index(p, 0);
+	if (n >= 0 && parms.is_sub[n]) {
+	    while (++n < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
+		result++;
+	    }
+	}
+    }
+    TRACE(("...param_has_subparams(%d) ->%d\n", item, result));
+    return result;
+}
+
+#if OPT_DIRECT_COLOR || OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
 
 static int
 get_subparam(int p, int s)

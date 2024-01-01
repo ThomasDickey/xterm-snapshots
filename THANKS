@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.37 2023/10/06 23:20:38 tom Exp $
+-- $XTermId: THANKS,v 1.38 2024/01/01 23:29:39 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -13,6 +13,7 @@ Here is a list from xterm.log.html of people who have contributed changes,
 or whose suggested change could be adapted:
 
 Adam M Costello
+Adam Saponara
 Adam Sulmicki
 Ailin Nemui
 Al Poole
@@ -81,6 +82,7 @@ Dennis Schneider
 Dimitrios Christidis
 Ed Schouten
 Eddy De Greef
+Edward Rosten
 Edward S Arthur
 Egbert Eich
 Egmont Koblinger
@@ -194,6 +196,7 @@ Pavel Roskin
 Peder Stray
 Per Hedeland
 Peter Berg Larsen
+Petri Kaukasoina
 Phil Sidler
 Philipp Klaus Krause
 Pierre Lombard
