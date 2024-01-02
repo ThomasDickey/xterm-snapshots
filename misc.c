@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1086 2024/01/01 20:23:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.1087 2024/01/02 00:11:24 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4855,12 +4855,11 @@ decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
     TScreen *screen = TScreenOf(xw);
     Bool result = False;
 
-    psarg -= '0';
     *upss = nrc_ASCII;
     if (screen->vtXX_level >= 3) {
 	Cardinal n;
 	for (n = 0; n < XtNumber(upss_table); ++n) {
-	    if (psarg != upss_table[n].params)
+	    if (((int) psarg - '0') != upss_table[n].params)
 		continue;
 
 	    if (cp[1] == '\0') {

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2010 2024/01/01 21:55:34 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2011 2024/01/02 00:08:54 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -5451,7 +5451,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRQUPSS:
 	    TRACE(("CASE_DECRQUPSS\n"));
 	    if (screen->vtXX_level >= 3) {
-		int psize;
+		int psize = 0;
 		char *encoded = encode_scs(screen, screen->gsets_upss, &psize);
 		init_reply(ANSI_DCS);
 		count = 0;
