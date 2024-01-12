@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2023)
-               updated for XTerm Patch #389 (2023/12/31)
+                    invisible-island.net (2006-2024)
+               updated for XTerm Patch #390 (2024/01/11)
 
 
 
@@ -1391,9 +1391,9 @@ CSI Pm # p
           limitations of C#.
 
 CSI > Ps q
-          Ps = 0  -> Report xterm name and version (XTVERSION).  The
-          response is a DSR sequence identifying the version: DCS > |
-          text ST
+            Ps = 0  -> Report xterm name and version (XTVERSION).
+          The response is a DSR sequence identifying the version:
+            DCS > | text ST
 
 CSI Ps q  Load LEDs (DECLL), VT100.
             Ps = 0  -> Clear all LEDS (default).
@@ -1818,12 +1818,12 @@ CSI Ps; Pf; Pb, }
             Ps = 7  -> bold blink
             Ps = 8  -> reverse underline
             Ps = 9  -> reverse blink
-            Ps = 1 0 -> bold underline blink
-            Ps = 1 1 -> bold reverse underline
-            Ps = 1 2 -> bold reverse blink
-            Ps = 1 3 -> bold underline blink
-            Ps = 1 4 -> reverse underline blink
-            Ps = 1 5 -> bold reverse underline blink
+            Ps = 1 0  -> underline blink
+            Ps = 1 1  -> bold reverse underline
+            Ps = 1 2  -> bold reverse blink
+            Ps = 1 3  -> bold underline blink
+            Ps = 1 4  -> reverse underline blink
+            Ps = 1 5  -> bold reverse underline blink
 
 CSI Ps ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.

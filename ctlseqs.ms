@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.705 2023/12/31 17:11:29 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.711 2024/01/12 00:25:53 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2022,2023 by Thomas E. Dickey
+.\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #389
-.ds RF 2023/12/31
+.ds LF Patch #390
+.ds RF 2024/01/11
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -125,6 +125,12 @@
 \\$*
 .br
 ..
+.\" Fixed-pitch font
+.ie n .ds CW R
+.el   \{
+.ie \n(.g .ds CW CR
+.el       .ds CW CW
+.\}
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g \{\
 .ds `` \(lq
@@ -359,7 +365,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2023)
+invisible-island.net (2006-2024)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -2029,8 +2035,12 @@ used to work around language limitations of C#.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*q
-\*(Ps = \*0 \(-> Report \fI\*(xt\fP name and version (XTVERSION).
-The response is a DSR sequence identifying the version: \*(Dc\*>\*|text \*(ST
+.br
+  \*(Ps = \*0 \(-> Report \fI\*(xt\fP name and version (XTVERSION).
+.br
+The response is a DSR sequence identifying the version:
+.br
+  \*(Dc\*>\*|text \*(ST
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*q
 Load LEDs (DECLL), VT100.
@@ -2541,12 +2551,12 @@ Attribute combinations:
   \*(Ps = \*7 \(-> bold blink
   \*(Ps = \*8 \(-> reverse underline
   \*(Ps = \*9 \(-> reverse blink
-  \*(Ps = \*10 \(-> bold underline blink
-  \*(Ps = \*11 \(-> bold reverse underline
-  \*(Ps = \*12 \(-> bold reverse blink
-  \*(Ps = \*13 \(-> bold underline blink
-  \*(Ps = \*14 \(-> reverse underline blink
-  \*(Ps = \*15 \(-> bold reverse underline blink
+  \*(Ps = \*1\*0 \(-> underline blink
+  \*(Ps = \*1\*1 \(-> bold reverse underline
+  \*(Ps = \*1\*2 \(-> bold reverse blink
+  \*(Ps = \*1\*3 \(-> bold underline blink
+  \*(Ps = \*1\*4 \(-> reverse underline blink
+  \*(Ps = \*1\*5 \(-> bold reverse underline blink
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*}
@@ -2905,7 +2915,7 @@ add mod1 = Alt_L
 keycode 115 = Meta_L
 clear mod3
 add mod3 = Meta_L
-.ft 1
+.ft R
 .DE
 .LP
 The \fBmetaSendsEscape\fP resource
@@ -3589,7 +3599,7 @@ are defined in \fIxcharmouse.h\fP as follows:
 #define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
 #define SET_PIXEL_POSITION_MOUSE    1016
-.ft 1
+.ft R
 .DE
 .br
 The motion reporting modes are strictly \fI\*(xt\fP extensions, and are not
@@ -4424,7 +4434,7 @@ On the other hand, ECMA-48 was not intended to be all-encompassing.
 Quoting from the second edition:
 .in +4n
 .sp
-.ft C
+.ft CW
 Full conformance to a standard means that all its requirements are met.
 For such conformance to be unique the standard must contain no options.
 This is typically the case for hardware standards, for instance Standard
@@ -4469,7 +4479,7 @@ does not list color as a feature of the SGR sequence (page 49).
 .IP
 In Appendix A, it mentions ECMA-48:
 .in +4n
-.ft C
+.ft CW
 .sp
 (8) This document represents a coordinated effort to develop a single technical
 standard in the United States and Europe (see ECMA-48 standard entitled
@@ -4484,7 +4494,7 @@ appears in the original document:
 .in +4n
 .hy 0
 .sp
-.ft C
+.ft CW
 ANSI X3.64-1979, and ECMA-48,
 \fIAdditional Controls for Character-Imaging I/O Devices\fP,
 were developed in parallel, with close liaison.
@@ -4649,7 +4659,7 @@ but that is coincidental.
 The latter was introduced in X10.4 (December 1986):
 .iP
 .RS
-.ft C
+.ft CW
 .na
 Most Dec Private mode settings can be saved away internally using \\E[?\fIn\fPs,
 where \fIn\fP is the same number to set or reset the Dec Private mode.
@@ -4712,7 +4722,7 @@ That is implied by the description's mention of \fIHFT\fP:
 .iP
 .RS
 .na
-.ft C
+.ft CW
 The aixterm command provides a standard terminal type for programs that
 do not interact directly with Enhanced X-Windows.
 This command provides

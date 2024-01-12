@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.898 2023/11/24 11:59:11 tom Exp $
+.\" $XTermId: xterm.man,v 1.899 2024/01/11 22:15:18 tom Exp $
 .\"
-.\" Copyright 1996-2022,2023 by Thomas E. Dickey
+.\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1391,7 +1391,7 @@ which it did not open for its own use.
 It is possible (though probably not portable) to have an application
 which passes an open file descriptor down to \fI\*n\fP past the
 initialization or the \fB\-S\fP option to a process running in the \fI\*n\fP.
-.SS Old Options
+.SS "Old Options"
 The following command line arguments are provided for compatibility with
 older versions.
 They may not be supported in the next release as the
@@ -1429,7 +1429,7 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
-.SS X Toolkit Options
+.SS "X Toolkit Options"
 The following standard \fIX Toolkit\fP command line arguments are commonly used
 with \fI\*n\fP:
 .TP 8
@@ -1568,7 +1568,7 @@ parsed and used when needed.
 .PP
 Application specific resources
 (e.g., \*(``\fB__default_class__.\fINAME\fR\*('') follow:
-.SS Application Resources
+.SS "Application Resources"
 .TP 8
 .B "backarrowKeyIsErase\fP (class\fB BackarrowKeyIsErase\fP)"
 Tie the VT\fIxxx\fP \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
@@ -2224,7 +2224,7 @@ then \fI\*n\fP inserts the icon title at that point rather
 than prepending the string to the icon title.
 (Only the first \*(``%s\*('' is used).
 .\"
-.SS VT100 Widget Resources
+.SS "VT100 Widget Resources"
 The following resources are specified as part
 of the \fIvt100\fP widget (class \fIVT100\fP).
 They are specified by patterns such as
@@ -5631,7 +5631,7 @@ This matches every font, the X library automatically chooses fonts with
 proper charsets.
 The \fBximFont\fP resource is provided to override this default font setting.
 .\"
-.SS Tek4014 Widget Resources
+.SS "Tek4014 Widget Resources"
 The following resources are specified
 as part of the \fItek4014\fP widget (class \fITek4014\fP).
 These are specified by patterns
@@ -5669,7 +5669,7 @@ The default is \*(``large\*(''.
 .B "width\fP (class\fB Width\fP)"
 Specifies the width of the Tektronix window in pixels.
 .\"
-.SS Menu Resources
+.SS "Menu Resources"
 The resources that may be specified for the various menus are described in
 the documentation for the \fIAthena\fP \fBSimpleMenu\fP widget.
 The name and classes of the entries in each of the menus are listed below.
@@ -5991,7 +5991,7 @@ This entry invokes the \fBset\-terminal\-type(\fIvt\fB)\fR action.
 .B "tekhide\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBset\-visibility(\fItek,toggle\fB)\fR action.
 .\"
-.SS Scrollbar Resources
+.SS "Scrollbar Resources"
 The following resources are useful when specified for the \fIAthena\fP Scrollbar
 widget:
 .TP 8
@@ -6179,7 +6179,7 @@ see
 for details).
 .
 .
-.SH SELECT/PASTE
+.SH "SELECT/PASTE"
 X clients provide select and paste support by responding to requests conveyed
 by the X server.
 The X server holds data in \*(``atoms\*('' which correspond
@@ -6273,7 +6273,7 @@ As the second argument to commands taking two arguments
 As a means of obtaining data when there is a primary selection
 and the user does not want to disturb it
 .
-.SS Selection Targets
+.SS "Selection Targets"
 The different types of data which are passed depend on what the receiving
 client asks for.
 These are termed \fIselection targets\fP.
@@ -6331,7 +6331,7 @@ u,i,s
 .fi
 .RE
 .
-.SS Mouse Protocol
+.SS "Mouse Protocol"
 Applications can send escape sequences to \fI\*n\fP to cause it to send
 escape sequences back to the computer when you press a pointer button,
 or even (depending on which escape sequence) send escape sequences back
@@ -8190,7 +8190,7 @@ The Tektronix window also has the following action:
 .B "gin\-press(\fIl/L/m/M/r/R\fP)"
 This action sends the indicated graphics input code.
 .
-.SS Default Key Bindings
+.SS "Default Key Bindings"
 The default bindings in the VT\fIxxx\fP window use the \fBSELECT\fP token,
 which is set by the \fBselectToClipboard\fP resource.
 These are for the \fIvt100\fP widget:
@@ -8263,7 +8263,7 @@ These are for the \fItek4014\fP widget:
            Shift ~Meta<Btn3Down>: \fBgin\-press\fP(R) \\n\\\&
                  ~Meta<Btn3Down>: \fBgin\-press\fP(r)
 .NE
-.SS Custom Key Bindings
+.SS "Custom Key Bindings"
 You can modify the \fBtranslations\fP resource by overriding parts
 of it, or merging your resources with it.
 .PP
@@ -8356,7 +8356,7 @@ keys for entering commonly-typed words:
         <Key>F20:       \fBstring\fP("print ") \\n\\\&
                         \fBinsert\-selection\fP(\fBPRIMARY\fP, \fBCUT_BUFFER0\fP)
 .NE
-.SS Default Scrollbar Bindings
+.SS "Default Scrollbar Bindings"
 Key bindings are normally associated with the \fIvt100\fP or \fItek4014\fP
 widgets which act as terminal emulators.
 \fI\*N\fP's scrollbar (and toolbar if it is configured) are separate widgets.
@@ -8467,7 +8467,7 @@ Most of these operations are standardized, from either the DEC or Tektronix
 terminals, or from more widely used standards such as ISO-6429.
 .PP
 A few examples of usage are given in this section.
-.SS Window and Icon Titles
+.SS "Window and Icon Titles"
 Some scripts use \fBecho\fP with options \fB\-e\fP and \fB\-n\fP to tell
 the shell to interpret the string \*(``\\e\*('' as
 the \fIescape\fP character and
@@ -8509,7 +8509,7 @@ printf \*(AQ\\033]1;%s\\033\\\\\*(AQ "Hello world!"
 printf \*(AQ\\033]1;%s\\007\*(AQ "Hello world!"
 .NE
 .
-.SS Special Keys
+.SS "Special Keys"
 \fI\*N\fP, like any VT100-compatible terminal emulator,
 has two modes for the \fIspecial keys\fP (cursor-keys, numeric keypad,
 and certain function-keys):
@@ -8567,7 +8567,7 @@ vi\-up\-line\-or\-history
 .NE
 .
 .
-.SS Changing Colors
+.SS "Changing Colors"
 A few shell programs provide the ability for users to add color and other
 video attributes to the shell prompt strings.
 Users can do this by setting \fB$PS1\fP (the primary prompt string).
@@ -8607,7 +8607,7 @@ and cannot be easily moved between different user environments.
 .
 .SH ENVIRONMENT
 \fI\*N\fP sets several environment variables.
-.SS System Independent
+.SS "System Independent"
 Some variables are used on every system:
 .TP 5
 .B DISPLAY
@@ -8649,7 +8649,7 @@ build \fI\*n\fP, followed by
 The patch number is also part of the response to a Secondary Device Attributes
 (DA) control sequence (see \fIXterm Control Sequences\fP).
 .
-.SS System Dependent
+.SS "System Dependent"
 .
 Depending on your system configuration, \fI\*n\fP may also set the
 following:
@@ -8710,10 +8710,10 @@ screen size.
 may be defined to a nonstandard location using the configure script.
 .\"
 .
-.SH WINDOW PROPERTIES
+.SH "WINDOW PROPERTIES"
 .
 In the output from \fBxprop\fP(1), there are several properties.
-.SS Properties set by X Toolkit
+.SS "Properties set by X Toolkit"
 .TP 5
 .B WM_CLASS
 This shows the \fIinstance name\fP and the X resource \fIclass\fP,
@@ -8756,7 +8756,7 @@ WM_LOCALE_NAME(STRING) = "en_US.UTF\-8"
 This holds the window title, normally at the top of \fI\*n\fP's window.
 It is set via the \fBtitle\fP resource.
 Applications can change this using control sequences.
-.SS Properties set by Xterm
+.SS "Properties set by Xterm"
 \fIX Toolkit\fP does not manage EWMH properties.
 \*N does this directly.
 .TP 5
@@ -8768,7 +8768,7 @@ stores the title string.
 .TP 5
 .B _NET_WM_PID
 stores the process identifier for \fI\*n\fP's display.
-.SS Properties used by Xterm
+.SS "Properties used by Xterm"
 .TP 5
 .B _NET_SUPPORTED
 \*N checks this property on the \fIsupporting window\fP
@@ -8833,7 +8833,7 @@ If you do not do this,
 the directory in which \fI\*n\fP's pixmap icon files are installed.
 .
 .
-.SH ERROR MESSAGES
+.SH "ERROR MESSAGES"
 Most of the fatal error messages from \fI\*n\fP use the following format:
 .NS
 \*n: Error \fIXXX\fP, errno \fIYYY\fP: \fIZZZ\fR
@@ -9071,6 +9071,28 @@ pick and choose emulator widgets and stick them into a single control widget.
 .PP
 There needs to be a dialog box to allow entry of the Tek COPY file name.
 .
+.SH AUTHORS
+Far too many people.
+.PP
+These contributed to the X Consortium:
+Loretta Guarino Reid (DEC-UEG-WSL),
+Joel McCormack (DEC-UEG-WSL), Terry Weissman (DEC-UEG-WSL),
+Edward Moy (Berkeley), Ralph R.\& Swick (MIT-Athena),
+Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
+Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
+Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
+Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
+.PP
+Beginning with XFree86, there were far more identifiable contributors.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 243 in June 2022.
+Keep in mind these:
+Jason Bacon,
+Jens Schweikhardt,
+Ross Combs,
+Stephen P.\& Wall,
+David Wexelblat, and
+Thomas Dickey (invisible\-island.net).
+.
 .
 .SH "SEE ALSO"
 .na
@@ -9132,25 +9154,3 @@ https://www.irif.fr/~jch/software/UTF8_STRING/
 An Xorg developer removed that part of the documentation in 2004
 when incorporating other work from XFree86 into Xorg.
 The feature is still supported in Xorg, though undocumented as of 2019.
-.
-.SH AUTHORS
-Far too many people.
-.PP
-These contributed to the X Consortium:
-Loretta Guarino Reid (DEC-UEG-WSL),
-Joel McCormack (DEC-UEG-WSL), Terry Weissman (DEC-UEG-WSL),
-Edward Moy (Berkeley), Ralph R.\& Swick (MIT-Athena),
-Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
-Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
-Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
-Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
-.PP
-Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 243 in June 2022.
-Keep in mind these:
-Jason Bacon,
-Jens Schweikhardt,
-Ross Combs,
-Stephen P.\& Wall,
-David Wexelblat, and
-Thomas Dickey (invisible\-island.net).
