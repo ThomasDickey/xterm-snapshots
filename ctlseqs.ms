@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.711 2024/01/12 00:25:53 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.712 2024/01/16 16:05:13 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #390
-.ds RF 2024/01/11
+.ds RF 2024/01/16
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -898,11 +898,11 @@ VT510 adds these:
   \*(Dc\*0\*!\*u\*(Dq\*4\*(ST	\(-> DEC Hebrew
   \*(Dc\*0\*!\*u\*%\*0\*(ST	\(-> DEC Turkish
   \*(Dc\*0\*!\*u\*&\*4\*(ST	\(-> DEC Cyrillic
-  \*(Dc\*0\*!\*u\*(cB\*(ST	\(-> ISO Latin-2 Supplemental
-  \*(Dc\*0\*!\*u\*F\*(ST	\(-> ISO Greek Supplemental
-  \*(Dc\*0\*!\*u\*H\*(ST	\(-> ISO Hebrew Supplemental
-  \*(Dc\*0\*!\*u\*M\*(ST	\(-> ISO Latin-5 Supplemental
-  \*(Dc\*0\*!\*u\*L\*(ST	\(-> ISO Latin-Cyrillic
+  \*(Dc\*1\*!\*u\*(cB\*(ST	\(-> ISO Latin-2 Supplemental
+  \*(Dc\*1\*!\*u\*F\*(ST	\(-> ISO Greek Supplemental
+  \*(Dc\*1\*!\*u\*H\*(ST	\(-> ISO Hebrew Supplemental
+  \*(Dc\*1\*!\*u\*M\*(ST	\(-> ISO Latin-5 Supplemental
+  \*(Dc\*1\*!\*u\*L\*(ST	\(-> ISO Latin-Cyrillic
 .sp 0.3
 VT520 accepts a few others (undocumented); xterm adds these:
   \*(Dc\*0\*!\*u\*(cB\*(ST	\(-> United States (USASCII).

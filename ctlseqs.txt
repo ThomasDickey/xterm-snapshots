@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #390 (2024/01/11)
+               updated for XTerm Patch #390 (2024/01/16)
 
 
 
@@ -425,11 +425,11 @@ DCS Ps! u Pt ST
             DCS 0 ! u " 4 ST  -> DEC Hebrew
             DCS 0 ! u % 0 ST  -> DEC Turkish
             DCS 0 ! u & 4 ST  -> DEC Cyrillic
-            DCS 0 ! u B ST    -> ISO Latin-2 Supplemental
-            DCS 0 ! u F ST    -> ISO Greek Supplemental
-            DCS 0 ! u H ST    -> ISO Hebrew Supplemental
-            DCS 0 ! u M ST    -> ISO Latin-5 Supplemental
-            DCS 0 ! u L ST    -> ISO Latin-Cyrillic
+            DCS 1 ! u B ST    -> ISO Latin-2 Supplemental
+            DCS 1 ! u F ST    -> ISO Greek Supplemental
+            DCS 1 ! u H ST    -> ISO Hebrew Supplemental
+            DCS 1 ! u M ST    -> ISO Latin-5 Supplemental
+            DCS 1 ! u L ST    -> ISO Latin-Cyrillic
           VT520 accepts a few others (undocumented); xterm adds these:
             DCS 0 ! u B ST    -> United States (USASCII).
             DCS 0 ! u 0 ST    -> DEC Special Character and Line Drawing

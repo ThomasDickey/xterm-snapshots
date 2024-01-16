@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1118 2023/12/31 20:56:46 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1119 2024/01/16 15:36:59 tom Exp $ */
 
 /*
  * Copyright 1999-2022,2023 by Thomas E. Dickey
@@ -1717,9 +1717,7 @@ typedef unsigned char IAttr;	/* at least 8 bits */
 #define NARROW_ICHAR    0xffff
 #if OPT_WIDER_ICHAR
 #define is_NON_CHAR(c)          (((c) >= 0xffd0 && (c) <= 0xfdef) || \
-                                 ((c) >= 0xfffe && (c) <= 0xffff) || \
-                                 ((c) > 0xffff && \
-                                  (((c) >> 1) & 0xffff) == 0xffff))
+                                 (((c) & 0xffff) >= 0xfffe))
 #define is_UCS_SPECIAL(c)       ((c) >= 0xfff0 && (c) <= 0xffff)
 #define WIDEST_ICHAR    0x1fffff
 typedef unsigned IChar;         /* for 8-21 bit characters */

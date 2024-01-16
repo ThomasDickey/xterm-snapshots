@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.913 2023/11/24 00:58:37 tom Exp $ */
+/* $XTermId: main.c,v 1.914 2024/01/12 01:19:20 Casper.Dik Exp $ */
 
 /*
  * Copyright 2002-2022,2023 by Thomas E. Dickey
@@ -3911,13 +3911,18 @@ xtermTrimEnv(void)
 			my_var[dstlen] = '\0';
 			xtermUnsetenv(my_var);
 			free(my_var);
+			/* When removing an entry, check the same slot again. */
+			j--;
 		    }
 		    break;
 		}
 	    } else if (dstlen == srclen &&
 		       !strncmp(environ[j], table[k].name, srclen)) {
-		if (table[k].trim)
+		if (table[k].trim) {
 		    xtermUnsetenv(table[k].name);
+		    /* When removing an entry, check the same slot again. */
+		    j--;
+		}
 		break;
 	    }
 	}
