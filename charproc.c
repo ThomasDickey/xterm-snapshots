@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2011 2024/01/02 00:08:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2012 2024/01/17 00:06:37 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1849,20 +1849,11 @@ static const struct {
 
 #if OPT_DEC_RECTOPS
 static char *
-encode_scs(TScreen *screen, DECNRCM_codes value, int *psize)
+encode_scs(DECNRCM_codes value, int *psize)
 {
     static char buffer[3];
     Cardinal n;
     char *result = buffer;
-
-#if OPT_WIDE_CHARS
-    if (screen->wide_chars && (screen->utf8_mode || screen->utf8_nrc_mode)) {
-	if (value == nrc_ASCII)
-	    value = nrc_ISO_Latin_1_Supp;
-    }
-#else
-    (void) screen;
-#endif
 
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (scs_table[n].result == value) {
@@ -5416,7 +5407,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, ';');
 		    for (item = 0; item < NUM_GSETS; ++item) {
 			int ps;
-			char *temp = encode_scs(screen, screen->gsets[item], &ps);
+			char *temp = encode_scs(screen->gsets[item], &ps);
 			while (*temp != '\0') {
 			    reply_char(count, *temp++);
 			}
@@ -5452,7 +5443,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECRQUPSS\n"));
 	    if (screen->vtXX_level >= 3) {
 		int psize = 0;
-		char *encoded = encode_scs(screen, screen->gsets_upss, &psize);
+		char *encoded = encode_scs(screen->gsets_upss, &psize);
 		init_reply(ANSI_DCS);
 		count = 0;
 		reply_char(count, psize ? '1' : '0');

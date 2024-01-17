@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1119 2024/01/16 15:36:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1120 2024/01/17 00:20:09 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

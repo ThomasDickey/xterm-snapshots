@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.914 2024/01/12 01:19:20 Casper.Dik Exp $ */
+/* $XTermId: main.c,v 1.915 2024/01/17 00:19:47 tom Exp $ */
 
 /*
- * Copyright 2002-2022,2023 by Thomas E. Dickey
+ * Copyright 2002-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
