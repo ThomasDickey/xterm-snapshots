@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.944 2023/12/25 21:16:35 tom Exp $ */
+/* $XTermId: util.c,v 1.945 2024/02/08 09:14:14 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4220,7 +4220,7 @@ drawXtermText(XTermDraw * params,
 		XftFont *tempFont = 0;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
-		if (xtermIsDecGraphic(ch) || ch == 0) {
+		if (xtermIsInternalCs(ch) || ch == 0) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
 		     * in cells 0-31.  Assume this (we cannot inspect the
@@ -4247,7 +4247,7 @@ drawXtermText(XTermDraw * params,
 		     */
 		    if_OPT_WIDE_CHARS(screen, {
 			unsigned part = ucs2dec(screen, ch);
-			if (xtermIsDecGraphic(part)) {
+			if (xtermIsInternalCs(part)) {
 			    if (screen->force_box_chars
 				|| screen->broken_box_chars) {
 				SetMissing("case 2");
@@ -4285,7 +4285,7 @@ drawXtermText(XTermDraw * params,
 #else
 		XTermXftFonts *currData = ndata;
 #define CURR_TEMP XftFp(currData)
-		if (xtermIsDecGraphic(ch)) {
+		if (xtermIsInternalCs(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
 		     * in cells 1-31.  Check for this, and attempt to fill in

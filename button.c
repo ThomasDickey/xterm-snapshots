@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.657 2023/10/22 18:28:34 tom Exp $ */
+/* $XTermId: button.c,v 1.658 2024/02/08 09:08:00 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1670,6 +1670,8 @@ DECtoASCII(unsigned ch)
     if (xtermIsDecGraphic(ch)) {
 	ch = CharOf("###########+++++##-##++++|######"[ch]);
 	/*           01234567890123456789012345678901 */
+    } else {
+	ch = '?';		/* DEC Technical has no mapping */
     }
     return ch;
 }
@@ -1715,7 +1717,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 		AddChar(&buffer, &used, offset, CharOf(value));
 	    } else {
 		unsigned eqv = ucs2dec(screen, value);
-		if (xtermIsDecGraphic(eqv)) {
+		if (xtermIsInternalCs(eqv)) {
 		    AddChar(&buffer, &used, offset, DECtoASCII(eqv));
 		} else {
 		    eqv = AsciiEquivs(value);
@@ -2572,7 +2574,7 @@ removeControls(XtermWidget xw, char *value)
 		if ((n == VMIN || n == VTIME) && !(data.c_lflag & ICANON))
 		    continue;
 		switch (n) {
-		/* POSIX */
+		    /* POSIX */
 		case VEOF:
 		case VEOL:
 		case VERASE:
@@ -2582,7 +2584,7 @@ removeControls(XtermWidget xw, char *value)
 		case VSTART:
 		case VSTOP:
 		case VSUSP:
-		/* system-dependent */
+		    /* system-dependent */
 #ifdef VDISCARD
 		case VDISCARD:
 #endif

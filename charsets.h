@@ -1,9 +1,9 @@
 /*
- * $XTermId: charsets.h,v 1.28 2023/12/25 18:57:23 tom Exp $
+ * $XTermId: charsets.h,v 1.29 2024/02/08 08:52:16 tom Exp $
  */
 
 /*
- * Copyright 2023 by Thomas E. Dickey
+ * Copyright 2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,7 +54,9 @@
  * Note: the "figure A-xx" comments refer to EK-PPLV2-PM.
  */
 
+#ifndef PUA
 #define PUA(n) (0xEEEE + (n))
+#endif
 #define UNDEF  0x2426		/* rendered as a backwards "?" */
 
 /*
@@ -176,7 +178,7 @@
 	} \
 	end_CODEPAGE()
 
-#define unmap_ISO_Latin_1(code,dft)	/* nothing */
+#define unmap_ISO_Latin_1(code,dft) /* nothing */
 
 #define map_NRCS_Dutch(code) \
 	switch (code) { \
@@ -191,7 +193,7 @@
 	    MAP(0x7E, XK_acute)		/* U+00B4 ACUTE ACCENT */ \
 	}
 
-#define unmap_NRCS_Dutch(code,dft)	/* nothing */
+#define unmap_NRCS_Dutch(code,dft) /* nothing */
 
 #define map_NRCS_Finnish(code) \
 	switch (code) { \
@@ -206,7 +208,7 @@
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Finnish(code,dft)	/* nothing */
+#define unmap_NRCS_Finnish(code,dft) /* nothing */
 
 #define map_NRCS_French(code) \
 	switch (code) { \
@@ -221,7 +223,7 @@
 	    MAP(0x7E, XK_diaeresis)	/* U+00A8 DIAERESIS */ \
 	}
 
-#define unmap_NRCS_French(code,dft)	/* nothing */
+#define unmap_NRCS_French(code,dft) /* nothing */
 
 #define map_NRCS_French_Canadian(code) \
 	switch (code) { \
@@ -237,7 +239,7 @@
 	    MAP(0x7E, XK_ucircumflex)	/* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
 	}
 
-#define unmap_NRCS_French_Canadian(code,dft)	/* nothing */
+#define unmap_NRCS_French_Canadian(code,dft) /* nothing */
 
 #define map_NRCS_German(code) \
 	switch (code) { \
@@ -251,7 +253,7 @@
 	    MAP(0x7E, XK_ssharp)	/* U+00DF LATIN SMALL LETTER SHARP S */ \
 	}
 
-#define unmap_NRCS_German(code,dft)	/* nothing */
+#define unmap_NRCS_German(code,dft) /* nothing */
 
 #define map_NRCS_Italian(code) \
 	switch (code) { \
@@ -267,7 +269,7 @@
 	    MAP(0x7E, XK_igrave)	/* U+00EC LATIN SMALL LETTER I WITH GRAVE */ \
 	}
 
-#define unmap_NRCS_Italian(code,dft)	/* nothing */
+#define unmap_NRCS_Italian(code,dft) /* nothing */
 
 #define map_NRCS_Norwegian_Danish(code) \
 	switch (code) { \
@@ -283,7 +285,7 @@
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Norwegian_Danish(code,dft)	/* nothing */
+#define unmap_NRCS_Norwegian_Danish(code,dft) /* nothing */
 
 #define map_NRCS_Portuguese(code) \
 	switch (code) { \
@@ -295,7 +297,7 @@
 	    MAP(0x7D, XK_otilde)	/* U+00F5 LATIN SMALL LETTER O WITH TILDE */ \
 	}
 
-#define unmap_NRCS_Portuguese(code,dft)		/* nothing */
+#define unmap_NRCS_Portuguese(code,dft) /* nothing */
 
 #define map_NRCS_Spanish(code) \
 	switch (code) { \
@@ -309,7 +311,7 @@
 	    MAP(0x7D, XK_ccedilla)	/* U+00E7 LATIN SMALL LETTER C WITH CEDILLA */ \
 	}
 
-#define unmap_NRCS_Spanish(code,dft)	/* nothing */
+#define unmap_NRCS_Spanish(code,dft) /* nothing */
 
 #define map_NRCS_Swedish(code) \
 	switch (code) { \
@@ -325,7 +327,7 @@
 	    MAP(0x7E, XK_udiaeresis)	/* U+00FC LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Swedish(code,dft)	/* nothing */
+#define unmap_NRCS_Swedish(code,dft) /* nothing */
 
 #define map_NRCS_Swiss(code) \
 	switch (code) { \
@@ -343,7 +345,7 @@
 	    MAP(0x7E, XK_ucircumflex)	/* U+00FB LATIN SMALL LETTER U WITH CIRCUMFLEX */ \
 	}
 
-#define unmap_NRCS_Swiss(code,dft)	/* nothing */
+#define unmap_NRCS_Swiss(code,dft) /* nothing */
 
 /*
  * Unlike NRCS, which splices a few characters onto ISO-8859-1, the
@@ -2231,7 +2233,7 @@
 	    UNI(0x7a, 0x05EA)	/* HEBREW LETTER TAV */ \
 	}
 
-#define unmap_NRCS_Hebrew(code,dft)	/* nothing */
+#define unmap_NRCS_Hebrew(code,dft) /* nothing */
 
 /*
  * figure A-26 "DEC 7-Bit Turkish Character Set"
@@ -2251,7 +2253,7 @@
 	    UNI(0x7e, 0x00FC)	/* LATIN SMALL LETTER U WITH DIAERESIS */ \
 	}
 
-#define unmap_NRCS_Turkish(code,dft)	/* nothing */
+#define unmap_NRCS_Turkish(code,dft) /* nothing */
 #else
 #define map_DEC_Cyrillic(code)	/* nothing */
 #define unmap_DEC_Cyrillic(code,dft) dft

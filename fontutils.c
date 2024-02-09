@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.780 2023/11/24 00:59:16 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.781 2024/02/09 00:25:11 tom Exp $ */
 
 /*
- * Copyright 1998-2022,2023 by Thomas E. Dickey
+ * Copyright 1998-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3991,6 +3991,39 @@ xtermDrawBoxChar(XTermDraw * params,
 	SEG(  0,	  2*BOX_HIGH/3,	  CHR_WIDE,   2*BOX_HIGH/3),
 	SEG(  0,	    MID_HIGH,	  CHR_WIDE,	MID_HIGH),
 	-1
+    }, sigma_1[] =
+    {
+	SEG(BOX_WIDE,	    MID_HIGH,	  BOX_WIDE/2,	MID_HIGH),
+	SEG(BOX_WIDE/2,	    MID_HIGH,	  BOX_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_2[] =
+    {
+	SEG(BOX_WIDE,	    MID_HIGH,	  BOX_WIDE/2,	MID_HIGH),
+	SEG(BOX_WIDE/2,	    MID_HIGH,	  BOX_WIDE,	0),
+	-1
+    }, sigma_3[] =
+    {
+	SEG(  0,	    0,	  	  BOX_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_4[] =
+    {
+	SEG(  0,	    BOX_HIGH,	  BOX_WIDE,	0),
+	-1
+    }, sigma_5[] =
+    {
+	SEG(  0,	    MID_HIGH,	  MID_WIDE,	MID_HIGH),
+	SEG(MID_WIDE,	    MID_HIGH,	  MID_WIDE,	BOX_HIGH),
+	-1
+    }, sigma_6[] =
+    {
+	SEG(  0,	    MID_HIGH,	  MID_WIDE,	MID_HIGH),
+	SEG(MID_WIDE,	    MID_HIGH,	  MID_WIDE,	0),
+	-1
+    }, sigma_7[] =
+    {
+	SEG(  0,	    0,		  MID_WIDE,	MID_HIGH),
+	SEG(  0,	    BOX_HIGH,	  MID_WIDE,	MID_HIGH),
+	-1
     };
 
     static const struct {
@@ -4030,6 +4063,14 @@ xtermDrawBoxChar(XTermDraw * params,
 	{ 0, not_equal_to },		/* 1D */
 	{ 0, 0 },			/* 1E LB */
 	{ 0, 0 },			/* 1F bullet */
+	{ 0, 0 },			/* 20 space */
+	{ 3, sigma_1 },			/* PUA(0) */
+	{ 3, sigma_2 },			/* PUA(1) */
+	{ 3, sigma_3 },			/* PUA(2) */
+	{ 3, sigma_4 },			/* PUA(3) */
+	{ 3, sigma_5 },			/* PUA(4) */
+	{ 3, sigma_6 },			/* PUA(5) */
+	{ 3, sigma_7 },			/* PUA(6) */
     };
     /* *INDENT-ON* */
 
@@ -4085,7 +4126,7 @@ xtermDrawBoxChar(XTermDraw * params,
 #endif
 
     /*
-     * Line-drawing characters show use the full (scaled) cellsize, while
+     * Line-drawing characters display using the full (scaled) cellsize, while
      * other characters should be shifted to center them vertically.
      */
     if (!xftords) {
@@ -4094,6 +4135,11 @@ xtermDrawBoxChar(XTermDraw * params,
 	} else {
 	    y += ScaleShift(screen);
 	}
+    }
+
+    if (xtermIsDecTechnical(ch)) {
+	ch -= XTERM_PUA;
+	ch += 33;
     }
 
     TRACE(("DRAW_BOX(%02X) cell %dx%d at %d,%d%s\n",

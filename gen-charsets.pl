@@ -1,9 +1,9 @@
 #! /usr/bin/env perl
-# $XTermId: gen-charsets.pl,v 1.35 2023/12/25 18:46:14 tom Exp $
+# $XTermId: gen-charsets.pl,v 1.37 2024/02/09 01:11:52 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2018,2023 by Thomas E. Dickey
+# Copyright 2018-2023,2024 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -67,7 +67,9 @@ our $note_1 = "\
 #define included_charsets_h 1";
 
 our $note_2 = "\
+#ifndef PUA
 #define PUA(n) (0xEEEE + (n))
+#endif
 #define UNDEF  0x2426\t\t/* rendered as a backwards \"?\" */";
 
 our $note_3 = "\

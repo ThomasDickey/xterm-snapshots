@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.142 2022/10/23 14:47:45 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.144 2024/02/09 01:11:17 tom Exp $ */
 
 /*
- * Copyright 1998-2021,2022 by Thomas E. Dickey
+ * Copyright 1998-2022,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -142,7 +142,10 @@ extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
 extern void xtermSaveVTFonts (XtermWidget /* xw */);
 #endif
 
+/* checks for internal charset codes */
+#define xtermIsDecTechnical(ch)	((ch) >= XTERM_PUA && (ch) <= XTERM_PUA + 6)
 #define xtermIsDecGraphic(ch)	((ch) > 0 && (ch) < 32)
+#define xtermIsInternalCs(ch)	(xtermIsDecGraphic(ch) || xtermIsDecTechnical(ch))
 
 #if OPT_RENDERFONT
 extern Boolean maybeXftCache(XtermWidget /* xw */, XftFont * /* font */);
