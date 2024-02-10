@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.38 2024/01/01 23:29:39 tom Exp $
+-- $XTermId: THANKS,v 1.39 2024/02/10 01:24:54 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -157,6 +157,7 @@ Martin Hostettler
 Martin Pirker
 Martin Tournoij
 Matthew Green
+Matthew Martin
 Matthias Baake
 Matthias Scheler
 Matthieu Herrb

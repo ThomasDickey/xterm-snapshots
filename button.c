@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.658 2024/02/08 09:08:00 tom Exp $ */
+/* $XTermId: button.c,v 1.661 2024/02/10 01:18:12 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4002,6 +4002,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 						indexed)) != 0) {
 		    int len = (int) strlen(search);
 		    int col;
+		    int offset;
 		    int best_col = -1;
 		    int best_len = -1;
 
@@ -4010,12 +4011,13 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 		    endc->row = 0;
 		    endc->col = 0;
 
-		    for (col = 0; indexed[col] < len; ++col) {
+		    for (col = 0; (offset = indexed[col]) < len; ++col) {
 			if (regexec(&preg,
-				    search + indexed[col],
-				    (size_t) 1, &match, 0) == 0) {
-			    int start_inx = (int) (match.rm_so + indexed[col]);
-			    int finis_inx = (int) (match.rm_eo + indexed[col]);
+				    search + offset,
+				    (size_t) 1, &match,
+				    col ? REG_NOTBOL : 0) == 0) {
+			    int start_inx = (int) (match.rm_so + offset);
+			    int finis_inx = (int) (match.rm_eo + offset);
 			    int start_col = indexToCol(indexed, len, start_inx);
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
@@ -4042,11 +4044,10 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			       indexed[best_col],
 			       indexed[best_nxt]));
 			TRACE(("matched:%d:%s\n",
-			       indexed[best_nxt] + 1 -
+			       indexed[best_nxt] -
 			       indexed[best_col],
 			       visibleChars((Char *) (search + indexed[best_col]),
-					    (unsigned) (indexed[best_nxt] +
-							1 -
+					    (unsigned) (indexed[best_nxt] -
 							indexed[best_col]))));
 		    }
 		    free(search);
