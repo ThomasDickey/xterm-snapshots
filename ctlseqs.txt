@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #390 (2024/01/16)
+               updated for XTerm Patch #390 (2024/02/19)
 
 
 
@@ -3399,7 +3399,7 @@ o   ANSI X3.64-1979 does not list color as a feature of the SGR sequence
         ANSI X3.64-1979, and ECMA-48, Additional Controls for Character-
         Imaging I/O Devices, were developed in parallel, with close
         liaison.  ISO DP 6429, Additional Control Functions for
-        Character-Imaging Devices, was developed as a synthesis of X3.04
+        Character-Imaging Devices, was developed as a synthesis of X3.64
         and ECMA-48.  During this process, some control functions as
         well as additional selective parameters were added.  Except for
         point 1 below, X3.64 is a subset of ISO 6429.  Although the two
