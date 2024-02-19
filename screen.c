@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.650 2024/01/01 19:59:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.651 2024/02/13 22:10:51 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -948,7 +948,7 @@ ScrnWriteText(XtermWidget xw,
 		: (Char) str[n];
 	}
 #endif /* OPT_DEC_RECTOPS */
-	chars[n] = (flags & INVISIBLE) ? ' ' : str[n];
+	chars[n] = str[n];
     }
 
 #if OPT_BLINK_TEXT
@@ -2648,11 +2648,6 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 /*
  * Modifies the video-attributes only - so selection (not a video attribute) is
  * unaffected.  Colors and double-size flags are unaffected as well.
- *
- * FIXME: our representation for "invisible" does not work with this operation,
- * since the attribute byte is fully-allocated for other flags.  The logic
- * is shown for INVISIBLE because it's harmless, and useful in case the
- * CHARDRAWN or PROTECTED flags are reassigned.
  */
 void
 ScrnMarkRectangle(XtermWidget xw,

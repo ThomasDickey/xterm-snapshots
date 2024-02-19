@@ -1,7 +1,7 @@
-/* $XTermId: charsets.c,v 1.124 2023/12/26 11:49:05 tom Exp $ */
+/* $XTermId: charsets.c,v 1.125 2024/02/19 18:31:35 tom Exp $ */
 
 /*
- * Copyright 1998-2020,2023 by Thomas E. Dickey
+ * Copyright 1998-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,14 +60,14 @@
  */
 
 #define HandleUPSS(charset) \
-    if (charset == nrc_DEC_Supp) { \
+    if (charset == nrc_DEC_UPSS) { \
 	charset = screen->gsets_upss; \
 	if (screen->vtXX_level >= 5) { \
 	    /* EMPTY */ ; \
 	} else if (screen->vtXX_level >= 3) { \
 	    if (charset != nrc_DEC_Supp) \
 		charset = nrc_ISO_Latin_1_Supp; \
-	} else { \
+	} else if (screen->vtXX_level < 2) { \
 	    charset = nrc_ASCII; \
 	} \
     }

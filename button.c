@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.661 2024/02/10 01:18:12 tom Exp $ */
+/* $XTermId: button.c,v 1.662 2024/02/14 21:33:20 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -5166,6 +5166,8 @@ SaveText(TScreen *screen,
 	unsigned c;
 	assert(i < (int) ld->lineSize);
 	c = E2A(ld->charData[i]);
+	if (ld->attribs[i] & INVISIBLE)
+	    continue;
 #if OPT_WIDE_CHARS
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.

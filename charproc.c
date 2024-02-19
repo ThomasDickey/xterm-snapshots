@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2012 2024/01/17 00:06:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2014 2024/02/18 21:04:06 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1236,7 +1236,7 @@ restoreCharsets(TScreen *screen, DECNRCM_codes * source)
 void
 resetCharsets(TScreen *screen)
 {
-    int dft_upss = (screen->vtXX_level >= 2) ? DFT_UPSS : nrc_ASCII;
+    int dft_upss = (screen->ansi_level >= 2) ? DFT_UPSS : nrc_ASCII;
 
 #if OPT_WIDE_CHARS
     /*
@@ -1264,8 +1264,8 @@ resetCharsets(TScreen *screen)
      */
     initCharset(screen, 0, nrc_ASCII);
     initCharset(screen, 1, nrc_ASCII);
-    initCharset(screen, 2, nrc_ASCII);
-    initCharset(screen, 3, nrc_ASCII);
+    initCharset(screen, 2, dft_upss);
+    initCharset(screen, 3, dft_upss);
     initCharset(screen, 4, dft_upss);	/* gsets_upss */
 
     screen->curgl = 0;		/* G0 => GL.            */
@@ -1297,8 +1297,9 @@ modified_DECNRCM(XtermWidget xw)
 
 /*
  * VT300 and up support three ANSI conformance levels, defined according to
- * the dpANSI X3.134.1 standard.  DEC's manuals equate levels 1 and 2, and
- * are unclear.  This code is written based on the manuals.
+ * ECMA-43 (originally dpANSI X3.134.1).
+ *
+ * VSRM - Documented Exceptions EL-00070-D
  */
 static void
 set_ansi_conformance(TScreen *screen, int level)
@@ -1309,21 +1310,15 @@ set_ansi_conformance(TScreen *screen, int level)
 	   screen->terminal_id,
 	   screen->ansi_level));
     if (screen->vtXX_level >= 3) {
-	switch (screen->ansi_level = level) {
-	case 1:
-	    /* FALLTHRU */
-	case 2:
-	    initCharset(screen, 0, nrc_ASCII);	/* G0 is ASCII */
-	    initCharset(screen, 1, nrc_ASCII);	/* G1 is ISO Latin-1 */
-	    screen->curgl = 0;
-	    screen->curgr = 1;
-	    break;
-	case 3:
-	    initCharset(screen, 0, nrc_ASCII);	/* G0 is ASCII */
-	    screen->curgl = 0;
-	    break;
-	}
+	screen->ansi_level = level;
     }
+}
+
+static void
+set_vtXX_level(TScreen *screen, int level)
+{
+    screen->vtXX_level = level;
+    screen->ansi_level = (level > 1) ? 3 : 1;
 }
 
 /*
@@ -4656,7 +4651,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * On restore, the terminal does not recognize DECRQSS for
 		 * DECSCL (per vttest).
 		 */
-		screen->vtXX_level = 1;
+		set_vtXX_level(screen, 1);
 		xw->flags = screen->vt52_save_flags;
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
@@ -4715,7 +4710,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     */
 		    ReallyReset(xw, False, False);
 		    init_parser(xw, sp);
-		    screen->vtXX_level = new_vtXX_level;
+		    set_vtXX_level(screen, new_vtXX_level);
 		    if (new_vtXX_level > 1) {
 			switch (case_value) {
 			case 1:
@@ -5077,13 +5072,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_SS2:
 	    TRACE(("CASE_SS2\n"));
-	    screen->curss = 2;
+	    if (screen->vtXX_level > 1)
+		screen->curss = 2;
 	    ResetState(sp);
 	    break;
 
 	case CASE_SS3:
 	    TRACE(("CASE_SS3\n"));
-	    screen->curss = 3;
+	    if (screen->vtXX_level > 1)
+		screen->curss = 3;
 	    ResetState(sp);
 	    break;
 
@@ -5759,31 +5756,36 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_LS2:
 	    TRACE(("CASE_LS2\n"));
-	    screen->curgl = 2;
+	    if (screen->ansi_level > 2)
+		screen->curgl = 2;
 	    ResetState(sp);
 	    break;
 
 	case CASE_LS3:
 	    TRACE(("CASE_LS3\n"));
-	    screen->curgl = 3;
+	    if (screen->ansi_level > 2)
+		screen->curgl = 3;
 	    ResetState(sp);
 	    break;
 
 	case CASE_LS3R:
 	    TRACE(("CASE_LS3R\n"));
-	    screen->curgr = 3;
+	    if (screen->ansi_level > 2)
+		screen->curgr = 3;
 	    ResetState(sp);
 	    break;
 
 	case CASE_LS2R:
 	    TRACE(("CASE_LS2R\n"));
-	    screen->curgr = 2;
+	    if (screen->ansi_level > 2)
+		screen->curgr = 2;
 	    ResetState(sp);
 	    break;
 
 	case CASE_LS1R:
 	    TRACE(("CASE_LS1R\n"));
-	    screen->curgr = 1;
+	    if (screen->ansi_level > 2)
+		screen->curgr = 1;
 	    ResetState(sp);
 	    break;
 
@@ -7188,7 +7190,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		 * (e.g., a VT420) does not alter those tab settings when
 		 * switching modes.
 		 */
-		screen->vtXX_level = 0;
+		set_vtXX_level(screen, 0);
 		screen->vt52_save_flags = xw->flags;
 		xw->flags = 0;
 		screen->vt52_save_curgl = screen->curgl;
@@ -10527,7 +10529,7 @@ VTInitialize(Widget wrequest,
 	   screen->term_id,
 	   screen->terminal_id));
 
-    screen->vtXX_level = (screen->terminal_id / 100);
+    set_vtXX_level(screen, (screen->terminal_id / 100));
 
     init_Ires(screen.title_modes);
     screen->title_modes0 = screen->title_modes;

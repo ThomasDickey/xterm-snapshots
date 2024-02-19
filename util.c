@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.945 2024/02/08 09:14:14 tom Exp $ */
+/* $XTermId: util.c,v 1.947 2024/02/17 00:42:32 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1159,12 +1159,6 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
 	    if (DamagedCurCells(screen, cells, &kl, &kr))
 		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
-
-	if (attr_flags & INVISIBLE) {
-	    Cardinal n;
-	    for (n = 0; n < cells; ++n)
-		str[n] = ' ';
-	}
 
 	TRACE(("WriteText calling drawXtermText (%d) (%d,%d)\n",
 	       LineCharSet(screen, ld),
@@ -3882,9 +3876,10 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 }
 
 static int
-xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int
-		  length, Bool fullwidth)
+xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
+		  int x, int y, int length, Bool fullwidth)
 {
+    XtermWidget xw = params->xw;
     TScreen *screen = TScreenOf(xw);
     int src, dst;
     IChar *mapped = BfBuf(IChar);
@@ -3906,7 +3901,13 @@ xtermFullString16(XtermWidget xw, unsigned flags, GC gc, int x, int y, int
 #endif
 	       xtermMissingChar(ch, fp)) {
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
-	    x = xtermDrawMissing(screen, flags, gc, x, y, ch_width, fullwidth);
+	    if (xtermIsDecTechnical(ch)) {
+		xtermDrawBoxChar(params, ch, gc,
+				 x, y - FontAscent(screen), 1, False);
+		x += FontWidth(screen);
+	    } else {
+		x = xtermDrawMissing(screen, flags, gc, x, y, ch_width, fullwidth);
+	    }
 	    dst = 0;
 	} else {
 	    UCS2SBUF(ch);
@@ -4803,7 +4804,7 @@ drawXtermText(XTermDraw * params,
 	    }
 	}
 
-	xtermFullString16(recur.xw, recur.draw_flags, gc,
+	xtermFullString16(&recur, recur.draw_flags, gc,
 			  x, y + y_shift + ascent_adjust,
 			  dst, needWide);
 #if OPT_WIDE_ATTRS
@@ -4816,7 +4817,7 @@ drawXtermText(XTermDraw * params,
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
 		beginClipping(screen, gc, (Cardinal) font_width, len);
 	    }
-	    xtermFullString16(recur.xw, recur.draw_flags | NOBACKGROUND,
+	    xtermFullString16(&recur, recur.draw_flags | NOBACKGROUND,
 			      gc, x + 1, y + y_shift + ascent_adjust,
 			      dst, needWide);
 	    if (!(recur.draw_flags & (DOUBLEWFONT | DOUBLEHFONT))) {
@@ -5102,6 +5103,9 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
     }
 #endif
 
+    if (attr_flags & INVISIBLE) {
+	fg_pix = bg_pix;
+    }
     setCgsFore(xw, win, cgsId, fg_pix);
     setCgsBack(xw, win, cgsId, bg_pix);
     return getCgsGC(xw, win, cgsId);
