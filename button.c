@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.662 2024/02/14 21:33:20 tom Exp $ */
+/* $XTermId: button.c,v 1.663 2024/04/19 07:42:00 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1704,8 +1704,10 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 
     if (len != 0) {
 	PtyData data;
+	Boolean save_vt100 = screen->vt100_graphics;
 
 	fakePtyData(&data, s, s + len);
+	screen->vt100_graphics = False;		/* temporary override */
 	while (decodeUtf8(screen, &data)) {
 	    Bool fails = False;
 	    Bool extra = False;
@@ -1747,6 +1749,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 		AddChar(&buffer, &used, offset, ' ');
 	}
 	AddChar(&buffer, &used, offset, '\0');
+	screen->vt100_graphics = save_vt100;
 	*result = (unsigned long) (offset - 1);
     } else {
 	*result = 0;
