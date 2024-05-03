@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.899 2024/01/11 22:15:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.900 2024/05/02 20:29:44 tom Exp $
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
@@ -89,15 +89,15 @@
 .ie \n(.g \{\
 .ds `` \(lq
 .ds '' \(rq
-.ds AQ \(aq
+.ds '  \(aq
 .\}
 .el \{\
 .ie t .ds `` ``
 .el   .ds `` ""
 .ie t .ds '' ''
 .el   .ds '' ""
-.ie t .ds AQ \(aq
-.el   .ds AQ '
+.ie t .ds '  \(aq
+.el   .ds '  '
 .\}",
 .SH NAME
 xterm \-
@@ -6503,7 +6503,7 @@ when the screen dump was performed
 The \fBdump\-html\fP action can also be triggered using the Media Copy
 control sequence CSI 1 0 i, for example from a shell script with
 .NS
-printf \*(AQ\\033[10i\*(AQ
+printf \*'\\033[10i\*'
 .NE
 .sp
 Only the UTF-8 encoding is supported.
@@ -6541,7 +6541,7 @@ when the screen dump was performed
 The \fBdump\-svg\fP action can also be triggered using the Media Copy
 control sequence CSI 1 1 i, for example from a shell script with
 .NS
-printf \*(AQ\\033[11i\*(AQ
+printf \*'\\033[11i\*'
 .NE
 .sp
 Only the UTF-8 encoding is supported.
@@ -7315,7 +7315,7 @@ static int charClass[256] = {
      1,   1,   1,   1,   1,   1,   1,   1,
 /* CAN   EM  SUB  ESC   FS   GS   RS   US */
      1,   1,   1,   1,   1,   1,   1,   1,
-/*  SP    !    "    #    $    %    &    \*(AQ */
+/*  SP    !    "    #    $    %    &    \*' */
 .\"   " <- for emacs autocolor to work well :-)
     32,  33,  34,  35,  36,  37,  38,  39,
 /*   (    )    *    +    ,    \-    .    / */
@@ -7352,25 +7352,25 @@ static int charClass[256] = {
    160, 161, 162, 163, 164, 165, 166, 167,
 /*  ..   c0   ip   <<    _        R0    \- */
    168, 169, 170, 171, 172, 173, 174, 175,
-/*   o   +\-    2    3    \*(AQ    u   q|    . */
+/*   o   +\-    2    3    \*'    u   q|    . */
    176, 177, 178, 179, 180, 181, 182, 183,
 /*   ,    1    2   >>  1/4  1/2  3/4    ? */
    184, 185, 186, 187, 188, 189, 190, 191,
-/*  A`   A\*(AQ   A^   A~   A:   Ao   AE   C, */
+/*  A`   A\*'   A^   A~   A:   Ao   AE   C, */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*  E`   E\*(AQ   E^   E:   I`   I\*(AQ   I^   I: */
+/*  E`   E\*'   E^   E:   I`   I\*'   I^   I: */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*  D\-   N~   O`   O\*(AQ   O^   O~   O:    X */
+/*  D\-   N~   O`   O\*'   O^   O~   O:    X */
     48,  48,  48,  48,  48,  48,  48, 215,
-/*  O/   U`   U\*(AQ   U^   U:   Y\*(AQ    P    B */
+/*  O/   U`   U\*'   U^   U:   Y\*'    P    B */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*  a`   a\*(AQ   a^   a~   a:   ao   ae   c, */
+/*  a`   a\*'   a^   a~   a:   ao   ae   c, */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*  e`   e\*(AQ   e^   e:   i`   i\*(AQ   i^   i: */
+/*  e`   e\*'   e^   e:   i`   i\*'   i^   i: */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*   d   n~   o`   o\*(AQ   o^   o~   o:   \-: */
+/*   d   n~   o`   o\*'   o^   o~   o:   \-: */
     48,  48,  48,  48,  48,  48,  48, 247,
-/*  o/   u`   u\*(AQ   u^   u:   y\*(AQ    P   y: */
+/*  o/   u`   u\*'   u^   u:   y\*'    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
 .NE
 .IP
@@ -7551,7 +7551,7 @@ to view a file whose name is selected while holding the shift key down.
 The new process is started when the mouse button is released:
 .NS
 *VT100*translations: #override Shift \\\&
-    <Btn1Up>:\fBexec\-formatted\fP("xterm \-e view \*(AQ%t\*(AQ", \fBSELECT\fP)
+    <Btn1Up>:\fBexec\-formatted\fP("xterm \-e view \*'%t\*'", \fBSELECT\fP)
 .NE
 .TP 8
 .B "exec\-selectable(\fIformat\fP, \fIonClicks\fP)"
@@ -8478,10 +8478,10 @@ Instead, use \fBprintf\fP (POSIX).
 For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
 you could use one of these commands in a script:
 .NS
-printf \*(AQ\\033]2;Hello world!\\033\\\\\*(AQ
-printf \*(AQ\\033]2;Hello world!\\007\*(AQ
-printf \*(AQ\\033]2;%s\\033\\\\\*(AQ "Hello world!"
-printf \*(AQ\\033]2;%s\\007\*(AQ "Hello world!"
+printf \*'\\033]2;Hello world!\\033\\\\\*'
+printf \*'\\033]2;Hello world!\\007\*'
+printf \*'\\033]2;%s\\033\\\\\*' "Hello world!"
+printf \*'\\033]2;%s\\007\*' "Hello world!"
 .NE
 .PP
 The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
@@ -8491,10 +8491,10 @@ newline from the output.
 Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
 at the same time, using a slightly different control sequence:
 .NS
-printf \*(AQ\\033]0;Hello world!\\033\\\\\*(AQ
-printf \*(AQ\\033]0;Hello world!\\007\*(AQ
-printf \*(AQ\\033]0;%s\\033\\\\\*(AQ "Hello world!"
-printf \*(AQ\\033]0;%s\\007\*(AQ "Hello world!"
+printf \*'\\033]0;Hello world!\\033\\\\\*'
+printf \*'\\033]0;Hello world!\\007\*'
+printf \*'\\033]0;%s\\033\\\\\*' "Hello world!"
+printf \*'\\033]0;%s\\007\*' "Hello world!"
 .NE
 .PP
 The difference is the \fIparameter\fP \*(``0\*('' in each command.
@@ -8503,10 +8503,10 @@ Some will make a distinction and allow you to set just the icon title.
 You can tell \fI\*n\fP to ask for this with a different parameter
 in the control sequence:
 .NS
-printf \*(AQ\\033]1;Hello world!\\033\\\\\*(AQ
-printf \*(AQ\\033]1;Hello world!\\007\*(AQ
-printf \*(AQ\\033]1;%s\\033\\\\\*(AQ "Hello world!"
-printf \*(AQ\\033]1;%s\\007\*(AQ "Hello world!"
+printf \*'\\033]1;Hello world!\\033\\\\\*'
+printf \*'\\033]1;Hello world!\\007\*'
+printf \*'\\033]1;%s\\033\\\\\*' "Hello world!"
+printf \*'\\033]1;%s\\007\*' "Hello world!"
 .NE
 .
 .SS "Special Keys"

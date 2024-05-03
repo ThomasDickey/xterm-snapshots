@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.915 2024/01/17 00:19:47 tom Exp $ */
+/* $XTermId: main.c,v 1.917 2024/05/03 23:24:16 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -158,7 +158,7 @@ static GCC_NORETURN void hungtty(int);
 static GCC_NORETURN void Syntax(char *);
 static GCC_NORETURN void HsSysError(int);
 
-#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || ( defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 1) )
+#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_VERSION) || ( defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 1) )
 #define USE_POSIX_SIGNALS
 #endif
 
@@ -172,7 +172,7 @@ static GCC_NORETURN void HsSysError(int);
 #define KANJI
 #endif
 
-#ifdef linux
+#ifdef __linux__
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
 #define WTMP
@@ -198,7 +198,7 @@ static GCC_NORETURN void HsSysError(int);
 #endif
 #endif
 
-#if defined(__GLIBC__) && !defined(linux)
+#if defined(__GLIBC__) && !defined(__linux__)
 #define USE_SYSV_PGRP
 #define WTMP
 #endif
@@ -291,7 +291,7 @@ ttyslot(void)
 #define setpgrp setpgid
 #endif
 
-#ifndef linux
+#ifndef __linux__
 #ifndef VMS
 #ifndef USE_POSIX_TERMIOS
 #ifndef USE_ANY_SYSV_TERMIO
@@ -304,7 +304,7 @@ ttyslot(void)
 #include <sys/resource.h>
 #endif
 #endif /* !VMS */
-#endif /* !linux */
+#endif /* !__linux__ */
 
 #endif /* __QNX__ */
 
@@ -438,7 +438,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 
 #include <signal.h>
 
-#if defined(__SCO__) || (defined(ISC) && !defined(_POSIX_SOURCE))
+#if defined(__SCO__) || (defined(ISC) && !defined(_POSIX_VERSION))
 #undef SIGTSTP			/* defined, but not the BSD way */
 #endif
 
@@ -3101,7 +3101,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 }
 
-#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#if defined(__osf__) || (defined(__linux__) && !defined(USE_USG_PTYS)) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define USE_OPENPTY 1
 static int opened_tty = -1;
 #endif
@@ -4356,7 +4356,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    /*
 	     * now in child process
 	     */
-#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(__SCO__) || defined(__QNX__)
+#ifdef HAVE_SETSID
 	    int pgrp = setsid();	/* variable may not be used... */
 #else
 	    int pgrp = getpid();
@@ -4570,7 +4570,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	     */
 	    {
 #ifdef TERMIO_STRUCT
-#if defined(umips) || defined(CRAY) || defined(linux)
+#if defined(umips) || defined(CRAY) || defined(__linux__)
 		/* If the control tty had its modes screwed around with,
 		   eg. by lineedit in the shell, or emacs, etc. then tio
 		   will have bad values.  Let's just get termio from the
@@ -5016,7 +5016,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
 	    if (xw->misc.login_shell)
 		updwtmpx(WTMPX_FILE, &utmp);
-#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
+#elif defined(__linux__) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 	    if (xw->misc.login_shell)
 		call_updwtmp(etc_wtmp, &utmp);
 #else
@@ -5598,7 +5598,7 @@ Exit(int n)
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
 		if (xw->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, utptr);
-#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
+#elif defined(__linux__) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 		copy_filled(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
 		if (xw->misc.login_shell)
 		    call_updwtmp(etc_wtmp, utptr);

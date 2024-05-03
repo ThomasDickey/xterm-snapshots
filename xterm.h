@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.942 2023/12/23 01:39:45 tom Exp $ */
+/* $XTermId: xterm.h,v 1.944 2024/05/03 23:23:57 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -135,15 +135,15 @@
 #define HAVE_UTMP_UT_SESSION 1
 #endif
 
-#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4) && !defined(__FreeBSD__)
+#if !(defined(__linux__) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4) && !defined(__FreeBSD__)
 #define ut_xstatus ut_exit.e_exit
 #endif
 
-#if defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#if defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX) || (defined(__linux__) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 #define HAVE_UTMP_UT_XTIME 1
 #endif
 
-#if defined(linux) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__CYGWIN__)
 #define USE_LASTLOG
 #define HAVE_LASTLOG_H
 #define USE_STRUCT_LASTLOG
@@ -168,11 +168,11 @@
 #define OPT_SCO_FUNC_KEYS 1
 #endif
 
-#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
+#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_VERSION) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
 #define USE_POSIX_WAIT
 #endif
 
-#if defined(AIXV3) || defined(CRAY) || defined(__SCO__) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(linux) || defined(macII) || defined(BSD_UTMPX)
+#if defined(AIXV3) || defined(CRAY) || defined(__SCO__) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(__linux__) || defined(macII) || defined(BSD_UTMPX)
 #define USE_SYSV_UTMP
 #endif
 
@@ -203,11 +203,11 @@
 #define HAVE_XKB_BELL_EXT 1
 #endif
 
-#if (defined(SVR4) && !defined(__CYGWIN__)) || defined(linux) || (defined(BSD) && (BSD >= 199103))
+#if (defined(SVR4) && !defined(__CYGWIN__)) || defined(__linux__) || (defined(BSD) && (BSD >= 199103))
 #define HAVE_POSIX_SAVED_IDS
 #endif
 
-#if defined(linux) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(VMS) || defined(__INTERIX))
+#if defined(__linux__) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(VMS) || defined(__INTERIX))
 #define HAVE_INITGROUPS
 #endif
 
@@ -215,6 +215,10 @@
 #define HAVE_SETITIMER 1
 #else
 #define HAVE_SETITIMER 0
+#endif
+
+#if defined(_POSIX_VERSION) || defined(SVR4) || defined(__convex__) || defined(__SCO__) || defined(__QNX__)
+#define HAVE_SETSID 1
 #endif
 
 #endif /* HAVE_CONFIG_H */
@@ -287,7 +291,7 @@ extern int errno;
  * FIXME:  Toggling logging from xterm hangs under Linux 2.0.29 with libc5 if
  * we use 'waitpid()', while 'wait()' seems to work properly.
  */
-#ifdef linux
+#ifdef __linux__
 #undef HAVE_WAITPID
 #endif
 
@@ -390,7 +394,7 @@ extern int errno;
 
 #include <setjmp.h>
 
-#if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
+#if !defined(VMS) && !(defined(__linux__) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
 #endif
 

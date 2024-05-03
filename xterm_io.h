@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.68 2023/10/22 14:54:29 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.69 2024/05/03 23:32:26 tom Exp $ */
 
 /*
- * Copyright 2000-2020,2023 by Thomas E. Dickey
+ * Copyright 2000-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -70,7 +70,7 @@
 #endif
 #endif
 
-#ifdef linux
+#ifdef __linux__
 #define USE_TERMIOS
 #define HAVE_POSIX_OPENPT 1
 #define HAVE_PTSNAME 1
@@ -99,7 +99,7 @@
 #define HAVE_GRANTPT_PTY_ISATTY 1
 #endif
 
-#if defined(__GLIBC__) && !(defined(linux) || defined(__GNU__))
+#if defined(__GLIBC__) && !(defined(__linux__) || defined(__GNU__))
 #define USE_POSIX_TERMIOS	/* GNU/KFreeBSD and GNU/KNetBSD */
 #endif
 
@@ -203,7 +203,7 @@
 
 #ifdef Lynx
 #include <resource.h>
-#elif !(defined(SYSV) || defined(linux) || defined(VMS) || (defined(__QNX__)&&!defined(__QNXNTO__)))
+#elif !(defined(SYSV) || defined(__linux__) || defined(VMS) || (defined(__QNX__)&&!defined(__QNXNTO__)))
 #include <sys/resource.h>
 #endif
 
@@ -225,7 +225,7 @@
 #include <sys/filio.h>
 #endif
 
-#if defined(TIOCSLTC) && ! (defined(linux) || defined(__MVS__) || defined(Lynx) || defined(SVR4))
+#if defined(TIOCSLTC) && ! (defined(__linux__) || defined(__MVS__) || defined(Lynx) || defined(SVR4))
 #define HAS_LTCHARS
 #endif
 
@@ -297,6 +297,5 @@ typedef unsigned short ttySize_t;
 #else
 #error Neither termio or termios is enabled
 #endif /* USE_ANY_SYSV_TERMIO */
-
 
 #endif /* included_xterm_io_h */
