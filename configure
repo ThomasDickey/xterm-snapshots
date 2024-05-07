@@ -20550,8 +20550,8 @@ echo "${ECHO_T}$cf_cv_input_method" >&6
 test "$cf_cv_input_method" = no && enable_ximp=no
 if test "$enable_ximp" != no ; then
 	if test "$enable_i18n" = no ; then
-		{ echo "$as_me:20553: WARNING: input-methor relies upon internationalization" >&5
-echo "$as_me: WARNING: input-methor relies upon internationalization" >&2;}
+		{ echo "$as_me:20553: WARNING: input-method relies upon internationalization" >&5
+echo "$as_me: WARNING: input-method relies upon internationalization" >&2;}
 		enable_ximp=no
 	fi
 fi

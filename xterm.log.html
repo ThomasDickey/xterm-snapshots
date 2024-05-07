@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2605 2024/05/03 23:37:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.2606 2024/05/05 22:40:22 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1063,6 +1063,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add resource <tt>incrementalGraphics</tt> (prompted by
+    patch by Ben Wong).</li>
+
+    <li>reorganize <tt>graphics_sixel.c</tt> as a step toward
+    eliminating graphics buffer-size (integrated patch by Ben
+    Wong).</li>
+
     <li>use <tt>__linux__</tt> consistently rather than the older
     <tt>linux</tt>.</li>
 

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.917 2024/05/03 23:24:16 tom Exp $ */
+/* $XTermId: main.c,v 1.918 2024/05/07 20:37:13 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -3750,7 +3750,10 @@ findValidShell(const char *haystack, const char *needle)
 static int
 ourValidShell(const char *pathname)
 {
-    return findValidShell(x_strtrim(resource.valid_shells), pathname);
+    char *trimmed  = x_strtrim(resource.valid_shells);
+    int result = findValidShell(trimmed, pathname);
+    free(trimmed);
+    return result;
 }
 
 #if defined(HAVE_GETUSERSHELL) && defined(HAVE_ENDUSERSHELL)

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1121 2024/02/08 08:57:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1122 2024/05/05 20:32:31 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -2853,6 +2853,7 @@ typedef struct {
 	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
 	Boolean		privatecolorregisters0; /* initial privateColorRegisters */
+	Boolean		incremental_graphics; /* draw graphics incrementally */
 #endif
 
 	/* Graphics Printing */

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.944 2024/05/03 23:23:57 tom Exp $ */
+/* $XTermId: xterm.h,v 1.945 2024/05/05 20:33:45 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -559,6 +559,7 @@ extern char **environ;
 #define XtNiconFont		"iconFont"
 #define XtNiconGeometry		"iconGeometry"
 #define XtNiconHint		"iconHint"
+#define XtNincrementalGraphics  "incrementalGraphics"
 #define XtNindicatorFormat	"indicatorFormat"
 #define XtNinitialFont		"initialFont"
 #define XtNinternalBorder	"internalBorder"
@@ -817,6 +818,7 @@ extern char **environ;
 #define XtCIconFont		"IconFont"
 #define XtCIconGeometry		"IconGeometry"
 #define XtCIconHint		"IconHint"
+#define XtCIncrementalGraphics  "IncrementalGraphics"
 #define XtCIndicatorFormat	"IndicatorFormat"
 #define XtCInitialFont		"InitialFont"
 #define XtCInternalBorder	"InternalBorder"

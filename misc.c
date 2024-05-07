@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1087 2024/01/02 00:11:24 tom Exp $ */
+/* $XTermId: misc.c,v 1.1091 2024/05/07 22:26:13 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4896,8 +4896,10 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
     Bool okay;
     ANSI params;
     char psarg = '0';
-#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
+#if OPT_VT525_COLORS && OPT_ISO_COLORS
     const char *cp2;
+#endif
+#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
     int ival;
 #endif
 
@@ -5036,7 +5038,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    } else
 #endif
 #if OPT_MOD_FKEYS
-	    if (*cp == '>' && !strcmp((cp2 = skip_params(1 + cp)), "m")) {	/* XTQMODKEYS */
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
 		++cp;
 		okay = True;
 		ival = parse_int_param(&cp);
@@ -5284,7 +5286,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    case 'q':		/* sixel */
 #if OPT_SIXEL_GRAPHICS
 		if (optSixelGraphics(screen)) {
-		    (void) parse_sixel(xw, &params, cp);
+		    parse_sixel_init(xw, &params);
+		    while (*cp) {
+			parse_sixel_char(*cp++);
+		    }
+		    parse_sixel_finished(xw);
+		    TRACE(("DONE parsed sixel data\n"));
 		}
 #else
 		TRACE(("ignoring sixel graphic (compilation flag not enabled)\n"));

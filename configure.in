@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.400 2024/05/03 00:43:38 tom Exp $
+dnl $XTermId: configure.in,v 1.401 2024/05/05 20:39:09 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -771,7 +771,7 @@ CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
 if test "$enable_ximp" != no ; then
 	if test "$enable_i18n" = no ; then
-		AC_MSG_WARN(input-methor relies upon internationalization)
+		AC_MSG_WARN(input-method relies upon internationalization)
 		enable_ximp=no
 	fi
 fi

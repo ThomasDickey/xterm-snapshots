@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2014 2024/02/18 21:04:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2015 2024/05/05 20:38:22 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -755,6 +755,8 @@ static XtResource xterm_resources[] =
 	 screen.numcolorregisters, 0),
     Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters,
 	 screen.privatecolorregisters, True),
+    Bres(XtNincrementalGraphics, XtCIncrementalGraphics,
+	 screen.incremental_graphics, False),
 #endif
 
 #if OPT_STATUS_LINE
