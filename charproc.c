@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2015 2024/05/05 20:38:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2018 2024/05/10 23:11:45 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3098,34 +3098,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * with values in the C1 range to use them as printable characters,
 	 * provided that they are not intermixed with an escape sequence.
 	 */
-	if (screen->c1_printable
-	    && (c >= 128 && c < 256)) {
-	    sp->nextstate = (sp->parsestate == esc_table
-			     ? CASE_ESC_IGNORE
-			     : sp->parsestate[E2A(160)]);
-	    TRACE(("allowC1Printable %04X %s ->%s\n",
-		   c, which_table(sp->parsestate),
-		   visibleVTparse(sp->nextstate)));
-	}
+#if OPT_WIDE_CHARS
+	if (!screen->wide_chars)
+#endif
+	    if (screen->c1_printable
+		&& (c >= 128 && c < 256)) {
+		sp->nextstate = (sp->parsestate == esc_table
+				 ? CASE_ESC_IGNORE
+				 : sp->parsestate[E2A(160)]);
+		TRACE(("allowC1Printable %04X %s ->%s\n",
+		       c, which_table(sp->parsestate),
+		       visibleVTparse(sp->nextstate)));
+	    }
 #endif
 
 #if OPT_WIDE_CHARS
-	/*
-	 * If we have a C1 code and the c1_printable flag is not set, simply
-	 * ignore it when it was translated from UTF-8.  That is because the
-	 * value could not have been present as-is in the UTF-8.
-	 *
-	 * To see that CASE_IGNORE is a consistent value, note that it is
-	 * always used for NUL and other uninteresting C0 controls.
-	 */
-#if OPT_C1_PRINT
-	if (!screen->c1_printable)
-#endif
-	    if (screen->wide_chars
-		&& (c >= 128 && c < 160)) {
-		sp->nextstate = CASE_IGNORE;
-	    }
-
 	/*
 	 * If this character is a different width than the last one, put the
 	 * previous text into the buffer and draw it now.
@@ -11234,6 +11221,10 @@ VTInitialize(Widget wrequest,
     TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default: %s\n",
 	   BtoS(screen->privatecolorregisters)));
     screen->privatecolorregisters0 = screen->privatecolorregisters;
+
+    init_Bres(screen.incremental_graphics);
+    TRACE(("initialized INCREMENTAL_GRAPHICS to resource default: %s\n",
+	   BtoS(screen->incremental_graphics)));
 #endif
 
 #if OPT_GRAPHICS

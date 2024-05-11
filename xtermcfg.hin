@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.230 2024/05/03 00:42:25 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.231 2024/05/11 17:26:14 tom Exp $ */
 
 /*
  * Copyright 1997-2023,2024 by Thomas E. Dickey
@@ -65,9 +65,11 @@
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
 #undef DISABLE_SETGID		/* CF_ARG_DISABLE(setgid) */
 #undef DISABLE_SETUID		/* CF_ARG_DISABLE(setuid) */
+#undef HAVE_CLOCK_GETTIME	/* CF_FUNC_GETTIME */
 #undef HAVE_ENDUSERSHELL	/* AC_CHECK_FUNCS(endusershell) */
 #undef HAVE_GETHOSTNAME		/* AC_CHECK_FUNCS(gethostname) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
+#undef HAVE_GETTIMEOFDAY	/* CF_FUNC_GETTIME */
 #undef HAVE_GETUSERSHELL	/* AC_CHECK_FUNCS(getusershell) */
 #undef HAVE_GRANTPT		/* CF_FUNC_GRANTPT */
 #undef HAVE_GRANTPT_PTY_ISATTY	/* CF_FUNC_GRANTPT */

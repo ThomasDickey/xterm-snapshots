@@ -1,8 +1,8 @@
-/* $XTermId: graphics.c,v 1.131 2023/10/06 08:24:24 tom Exp $ */
+/* $XTermId: graphics.c,v 1.135 2024/05/11 09:49:08 tom Exp $ */
 
 /*
+ * Copyright 2013-2023,2024 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
- * Copyright 2013-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1027,11 +1027,18 @@ refresh_graphic(TScreen const *screen,
 void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
-    const int hs = ((h + 59) / 60) % 6;
+    int hs;
     const double lv = l / MAX_PCT;
     const double sv = s / MAX_PCT;
     double c, x, m, c2;
     double r1, g1, b1;
+
+    h = h - 120;		/* Rotate so that blue is at 0 degrees  */
+    while (h < 0)
+	h += 360;		/* Normalize to 0 to 360, */
+    while (h >= 360)
+	h -= 360;
+    hs = ((h + 59) / 60) % 6;
 
     if (s == 0) {
 	*r = *g = *b = (short) l;

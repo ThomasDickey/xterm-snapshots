@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2606 2024/05/05 22:40:22 tom Exp $
+  $XTermId: xterm.log.html,v 1.2608 2024/05/10 23:22:47 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1063,29 +1063,40 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
-    <li>add resource <tt>incrementalGraphics</tt> (prompted by
+    <li>improve integration between UTF-8 and
+    <code>allowC1Printable</code>.</li>
+
+    <li>alter SIXEL HLS computation to make blue 0 degrees (patch
+    by Ben Wong).</li>
+
+    <li>disable SIXEL aspect-ratio, pending a rewrite (patch by Ben
+    Wong).</li>
+
+    <li>add resource <code>incrementalGraphics</code> (prompted by
     patch by Ben Wong).</li>
 
     <li>reorganize <tt>graphics_sixel.c</tt> as a step toward
     eliminating graphics buffer-size (integrated patch by Ben
     Wong).</li>
 
-    <li>use <tt>__linux__</tt> consistently rather than the older
-    <tt>linux</tt>.</li>
+    <li>use <code>__linux__</code> consistently rather than the
+    older <code>linux</code>.</li>
 
     <li>build-fix for musl (report by Jon&aacute;&scaron; Vidra,
     adapted patch by Khem Raj):
       <ul>
-        <li>modify <tt><em>ifdef</em></tt> for
-        <tt>USE_OPENPTY</tt>, changing test for <tt>__GLIBC__</tt>
-        to <tt>__linux__</tt></li>
+        <li>modify <code><em>ifdef</em></code> for
+        <code>USE_OPENPTY</code>, changing test for
+        <code>__GLIBC__</code> to <code>__linux__</code></li>
 
-        <li>change <tt><em>ifdef</em></tt>'s for
-        <tt>_POSIX_SOURCE</tt> to <tt>_POSIX_VERSION</tt></li>
+        <li>change <code><em>ifdef</em></code>'s for
+        <code>_POSIX_SOURCE</code> to
+        <code>_POSIX_VERSION</code></li>
 
-        <li>modify <tt><em>ifdef</em></tt> for <tt>setsid</tt> to
-        use a configure-script check for that function's existence
-        and move the old check to imake fallbacks.</li>
+        <li>modify <code><em>ifdef</em></code> for
+        <code>setsid</code> to use a configure-script check for
+        that function's existence and move the old check to imake
+        fallbacks.</li>
       </ul>
     </li>
 

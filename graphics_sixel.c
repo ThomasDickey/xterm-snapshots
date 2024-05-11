@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.49 2024/05/07 19:39:53 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.56 2024/05/11 17:32:20 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -194,8 +194,12 @@ set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 }
 
 static void
-update_sixel_aspect(SixelContext const *context, Graphic *graphic)
+update_sixel_aspect(SixelContext * context, Graphic *graphic)
 {
+    int limit;
+    int best;
+    int gcd;
+
     /* We want to keep the ratio accurate but would like every pixel to have
      * the same size so keep these as whole numbers.
      */
@@ -218,23 +222,51 @@ update_sixel_aspect(SixelContext const *context, Graphic *graphic)
     TRACE(("sixel updating pixel aspect (v:h): %d:%d\n",
 	   context->aspect_vertical, context->aspect_horizontal));
 
-    /* FIXME: Should handle ratios like 2:3 and 16:9 */
-    if (context->aspect_vertical < context->aspect_horizontal) {
-	graphic->pixw = 1;
-	graphic->pixh = ((context->aspect_vertical
-			  + context->aspect_horizontal - 1)
-			 / context->aspect_horizontal);
-    } else {
-	graphic->pixw = ((context->aspect_horizontal
-			  + context->aspect_vertical - 1)
-			 / context->aspect_vertical);
-	graphic->pixh = 1;
+    /*
+     * Reduce to the lowest possible format,
+     * to handle ratios such as 2:3 and 16:9
+     */
+    limit = Min(context->aspect_vertical, context->aspect_horizontal);
+    TRACE(("sixel aspect limit: %d\n", limit));
+    best = 1;
+    for (gcd = 2; gcd <= limit; ++gcd) {
+	if ((context->aspect_vertical % gcd) == 0
+	    && (context->aspect_horizontal % gcd) == 0) {
+	    best = gcd;
+	}
     }
+    TRACE(("sixel aspect gcd: %d\n", best));
+    context->aspect_vertical /= best;
+    context->aspect_horizontal /= best;
+
+    /* EK-PPLV2-PM-B01 says the range along either axis is no more than 10 */
+    if (context->aspect_vertical > (10 * context->aspect_horizontal))
+	context->aspect_vertical = (10 * context->aspect_horizontal);
+
+    if (context->aspect_horizontal > (10 * context->aspect_vertical))
+	context->aspect_horizontal = (10 * context->aspect_vertical);
+
+    /* in any case, limit "pixel" size if both are large */
+#define by10(n) n = (n + 5) / 10
+    while (context->aspect_vertical >= 10
+	   && context->aspect_horizontal >= 10) {
+	by10(context->aspect_vertical);
+	by10(context->aspect_horizontal);
+    }
+
+    graphic->pixw = context->aspect_horizontal;
+    graphic->pixh = context->aspect_vertical;
+
     TRACE(("sixel aspect ratio: an=%d ad=%d -> pixw=%d pixh=%d\n",
 	   context->aspect_vertical,
 	   context->aspect_horizontal,
 	   graphic->pixw,
 	   graphic->pixh));
+#if 1
+    /* FIXME: Aspect Ratio is buggy, so we'll just force it off */
+    graphic->pixw = 1;
+    graphic->pixh = 1;
+#endif
 }
 
 static int
@@ -428,15 +460,62 @@ parse_sixel_init(XtermWidget xw, ANSI *params)
     return 0;
 }
 
+#ifdef HAVE_CLOCK_GETTIME
+/* Returns True if the system's monotonic clock has reached or exceeded _when_.
+ * If _increment_ is not NULL, _when_ will be set to now + _increment_.
+ */
+#define TS_MSEC 1000000000L
+static Boolean
+times_up(struct timespec *when, struct timespec *increment)
+{
+    struct timespec now;
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (when->tv_sec < now.tv_sec
+	|| (when->tv_sec == now.tv_sec
+	    && when->tv_nsec < now.tv_nsec)) {
+	return False;
+    }
+    if (increment) {
+	when->tv_sec += now.tv_sec + increment->tv_sec;
+	when->tv_nsec += now.tv_nsec + increment->tv_nsec;
+	while (when->tv_nsec >= TS_MSEC) {
+	    when->tv_sec += 1;
+	    when->tv_nsec -= TS_MSEC;
+	}
+    }
+    return True;
+}
+
+#endif
+
 static void
 parse_sixel_incremental_display(void)
 {
     /* Watch sixels appear just like a VT340!  */
-    int dirty_row = ((s_context.row * s_graphic->pixw)
+    int dirty_row = ((s_context.row * s_graphic->pixh)
 		     + (s_graphic->charrow * FontHeight(s_screen)));
 
     int dirty_col = ((s_context.col * s_graphic->pixw)
 		     + (s_graphic->charcol * FontWidth(s_screen)));
+
+#ifdef HAVE_CLOCK_GETTIME
+    static struct timespec next_refresh =
+    {
+	0, 0
+    };
+    static struct timespec refresh_delay =
+    {
+	0, 1000			/* 1E6/1E9 = 1 millisecond */
+    };
+
+    /* Bundle up incremental refreshes that happen faster than visually
+     * perceptible.
+     */
+    if (!times_up(&next_refresh, &refresh_delay)) {
+	return;
+    }
+#endif
 
     if (dirty_row != s_prev_row) {
 	s_prev_row = dirty_row;
