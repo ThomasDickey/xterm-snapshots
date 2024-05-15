@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.918 2024/05/07 20:37:13 tom Exp $ */
+/* $XTermId: main.c,v 1.919 2024/05/15 23:52:16 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -3750,7 +3750,7 @@ findValidShell(const char *haystack, const char *needle)
 static int
 ourValidShell(const char *pathname)
 {
-    char *trimmed  = x_strtrim(resource.valid_shells);
+    char *trimmed = x_strtrim(resource.valid_shells);
     int result = findValidShell(trimmed, pathname);
     free(trimmed);
     return result;
@@ -4364,13 +4364,13 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #else
 	    int pgrp = getpid();
 #endif
-	    TRACE_CHILD
+	    TRACE_CHILD;
 
 #ifdef USE_USG_PTYS
 #ifdef HAVE_SETPGID
-		setpgid(0, 0);
+	    setpgid(0, 0);
 #else
-		setpgrp();
+	    setpgrp();
 #endif
 	    unlockpt(screen->respond);
 	    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");

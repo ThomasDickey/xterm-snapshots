@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2018 2024/05/10 23:11:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2019 2024/05/15 22:40:21 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3113,6 +3113,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 
 #if OPT_WIDE_CHARS
+	/*
+	 * If we have a C1 code and the c1_printable flag is not set, simply
+	 * ignore it when it was translated from UTF-8, unless the parse-state
+	 * tells us that a C1 would be legal.
+	 */
+#if OPT_C1_PRINT
+	if (!screen->c1_printable)
+#endif
+	    if (screen->wide_chars
+		&& (c >= 128 && c < 160)) {
+		if (sp->parsestate != ansi_table)
+		    sp->nextstate = CASE_IGNORE;
+	    }
+
 	/*
 	 * If this character is a different width than the last one, put the
 	 * previous text into the buffer and draw it now.
