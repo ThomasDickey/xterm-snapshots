@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.56 2024/05/11 17:32:20 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.57 2024/05/16 20:03:50 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -206,18 +206,10 @@ update_sixel_aspect(SixelContext * context, Graphic *graphic)
 
     /* FIXME: The VT340 repeats pixels instead of spreading them out. */
 
-    /* FIXME: A single sixel image can have multiple aspect ratios on
-       the VT340, but PPLv2 does not allow it. We currently neither
-       implement it nor explicitly ignore DECGRA after sixels have
-       started. */
-
-    /* FIXME: DEC terminals had pixels about twice as tall as they were wide,
-     * and it seems the VT125 and VT24x only used data from odd graphic rows.
-     * This means it basically cancels out if we ignore both, except that
-     * the even rows of pixels may not be written by the application such that
-     * they are suitable for display.  In practice this doesn't seem to be
-     * an issue but I have very few test files/programs.
-     */
+    /* FIXME: A single sixel DCS string can have multiple aspect ratios on
+       the VT340, but PPLv2 does not allow it. We currently neither implement
+       it nor explicitly ignore DECGRA after sixels have started. We probably
+       should allow for it as that is how genuine DEC hardware behaved. */
 
     TRACE(("sixel updating pixel aspect (v:h): %d:%d\n",
 	   context->aspect_vertical, context->aspect_horizontal));
@@ -239,7 +231,18 @@ update_sixel_aspect(SixelContext * context, Graphic *graphic)
     context->aspect_vertical /= best;
     context->aspect_horizontal /= best;
 
-    /* EK-PPLV2-PM-B01 says the range along either axis is no more than 10 */
+    /* EK-PPLV2-PM-B01 says the range along either axis is no more than 10,
+     * which is good advice for programs creating images for generic "Level 2
+     * Sixel" devices.
+     *
+     * FIXME: The converse is true when implementing a sixel rendering
+     * engine. As a *minimum* requirement, xterm must allow either axis to
+     * range from 1 to 10, but, just like the hardware it emulates, it may
+     * exceed specifications.
+     *
+     * The VT340 appears to have no practical limit. Even ratios over 480:1
+     * -- where each pixel would exceed the screen height -- are allowed.
+     */
     if (context->aspect_vertical > (10 * context->aspect_horizontal))
 	context->aspect_vertical = (10 * context->aspect_horizontal);
 
@@ -283,18 +286,14 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
     if (SixelScrolling(xw)) {
 	int new_row, new_col;
 
-	/* Note: XTerm follows the VT382 behavior in text cursor placement.
-	 * The VT382's vertical position appears to be truncated (rounded
-	 * toward zero) after converting to character row.  While rounding up
-	 * is more often what is desired, so as to not overwrite the image,
-	 * doing so automatically would cause text or graphics to scroll off
-	 * the top of the screen.  Therefore, applications must add their own
-	 * newline character, if desired, after a sixel image.
+	/* Note: XTerm follows the VT340 behavior in text cursor placement
+	 * for nearly all sixel images. It differs in the few places where
+	 * TWO newlines would have been necessary for subsequent text to not
+	 * overwrite an image. XTerm always requires only a single newline.
 	 *
-	 * FIXME: The VT340 also rounds down, but it seems to have a strange
-	 * behavior where, on rare occasions, two newlines are required to
-	 * advance beyond the end of the image.  This appears to be a firmware
-	 * bug, but it should be added as an option for compatibility.
+	 * Emulating the VT340's quirky and undocumented behavior is of
+	 * dubious value. The heuristic DEC used has nice properties, but
+	 * only applies if the font is exactly 20 pixels high.
 	 */
 	new_row = (graphic->charrow - 1
 		   + (((graphic->actual_height * graphic->pixh)
@@ -460,11 +459,15 @@ parse_sixel_init(XtermWidget xw, ANSI *params)
     return 0;
 }
 
-#ifdef HAVE_CLOCK_GETTIME
+#if defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_MONOTONIC)
+#define TS_NANOSEC 1L
+#define TS_MICROSEC 1000L * TS_NANOSEC
+#define TS_MILLISEC 1000L * TS_MICROSEC
+#define TS_SEC      1000L * TS_MILLISEC
+
 /* Returns True if the system's monotonic clock has reached or exceeded _when_.
  * If _increment_ is not NULL, _when_ will be set to now + _increment_.
  */
-#define TS_MSEC 1000000000L
 static Boolean
 times_up(struct timespec *when, struct timespec *increment)
 {
@@ -479,9 +482,9 @@ times_up(struct timespec *when, struct timespec *increment)
     if (increment) {
 	when->tv_sec += now.tv_sec + increment->tv_sec;
 	when->tv_nsec += now.tv_nsec + increment->tv_nsec;
-	while (when->tv_nsec >= TS_MSEC) {
+	while (when->tv_nsec >= TS_SEC) {
 	    when->tv_sec += 1;
-	    when->tv_nsec -= TS_MSEC;
+	    when->tv_nsec -= TS_SEC;
 	}
     }
     return True;
@@ -499,14 +502,14 @@ parse_sixel_incremental_display(void)
     int dirty_col = ((s_context.col * s_graphic->pixw)
 		     + (s_graphic->charcol * FontWidth(s_screen)));
 
-#ifdef HAVE_CLOCK_GETTIME
+#if defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_MONOTONIC)
     static struct timespec next_refresh =
     {
 	0, 0
     };
     static struct timespec refresh_delay =
     {
-	0, 1000			/* 1E6/1E9 = 1 millisecond */
+	0, TS_MILLISEC
     };
 
     /* Bundle up incremental refreshes that happen faster than visually
@@ -649,6 +652,7 @@ parse_sixel_char(char cp)
 	    return finished_parsing(s_xw, s_graphic);
 	}
 
+	/* Save data from Raster Attributes */
 	/* *INDENT-EQLS* */
 	s_context.aspect_vertical   = s_raster_params[s_GETTINGPAN];
 	s_context.aspect_horizontal = s_raster_params[s_GETTINGPAD];
@@ -666,7 +670,7 @@ parse_sixel_char(char cp)
 	/* cp (next character to consume) is not digit, space, or semicolon, so finish up with raster  */
 	s_raster_state = s_NOTRASTER;
 
-	/* FIXME: Declared size should immediately clear & scroll rectangle */
+	/* FIXME: Declared size should clear & scroll rectangle when no raster attributes */
 	if (s_context.declared_width > s_graphic->actual_width) {
 	    s_graphic->actual_width = s_context.declared_width;
 	}
