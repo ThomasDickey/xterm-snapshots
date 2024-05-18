@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.781 2024/02/09 00:25:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.782 2024/05/17 19:54:51 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -3817,7 +3817,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 }
 #endif
 
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
 /*
  * The grid is arbitrary, enough resolution that nothing's lost in
  * initialization.
@@ -4289,7 +4289,7 @@ xtermDrawBoxChar(XTermDraw * params,
     }
     resetXtermLineAttributes(screen->display, gc2);
 }
-#endif /* OPT_BOX_CHARS */
+#endif /* OPT_BOX_CHARS || OPT_WIDE_CHARS */
 
 #if OPT_RENDERFONT
 static int

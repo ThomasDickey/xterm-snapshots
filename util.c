@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.947 2024/02/17 00:42:32 tom Exp $ */
+/* $XTermId: util.c,v 1.948 2024/05/18 00:18:02 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3357,7 +3357,7 @@ xtermFillCells(XTermDraw * params,
 	case gcFiller:
 	    dstId = srcId;
 	    break;
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_WIDE_CHARS
 	case gcLine:
 	case gcDots:
 	    break;

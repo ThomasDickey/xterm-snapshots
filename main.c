@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.919 2024/05/15 23:52:16 tom Exp $ */
+/* $XTermId: main.c,v 1.920 2024/05/17 08:15:43 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -176,10 +176,8 @@ static GCC_NORETURN void HsSysError(int);
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
 #define WTMP
-#ifdef __GLIBC__
-#if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
+#ifdef HAVE_PTY_H
 #include <pty.h>
-#endif
 #endif
 #endif
 

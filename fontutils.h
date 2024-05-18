@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.144 2024/02/09 01:11:17 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.145 2024/05/17 19:55:52 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2024 by Thomas E. Dickey
@@ -123,11 +123,11 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 	  ? ((font)->known_missing[(Char)(ch)] > 1) \
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
-
-extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /* gc */, int /* x */, int /* y */, int /* cols */, Bool /* xftords */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif
+
+extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /* gc */, int /* x */, int /* y */, int /* cols */, Bool /* xftords */);
 
 #if OPT_BOX_CHARS || OPT_REPORT_FONTS
 extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
