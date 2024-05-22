@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.715 2024/05/02 20:53:28 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.716 2024/05/22 08:18:51 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #391
-.ds RF 2024/05/02
+.ds LF Patch #392
+.ds RF 2024/05/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -893,7 +893,8 @@ The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .iP
 .IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
 Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
-\fI\*(XT\fP ignores this in UTF-8 mode.
+\fI\*(XT\fP ignores this in UTF-8 mode,
+and uses the \fBpreferLatin1\fP resource to choose the default setting.
 .sp 0.3
 VT320 provides these:
   \*(Dc\*0\*!\*u\*%\*5\*(ST	\(-> DEC Supplemental Graphic

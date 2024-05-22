@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.946 2024/05/17 19:17:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.947 2024/05/21 23:33:24 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -619,6 +619,7 @@ extern char **environ;
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
 #define XtNprecompose		"precompose"
+#define XtNpreferLatin1		"preferLatin1"
 #define XtNprintAttributes	"printAttributes"
 #define XtNprintFileImmediate	"printFileImmediate"
 #define XtNprintFileOnXError	"printFileOnXError"
@@ -873,6 +874,7 @@ extern char **environ;
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
 #define XtCPrecompose		"Precompose"
+#define XtCPreferLatin1		"PreferLatin1"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrintFileImmediate	"PrintFileImmediate"
 #define XtCPrintFileOnXError	"PrintFileOnXError"

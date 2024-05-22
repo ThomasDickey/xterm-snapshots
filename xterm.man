@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.901 2024/05/05 22:42:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.902 2024/05/22 08:15:46 tom Exp $
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
@@ -4751,6 +4751,15 @@ The default is \*(``true\*(''.
 .B "preeditType\fP (class\fB PreeditType\fP)"
 Tells \fI\*n\fP which types of preedit (preconversion) string to display.
 The default is \*(``OverTheSpot,Root\*(''.
+.TP 8
+.B "preferLatin1\fP (class\fB PreferLatin1\fP)"
+Tells \fI\*n\fP whether to use DEC Supplemental Graphic,
+or ISO Latin-1 for
+the user-preferred supplemental set (UPSS)
+when initializing character sets.
+The former is the documented setting for hardware terminals,
+but the latter is expected by most users.
+The default is \*(``true\*('' (ISO Latin-1).
 .TP 8
 .B "printAttributes\fP (class\fB PrintAttributes\fP)"
 Specifies whether to print graphic attributes along with the text.

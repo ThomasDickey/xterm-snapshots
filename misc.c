@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1091 2024/05/07 22:26:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.1092 2024/05/21 00:28:28 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4883,6 +4883,8 @@ decode_upss(XtermWidget xw, const char *cp, char psarg, DECNRCM_codes * upss)
 	    }
 	    break;
 	}
+	TRACE(("DECAUPSS %ssuccessful %s\n",
+	       result ? "" : "not ", visibleScsCode(*upss)));
     }
     return result;
 }

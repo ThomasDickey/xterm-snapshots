@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.125 2024/02/19 18:31:35 tom Exp $ */
+/* $XTermId: charsets.c,v 1.126 2024/05/22 00:27:53 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -402,8 +402,6 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 		    }
 #endif
 		}
-	    } else {
-		chr = (seven | 0x80);
 	    }
 	    break;
 
@@ -428,11 +426,8 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    break;
 
 	case nrc_DEC_Supp:
-	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
-	    break;
-
 	case nrc_DEC_Supp_Graphic:
-	    map_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
+	    map_DEC_Supp_Graphic(chr = seven, chr = eight);
 	    break;
 
 	case nrc_DEC_Technical:
@@ -561,6 +556,8 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    --sums;
 #endif
 	} else {
+	    if (eight >= 128 && chr < 128 && chr > 32)
+		chr |= 128;
 	    *s = (IChar) A2E(chr);
 	}
     }

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.920 2024/05/17 08:15:43 tom Exp $ */
+/* $XTermId: main.c,v 1.921 2024/05/22 20:11:43 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -5730,7 +5730,7 @@ resize_termcap(XtermWidget xw)
     char *newtc = get_tcap_buffer(xw);
 
 #ifndef USE_SYSV_ENVVARS
-    if (!TEK4014_ACTIVE(xw) && *newtc) {
+    if (!TEK4014_ACTIVE(xw) && newtc != NULL && *newtc) {
 	TScreen *screen = TScreenOf(xw);
 	char *ptr1, *ptr2;
 	size_t i;
@@ -5757,6 +5757,10 @@ resize_termcap(XtermWidget xw)
 	ptr1 += 3;
 	ptr2 += 3;
 	strncpy(newtc, oldtc, i = (size_t) (ptr1 - oldtc));
+	if (i >= TERMCAP_SIZE - 10) {
+	    TRACE(("...insufficient space: %lu\n", (unsigned long) i));
+	    return;
+	}
 	temp = newtc + i;
 	sprintf(temp, "%d", (li_first
 			     ? MaxRows(screen)

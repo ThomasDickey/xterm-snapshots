@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2020 2024/05/18 00:21:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2021 2024/05/21 23:45:22 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -478,6 +478,7 @@ static XtResource xterm_resources[] =
     Bres(XtNmultiScroll, XtCMultiScroll, screen.multiscroll, False),
     Bres(XtNoldXtermFKeys, XtCOldXtermFKeys, screen.old_fkeys, False),
     Bres(XtNpopOnBell, XtCPopOnBell, screen.poponbell, False),
+    Bres(XtNpreferLatin1, XtCPreferLatin1, screen.prefer_latin1, True),
     Bres(XtNprinterAutoClose, XtCPrinterAutoClose, SPS.printer_autoclose, False),
     Bres(XtNprinterExtent, XtCPrinterExtent, SPS.printer_extent, False),
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
@@ -1240,7 +1241,9 @@ restoreCharsets(TScreen *screen, DECNRCM_codes * source)
 void
 resetCharsets(TScreen *screen)
 {
-    int dft_upss = (screen->ansi_level >= 2) ? DFT_UPSS : nrc_ASCII;
+    int dft_upss = ((screen->ansi_level >= 2)
+		    ? PreferredUPSS(screen)
+		    : nrc_ASCII);
 
 #if OPT_WIDE_CHARS
     /*
@@ -1259,7 +1262,7 @@ resetCharsets(TScreen *screen)
     }
 #endif
 
-    TRACE(("resetCharsets\n"));
+    TRACE(("resetCharsets: UPSS=%s\n", visibleScsCode(dft_upss)));
 
     /*
      * The assignments for G2/G3 to ASCII differ from the documented DEC
@@ -10606,6 +10609,7 @@ VTInitialize(Widget wrequest,
     wnew->screen.pointer_mode0 = wnew->screen.pointer_mode;
 
     init_Sres(screen.answer_back);
+    init_Bres(screen.prefer_latin1);
 
     wnew->SPS.printer_checked = False;
     init_Sres(SPS.printer_command);

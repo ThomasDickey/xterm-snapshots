@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1123 2024/05/17 20:59:44 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1124 2024/05/21 23:30:59 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1081,6 +1081,7 @@ typedef enum {
  */
 #define DFT_UPSS nrc_DEC_Supp_Graphic
 #define ALT_UPSS nrc_ISO_Latin_1_Supp
+#define PreferredUPSS(screen)	((screen)->prefer_latin1 ? ALT_UPSS : DFT_UPSS)
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
@@ -2634,7 +2635,8 @@ typedef struct {
 	Cursor		pointer_cursor;	/* current pointer cursor	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
-	String	answer_back;		/* response to ENQ		*/
+	String		answer_back;	/* response to ENQ		*/
+	Boolean		prefer_latin1;	/* preference for UPSS		*/
 
 	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
