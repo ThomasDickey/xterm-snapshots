@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.716 2024/05/22 08:18:51 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.717 2024/05/25 16:43:09 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #392
-.ds RF 2024/05/22
+.ds RF 2024/05/25
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1939,8 +1939,8 @@ VT400 & up (LK01) respectively.
 .iP
   \*(Ps = \*5\*5 \(-> Report Locator status.
 The response is
-\*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or
-\*(Cs\*?\*5\*0\*n No Locator, if not.
+\*(Cs\*?\*5\*0\*n Locator available, if compiled-in, or
+\*(Cs\*?\*5\*3\*n No Locator, if not.
   \*(Ps = \*5\*6 \(-> Report Locator type.
 The response is
 \*(Cs\*?\*5\*7\*;\*1\*n Mouse, if compiled-in, or
@@ -2295,7 +2295,7 @@ Request Displayed Extent (DECRQDE), VT340, VT420.
 .br
 Response is
 .br
-  \*(Cs\*(Ph\*;\*(Pw\*;\*(Pc\*;\*(Pr\*;\*(Pp\*s\*(Dq\*v
+  \*(Cs\*(Ph\*;\*(Pw\*;\*(Pc\*;\*(Pr\*;\*(Pp\*s\*(Dq\*w
 .br
 where
   \*(Ph is the number of lines of the current page

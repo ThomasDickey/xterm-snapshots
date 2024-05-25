@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #392 (2024/05/22)
+               updated for XTerm Patch #392 (2024/05/25)
 
 
 
@@ -1308,7 +1308,7 @@ CSI ? Ps n
           and VT400 & up (LK01) respectively.
 
             Ps = 5 5  -> Report Locator status.  The response is CSI ? 5
-          3 n  Locator available, if compiled-in, or CSI ? 5 0 n  No
+          0 n  Locator available, if compiled-in, or CSI ? 5 3 n  No
           Locator, if not.
             Ps = 5 6  -> Report Locator type.  The response is CSI ? 5 7
           ; 1 n  Mouse, if compiled-in, or CSI ? 5 7 ; 0 n  Cannot
@@ -1595,7 +1595,7 @@ CSI Ps SP u
 
 CSI " v   Request Displayed Extent (DECRQDE), VT340, VT420.
           Response is
-            CSI Ph; Pw; Pc; Pr; Pp " v
+            CSI Ph; Pw; Pc; Pr; Pp " w
           where
             Ph is the number of lines of the current page
             Pw is the number of columns of the current page
