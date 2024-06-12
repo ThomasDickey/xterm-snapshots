@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.921 2024/05/22 20:11:43 tom Exp $ */
+/* $XTermId: main.c,v 1.922 2024/06/12 19:17:29 Iain.Riley Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -3877,6 +3877,7 @@ xtermTrimEnv(void)
 	TRIM(0, WINDOW),	/* screen */
 	TRIM(0, XCURSOR_PATH),
 	KEEP(0, MC_XDG_OPEN),
+	KEEP(0, TERM_INGRES),
 	TRIM(1, COLORFGBG),
 	TRIM(1, COLORTERM),
 	TRIM(1, GIO_LAUNCHED_),
