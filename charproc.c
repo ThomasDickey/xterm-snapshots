@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2021 2024/05/21 23:45:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2027 2024/06/27 22:04:57 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -133,6 +133,7 @@
 #include <charclass.h>
 #include <xstrings.h>
 #include <graphics.h>
+#include <graphics_sixel.h>
 
 #ifdef NO_LEAKS
 #include <xtermcap.h>
@@ -1723,7 +1724,12 @@ dump_params(void)
 	    sp->print_used = 0;						\
 	}								\
 
-#define PARSE_SRM 1
+typedef enum {
+    sa_INIT
+    ,sa_LAST
+    ,sa_REGIS
+    ,sa_SIXEL
+} StringArgs;
 
 struct ParseState {
     unsigned check_recur;
@@ -1736,6 +1742,7 @@ struct ParseState {
     int scssize;
     Bool private_function;	/* distinguish private-mode from standard */
     int string_mode;		/* nonzero iff we're processing a string */
+    StringArgs string_args;	/* parse-state within string processing */
     Bool string_skip;		/* true if we will ignore the string */
     int lastchar;		/* positive iff we had a graphic character */
     int nextstate;
@@ -2207,6 +2214,44 @@ one_if_default(int which)
     if (result <= 0)
 	result = 1;
     return result;
+}
+
+#define BeginString(mode) \
+	do { \
+	    sp->string_mode = mode; \
+	    sp->string_args = sa_LAST; \
+	    sp->parsestate = sos_table; \
+	} while (0)
+
+#define BeginString2(mode) \
+	do { \
+	    sp->string_mode = mode; \
+	    sp->string_args = sa_INIT; \
+	    sp->parsestate = sos_table; \
+	} while (0)
+
+static void
+begin_sixel(XtermWidget xw, struct ParseState *sp)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    sp->string_args = sa_LAST;
+    if (optSixelGraphics(screen)) {
+#if OPT_SIXEL_GRAPHICS
+	ANSI params;
+	const char *cp;
+
+	cp = (const char *) sp->string_area;
+	sp->string_area[sp->string_used] = '\0';
+	parse_ansi_params(&params, &cp);
+	parse_sixel_init(xw, &params);
+	sp->string_args = sa_SIXEL;
+	sp->string_used = 0;
+#else
+	(void) screen;
+	TRACE(("ignoring sixel graphic (compilation flag not enabled)\n"));
+#endif
+    }
 }
 
 /*
@@ -3179,11 +3224,36 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	}
 
 	/*
-	 * Accumulate string for APC, DCS, PM, OSC, SOS controls
-	 * This should always be 8-bit characters.
+	 * Accumulate string for DCS, OSC controls
+	 * The string content should always be 8-bit characters.
+	 *
+	 * APC, PM and SOS are ignored; xterm currently does not use those.
 	 */
 	if (sp->parsestate == sos_table) {
-	    if (sp->string_skip) {
+#if OPT_WIDE_CHARS
+	    /*
+	     * We cannot display codes above 255, but let's try to
+	     * accommodate the application a little by not aborting the
+	     * string.
+	     */
+	    if ((c & WIDEST_ICHAR) > 255) {
+		sp->nextstate = CASE_PRINT;
+		c = BAD_ASCII;
+	    }
+#endif
+	    if (sp->string_mode == ANSI_APC ||
+		sp->string_mode == ANSI_PM ||
+		sp->string_mode == ANSI_SOS) {
+		/* EMPTY */
+	    }
+#if OPT_SIXEL_GRAPHICS
+	    else if (sp->string_args == sa_SIXEL) {
+		/* avoid adding the string-terminator */
+		if (sos_table[CharOf(c)] == CASE_IGNORE)
+		    parse_sixel_char((char)c);
+	    }
+#endif
+	    else if (sp->string_skip) {
 		sp->string_used++;
 	    } else if (sp->string_used > screen->strings_max) {
 		sp->string_skip = True;
@@ -3198,18 +3268,38 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    continue;
 		}
 		SafeFree(sp->string_area, sp->string_size);
-#if OPT_WIDE_CHARS
 		/*
-		 * We cannot display codes above 255, but let's try to
-		 * accommodate the application a little by not aborting the
-		 * string.
+		 * ReGIS and SIXEL data can be detected by skipping over (only)
+		 * parameters to the first non-parameter character and
+		 * inspecting it.  Since both are DCS, we can also ignore OSC.
 		 */
-		if ((c & WIDEST_ICHAR) > 255) {
-		    sp->nextstate = CASE_PRINT;
-		    c = BAD_ASCII;
-		}
-#endif
 		sp->string_area[(sp->string_used)++] = CharOf(c);
+		if (sp->string_args < sa_LAST) {
+		    switch (c) {
+		    case ':':
+		    case ';':
+		    case '0':
+		    case '1':
+		    case '2':
+		    case '3':
+		    case '4':
+		    case '5':
+		    case '6':
+		    case '7':
+		    case '8':
+		    case '9':
+			break;
+		    case 'p':
+			sp->string_args = sa_REGIS;
+			break;
+		    case 'q':
+			begin_sixel(xw, sp);
+			break;
+		    default:
+			sp->string_args = sa_LAST;
+			break;
+		    }
+		}
 	    }
 	} else if (sp->parsestate != esc_table) {
 	    /* if we were accumulating, we're not any more */
@@ -4893,7 +4983,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		   (unsigned long) sp->string_used,
 		   sp->string_mode));
 	    ResetState(sp);
-	    if (!sp->string_used)
+	    if (!sp->string_used && !sp->string_args)
 		break;
 	    if (sp->string_skip) {
 		xtermWarning("Ignoring too-long string (%lu) for mode %#02x\n",
@@ -4902,14 +4992,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		sp->string_skip = False;
 		sp->string_used = 0;
 	    } else {
-		sp->string_area[--(sp->string_used)] = '\0';
+		if (sp->string_used)
+		    sp->string_area[--(sp->string_used)] = '\0';
 		if (sp->check_recur <= 1) {
 		    switch (sp->string_mode) {
 		    case ANSI_APC:
 			/* ignored */
 			break;
 		    case ANSI_DCS:
-			do_dcs(xw, sp->string_area, sp->string_used);
+#if OPT_SIXEL_GRAPHICS
+			if (sp->string_args == sa_SIXEL) {
+			    parse_sixel_finished(xw);
+			    TRACE(("DONE parsed sixel data\n"));
+			} else
+#endif
+			    do_dcs(xw, sp->string_area, sp->string_used);
 			break;
 		    case ANSI_OSC:
 			do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
@@ -4931,8 +5028,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SOS:
 	    TRACE(("CASE_SOS: Start of String\n"));
 	    if (ParseSOS(screen)) {
-		sp->string_mode = ANSI_SOS;
-		sp->parsestate = sos_table;
+		BeginString(ANSI_SOS);
 	    } else {
 		illegal_parse(xw, c, sp);
 	    }
@@ -4941,8 +5037,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_PM:
 	    TRACE(("CASE_PM: Privacy Message\n"));
 	    if (ParseSOS(screen)) {
-		sp->string_mode = ANSI_PM;
-		sp->parsestate = sos_table;
+		BeginString(ANSI_PM);
 	    } else {
 		illegal_parse(xw, c, sp);
 	    }
@@ -4950,15 +5045,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DCS:
 	    TRACE(("CASE_DCS: Device Control String\n"));
-	    sp->string_mode = ANSI_DCS;
-	    sp->parsestate = sos_table;
+	    BeginString2(ANSI_DCS);
 	    break;
 
 	case CASE_APC:
 	    TRACE(("CASE_APC: Application Program Command\n"));
 	    if (ParseSOS(screen)) {
-		sp->string_mode = ANSI_APC;
-		sp->parsestate = sos_table;
+		BeginString(ANSI_APC);
 	    } else {
 		illegal_parse(xw, c, sp);
 	    }
@@ -5733,8 +5826,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_OSC:
 	    TRACE(("CASE_OSC: Operating System Command\n"));
-	    sp->parsestate = sos_table;
-	    sp->string_mode = ANSI_OSC;
+	    BeginString(ANSI_OSC);
 	    break;
 
 	case CASE_RIS:

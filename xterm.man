@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.902 2024/05/22 08:15:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.904 2024/06/28 23:56:28 tom Exp $
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
@@ -4243,7 +4243,7 @@ several types of control strings which can contain text, e.g.,
 \fI\*N\fP reads these strings,
 accumulating them into a buffer until they are properly terminated.
 At that point, \fI\*n\fP interprets the strings.
-If they happen to be \fBDCS\fP commands to draw ReGIS or SIXEL images,
+If they happen to be \fBDCS\fP commands to draw ReGIS images,
 these strings may be large, in the hundreds of kilobytes.
 A few \fBOSC\fP commands may be as large as 10 kilobytes.
 .IP

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1092 2024/05/21 00:28:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.1094 2024/06/26 08:05:39 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4458,7 +4458,7 @@ parse_decudk(XtermWidget xw, const char *cp)
  * Parse numeric parameters.  Normally we use a state machine to simplify
  * interspersing with control characters, but have the string already.
  */
-static void
+void
 parse_ansi_params(ANSI *params, const char **string)
 {
     const char *cp = *string;
@@ -5272,7 +5272,6 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	/* FALLTHRU */
     default:
 	if (optRegisGraphics(screen) ||
-	    optSixelGraphics(screen) ||
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
@@ -5285,19 +5284,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		TRACE(("ignoring ReGIS graphic (compilation flag not enabled)\n"));
 #endif
 		break;
-	    case 'q':		/* sixel */
-#if OPT_SIXEL_GRAPHICS
-		if (optSixelGraphics(screen)) {
-		    parse_sixel_init(xw, &params);
-		    while (*cp) {
-			parse_sixel_char(*cp++);
-		    }
-		    parse_sixel_finished(xw);
-		    TRACE(("DONE parsed sixel data\n"));
-		}
-#else
-		TRACE(("ignoring sixel graphic (compilation flag not enabled)\n"));
-#endif
+	    case 'q':		/* sixel is done in charproc.c */
 		break;
 	    case '|':		/* DECUDK */
 		if (screen->vtXX_level >= 2) {	/* VT220 */
