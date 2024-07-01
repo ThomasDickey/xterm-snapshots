@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2027 2024/06/27 22:04:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2028 2024/07/01 21:20:11 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3250,7 +3250,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    else if (sp->string_args == sa_SIXEL) {
 		/* avoid adding the string-terminator */
 		if (sos_table[CharOf(c)] == CASE_IGNORE)
-		    parse_sixel_char((char)c);
+		    parse_sixel_char((char) c);
 	    }
 #endif
 	    else if (sp->string_skip) {
@@ -5002,7 +5002,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    case ANSI_DCS:
 #if OPT_SIXEL_GRAPHICS
 			if (sp->string_args == sa_SIXEL) {
-			    parse_sixel_finished(xw);
+			    parse_sixel_finished();
 			    TRACE(("DONE parsed sixel data\n"));
 			} else
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.57 2024/05/16 20:03:50 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.62 2024/07/01 21:19:30 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -272,18 +272,18 @@ update_sixel_aspect(SixelContext * context, Graphic *graphic)
 #endif
 }
 
-static int
-finished_parsing(XtermWidget xw, Graphic *graphic)
+static void
+finished_parsing(Graphic *graphic)
 {
-    TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(s_xw);
 
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
      */
     if (screen->scroll_amt)
-	FlushScroll(xw);
+	FlushScroll(s_xw);
 
-    if (SixelScrolling(xw)) {
+    if (SixelScrolling(s_xw)) {
 	int new_row, new_col;
 
 	/* Note: XTerm follows the VT340 behavior in text cursor placement
@@ -327,7 +327,7 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
 	}
 
 	while (new_row > screen->bot_marg) {
-	    xtermScroll(xw, 1);
+	    xtermScroll(s_xw, 1);
 	    new_row--;
 	    TRACE(("bottom row was past screen.  new start row=%d, cursor row=%d\n",
 		   graphic->charrow, new_row));
@@ -344,16 +344,15 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
     }
 
     graphic->dirty = True;
-    refresh_modified_displayed_graphics(xw);
+    refresh_modified_displayed_graphics(s_xw);
     dump_graphic(graphic);
-    return 0;
 }
 
 /*
  * Handle Sixel protocol selector: Ps1 ; Ps2 ; Ps3 q
  * Refer to EK-PPLV2-PM, Table 5-1 "Macro Parameter Selections"
  */
-int
+void
 parse_sixel_init(XtermWidget xw, ANSI *params)
 {
     s_xw = xw;
@@ -455,8 +454,6 @@ parse_sixel_init(XtermWidget xw, ANSI *params)
     }
 
     update_sixel_aspect(&s_context, s_graphic);
-
-    return 0;
 }
 
 #if defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_MONOTONIC)
@@ -537,7 +534,7 @@ parse_sixel_incremental_display(void)
     s_prev_col = dirty_col;
 }
 
-int
+void
 parse_sixel_char(char cp)
 {
     /* s_* variables are static state, defined above */
@@ -546,9 +543,9 @@ parse_sixel_char(char cp)
 	if (s_repeating && cp == '\0') {
 	    TRACE(("DATA_ERROR: sixel data string terminated in the middle of a repeat operator\n"));
 	    s_repeating = False;
-	    return finished_parsing(s_xw, s_graphic);
+	    finished_parsing(s_graphic);
 	}
-	return 0;
+	return;
     }
 
     if (isdigit(cp)) {
@@ -556,7 +553,7 @@ parse_sixel_char(char cp)
 	    s_accumulator = 0;
 	s_accumulator *= 10;
 	s_accumulator += cp - '0';
-	return 0;
+	return;
     }
 
     if (s_repeating) {		/* '!' ...  */
@@ -580,7 +577,6 @@ parse_sixel_char(char cp)
 			set_sixel(s_graphic, &s_context, sixel)) {
 			s_context.col++;
 		    } else {
-			s_context.col = 0;
 			break;
 		    }
 		}
@@ -596,7 +592,7 @@ parse_sixel_char(char cp)
 	s_repeating = False;
 	if (s_screen->incremental_graphics)
 	    parse_sixel_incremental_display();
-	return 0;
+	return;
     }
 
     /* FIXME: Raster attributes (") can occur repeatedly and at any time. */
@@ -633,7 +629,8 @@ parse_sixel_char(char cp)
 		TRACE(("DATA_ERROR: raster " #field " %d > max %d\n", \
 		       s_raster_params[state], s_graphic->max_ ## field)); \
 		s_raster_state = s_NOTRASTER; \
-		return finished_parsing(s_xw, s_graphic); \
+		finished_parsing(s_graphic); \
+		return; \
 	    } \
 	    s_context.declared_ ## field = s_raster_params[state]; \
 	    break
@@ -649,7 +646,8 @@ parse_sixel_char(char cp)
 	    TRACE(("DATA_ERROR: raster operator ('\"') with too many parameters (%d)\n, next char %c (%d)\n",
 		   s_raster_state, cp, cp));
 	    s_raster_state = s_NOTRASTER;
-	    return finished_parsing(s_xw, s_graphic);
+	    finished_parsing(s_graphic);
+	    return;
 	}
 
 	/* Save data from Raster Attributes */
@@ -664,7 +662,7 @@ parse_sixel_char(char cp)
 	s_raster_state++;
 
 	if (cp == ';') {
-	    return 0;
+	    return;
 	}
 
 	/* cp (next character to consume) is not digit, space, or semicolon, so finish up with raster  */
@@ -692,7 +690,8 @@ parse_sixel_char(char cp)
 		/* FIXME: What does VT340 do with default register? */
 		TRACE(("DATA_ERROR: sixel data string uses default color register, next char %c (%d)\n",
 		       cp, cp));
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 	    s_Pregister = (RegisterNum) s_color_params[s_GETTINGREGISTER];
 	    /* The DEC terminals wrapped register indices. */
@@ -705,7 +704,8 @@ parse_sixel_char(char cp)
 		/* FIXME: Default VT340 colorspace is HSL, right? */
 		TRACE(("DATA_ERROR: sixel data string uses default colorspace \n"));
 		s_color_state = s_NOTCOLORING;
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 	    break;
 	case s_GETTINGPC1:
@@ -713,7 +713,8 @@ parse_sixel_char(char cp)
 		/* FIXME: Does VT340 sixel do the same as ReGIS and use the previous value for unspecified color components?   */
 		TRACE(("DATA_ERROR: sixel data string uses default color component 1 \n"));
 		s_color_state = s_NOTCOLORING;
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 	    break;
 	case s_GETTINGPC2:
@@ -721,7 +722,8 @@ parse_sixel_char(char cp)
 		/* FIXME: unspecified color components?   */
 		TRACE(("DATA_ERROR: sixel data string uses default color component 2 \n"));
 		s_color_state = s_NOTCOLORING;
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 	    break;
 	case s_GETTINGPC3:
@@ -729,7 +731,8 @@ parse_sixel_char(char cp)
 		/* FIXME: unspecified color components?   */
 		TRACE(("DATA_ERROR: sixel data string uses default color component 3 \n"));
 		s_color_state = s_NOTCOLORING;
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 	    break;
 	case s_COLORINGDONE:
@@ -741,20 +744,22 @@ parse_sixel_char(char cp)
 	    TRACE(("DATA_ERROR: sixel switch color operator ('#') with too many parameters\n, next char %c (%d)\n",
 		   cp, cp));
 	    s_color_state = s_NOTCOLORING;
-	    return finished_parsing(s_xw, s_graphic);
+	    finished_parsing(s_graphic);
+	    return;
 	}
 
 	s_accumulator = -1;
 	s_color_state++;
 
 	if (cp == ';') {
-	    return 0;
+	    return;
 	} else {
 	    /* cp (next character to consume) is not digit, space, or semicolon, so finish up with color  */
 	    if (s_color_state != s_COLORINGDONE && s_color_state != s_GETTINGCOLORSPACE) {
 		TRACE(("DATA_ERROR: sixel switch color operator with wrong number of parameters (%d)\n", s_color_state));
 		s_color_state = s_NOTCOLORING;
-		return finished_parsing(s_xw, s_graphic);
+		finished_parsing(s_graphic);
+		return;
 	    }
 
 	    if (s_color_state == s_COLORINGDONE) {
@@ -775,7 +780,8 @@ parse_sixel_char(char cp)
 			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range HLS color coordinates %d,%d,%d\n",
 			       Pc1, Pc2, Pc3));
 			s_color_state = s_NOTCOLORING;
-			return finished_parsing(s_xw, s_graphic);
+			finished_parsing(s_graphic);
+			return;
 		    }
 		    hls2rgb(Pc1, Pc2, Pc3, &r, &g, &b);
 		    break;
@@ -784,7 +790,8 @@ parse_sixel_char(char cp)
 			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range RGB color coordinates %d,%d,%d\n",
 			       Pc1, Pc2, Pc3));
 			s_color_state = s_NOTCOLORING;
-			return finished_parsing(s_xw, s_graphic);
+			finished_parsing(s_graphic);
+			return;
 		    }
 		    r = (short) Pc1;
 		    g = (short) Pc2;
@@ -793,7 +800,8 @@ parse_sixel_char(char cp)
 		default:	/* unknown */
 		    TRACE(("DATA_ERROR: sixel set color operator uses unknown color space %d\n", Pspace));
 		    s_color_state = s_NOTCOLORING;
-		    return finished_parsing(s_xw, s_graphic);
+		    finished_parsing(s_graphic);
+		    return;
 		}
 		update_color_register(s_graphic,
 				      s_Pregister,
@@ -815,8 +823,7 @@ parse_sixel_char(char cp)
 	if (sixel) {
 	    if (!ValidColumn(s_graphic, &s_context) ||
 		!set_sixel(s_graphic, &s_context, sixel)) {
-		s_context.col = 0;
-		return 0;
+		return;
 	    }
 	}
 	s_context.col++;
@@ -877,14 +884,11 @@ parse_sixel_char(char cp)
 	TRACE(("DATA_ERROR: skipping unknown sixel command %04x (%c)\n",
 	       (int) cp, cp));
     }
-
-    return 0;
 }
 
-/* Just like finished_parsing, but called from do_dcs in misc.c */
-int
-parse_sixel_finished(XtermWidget xw)
+/* Just like finished_parsing, but called from charproc.c */
+void
+parse_sixel_finished(void)
 {
-    /* FIXME: should use s_xw */
-    return finished_parsing(xw, s_graphic);
+    finished_parsing(s_graphic);
 }
