@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2626 2024/07/01 22:47:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.2627 2024/07/04 23:52:26 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1067,6 +1067,18 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fixes for <tt>wcwidth</tt>:
+      <ul>
+        <li>return 0 for format effectors, like a zero-width
+        printing character rather than -1 like a control character
+        (report by Rajeev V. Pillai).</li>
+
+        <li>correct <tt>doublewidth</tt> to account for reserved
+        codepoints which are listed in the EastAsianWidth
+        file.</li>
+      </ul>
+    </li>
+
     <li>amend sixel bounds-check added in <a href=
     "#xterm_371">patch #371</a> to not wrap out-of-bounds
     data.</li>
