@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.67 2024/07/04 23:47:55 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.73 2024/07/06 00:45:04 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -115,14 +115,21 @@
  *-----------------------------------------------------------------------------
  */
 
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
+
 #ifdef TEST_DRIVER
 #include <stdio.h>
 #include <stdlib.h>             /* EXIT_SUCCESS, etc. */
 #include <unistd.h>             /* getopt() */
 #include <string.h>             /* strncmp() */
 #include <locale.h>             /* setlocale() */
-#include <wchar.h>              /* wcwidth() */
 #include <wctype.h>             /* this module */
+#endif
+
+#ifdef HAVE_WCHAR_H
+#include <wchar.h>              /* wcwidth() */
 #endif
 
 #include <wcwidth.h>
@@ -677,6 +684,12 @@ int mk_wcwidth(wchar_t ucs)
 
     if (Lookup(cmp, doublewidth)) {
       result = 2;
+    } else if (cmp >= 0xd800 && cmp <= 0xdfff) {
+#ifdef HAVE_WCWIDTH
+      result = (wcwidth)(ucs);
+#else
+      result = -1;
+#endif
     } else if (cmp >= unknowns[0].first && Lookup(cmp, unknowns)) {
       result = -1;
     }

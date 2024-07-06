@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.194 2023/11/23 12:23:06 tom Exp $
+-- $XTermId: INSTALL,v 1.195 2024/07/05 22:50:45 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2022,2023 by Thomas E. Dickey
+-- Copyright 1997-2023,2024 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -197,14 +197,6 @@ The options (in alphabetic order):
 
   	Do not compile-in code to handle multi-byte characters.  This is
 	related to, but not identical with the input method logic.
-
-  --disable-imake         disable use of imake for definitions
-
-  	Do not attempt to use imake to determine compiler options.
-
-	The main.c file has many ifdef's which rely on obscure combinations
-	known only to imake.  The configure script implements only a
-	portion of the tests needed to supplant imake.
 
   --disable-initial-erase disable setup for stty erase
 
@@ -483,6 +475,14 @@ The options (in alphabetic order):
 
   	Compile-in code to support HP-style function keys.
 
+  --enable-imake          enable use of imake for definitions
+
+  	Attempt to use imake to determine compiler options.
+
+	The main.c file has many ifdef's which rely on obscure combinations
+	known only to imake.  The configure script implements only a
+	portion of the tests needed to supplant imake.
+
   --enable-load-vt-fonts  enable load-vt-fonts() action
 
   	Compile-in code that allows user to define load different VT-font
@@ -522,12 +522,12 @@ The options (in alphabetic order):
 	with the X.org "modular" build, whose compiler options are unrelated to
 	imake or older versions of any libraries that it may distribute.  In
 	this case, the configure script needs some help.  Use this option to
-	enable or disable NARROW proto (and disable imake with the
-	--disable-imake option) to match the whims of X.org hackers.
+	enable or disable NARROW proto (and do not enable imake with the
+	--enable-imake option) to match the whims of X.org hackers.
 
 	For instance
 
-		configure --disable-imake --disable-narrowproto
+		configure --disable-narrowproto
 
   --enable-pty-erase      set default ptyInitialErase resource (default: false)
 

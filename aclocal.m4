@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.526 2024/05/11 17:41:03 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.528 2024/07/05 23:35:35 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -4254,7 +4254,7 @@ AC_SUBST(ICON_LIST)
 AC_SUBST(ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 12 updated: 2022/02/24 17:10:03
+dnl CF_WITH_IMAKE_CFLAGS version: 13 updated: 2024/07/05 19:34:53
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
@@ -4263,10 +4263,10 @@ AC_DEFUN([CF_WITH_IMAKE_CFLAGS],[
 AC_REQUIRE([CF_ENABLE_NARROWPROTO])
 
 AC_MSG_CHECKING(if we should use imake to help)
-CF_ARG_DISABLE(imake,
-	[  --disable-imake         disable use of imake for definitions],
-	[enable_imake=no],
-	[enable_imake=yes])
+CF_ARG_ENABLE(imake,
+	[  --enable-imake          enable use of imake for definitions],
+	[enable_imake=yes],
+	[enable_imake=no])
 AC_MSG_RESULT($enable_imake)
 
 if test "$enable_imake" = yes ; then

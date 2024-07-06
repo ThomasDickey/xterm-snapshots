@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.232 2024/05/17 08:13:42 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.233 2024/07/05 23:37:42 tom Exp $ */
 
 /*
  * Copyright 1997-2023,2024 by Thomas E. Dickey
@@ -74,7 +74,6 @@
 #undef HAVE_GRANTPT_PTY_ISATTY	/* CF_FUNC_GRANTPT */
 #undef HAVE_INITGROUPS		/* AC_CHECK_FUNCS(initgroups) */
 #undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
-#undef HAVE_LASTLOG_H		/* AC_CHECK_HEADERS(lastlog.h) */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_LIBUTIL_H		/* AC_CHECK_HEADERS(libutil.h) */
 #undef HAVE_LIBXPM		/* CF_WITH_XPM */
@@ -90,12 +89,9 @@
 #undef HAVE_MKSTEMP		/* CF_MKSTEMP */
 #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
-#undef HAVE_PATHS_H		/* AC_CHECK_HEADERS(paths.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
-#undef HAVE_PCRE2POSIX_H	/* AC_CHECK_HEADERS(pcre2posix.h) */
 #undef HAVE_PCRE2POSIX_H	/* CF_WITH_PCRE2 */
 #undef HAVE_PCRE2REGCOMP	/* CF_WITH_PCRE2 */
-#undef HAVE_PCREPOSIX_H		/* AC_CHECK_HEADERS(pcreposix.h) */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
 #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
 #undef HAVE_POSIX_SAVED_IDS	/* CF_POSIX_SAVED_IDS */
