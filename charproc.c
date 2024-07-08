@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2028 2024/07/01 21:20:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2029 2024/07/08 20:52:05 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4041,7 +4041,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    default:
 			TRACE(("...unexpected subparameter in SGR\n"));
 			item += skip;	/* ignore this */
-			op = NPARAM;	/* will never use this, anyway */
+			op = 9999;	/* will never use this, anyway */
 			break;
 		    }
 		}
