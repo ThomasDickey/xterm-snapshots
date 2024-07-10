@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.922 2024/06/12 19:17:29 Iain.Riley Exp $ */
+/* $XTermId: main.c,v 1.923 2024/07/09 08:03:49 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -2905,7 +2905,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	resource.title = x_strdup(my_class);
 	for (n = 0; resource.title[n]; ++n) {
 	    if (isalpha(CharOf(resource.title[n])))
-		resource.title[n] = (char) tolower(resource.title[n]);
+		resource.title[n] = (char) tolower(CharOf(resource.title[n]));
 	}
 	TRACE(("setting:\n\ttitle \"%s\"\n", resource.title));
 	XtSetArg(args[0], XtNtitle, resource.title);

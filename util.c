@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.948 2024/05/18 00:18:02 tom Exp $ */
+/* $XTermId: util.c,v 1.950 2024/07/10 20:22:19 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3886,7 +3886,8 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
     XChar2b *buffer2 = BfBuf(XChar2b);
     VTwin *currentWin = WhichVWin(screen);
     XTermFonts *xf = getCgsFont(xw, currentWin, gc);
-    XTermFonts *fp = xf ? xf : getNormalFont(screen, fNorm);
+    XTermFonts *fn = getNormalFont(screen, fNorm);
+    XTermFonts *fp = xf ? xf : fn;
 
     for (src = dst = 0; src < (int) length; src++) {
 	IChar ch = mapped[src];
@@ -3899,7 +3900,11 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 #if OPT_WIDER_ICHAR
 	       (ch > NARROW_ICHAR) ||
 #endif
-	       xtermMissingChar(ch, fp)) {
+	       xtermMissingChar(ch,
+				(((xf >= fn) && (xf - fn) <= fMAX)
+				 ? XTermFontsRef(screen->fnts,
+						 (VTFontEnum) (xf - fn))
+				 : fp))) {
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
 	    if (xtermIsDecTechnical(ch)) {
 		xtermDrawBoxChar(params, ch, gc,

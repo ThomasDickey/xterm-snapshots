@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2029 2024/07/08 20:52:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2032 2024/07/10 21:09:42 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -2196,6 +2196,12 @@ static int
 optional_param(int which)
 {
     return (nparam > which) ? GetParam(which) : DEFAULT;
+}
+
+static int
+only_default(void)
+{
+    return (nparam <= 1) && (GetParam(0) == DEFAULT);
 }
 
 static int
@@ -4594,7 +4600,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    set_lr_margins(screen, left - 1, right - 1);
 		    CursorSet(screen, 0, 0, xw->flags);
 		}
-	    } else {
+	    } else if (only_default()) {
 		TRACE(("CASE_ANSI_SC - save cursor\n"));
 		CursorSave(xw);
 	    }
@@ -4608,6 +4614,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ANSI_RC:
+	    if (!only_default())
+		break;
 	    /* FALLTHRU */
 	case CASE_DECRC:
 	    TRACE(("CASE_%sRC - restore cursor\n",

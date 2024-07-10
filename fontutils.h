@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.145 2024/05/17 19:55:52 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.146 2024/07/10 15:48:31 tom Exp $ */
 
 /*
  * Copyright 1998-2022,2024 by Thomas E. Dickey
@@ -130,6 +130,14 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 extern void xtermDrawBoxChar (XTermDraw * /* params */, unsigned /* ch */, GC /* gc */, int /* x */, int /* y */, int /* cols */, Bool /* xftords */);
 
 #if OPT_BOX_CHARS || OPT_REPORT_FONTS
+#define XTermFontsRef(fontList, which) \
+	((((fontList)[(which)].fs == NULL || \
+	   (fontList)[(which)].fs->per_char == NULL) && \
+	 (which) != fNorm && \
+	 (fontList)[fNorm].fs != NULL && \
+	 (fontList)[fNorm].fs->per_char != NULL) \
+	? &((fontList)[fNorm]) \
+	: &((fontList)[(which)]))
 extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 #endif
 

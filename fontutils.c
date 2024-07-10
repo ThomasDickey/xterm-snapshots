@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.782 2024/05/17 19:54:51 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.783 2024/07/10 15:48:26 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -1203,6 +1203,81 @@ reportXCharStruct(const char *tag, XCharStruct * cs)
 }
 
 static void
+fillXCharStruct(XCharStruct * cs, short value)
+{
+    cs->lbearing = value;
+    cs->rbearing = value;
+    cs->width = value;
+    cs->ascent = value;
+    cs->descent = value;
+}
+
+/* if the per-character data differs from the summary, that is a problem */
+static void
+compareXCharStruct(const char *tag, XCharStruct * actual, XCharStruct * expect)
+{
+#define CompareXCharStruct(field) \
+    if (actual->field != expect->field) \
+    	ReportFonts("\t\t%s %s differs: %d\n", tag, #field, actual->field)
+    CompareXCharStruct(lbearing);
+    CompareXCharStruct(rbearing);
+    CompareXCharStruct(width);
+    CompareXCharStruct(ascent);
+    CompareXCharStruct(descent);
+}
+
+static void
+reportXPerChar(XFontStruct *fs)
+{
+    XCharStruct *cs = fs->per_char;
+
+    if (cs != NULL) {
+	XCharStruct min_bounds;
+	XCharStruct max_bounds;
+	int valid = 0;
+	int total = 0;
+	unsigned first_char = 0;
+	unsigned last_char = 0;
+	unsigned ch;
+
+	if (fs->max_byte1 == 0) {
+	    first_char = fs->min_char_or_byte2;
+	    last_char = fs->max_char_or_byte2;
+	} else {
+	    first_char = (fs->min_byte1 * 256) + fs->min_char_or_byte2;
+	    last_char = (fs->max_byte1 * 256) + fs->max_char_or_byte2;
+	}
+
+	fillXCharStruct(&max_bounds, -32768);
+	fillXCharStruct(&min_bounds, 32767);
+	for (ch = first_char; ch < last_char; ++ch) {
+	    XCharStruct *item = cs + ch;
+	    ++total;
+	    if (!CI_NONEXISTCHAR(item)) {
+		++valid;
+#define MIN_BOUNDS(field) min_bounds.field = Min(min_bounds.field, item->field)
+		MIN_BOUNDS(lbearing);
+		MIN_BOUNDS(rbearing);
+		MIN_BOUNDS(width);
+		MIN_BOUNDS(ascent);
+		MIN_BOUNDS(descent);
+#define MAX_BOUNDS(field) max_bounds.field = Max(max_bounds.field, item->field)
+		MAX_BOUNDS(lbearing);
+		MAX_BOUNDS(rbearing);
+		MAX_BOUNDS(width);
+		MAX_BOUNDS(ascent);
+		MAX_BOUNDS(descent);
+	    }
+	}
+	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);
+	compareXCharStruct("Max", &max_bounds, &(fs->max_bounds));
+	compareXCharStruct("Min", &min_bounds, &(fs->min_bounds));
+    } else {
+	ReportFonts("\t\tPer-character: none\n");
+    }
+}
+
+static void
 reportOneVTFont(const char *tag,
 		XTermFonts * fnt)
 {
@@ -1249,7 +1324,8 @@ reportOneVTFont(const char *tag,
 	ReportFonts("\t\tproperties:    %d\n", fs->n_properties);
 	reportXCharStruct("min_bounds", &(fs->min_bounds));
 	reportXCharStruct("max_bounds", &(fs->max_bounds));
-	/* TODO: report fs->properties and fs->per_char */
+	reportXPerChar(fs);
+	/* TODO: report fs->properties */
     }
 }
 
@@ -1265,11 +1341,12 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 	    ReportFonts("Loaded VTFonts(default)\n");
 	}
 
-	reportOneVTFont("fNorm", GetNormalFont(screen, fNorm));
-	reportOneVTFont("fBold", GetNormalFont(screen, fBold));
+#define ReportOneVTFont(name) reportOneVTFont(#name, screen->fnts + name)
+	ReportOneVTFont(fNorm);
+	ReportOneVTFont(fBold);
 #if OPT_WIDE_CHARS
-	reportOneVTFont("fWide", GetNormalFont(screen, fWide));
-	reportOneVTFont("fWBold", GetNormalFont(screen, fWBold));
+	ReportOneVTFont(fWide);
+	ReportOneVTFont(fWBold);
 #endif
     }
 }
@@ -4101,7 +4178,7 @@ xtermDrawBoxChar(XTermDraw * params,
 	int which = (params->attr_flags & BOLD) ? fBold : fNorm;
 	unsigned n;
 	for (n = 1; n < 32; n++) {
-	    if (xtermMissingChar(n, getNormalFont(screen, which)))
+	    if (xtermMissingChar(n, XTermFontsRef(screen->fnts, which)))
 		continue;
 	    if (dec2ucs(screen, n) != ch)
 		continue;
