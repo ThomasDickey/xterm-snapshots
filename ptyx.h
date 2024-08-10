@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1124 2024/05/21 23:30:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1125 2024/08/09 21:25:44 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1598,7 +1598,7 @@ typedef enum {
 #define DBLCS_BITS            4
 #define DBLCS_MASK            BITS2MASK(DBLCS_BITS)
 
-#define GetLineDblCS(ld)      (((ld)->bufHead >> LINEFLAG_BITS) & DBLCS_MASK)
+#define GetLineDblCS(ld)      ((ld) != NULL ? (((ld)->bufHead >> LINEFLAG_BITS) & DBLCS_MASK) : 0)
 #define SetLineDblCS(ld,cs)   (ld)->bufHead = (RowData) ((ld->bufHead & LINEFLAG_MASK) | (cs << LINEFLAG_BITS))
 
 #define LineCharSet(screen, ld) \

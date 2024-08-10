@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.783 2024/07/10 15:48:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.784 2024/08/10 00:18:36 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -1250,8 +1250,9 @@ reportXPerChar(XFontStruct *fs)
 
 	fillXCharStruct(&max_bounds, -32768);
 	fillXCharStruct(&min_bounds, 32767);
+	TRACE2(("\t\tCells: %d..%d\n", first_char, last_char));
 	for (ch = first_char; ch < last_char; ++ch) {
-	    XCharStruct *item = cs + ch;
+	    XCharStruct *item = cs + ch - first_char;
 	    ++total;
 	    if (!CI_NONEXISTCHAR(item)) {
 		++valid;
@@ -1267,6 +1268,15 @@ reportXPerChar(XFontStruct *fs)
 		MAX_BOUNDS(width);
 		MAX_BOUNDS(ascent);
 		MAX_BOUNDS(descent);
+		TRACE2(("\t\t\t%d: cell [%d .. %d] wide %d high %d / %d\n",
+			ch,
+			item->lbearing,
+			item->rbearing,
+			item->width,
+			item->ascent,
+			item->descent));
+	    } else {
+		TRACE(("\t\t\t%d: cell missing\n", ch));
 	    }
 	}
 	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);

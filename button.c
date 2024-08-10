@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.663 2024/04/19 07:42:00 tom Exp $ */
+/* $XTermId: button.c,v 1.664 2024/08/09 21:29:35 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3754,7 +3754,13 @@ okPosition(TScreen *screen,
 {
     Boolean result = True;
 
-    if (cell->row > screen->max_row) {
+    assert(ld != NULL);
+    assert(*ld != NULL);
+
+    if (*ld == NULL) {
+	result = False;
+	TRACE(("okPosition LineData is null!\n"));
+    } else if (cell->row > screen->max_row) {
 	result = False;
 	TRACE(("okPosition cell row %d > screen max %d\n", cell->row, screen->max_row));
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
