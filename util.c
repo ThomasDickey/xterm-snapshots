@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.950 2024/07/10 20:22:19 tom Exp $ */
+/* $XTermId: util.c,v 1.951 2024/08/11 22:40:46 Matthew.Martin Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3901,7 +3901,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 	       (ch > NARROW_ICHAR) ||
 #endif
 	       xtermMissingChar(ch,
-				(((xf >= fn) && (xf - fn) <= fMAX)
+				(((xf >= fn) && (xf - fn) < fMAX)
 				 ? XTermFontsRef(screen->fnts,
 						 (VTFontEnum) (xf - fn))
 				 : fp))) {
