@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.951 2024/08/11 22:40:46 Matthew.Martin Exp $ */
+/* $XTermId: util.c,v 1.954 2024/08/29 17:07:30 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3905,8 +3905,11 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 				 ? XTermFontsRef(screen->fnts,
 						 (VTFontEnum) (xf - fn))
 				 : fp))) {
+	    unsigned part = ucs2dec(screen, ch);
+	    if (xtermIsDecGraphic(part)	&& ch > 255)
+		ch = (IChar) part;
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
-	    if (xtermIsDecTechnical(ch)) {
+	    if (xtermIsInternalCs(ch)) {
 		xtermDrawBoxChar(params, ch, gc,
 				 x, y - FontAscent(screen), 1, False);
 		x += FontWidth(screen);
@@ -4496,6 +4499,7 @@ drawXtermText(XTermDraw * params,
 	    Bool isMissing;
 	    int ch_width;
 #if OPT_WIDE_CHARS
+	    unsigned part;
 
 	    if (ch == HIDDEN_CHAR) {
 		if (last > first) {
@@ -4533,8 +4537,8 @@ drawXtermText(XTermDraw * params,
 		if (!isMissing
 		    && TScreenOf(recur.xw)->force_box_chars) {
 		    if (ch > 255
-			&& ucs2dec(screen, ch) < 32) {
-			ch = ucs2dec(screen, ch);
+			&& (part = ucs2dec(screen, ch)) < 32) {
+			ch = part;
 			isMissing = True;
 		    } else if (ch < 32) {
 			isMissing = True;
@@ -4557,7 +4561,9 @@ drawXtermText(XTermDraw * params,
 		    ch_width = 1;	/* special case for line-drawing */
 		else if (ch_width < 0)
 		    ch_width = 1;	/* special case for combining char */
-		if (!ucs_workaround(&recur, ch, gc, x, y)) {
+		if (ch > 255 && (part = ucs2dec(screen, ch)) < 32) {
+		    xtermDrawBoxChar(&recur, part, gc, x, y, 1, False);
+		} else if (!ucs_workaround(&recur, ch, gc, x, y)) {
 		    xtermDrawBoxChar(&recur, ch, gc, x, y, ch_width, False);
 		}
 #else
