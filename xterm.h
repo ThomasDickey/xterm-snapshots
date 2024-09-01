@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.948 2024/06/26 07:45:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.949 2024/09/01 22:41:13 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1140,7 +1140,7 @@ extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
 extern void resetMargins (XtermWidget /* xw */);
-extern void restoreCharsets (TScreen * /* screen */, DECNRCM_codes * /* source */);
+extern void restoreCharsets (TScreen * /* screen */, const DECNRCM_codes * /* source */);
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen * /* screen */, int /* cols */);
 extern void set_max_row(TScreen * /* screen */, int /* rows */);
@@ -1720,7 +1720,7 @@ extern char * xtermSetLocale (int /* category */, String /* after */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
+extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);

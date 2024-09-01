@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2032 2024/07/10 21:09:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2034 2024/09/01 21:33:27 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1231,7 +1231,7 @@ saveCharsets(TScreen *screen, DECNRCM_codes * target)
 }
 
 void
-restoreCharsets(TScreen *screen, DECNRCM_codes * source)
+restoreCharsets(TScreen *screen, const DECNRCM_codes * source)
 {
     int g;
     for (g = 0; g < NUM_GSETS2; ++g) {
@@ -1471,7 +1471,7 @@ static const struct {
 
 #define WHICH_TABLE(name) if (table == name) result = #name
 static const char *
-which_table(Const PARSE_T * table)
+which_table(const PARSE_T * table)
 {
     const char *result = "?";
     Cardinal n;
@@ -2205,22 +2205,17 @@ only_default(void)
 }
 
 static int
-zero_if_default(int which)
+use_default_value(int which, int default_value)
 {
-    int result = (nparam > which) ? GetParam(which) : 0;
+    int result = (nparam > which) ? GetParam(which) : default_value;
     if (result <= 0)
-	result = 0;
+	result = default_value;
     return result;
 }
 
-static int
-one_if_default(int which)
-{
-    int result = (nparam > which) ? GetParam(which) : 0;
-    if (result <= 0)
-	result = 1;
-    return result;
-}
+#define zero_if_default(which) use_default_value(which, 0)
+
+#define one_if_default(which) use_default_value(which, 1)
 
 #define BeginString(mode) \
 	do { \
@@ -5366,10 +5361,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECFRA:
 	    if (screen->vtXX_level >= 4) {
-		value = zero_if_default(0);
+		value = use_default_value(0, ' ');
 
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-		if (nparam > 0 && CharWidth(screen, value) > 0) {
+		/* DEC 070, page 5-170 says the fill-character is either
+		 * ASCII or Latin1; xterm allows printable Unicode values.
+		 */
+		if (nparam > 0
+		    && ((value >= 256 && CharWidth(screen, value) > 0)
+			|| IsLatin1(value))) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}

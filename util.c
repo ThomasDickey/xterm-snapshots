@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.954 2024/08/29 17:07:30 tom Exp $ */
+/* $XTermId: util.c,v 1.955 2024/09/01 22:51:57 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3702,7 +3702,7 @@ fixupItalics(XTermDraw * params,
 
 #if OPT_DEC_CHRSET
 static int
-fakeDoubleChars(XTermDraw * params,
+fakeDoubleChars(const XTermDraw * params,
 		GC gc,
 		int y,
 		int x,
@@ -3906,7 +3906,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 						 (VTFontEnum) (xf - fn))
 				 : fp))) {
 	    unsigned part = ucs2dec(screen, ch);
-	    if (xtermIsDecGraphic(part)	&& ch > 255)
+	    if (xtermIsDecGraphic(part) && ch > 255)
 		ch = (IChar) part;
 	    x = xtermPartString16(screen, flags, gc, x, y, dst);
 	    if (xtermIsInternalCs(ch)) {
@@ -3971,7 +3971,7 @@ xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
  * value is the updated x position.
  */
 int
-drawXtermText(XTermDraw * params,
+drawXtermText(const XTermDraw * params,
 	      GC gc,
 	      int start_x,
 	      int start_y,
@@ -5275,7 +5275,7 @@ typedef struct _DimColorHT {
 } DimColorHT;
 
 static unsigned
-jhash1(unsigned char *key, size_t len)
+jhash1(const unsigned char *key, size_t len)
 {
     unsigned hash;
     size_t i;

@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.375 2023/12/01 21:39:31 tom Exp $ */
+/* $XTermId: menu.c,v 1.376 2024/09/01 22:49:10 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -769,7 +769,7 @@ static Bool
 domenu(Widget w,
        XEvent *event GCC_UNUSED,
        String *params,		/* mainMenu, vtMenu, or tekMenu */
-       Cardinal *param_count)	/* 0 or 1 */
+       const Cardinal *param_count)	/* 0 or 1 */
 {
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);

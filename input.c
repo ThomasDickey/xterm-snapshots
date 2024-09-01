@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.370 2023/05/09 08:14:04 tom Exp $ */
+/* $XTermId: input.c,v 1.371 2024/09/01 22:49:10 tom Exp $ */
 
 /*
- * Copyright 1999-2022,2023 by Thomas E. Dickey
+ * Copyright 1999-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1926,7 +1926,7 @@ xtermHasTranslation(XtermWidget xw, const char *keyword, Bool onlyInsert)
 				      onlyInsert));
 }
 
-#if OPT_EXTRA_PASTE
+#if OPT_EXTRA_PASTE && (defined(XF86XK_Paste) || defined(SunXK_Paste))
 static void
 addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 {

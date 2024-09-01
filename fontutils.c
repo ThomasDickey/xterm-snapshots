@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.784 2024/08/10 00:18:36 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.785 2024/09/01 21:28:27 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -4459,7 +4459,7 @@ markXftOpened(XtermWidget xw, XTermXftFonts *which, int n, unsigned wc)
 }
 
 static char **
-xftData2List(XtermWidget xw, XTermXftFonts *fontData)
+xftData2List(XtermWidget xw, const XTermXftFonts *fontData)
 {
     TScreen *screen = TScreenOf(xw);
     VTFontList *lists = &xw->work.fonts.xft;
@@ -6008,7 +6008,7 @@ getMyXftFont(XtermWidget xw, int which, int fontnum)
 }
 
 const char *
-whichXftFonts(XtermWidget xw, XTermXftFonts *data)
+whichXftFonts(XtermWidget xw, const XTermXftFonts *data)
 {
     TScreen *screen = TScreenOf(xw);
     const char *result = "?";
@@ -6085,7 +6085,7 @@ whichFontEnum(VTFontEnum value)
 }
 
 const char *
-whichFontList(XtermWidget xw, VTFontList * value)
+whichFontList(XtermWidget xw, const VTFontList * value)
 {
     const char *result = "?";
     if (value == &(xw->work.fonts.x11))

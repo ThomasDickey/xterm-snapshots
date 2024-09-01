@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.240 2023/10/14 16:52:49 tom Exp $ */
+/* $XTermId: trace.c,v 1.241 2024/09/01 22:49:10 tom Exp $ */
 
 /*
- * Copyright 1997-2022,2023 by Thomas E. Dickey
+ * Copyright 1997-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -782,7 +782,7 @@ formatEventMask(char *target, unsigned source, Boolean buttons)
 }
 
 void
-TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
+TraceEvent(const char *tag, XEvent *ev, String *params, const Cardinal *num_params)
 {
     char mask_buffer[160];
 
