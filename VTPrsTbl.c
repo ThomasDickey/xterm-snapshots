@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.118 2024/09/02 16:06:07 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.117 2023/12/27 22:46:08 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -93,7 +93,7 @@
  * it happy, we put each onto a separate line....  Sigh...
  */
 
-const PARSE_T ansi_table[] =
+Const PARSE_T ansi_table[] =
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -417,7 +417,7 @@ CASE_PRINT,
 CASE_PRINT,
 };
 
-const PARSE_T csi_table[] =		/* CSI */
+Const PARSE_T csi_table[] =		/* CSI */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -741,7 +741,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T csi2_table[] =		/* CSI */
+Const PARSE_T csi2_table[] =		/* CSI */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -1065,7 +1065,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T csi_ex_table[] =		/* CSI ! */
+Const PARSE_T csi_ex_table[] =		/* CSI ! */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -1389,7 +1389,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T csi_quo_table[] =		/* CSI ... " */
+Const PARSE_T csi_quo_table[] =		/* CSI ... " */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -1714,7 +1714,7 @@ CASE_IGNORE,
 };
 
 #if OPT_BLINK_CURS
-const PARSE_T csi_sp_table[] =		/* CSI ... SP */
+Const PARSE_T csi_sp_table[] =		/* CSI ... SP */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2039,7 +2039,7 @@ CASE_IGNORE,
 };
 #endif
 
-const PARSE_T csi_tick_table[] =	/* CSI ... ' */
+Const PARSE_T csi_tick_table[] =	/* CSI ... ' */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2364,7 +2364,7 @@ CASE_IGNORE,
 };
 
 #if OPT_XTERM_SGR
-const PARSE_T csi_hash_table[] =	/* CSI ... # */
+Const PARSE_T csi_hash_table[] =	/* CSI ... # */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2689,7 +2689,7 @@ CASE_GROUND_STATE,
 };
 #endif
 
-const PARSE_T csi_amp_table[] =	/* CSI ... & */
+Const PARSE_T csi_amp_table[] =	/* CSI ... & */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -3014,7 +3014,7 @@ CASE_GROUND_STATE,
 };
 
 #if OPT_DEC_RECTOPS
-const PARSE_T csi_dollar_table[] =	/* CSI ... $ */
+Const PARSE_T csi_dollar_table[] =	/* CSI ... $ */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -3338,7 +3338,7 @@ CASE_DECSSDT,
 CASE_GROUND_STATE,
 };
 
-const PARSE_T csi_star_table[] =	/* CSI ... * */
+Const PARSE_T csi_star_table[] =	/* CSI ... * */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -3664,7 +3664,7 @@ CASE_GROUND_STATE,
 #endif	/* OPT_DEC_RECTOPS */
 
 #if OPT_VT525_COLORS
-const PARSE_T csi_comma_table[] =	/* CSI ... , */
+Const PARSE_T csi_comma_table[] =	/* CSI ... , */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -3989,7 +3989,7 @@ CASE_GROUND_STATE,
 };
 #endif /* OPT_VT525_COLORS */
 
-const PARSE_T dec_table[] =		/* CSI ? */
+Const PARSE_T dec_table[] =		/* CSI ? */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -4314,7 +4314,7 @@ CASE_IGNORE,
 };
 
 #if OPT_DEC_RECTOPS
-const PARSE_T csi_dec_dollar_table[] =	/* CSI ?... $ */
+Const PARSE_T csi_dec_dollar_table[] =	/* CSI ?... $ */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -4639,7 +4639,7 @@ CASE_GROUND_STATE,
 };
 #endif /* OPT_DEC_RECTOPS */
 
-const PARSE_T dec2_table[] =		/* CSI > */
+Const PARSE_T dec2_table[] =		/* CSI > */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -4963,7 +4963,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T dec3_table[] =		/* CSI = */
+Const PARSE_T dec3_table[] =		/* CSI = */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -5287,7 +5287,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T cigtable[] =		/* CASE_CSI_IGNORE */
+Const PARSE_T cigtable[] =		/* CASE_CSI_IGNORE */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -5611,7 +5611,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T eigtable[] =		/* CASE_ESC_IGNORE */
+Const PARSE_T eigtable[] =		/* CASE_ESC_IGNORE */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -5935,7 +5935,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T esc_table[] =		/* ESC */
+Const PARSE_T esc_table[] =		/* ESC */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -6259,7 +6259,7 @@ CASE_LS1R,
 CASE_IGNORE,
 };
 
-const PARSE_T esc_sp_table[] =		/* ESC SP */
+Const PARSE_T esc_sp_table[] =		/* ESC SP */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -6583,7 +6583,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scrtable[] =		/* ESC # */
+Const PARSE_T scrtable[] =		/* ESC # */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -6907,7 +6907,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scstable[] =		/* ESC ( etc. */
+Const PARSE_T scstable[] =		/* ESC ( etc. */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -7231,7 +7231,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scs96table[] =		/* ESC - etc. */
+Const PARSE_T scs96table[] =		/* ESC - etc. */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -7559,7 +7559,7 @@ CASE_IGNORE,
  * This table is treated specially.  The CASE_IGNORE entries correspond to the
  * characters that can be accumulated for the string function (e.g., OSC).
  */
-const PARSE_T sos_table[] =		/* OSC, DCS, etc. */
+Const PARSE_T sos_table[] =		/* OSC, DCS, etc. */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -7884,7 +7884,7 @@ CASE_IGNORE,
 };
 
 #if OPT_WIDE_CHARS
-const PARSE_T esc_pct_table[] =		/* ESC % */
+Const PARSE_T esc_pct_table[] =		/* ESC % */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -8208,7 +8208,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scs_2qt_table[] =		/* SCS " */
+Const PARSE_T scs_2qt_table[] =		/* SCS " */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -8532,7 +8532,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scs_amp_table[] =		/* SCS & */
+Const PARSE_T scs_amp_table[] =		/* SCS & */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -8856,7 +8856,7 @@ CASE_GROUND_STATE,
 CASE_IGNORE,
 };
 
-const PARSE_T scs_pct_table[] =		/* SCS % */
+Const PARSE_T scs_pct_table[] =		/* SCS % */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -9182,7 +9182,7 @@ CASE_IGNORE,
 #endif /* OPT_WIDE_CHARS */
 
 #if OPT_VT52_MODE
-const PARSE_T vt52_table[] =
+Const PARSE_T vt52_table[] =
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -9506,7 +9506,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const PARSE_T vt52_esc_table[] =
+Const PARSE_T vt52_esc_table[] =
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -9830,7 +9830,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const PARSE_T vt52_ignore_table[] =
+Const PARSE_T vt52_ignore_table[] =
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,

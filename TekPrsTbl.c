@@ -1,7 +1,7 @@
-/* $XTermId: TekPrsTbl.c,v 1.10 2024/09/02 16:07:11 tom Exp $ */
+/* $XTermId: TekPrsTbl.c,v 1.9 2006/02/13 01:14:57 tom Exp $ */
 
 /*
- * Copyright 1998-2006,2024 by Thomas E. Dickey
+ * Copyright 1998-2001,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,9 +54,8 @@
 /* $XFree86: xc/programs/xterm/TekPrsTbl.c,v 3.5 2006/02/13 01:14:57 dickey Exp $ */
 
 #include <Tekparse.h>
-/* *INDENT-OFF* */
 
-const int Talptable[] =		/* US (^_) normal alpha mode */
+Const int Talptable[] =		/* US (^_) normal alpha mode */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -380,7 +379,7 @@ CASE_PRINT,
 CASE_PRINT,
 };
 
-const int Tbestable[] =		/* ESC while in bypass state */
+Const int Tbestable[] =		/* ESC while in bypass state */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_BYP_STATE,
@@ -704,7 +703,7 @@ CASE_BYP_STATE,
 CASE_BYP_STATE,
 };
 
-const int Tbyptable[] =		/* ESC CAN (^X) bypass state */
+Const int Tbyptable[] =		/* ESC CAN (^X) bypass state */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -1028,7 +1027,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const int Tesctable[] =		/* ESC */
+Const int Tesctable[] =		/* ESC */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_CURSTATE,
@@ -1352,7 +1351,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const int Tipltable[] =		/* RS (^^) incremental plot */
+Const int Tipltable[] =		/* RS (^^) incremental plot */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -1676,7 +1675,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const int Tplttable[] =		/* GS (^]) graph (plot) mode */
+Const int Tplttable[] =		/* GS (^]) graph (plot) mode */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2000,7 +1999,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const int Tpttable[] =		/* FS (^\) point plot mode */
+Const int Tpttable[] =		/* FS (^\) point plot mode */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2324,7 +2323,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 
-const int Tspttable[] =		/* ESC FS (^\) special point plot */
+Const int Tspttable[] =		/* ESC FS (^\) special point plot */
 {
 /*	NUL		SOH		STX		ETX	*/
 CASE_IGNORE,
@@ -2647,4 +2646,3 @@ CASE_IGNORE,
 CASE_IGNORE,
 CASE_IGNORE,
 };
-/* *INDENT-ON* */
