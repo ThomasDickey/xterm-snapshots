@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.250 2024/09/02 12:08:00 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.251 2024/09/02 16:05:14 tom Exp $ */
 
 /*
  * Copyright 2001-2022,2024 by Thomas E. Dickey
@@ -181,8 +181,8 @@ static jmp_buf Tekjump;
 static TekLink *TekRecord;
 static XSegment *Tline;
 
-static Const int *curstate = Talptable;
-static Const int *Tparsestate = Talptable;
+static const int *curstate = Talptable;
+static const int *Tparsestate = Talptable;
 
 static char defaultTranslations[] = "\
                 ~Meta<KeyPress>: insert-seven-bit() \n\

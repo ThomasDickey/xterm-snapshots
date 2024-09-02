@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.717 2024/05/25 16:43:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.719 2024/09/02 19:21:53 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #392
-.ds RF 2024/05/25
+.ds LF Patch #394
+.ds RF 2024/09/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -448,6 +448,30 @@ sequence because those cannot alter the meaning of the control sequence.
 .bP
 Some controls (such as \*(Os) introduce a string mode,
 which is ended on a \*(ST (string terminator).
+.IP
+Section 9 of ECMA-48, like DEC STD 070, chapter 3, goes into detail to
+explain that when processing 7-bit controls, the eighth bit of each
+byte is ignored.
+This applies to the content of APC, DCS, OSC, and PM strings,
+as well as to the terminating bytes such as the two-byte string terminator.
+Quoting from the latter,
+3.5.4.5 \fIGR Graphic Characters within Control Strings\fP:
+.in +4n
+.ft \*(CW
+.sp
+GR (8-bit) graphic characters in APC, OSC, and PM control strings will be
+treated as their 7-bit equivalent (the eighth bit will be ignored).
+.sp
+GR (8-bit) graphic characters are permitted within Device Control
+Strings, and the graphic character's interpretation will be
+dependent on the internal control string format.
+When they occur in the introducer sequence to a Device Control String,
+the eighth bit will be ignored,
+and they will be treated as their 7-bit equivalent.
+(Note that this is the same way 8-bit graphic characters
+are handled within control sequences.)
+.in -4n
+.ft R
 .IP
 ECMA-48 describes only correct behavior,
 telling what types of characters are expected
@@ -2104,7 +2128,12 @@ Only those modes listed as parameters are restored.
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*r
 Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Pm denotes the SGR attributes to change: 0, 1, 4, 5, 7.
+  \*(Pm denotes the SGR attributes to change: \*0, \*1, \*4, \*5, \*7, \*8.
+Setting SGR \*0 resets modes \*1, \*4, \*5, \*7.
+Those modes can be individually reset with SGR \*2\*2, \*2\*4, \*2\*5 and \*2\*7.
+Setting SGR \*8 is an \fI\*(xt\fP extension;
+it may be reset with SGR \*2\*8.
+See DECSACE.
 .
 .iP
 .IP \\*(Cs\\*(cs
@@ -2271,7 +2300,10 @@ Set warning-bell volume (DECSWBV), VT520.
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*t
 Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Pt\*s\*;\*(Pl\*s\*;\*(Pb\*s\*;\*(Pr denotes the rectangle.
-  \*(Pm denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
+  \*(Pm denotes the attributes to reverse, i.e.,  0, 1, 4, 5, 7, 8.
+Reversing SGR 0 reverses modes 1, 4, 5, 7.
+Reversing SGR 8 is an \fI\*(xt\fP extension.
+See DECSACE.
 .
 .iP
 .IP \\*(Cs\\*u
@@ -2368,6 +2400,23 @@ Select Attribute Change Extent (DECSACE), VT420 and up.
   \*(Ps = \*0 \(-> from start to end position, wrapped.
   \*(Ps = \*1 \(-> from start to end position, wrapped.
   \*(Ps = \*2 \(-> rectangle (exact).
+.br
+Modes \*0 and \*1 are the \fIstream\fP modes
+of the DECCARA and DECRARA controls.
+There are several aspects to \fIstream\fP versus \fIrectangle\fP modes:
+.br
+1. In both \fIstream\fP and \fIrectangle\fP modes, the
+row- and column-positions are affected by Origin Mode.
+.br
+2. In \fIrectangle\fP mode, cells outside the row- and column-positions
+are unaffected.
+In \fIstream\fP mode, the row- and column-positions are the starting
+and ending cells, with wrapping which ignores Origin Mode.
+.br
+3. In \fIstream\fP mode,
+those controls affect only cells where a character was drawn.
+In \fIrectangle\fP mode, cells where no character was drawn
+are first filled in with a space.
 .
 .iP
 .IP \\*(Cs\\*(Pc\\*s\\*;\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*$\\*x

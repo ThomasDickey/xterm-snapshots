@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2035 2024/09/02 11:47:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2036 2024/09/02 16:05:14 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1417,7 +1417,7 @@ set_max_row(TScreen *screen, int rows)
 #if OPT_TRACE
 #define DATA(name) { name, #name }
 static const struct {
-    Const PARSE_T *table;
+    const PARSE_T *table;
     const char *name;
 } all_tables[] = {
 
@@ -1496,7 +1496,7 @@ check_tables(void)
 
     TRACE(("** check_tables\n"));
     for (n = 0; n < XtNumber(all_tables); ++n) {
-	Const PARSE_T *table = all_tables[n].table;
+	const PARSE_T *table = all_tables[n].table;
 	TRACE(("*** %s\n", all_tables[n].name));
 	/*
 	 * Most of the tables should use the same codes in 0..31, 128..159
@@ -1571,7 +1571,7 @@ check_bitmasks(void)
     static struct {
 	int mode;
 	int code;
-	Const char *name;
+	const char *name;
     } table[] = {
 	DATA(DGRP(1), INVERSE),
 	    DATA(DGRP(1), UNDERLINE),
@@ -1736,8 +1736,8 @@ struct ParseState {
 #if OPT_VT52_MODE
     Bool vt52_cup;
 #endif
-    Const PARSE_T *groundtable;
-    Const PARSE_T *parsestate;
+    const PARSE_T *groundtable;
+    const PARSE_T *parsestate;
     int scstype;
     int scssize;
     Bool private_function;	/* distinguish private-mode from standard */
