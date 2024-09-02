@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.141 2021/05/27 22:29:12 tom Exp $ */
+/* $XTermId: data.h,v 1.142 2024/09/02 12:07:36 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2021 by Thomas E. Dickey
+ * Copyright 2002-2021,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -170,6 +170,7 @@ typedef struct XTERM_RESOURCE {
     Boolean utmpInhibit;
     Boolean utmpDisplayId;
     Boolean messages;
+    Boolean notMapped;
 
 #ifdef HAVE_LIB_XCURSOR
     String cursorTheme;

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1094 2024/06/26 08:05:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.1095 2024/09/02 12:03:29 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -6854,8 +6854,10 @@ set_vt_visibility(Bool on)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("set_vt_visibility(%d)\n", on));
+
     if (on) {
 	if (!screen->Vshow && xw) {
+	    resource.notMapped = False;
 	    VTInit(xw);
 	    XtMapWidget(XtParent(xw));
 #if OPT_TOOLBAR
@@ -6899,6 +6901,7 @@ set_tek_visibility(Bool on)
 	    }
 	    if (tekWidget != 0) {
 		Widget tekParent = SHELL_OF(tekWidget);
+		resource.notMapped = False;
 		XtRealizeWidget(tekParent);
 		XtMapWidget(XtParent(tekWidget));
 #if OPT_TOOLBAR

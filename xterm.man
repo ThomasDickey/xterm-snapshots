@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.904 2024/06/28 23:56:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.905 2024/09/02 14:45:15 tom Exp $
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
 .\"
@@ -1016,6 +1016,26 @@ This sets the \fBpointerColor\fP resource.
 This option specifies the number of characters from the right end of a line
 at which the margin bell, if enabled, will ring.
 The default is \*(``10\*(''.
+.TP 8
+.B "\-nomap"
+This option disables the initial \fImapping\fP of the terminal window.
+Mapping an X window makes it visible if it is \fImanaged\fP.
+The default is \*(``false\*('' because \fI\*n\fP's window
+is normally displayed on startup.
+.IP
+After startup, an unmapped \fI\*n\fP window can be mapped
+by identifying its window-id, e.g., using \fBxwininfo\fP(1)
+or \fBxlsclients\fP(1),
+and then employing another program such as \fBxdotool\fP(1)
+to ask the window manager to make it visible.
+.IP
+If the \fI\*n\fP window is visible (i.e., mapped),
+\fI\*n\fP's menus and actions (i.e., \fBset\-visibility\fP)
+allow one to select whether the VT100 or Tek4014 windows should be displayed.
+.TP 8
+.B "+nomap"
+This option enables the initial \fImapping\fP of the terminal window.
+This is the default behavior.
 .TP 8
 .B "\-nul"
 This option disables the display of underlining.

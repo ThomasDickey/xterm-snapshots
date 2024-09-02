@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.249 2022/10/06 19:41:47 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.251 2024/09/02 16:05:14 tom Exp $ */
 
 /*
- * Copyright 2001-2021,2022 by Thomas E. Dickey
+ * Copyright 2001-2022,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -181,8 +181,8 @@ static jmp_buf Tekjump;
 static TekLink *TekRecord;
 static XSegment *Tline;
 
-static Const int *curstate = Talptable;
-static Const int *Tparsestate = Talptable;
+static const int *curstate = Talptable;
+static const int *Tparsestate = Talptable;
 
 static char defaultTranslations[] = "\
                 ~Meta<KeyPress>: insert-seven-bit() \n\
@@ -1353,7 +1353,7 @@ TekRun(void)
     if (tekWidget != 0) {
 	TRACE(("TekRun ...\n"));
 
-	if (!TEK4014_SHOWN(xw)) {
+	if (!TEK4014_SHOWN(xw) && !resource.notMapped) {
 	    set_tek_visibility(True);
 	}
 	update_vttekmode();

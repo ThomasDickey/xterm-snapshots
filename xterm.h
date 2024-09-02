@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.949 2024/09/01 22:41:13 tom Exp $ */
+/* $XTermId: xterm.h,v 1.950 2024/09/02 11:44:50 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -608,6 +608,7 @@ extern char **environ;
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
 #define XtNnextEventDelay	"nextEventDelay"
+#define XtNnotMapped		"notMapped"
 #define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
@@ -866,6 +867,7 @@ extern char **environ;
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNextEventDelay	"NextEventDelay"
+#define XtCNotMapped		"NotMapped"
 #define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"

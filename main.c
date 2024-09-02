@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.923 2024/07/09 08:03:49 tom Exp $ */
+/* $XTermId: main.c,v 1.924 2024/09/02 12:09:47 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -897,6 +897,7 @@ static XtResource application_resources[] =
     Ires(XtNminBufSize, XtCMinBufSize, minBufSize, 4096),
     Ires(XtNmaxBufSize, XtCMaxBufSize, maxBufSize, 32768),
     Sres(XtNmenuLocale, XtCMenuLocale, menuLocale, DEF_MENU_LOCALE),
+    Bres(XtNnotMapped, XtCNotMapped, notMapped, False),
     Sres(XtNomitTranslation, XtCOmitTranslation, omitTranslation, NULL),
     Sres(XtNkeyboardType, XtCKeyboardType, keyboardType, "unknown"),
 #ifdef HAVE_LIB_XCURSOR
@@ -1097,6 +1098,8 @@ OPTS("-mesg",		NO_ARG(XtNmessages),			"off"),
 OPTS("+mesg",		NO_ARG(XtNmessages),			"on"),
 OPTS("-ms",		MY_ARG(XtNpointerColor),		NULL),
 OPTS("-nb",		MY_ARG(XtNnMarginBell),			NULL),
+OPTS("-nomap",		NO_ARG(XtNnotMapped),			"on"),
+OPTS("+nomap",		NO_ARG(XtNnotMapped),			"off"),
 OPTS("-nul",		NO_ARG(XtNunderLine),			"off"),
 OPTS("+nul",		NO_ARG(XtNunderLine),			"on"),
 OPTS("-pc",		NO_ARG(XtNboldColors),			"on"),
@@ -1308,6 +1311,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+mesg",               "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
+{ "-/+nomap",              "turn off/on initial mapping of window" },
 { "-/+nul",                "turn off/on display of underlining" },
 { "-/+aw",                 "turn on/off auto wraparound" },
 { "-/+pc",                 "turn on/off PC-style bold colors" },
