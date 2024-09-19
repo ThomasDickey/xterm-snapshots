@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #394 (2024/09/02)
+               updated for XTerm Patch #395 (2024/09/19)
 
 
 
@@ -433,7 +433,7 @@ DCS Ps ; Ps | Pt ST
           key value.  The key codes correspond to the DEC function-key
           codes (e.g., F6=17).
 
-DCS Ps! u Pt ST
+DCS Ps ! u Pt ST
           Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320,
           VT510.  XTerm ignores this in UTF-8 mode, and uses the
           preferLatin1 resource to choose the default setting.
@@ -1275,7 +1275,7 @@ CSI Ps n  Device Status Report (DSR).
 
           Note: it is possible for this sequence to be sent by a
           function key.  For example, with the default keyboard
-          configuration the shifted F1 key may send (with shift-,
+          configuration the shifted F3 key may send (with shift-,
           control-, alt-modifiers)
 
             CSI 1 ; 2  R , or
@@ -1285,7 +1285,7 @@ CSI Ps n  Device Status Report (DSR).
           The second parameter encodes the modifiers; values range from
           2 to 16.  See the section PC-Style Function Keys for the
           codes.  The modifyFunctionKeys and modifyKeyboard resources
-          can change the form of the string sent from the modified F1
+          can change the form of the string sent from the modified F3
           key.
 
 CSI > Ps n
@@ -1385,7 +1385,7 @@ CSI Pl ; Pc " p
 
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply DECRPM is
-            CSI Ps; Pm $ y
+            CSI Ps ; Pm $ y
           where Ps is the mode number as in SM/RM, and Pm is the mode
           value:
             0 - not recognized
@@ -1397,7 +1397,7 @@ CSI Ps $ p
 CSI ? Ps $ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply
           DECRPM is
-            CSI ? Ps; Pm $ y
+            CSI ? Ps ; Pm $ y
           where Ps is the mode number as in DECSET/DECSET, Pm is the
           mode value as in the ANSI DECRQM.
           Two private modes are read-only (i.e., 1 3  and 1 4 ),
@@ -1620,7 +1620,7 @@ CSI Ps SP u
 
 CSI " v   Request Displayed Extent (DECRQDE), VT340, VT420.
           Response is
-            CSI Ph; Pw; Pc; Pr; Pp " w
+            CSI Ph ; Pw ; Pc ; Pr ; Pp " w
           where
             Ph is the number of lines of the current page
             Pw is the number of columns of the current page
@@ -1827,7 +1827,7 @@ CSI # }   Pop video attributes from stack (XTPOPSGR), xterm.  Popping
           restores the video-attributes which were saved using XTPUSHSGR
           to their previous state.
 
-CSI Ps; Pf; Pb, |
+CSI Ps ; Pf ; Pb , |
           Assign Color (DECAC), VT525 only.
             Ps selects the color item
             Pf is the foreground color index 0..15
@@ -1838,7 +1838,7 @@ CSI Ps; Pf; Pb, |
           xterm uses the SGR color palette with DECAC color item 1 to
           update the VT100 window colors, like OSC  1 0  and 1 1 .
 
-CSI Ps; Pf; Pb, }
+CSI Ps ; Pf ; Pb , }
           Alternate Text Color (DECATC), VT525 only.  This feature
           specifies the colors to use when DECSTGLT is selected to 1 or
           2.
@@ -3598,7 +3598,7 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
     incompatible private control in one of its terminals more than  five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
+    In  that  model  of  the  VT420, CSI ? Pm ; Pc r selects the PC TERM
     emulation mode.  When this mode is enabled, the keyboard sends  scan
     codes  rather than characters (analogous to X keyboard events).  The
     first parameter of this private control enables or disables PC  TERM

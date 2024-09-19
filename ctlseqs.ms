@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.719 2024/09/02 19:21:53 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.722 2024/09/19 22:41:35 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #394
-.ds RF 2024/09/02
+.ds LF Patch #395
+.ds RF 2024/09/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -915,7 +915,7 @@ the key-code separated by a \*(``/\*('' from the hex-encoded key value.
 The key codes correspond to the DEC function-key codes (e.g., F6=17).
 .
 .iP
-.IP \\*(Dc\\*(Ps\\*!\\*u\\*(Pt\\*s\\*(ST
+.IP \\*(Dc\\*(Ps\\*s\\*!\\*u\\*(Pt\\*s\\*(ST
 Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
 \fI\*(XT\fP ignores this in UTF-8 mode,
 and uses the \fBpreferLatin1\fP resource to choose the default setting.
@@ -1894,7 +1894,7 @@ Result is
 \fBNote\fP:
 it is possible for this sequence to be sent by a function key.
 For example, with the default keyboard configuration
-the shifted F1 key may send (with shift-, control-, alt-modifiers)
+the shifted F3 key may send (with shift-, control-, alt-modifiers)
 .iP
   \*(Cs\*1\*;\*2\*s\*R, or
   \*(Cs\*1\*;\*5\*s\*R, or
@@ -1904,7 +1904,7 @@ the shifted F1 key may send (with shift-, control-, alt-modifiers)
 The second parameter encodes the modifiers; values range from 2 to 16.
 See the section \fBPC-Style Function Keys\fP for the codes.
 The \fB\%modifyFunctionKeys\fP and \fB\%modifyKeyboard\fP resources
-can change the form of the string sent from the modified F1 key.
+can change the form of the string sent from the modified F3 key.
 .
 .iP
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*n
@@ -2032,7 +2032,7 @@ but DECSCL is preferred.
 Request ANSI mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*(Ps\*;\*(Pm\*s\*$\*y
+  \*(Cs\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in SM/RM,
 and \*(Pm is the mode value:
@@ -2048,7 +2048,7 @@ and \*(Pm is the mode value:
 Request DEC private mode (DECRQM).
 For VT300 and up, reply DECRPM is
 .br
-  \*(Cs\*?\*(Ps\*;\*(Pm\*s\*$\*y
+  \*(Cs\*?\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
 where \*(Ps is the mode number as in DECSET/DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
@@ -2327,7 +2327,7 @@ Request Displayed Extent (DECRQDE), VT340, VT420.
 .br
 Response is
 .br
-  \*(Cs\*(Ph\*;\*(Pw\*;\*(Pc\*;\*(Pr\*;\*(Pp\*s\*(Dq\*w
+  \*(Cs\*(Ph\*s\*;\*(Pw\*s\*;\*(Pc\*s\*;\*(Pr\*s\*;\*(Pp\*s\*(Dq\*w
 .br
 where
   \*(Ph is the number of lines of the current page
@@ -2575,7 +2575,7 @@ Pop video attributes from stack (XTPOPSGR), \fI\*(xt\fP.
 Popping restores the video-attributes which were saved using XTPUSHSGR
 to their previous state.
 .iP
-.IP  \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*|
+.IP  \\*(Cs\\*(Ps\\*s\\*;\\*(Pf\\*s\\*;\\*(Pb\\*s\\*,\\*|
 Assign Color (DECAC), VT525 only.
   \*(Ps selects the color item
   \*(Pf is the foreground color index 0..15
@@ -2589,7 +2589,7 @@ Color items:
 update the VT100 window colors,
 like \*(Os \*1\*0 and \*1\*1.
 .iP
-.IP \\*(Cs\\*(Ps\\*;\\*(Pf\\*;\\*(Pb\\*,\\*}
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pf\\*s\\*;\\*(Pb\\*s\\*,\\*}
 Alternate Text Color (DECATC), VT525 only.
 This feature specifies the colors to use when \%DECSTGLT is selected to 1 or 2.
   \*(Ps selects attribute combinations
@@ -4766,7 +4766,7 @@ private control in one of its terminals more than five years later
 (for the VT420 PCTerm, announced in February 1992).
 .IP
 In that model of the VT420,
-\*(Cs\*?\*(Pm\*;\*(Pc\*s\*r
+\*(Cs\*?\*(Pm\*s\*;\*(Pc\*s\*r
 selects the \fIPC TERM\fP emulation mode.
 When this mode is enabled, the keyboard sends \fIscan codes\fP
 rather than characters (analogous to X keyboard events).
