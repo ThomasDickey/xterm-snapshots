@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #395 (2024/09/19)
+               updated for XTerm Patch #395 (2024/09/24)
 
 
 
@@ -343,6 +343,8 @@ ESC ( C   Designate G0 Character Set, VT100, ISO 2022.
             C = % 0  -> DEC Turkish, VT500.
             C = % 5  -> DEC Supplemental Graphics, VT300.
             C = & 4  -> DEC Cyrillic, VT500.
+            C = I  -> JIS-Katakana, VT382.
+            C = J  -> JIS-Roman, VT382.
           The VT520 reference manual lists a few more, but no
           documentation has been found for the mappings:
             C = % 3  -> SCS NRCS, VT500.

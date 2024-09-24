@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.722 2024/09/19 22:41:35 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.723 2024/09/24 08:29:39 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #395
-.ds RF 2024/09/19
+.ds RF 2024/09/24
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -776,6 +776,8 @@ These are documented as 94-character sets (like USASCII) without NRCS:
   \*(Cc = \*%\*0 \(-> DEC Turkish, VT500.
   \*(Cc = \*%\*5 \(-> DEC Supplemental Graphics, VT300.
   \*(Cc = \*&\*4 \(-> DEC Cyrillic, VT500.
+  \*(Cc = \*I \(-> JIS-Katakana, VT382.
+  \*(Cc = \*J \(-> JIS-Roman, VT382.
 .br
 The VT520 reference manual lists a few more,
 but no documentation has been found for the mappings:

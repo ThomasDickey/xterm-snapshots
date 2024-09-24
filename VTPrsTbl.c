@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.118 2024/09/02 16:06:07 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.119 2024/09/23 20:18:02 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -7001,8 +7001,8 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	H		I		J		K	*/
 CASE_GSETS,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
+CASE_GSETS,
 CASE_GSETS,
 /*	L		M		N		O	*/
 CASE_GROUND_STATE,
@@ -7161,8 +7161,8 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Egrave          Eacute          Ecircumflex     Ediaeresis      */
 CASE_GSETS,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS,
+CASE_GSETS,
 CASE_GSETS,
 /*      Igrave          Iacute          Icircumflex     Idiaeresis      */
 CASE_GROUND_STATE,

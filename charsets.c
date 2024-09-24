@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.126 2024/05/22 00:27:53 tom Exp $ */
+/* $XTermId: charsets.c,v 1.127 2024/09/21 00:24:17 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -110,6 +110,8 @@ isSevenBit(DECNRCM_codes cs)
     case nrc_Greek:
     case nrc_Hebrew:
     case nrc_Italian:
+    case nrc_JIS_Katakana:
+    case nrc_JIS_Roman:
     case nrc_Norwegian_Danish2:
     case nrc_Norwegian_Danish3:
     case nrc_Norwegian_Danish:
@@ -246,6 +248,14 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 
     case nrc_ISO_Latin_Cyrillic:
 	map_ISO_Latin_Cyrillic(code);
+	break;
+
+    case nrc_JIS_Katakana:
+	map_JIS_Katakana(code);
+	break;
+
+    case nrc_JIS_Roman:
+	map_JIS_Roman(code);
 	break;
 
     case nrc_Norwegian_Danish:
@@ -497,6 +507,14 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_ISO_Latin_Cyrillic(chr = seven);
 	    break;
 
+	case nrc_JIS_Katakana:
+	    map_JIS_Katakana(chr = seven);
+	    break;
+
+	case nrc_JIS_Roman:
+	    map_JIS_Roman(chr = seven);
+	    break;
+
 	case nrc_Norwegian_Danish:
 	case nrc_Norwegian_Danish2:
 	case nrc_Norwegian_Danish3:
@@ -705,6 +723,14 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 
 	    case nrc_Italian:
 		unmap_NRCS_Italian(chr, DFT_94(chr));
+		break;
+
+	    case nrc_JIS_Katakana:
+		unmap_JIS_Katakana(chr, DFT_94(chr));
+		break;
+
+	    case nrc_JIS_Roman:
+		unmap_JIS_Roman(chr, DFT_94(chr));
 		break;
 
 	    case nrc_ISO_Latin_1_Supp:

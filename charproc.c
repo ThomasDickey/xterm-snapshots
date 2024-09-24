@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2036 2024/09/02 16:05:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2038 2024/09/24 22:03:55 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1835,6 +1835,8 @@ static const struct {
     { nrc_Norwegian_Danish,  0,   '`', 3, 9, 1, 0 },
     { nrc_Portugese,         '%', '6', 3, 9, 1, 0 },
     { nrc_ISO_Latin_1_Supp,  0,   'A', 3, 9, 0, 1 },
+    { nrc_JIS_Katakana,      0,   'I', 3, 3, 0, 0 },
+    { nrc_JIS_Roman,         0,   'J', 3, 3, 0, 0 },
     /* VT5xx */
     { nrc_Greek,             '"', '>', 5, 9, 1, 0 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1, 0 },
@@ -7375,6 +7377,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_RXVT_TOOLBAR:
 	    ShowToolbar(IsSM());
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
@@ -7388,6 +7393,11 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -7739,25 +7749,29 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
+	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
 	case srm_DECHEM:	/* ignore */
-	case srm_DECHCCM:	/* ignore */
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -7765,6 +7779,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
@@ -7824,6 +7839,9 @@ savemodes(XtermWidget xw)
 	case srm_RXVT_TOOLBAR:
 	    DoSM(DP_TOOLBAR, resource.toolBar);
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* AT&T 610: Start/stop blinking cursor */
@@ -7836,6 +7854,11 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -8067,15 +8090,18 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
 	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
@@ -8083,9 +8109,10 @@ savemodes(XtermWidget xw)
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -8093,6 +8120,7 @@ savemodes(XtermWidget xw)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
@@ -8181,6 +8209,9 @@ restoremodes(XtermWidget xw)
 	    DoRM(DP_TOOLBAR, resource.toolBar);
 	    ShowToolbar(resource.toolBar);
 	    break;
+#else
+	case srm_DECEDM:	/* vt330:edit */
+	    break;
 #endif
 #if OPT_BLINK_CURS
 	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
@@ -8194,6 +8225,11 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_XOR_CURSOR_BLINKS:
 	    /* intentionally ignored (this is user-preference) */
+	    break;
+#else
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
 	    break;
 #endif
 	case srm_DECPFF:	/* print form feed */
@@ -8488,15 +8524,18 @@ restoremodes(XtermWidget xw)
 		   BtoS(screen->sixel_scrolls_right)));
 	    break;
 #endif
+	case srm_DEC131TM:	/* ignore */
+	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
 	case srm_DECATCBM:	/* ignore */
 	case srm_DECATCUM:	/* ignore */
 	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
 	case srm_DECCANSM:	/* ignore */
 	case srm_DECCAPSLK:	/* ignore */
 	case srm_DECCRTSM:	/* ignore */
 	case srm_DECECM:	/* ignore */
+	case srm_DECEKEM:	/* ignore */
+	case srm_DECESKM:	/* ignore */
 	case srm_DECFWM:	/* ignore */
 	case srm_DECHCCM:	/* ignore */
 	case srm_DECHDPXM:	/* ignore */
@@ -8504,9 +8543,10 @@ restoremodes(XtermWidget xw)
 	case srm_DECHWUM:	/* ignore */
 	case srm_DECIPEM:	/* ignore */
 	case srm_DECKBUM:	/* ignore */
+	case srm_DECKKDM:	/* ignore */
 	case srm_DECKLHIM:	/* ignore */
 	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
+	case srm_DECLTM:	/* ignore */
 	case srm_DECMCM:	/* ignore */
 	case srm_DECNAKB:	/* ignore */
 	case srm_DECNULM:	/* ignore */
@@ -8514,6 +8554,7 @@ restoremodes(XtermWidget xw)
 	case srm_DECOSCNM:	/* ignore */
 	case srm_DECPCCM:	/* ignore */
 	case srm_DECRLCM:	/* ignore */
+	case srm_DECRLM:	/* ignore */
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.241 2024/09/01 22:49:10 tom Exp $ */
+/* $XTermId: trace.c,v 1.242 2024/09/21 00:31:47 tom Exp $ */
 
 /*
  * Copyright 1997-2023,2024 by Thomas E. Dickey
@@ -289,6 +289,8 @@ visibleScsCode(DECNRCM_codes chrset)
 	MAP("Y", nrc_Italian);
 	MAP("A", nrc_ISO_Latin_1_Supp);
 	MAP("B", nrc_ISO_Latin_2_Supp);
+	MAP("I", nrc_JIS_Katakana);
+	MAP("J", nrc_JIS_Roman);
 	MAP("M", nrc_ISO_Latin_5_Supp);
 	MAP("L", nrc_ISO_Latin_Cyrillic);
 	MAP("`", nrc_Norwegian_Danish);

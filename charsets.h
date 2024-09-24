@@ -1,5 +1,5 @@
 /*
- * $XTermId: charsets.h,v 1.29 2024/02/08 08:52:16 tom Exp $
+ * $XTermId: charsets.h,v 1.33 2024/09/24 22:06:44 tom Exp $
  */
 
 /*
@@ -613,6 +613,120 @@
 	    MAP(0x7E, 0x02)	/* DOWNWARDS ARROW */ \
 	    default: dft; break; \
 	}
+
+#define map_JIS_Roman(code) \
+	begin_CODEPAGE(94) \
+	switch (code) { \
+	    UNI(0x5C, 0x00A5)	/* YEN SIGN */ \
+	    UNI(0x7E, 0x203E)	/* OVERLINE */ \
+	} \
+	end_CODEPAGE()
+
+#define unmap_JIS_Roman(code,dft) /* nothing */
+
+/*
+ * Documented as if only GR, but encoded here to allow assignment to GL and GR.
+ */
+#define map_JIS_Katakana(code) \
+	begin_CODEPAGE(94) \
+	switch (code) { \
+	    UNI(0x21, 0xFF61)	/* HALFWIDTH IDEOGRAPHIC FULL STOP */ \
+	    UNI(0x22, 0xFF62)	/* HALFWIDTH LEFT CORNER BRACKET */ \
+	    UNI(0x23, 0xFF63)	/* HALFWIDTH RIGHT CORNER BRACKET */ \
+	    UNI(0x24, 0xFF64)	/* HALFWIDTH IDEOGRAPHIC COMMA */ \
+	    UNI(0x25, 0xFF65)	/* HALFWIDTH KATAKANA MIDDLE DOT */ \
+	    UNI(0x26, 0xFF66)	/* HALFWIDTH KATAKANA LETTER WO */ \
+	    UNI(0x27, 0xFF67)	/* HALFWIDTH KATAKANA LETTER SMALL A */ \
+	    UNI(0x28, 0xFF68)	/* HALFWIDTH KATAKANA LETTER SMALL I */ \
+	    UNI(0x29, 0xFF69)	/* HALFWIDTH KATAKANA LETTER SMALL U */ \
+	    UNI(0x2A, 0xFF6A)	/* HALFWIDTH KATAKANA LETTER SMALL E */ \
+	    UNI(0x2B, 0xFF6B)	/* HALFWIDTH KATAKANA LETTER SMALL O */ \
+	    UNI(0x2C, 0xFF6C)	/* HALFWIDTH KATAKANA LETTER SMALL YA */ \
+	    UNI(0x2D, 0xFF6D)	/* HALFWIDTH KATAKANA LETTER SMALL YU */ \
+	    UNI(0x2E, 0xFF6E)	/* HALFWIDTH KATAKANA LETTER SMALL YO */ \
+	    UNI(0x2F, 0xFF6F)	/* HALFWIDTH KATAKANA LETTER SMALL TU */ \
+	    UNI(0x30, 0xFF70)	/* HALFWIDTH KATAKANA-HIRAGANA PROLONGED SOUND MARK */ \
+	    UNI(0x31, 0xFF71)	/* HALFWIDTH KATAKANA LETTER A */ \
+	    UNI(0x32, 0xFF72)	/* HALFWIDTH KATAKANA LETTER I */ \
+	    UNI(0x33, 0xFF73)	/* HALFWIDTH KATAKANA LETTER U */ \
+	    UNI(0x34, 0xFF74)	/* HALFWIDTH KATAKANA LETTER E */ \
+	    UNI(0x35, 0xFF75)	/* HALFWIDTH KATAKANA LETTER O */ \
+	    UNI(0x36, 0xFF76)	/* HALFWIDTH KATAKANA LETTER KA */ \
+	    UNI(0x37, 0xFF77)	/* HALFWIDTH KATAKANA LETTER KI */ \
+	    UNI(0x38, 0xFF78)	/* HALFWIDTH KATAKANA LETTER KU */ \
+	    UNI(0x39, 0xFF79)	/* HALFWIDTH KATAKANA LETTER KE */ \
+	    UNI(0x3A, 0xFF7A)	/* HALFWIDTH KATAKANA LETTER KO */ \
+	    UNI(0x3B, 0xFF7B)	/* HALFWIDTH KATAKANA LETTER SA */ \
+	    UNI(0x3C, 0xFF7C)	/* HALFWIDTH KATAKANA LETTER SI */ \
+	    UNI(0x3D, 0xFF7D)	/* HALFWIDTH KATAKANA LETTER SU */ \
+	    UNI(0x3E, 0xFF7E)	/* HALFWIDTH KATAKANA LETTER SE */ \
+	    UNI(0x3F, 0xFF7F)	/* HALFWIDTH KATAKANA LETTER SO */ \
+	    UNI(0x40, 0xFF80)	/* HALFWIDTH KATAKANA LETTER TA */ \
+	    UNI(0x41, 0xFF81)	/* HALFWIDTH KATAKANA LETTER TI */ \
+	    UNI(0x42, 0xFF82)	/* HALFWIDTH KATAKANA LETTER TU */ \
+	    UNI(0x43, 0xFF83)	/* HALFWIDTH KATAKANA LETTER TE */ \
+	    UNI(0x44, 0xFF84)	/* HALFWIDTH KATAKANA LETTER TO */ \
+	    UNI(0x45, 0xFF85)	/* HALFWIDTH KATAKANA LETTER NA */ \
+	    UNI(0x46, 0xFF86)	/* HALFWIDTH KATAKANA LETTER NI */ \
+	    UNI(0x47, 0xFF87)	/* HALFWIDTH KATAKANA LETTER NU */ \
+	    UNI(0x48, 0xFF88)	/* HALFWIDTH KATAKANA LETTER NE */ \
+	    UNI(0x49, 0xFF89)	/* HALFWIDTH KATAKANA LETTER NO */ \
+	    UNI(0x4A, 0xFF8A)	/* HALFWIDTH KATAKANA LETTER HA */ \
+	    UNI(0x4B, 0xFF8B)	/* HALFWIDTH KATAKANA LETTER HI */ \
+	    UNI(0x4C, 0xFF8C)	/* HALFWIDTH KATAKANA LETTER HU */ \
+	    UNI(0x4D, 0xFF8D)	/* HALFWIDTH KATAKANA LETTER HE */ \
+	    UNI(0x4E, 0xFF8E)	/* HALFWIDTH KATAKANA LETTER HO */ \
+	    UNI(0x4F, 0xFF8F)	/* HALFWIDTH KATAKANA LETTER MA */ \
+	    UNI(0x50, 0xFF90)	/* HALFWIDTH KATAKANA LETTER MI */ \
+	    UNI(0x51, 0xFF91)	/* HALFWIDTH KATAKANA LETTER MU */ \
+	    UNI(0x52, 0xFF92)	/* HALFWIDTH KATAKANA LETTER ME */ \
+	    UNI(0x53, 0xFF93)	/* HALFWIDTH KATAKANA LETTER MO */ \
+	    UNI(0x54, 0xFF94)	/* HALFWIDTH KATAKANA LETTER YA */ \
+	    UNI(0x55, 0xFF95)	/* HALFWIDTH KATAKANA LETTER YU */ \
+	    UNI(0x56, 0xFF96)	/* HALFWIDTH KATAKANA LETTER YO */ \
+	    UNI(0x57, 0xFF97)	/* HALFWIDTH KATAKANA LETTER RA */ \
+	    UNI(0x58, 0xFF98)	/* HALFWIDTH KATAKANA LETTER RI */ \
+	    UNI(0x59, 0xFF99)	/* HALFWIDTH KATAKANA LETTER RU */ \
+	    UNI(0x5A, 0xFF9A)	/* HALFWIDTH KATAKANA LETTER RE */ \
+	    UNI(0x5B, 0xFF9B)	/* HALFWIDTH KATAKANA LETTER RO */ \
+	    UNI(0x5C, 0xFF9C)	/* HALFWIDTH KATAKANA LETTER WA */ \
+	    UNI(0x5D, 0xFF9D)	/* HALFWIDTH KATAKANA LETTER N */ \
+	    UNI(0x5E, 0xFF9E)	/* HALFWIDTH KATAKANA VOICED SOUND MARK */ \
+	    UNI(0x5F, 0xFF9F)	/* HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK */ \
+	    XXX(0x60, UNDEF) \
+	    XXX(0x61, UNDEF) \
+	    XXX(0x62, UNDEF) \
+	    XXX(0x63, UNDEF) \
+	    XXX(0x64, UNDEF) \
+	    XXX(0x65, UNDEF) \
+	    XXX(0x66, UNDEF) \
+	    XXX(0x67, UNDEF) \
+	    XXX(0x68, UNDEF) \
+	    XXX(0x69, UNDEF) \
+	    XXX(0x6A, UNDEF) \
+	    XXX(0x6B, UNDEF) \
+	    XXX(0x6C, UNDEF) \
+	    XXX(0x6D, UNDEF) \
+	    XXX(0x6E, UNDEF) \
+	    XXX(0x6F, UNDEF) \
+	    XXX(0x70, UNDEF) \
+	    XXX(0x71, UNDEF) \
+	    XXX(0x72, UNDEF) \
+	    XXX(0x73, UNDEF) \
+	    XXX(0x74, UNDEF) \
+	    XXX(0x75, UNDEF) \
+	    XXX(0x76, UNDEF) \
+	    XXX(0x77, UNDEF) \
+	    XXX(0x78, UNDEF) \
+	    XXX(0x79, UNDEF) \
+	    XXX(0x7A, UNDEF) \
+	    XXX(0x7B, UNDEF) \
+	    XXX(0x7C, UNDEF) \
+	    XXX(0x7D, UNDEF) \
+	} \
+	end_CODEPAGE()
+
+#define unmap_JIS_Katakana(code,dft) /* nothing */
 
 /*
  * ISO Latin/Cyrillic is 8859-5
@@ -2275,6 +2389,10 @@
 #define unmap_ISO_Latin_5(code,dft) dft
 #define map_ISO_Latin_Cyrillic(code)	/* nothing */
 #define unmap_ISO_Latin_Cyrillic(code,dft) dft
+#define map_JIS_Katakana(code)	/* nothing */
+#define unmap_JIS_Katakana(code,dft) dft
+#define map_JIS_Roman(code)	/* nothing */
+#define unmap_JIS_Roman(code,dft) dft
 #define map_NRCS_Greek(code)	/* nothing */
 #define unmap_NRCS_Greek(code,dft) dft
 #define map_NRCS_Hebrew(code)	/* nothing */

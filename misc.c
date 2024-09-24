@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1095 2024/09/02 12:03:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.1096 2024/09/24 00:19:53 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -5556,7 +5556,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->keyboard.flags, MODE_DECSDM);
 	    break;
 #endif
-	case srm_DECNCSM:
+	case srm_DECNCSM:	/* no clearing screen on column change */
 	    if (screen->vtXX_level >= 5) {	/* VT510 */
 		result = MdFlag(xw->flags, NOCLEAR_COLM);
 	    } else {
@@ -5701,35 +5701,64 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->sixel_scrolls_right);
 	    break;
 #endif
-	case srm_DECARSM:	/* ignore */
-	case srm_DECATCBM:	/* ignore */
-	case srm_DECATCUM:	/* ignore */
-	case srm_DECBBSM:	/* ignore */
-	case srm_DECCAAM:	/* ignore */
-	case srm_DECCANSM:	/* ignore */
-	case srm_DECCAPSLK:	/* ignore */
-	case srm_DECCRTSM:	/* ignore */
-	case srm_DECECM:	/* ignore */
-	case srm_DECFWM:	/* ignore */
-	case srm_DECHCCM:	/* ignore */
-	case srm_DECHDPXM:	/* ignore */
-	case srm_DECHEM:	/* ignore */
-	case srm_DECHWUM:	/* ignore */
-	case srm_DECIPEM:	/* ignore */
-	case srm_DECKBUM:	/* ignore */
-	case srm_DECKLHIM:	/* ignore */
-	case srm_DECKPM:	/* ignore */
-	case srm_DECRLM:	/* ignore */
-	case srm_DECMCM:	/* ignore */
-	case srm_DECNAKB:	/* ignore */
-	case srm_DECNULM:	/* ignore */
-	case srm_DECNUMLK:	/* ignore */
-	case srm_DECOSCNM:	/* ignore */
-	case srm_DECPCCM:	/* ignore */
-	case srm_DECRLCM:	/* ignore */
-	case srm_DECRPL:	/* ignore */
-	case srm_DECVCCM:	/* ignore */
-	case srm_DECXRLM:	/* ignore */
+	    /* the remainder are recognized but unimplemented */
+	    /* VT3xx */
+	case srm_DEC131TM:	/* vt330:VT131 transmit */
+	case srm_DECEKEM:	/* vt330:edit key execution */
+	case srm_DECKKDM:	/* vt382:Kanji/Katakana */
+	case srm_DECLTM:	/* vt330:line transmit */
+#if !OPT_BLINK_CURS
+	case srm_DECKANAM:	/* vt382:Katakana shift */
+	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
+	case srm_DECTEM:	/* vt330:transmission execution */
+#endif
+#if !OPT_TOOLBAR
+	case srm_DECEDM:	/* vt330:edit */
+#endif
+	    if (screen->vtXX_level >= 3)
+		result = mdAlwaysReset;
+	    break;
+	    /* VT4xx */
+	case srm_DECHCCM:	/* vt420:Horizontal Cursor-Coupling Mode */
+	case srm_DECKBUM:	/* vt420:Keyboard Usage mode */
+	case srm_DECKPM:	/* vt420:Key Position Mode */
+	case srm_DECPCCM:	/* vt420:Page Cursor-Coupling Mode */
+	case srm_DECVCCM:	/* vt420:Vertical Cursor-Coupling Mode */
+	case srm_DECXRLM:	/* vt420:Transmit Rate Limiting */
+	    if (screen->vtXX_level >= 4)
+		result = mdAlwaysReset;
+	    break;
+	    /* VT5xx */
+	case srm_DECAAM:	/* vt510:auto answerback */
+	case srm_DECARSM:	/* vt510:auto resize */
+	case srm_DECATCBM:	/* vt520:alternate text color blink */
+	case srm_DECATCUM:	/* vt520:alternate text color underline */
+	case srm_DECBBSM:	/* vt520:bold and blink style */
+	case srm_DECCANSM:	/* vt510:conceal answerback */
+	case srm_DECCAPSLK:	/* vt510:Caps Lock Mode */
+	case srm_DECCRTSM:	/* vt510:CRT save */
+	case srm_DECECM:	/* vt520:erase color */
+	case srm_DECESKM:	/* vt510:enable secondary keyboard language */
+	case srm_DECFWM:	/* vt520:framed windows */
+	case srm_DECHDPXM:	/* vt510:half duplex */
+	case srm_DECHEM:	/* vt510:Hebrew encoding */
+	case srm_DECHWUM:	/* vt520:host wake-up mode (CRT and energy saver) */
+	case srm_DECIPEM:	/* vt510:IBM ProPrinter Emulation Mode */
+	case srm_DECKLHIM:	/* vt510:ignore */
+	case srm_DECMCM:	/* vt510:modem control */
+	case srm_DECNAKB:	/* vt510:Greek/N-A Keyboard Mapping */
+	case srm_DECNULM:	/* vt510:Ignoring Null Mode */
+	case srm_DECNUMLK:	/* vt510:Num Lock Mode */
+	case srm_DECOSCNM:	/* vt510:Overscan Mode */
+	case srm_DECRLCM:	/* vt510:Right-to-Left Copy */
+	case srm_DECRLM:	/* vt510:left-to-right */
+	case srm_DECRPL:	/* vt520:Review Previous Lines */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* vt520:Hebrew keyboard mapping */
+#endif
+	    if (screen->vtXX_level >= 5)
+		result = mdAlwaysReset;
+	    break;
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));

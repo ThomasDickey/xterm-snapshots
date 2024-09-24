@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1125 2024/08/09 21:25:44 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1126 2024/09/24 00:18:53 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1061,6 +1061,8 @@ typedef enum {
     ,nrc_ISO_Latin_2_Supp	/* vt5xx */
     ,nrc_ISO_Latin_5_Supp	/* vt5xx */
     ,nrc_ISO_Latin_Cyrillic	/* vt5xx */
+    ,nrc_JIS_Katakana		/* vt382 */
+    ,nrc_JIS_Roman		/* vt382 */
     ,nrc_Norwegian_Danish	/* vt3xx */
     ,nrc_Norwegian_Danish2	/* vt2xx */
     ,nrc_Norwegian_Danish3	/* vt2xx */
@@ -1099,19 +1101,29 @@ typedef enum {
     ,srm_X10_MOUSE = SET_X10_MOUSE
 #if OPT_TOOLBAR
     ,srm_RXVT_TOOLBAR = 10
+#else
+    ,srm_DECEDM = 10		/* vt330:edit */
 #endif
+    ,srm_DECLTM = 11		/* vt330:line transmit */
 #if OPT_BLINK_CURS
     ,srm_ATT610_BLINK = 12
     ,srm_CURSOR_BLINK_OPS = 13
     ,srm_XOR_CURSOR_BLINKS = 14
+#else
+    ,srm_DECKANAM = 12		/* vt382:Katakana shift */
+    ,srm_DECSCFDM = 13		/* vt330:space compression field delimiter */
+    ,srm_DECTEM = 14		/* vt330:transmission execution */
 #endif
-    ,srm_DECPFF = 18		/* Print Form Feed Mode */
-    ,srm_DECPEX = 19		/* Printer Extent Mode */
+    ,srm_DECEKEM = 16		/* vt330:edit key execution */
+    ,srm_DECPFF = 18		/* vt220:Print Form Feed Mode */
+    ,srm_DECPEX = 19		/* vt220:Printer Extent Mode */
     ,srm_DECTCEM = 25		/* Text Cursor Enable Mode */
     ,srm_RXVT_SCROLLBAR = 30
     ,srm_DECRLM = 34		/* vt510:Cursor Right to Left Mode */
 #if OPT_SHIFT_FONTS
     ,srm_RXVT_FONTSIZE = 35	/* also vt520:DECHEBM */
+#else
+    ,srm_DECHEBM = 35		/* vt520:Hebrew keyboard mapping */
 #endif
     ,srm_DECHEM = 36		/* vt510:Hebrew Encoding Mode */
 #if OPT_TEK4014
@@ -1131,8 +1143,10 @@ typedef enum {
     ,srm_DECGPBM = 46		/* Graphics Print Background Mode */
 #endif
     ,srm_ALTBUF = 47		/* also DECGRPM (Graphics Rotated Print Mode) */
+    ,srm_DEC131TM = 53		/* vt330:VT131 transmit */
     ,srm_DECNAKB = 57		/* vt510:Greek/N-A Keyboard Mapping */
     ,srm_DECIPEM = 58		/* vt510:IBM ProPrinter Emulation Mode */
+    ,srm_DECKKDM = 59   	/* vt382:Kanji/Katakana */
     ,srm_DECHCCM = 60		/* vt420:Horizontal Cursor-Coupling Mode */
     ,srm_DECVCCM = 61		/* vt420:Vertical Cursor-Coupling Mode */
     ,srm_DECPCCM = 64		/* vt420:Page Cursor-Coupling Mode */
@@ -1142,7 +1156,7 @@ typedef enum {
     ,srm_DECLRMM = 69		/* vt420:Vertical Split Screen Mode (DECVSSM) */
     ,srm_DECXRLM = 73		/* vt420:Transmit Rate Limiting */
 #if OPT_SIXEL_GRAPHICS
-    ,srm_DECSDM = 80		/* Sixel Display Mode */
+    ,srm_DECSDM = 80		/* vt320:Sixel Display Mode */
 #endif
     ,srm_DECKPM = 81		/* vt420:Key Position Mode */
     ,srm_DECNCSM = 95		/* vt510:No Clearing Screen On Column Change */
@@ -1150,10 +1164,11 @@ typedef enum {
     ,srm_DECCRTSM = 97		/* vt510:CRT Save Mode */
     ,srm_DECARSM = 98		/* vt510:Auto Resize Mode */
     ,srm_DECMCM = 99		/* vt510:Modem Control Mode */
-    ,srm_DECCAAM = 100		/* vt510:Auto Answerback Mode */
+    ,srm_DECAAM = 100		/* vt510:Auto Answerback Mode */
     ,srm_DECCANSM = 101		/* vt510:Conceal Answerback Message Mode */
     ,srm_DECNULM = 102		/* vt510:Ignoring Null Mode */
     ,srm_DECHDPXM = 103		/* vt510:Half-Duplex Mode */
+    ,srm_DECESKM = 104		/* vt510:enable secondary keyboard language */
     ,srm_DECOSCNM = 106		/* vt510:Overscan Mode */
     ,srm_DECNUMLK = 108		/* vt510:Num Lock Mode */
     ,srm_DECCAPSLK = 109	/* vt510:Caps Lock Mode */
