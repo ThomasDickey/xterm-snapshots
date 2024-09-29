@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.723 2024/09/24 08:29:39 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.724 2024/09/25 00:38:10 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -450,7 +450,7 @@ Some controls (such as \*(Os) introduce a string mode,
 which is ended on a \*(ST (string terminator).
 .IP
 Section 9 of ECMA-48, like DEC STD 070, chapter 3, goes into detail to
-explain that when processing 7-bit controls, the eighth bit of each
+explain that when processing 8-bit controls, the eighth bit of each
 byte is ignored.
 This applies to the content of APC, DCS, OSC, and PM strings,
 as well as to the terminating bytes such as the two-byte string terminator.
@@ -472,6 +472,30 @@ and they will be treated as their 7-bit equivalent.
 are handled within control sequences.)
 .in -4n
 .ft R
+.IP
+The reason for that is because ECMA-48 presents 7-bit controls as an
+alternative to 8-bit controls.  It says this:
+.in +4n
+.ft \*(CW
+.sp
+The control functions defined in this Standard can be coded in a 7-bit code as
+well as in an 8-bit code; both forms of coded representation are equivalent and
+in accordance with Standard ECMA-35.
+.in -4n
+.ft R
+.IP
+and in turn, ECMA-35 9.1 says
+.in +4n
+.ft \*(CW
+.sp
+A 7-bit code shall have a structure which is based on a 7-bit
+code table arranged in separate areas as follows (see figure 7):
+.in -4n
+.ft R
+.IP
+In short, a standard-compliant implementation of ECMA-48 ignores the
+eighth bit of bytes in control strings other than the C1 controls.
+\fI\*(XT\fP does this.
 .IP
 ECMA-48 describes only correct behavior,
 telling what types of characters are expected

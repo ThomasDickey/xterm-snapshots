@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1096 2024/09/24 00:19:53 tom Exp $ */
+/* $XTermId: misc.c,v 1.1097 2024/09/25 22:50:21 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -5705,8 +5705,13 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    /* VT3xx */
 	case srm_DEC131TM:	/* vt330:VT131 transmit */
 	case srm_DECEKEM:	/* vt330:edit key execution */
+	case srm_DECHCCM:	/* vt320:Horizontal Cursor-Coupling Mode */
+	case srm_DECKBUM:	/* vt330:Keyboard Usage mode */
 	case srm_DECKKDM:	/* vt382:Kanji/Katakana */
 	case srm_DECLTM:	/* vt330:line transmit */
+	case srm_DECPCCM:	/* vt330:Page Cursor-Coupling Mode */
+	case srm_DECVCCM:	/* vt330:Vertical Cursor-Coupling Mode */
+	case srm_DECXRLM:	/* vt330:Transmit Rate Limiting */
 #if !OPT_BLINK_CURS
 	case srm_DECKANAM:	/* vt382:Katakana shift */
 	case srm_DECSCFDM:	/* vt330:space compression field delimiter */
@@ -5719,12 +5724,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 		result = mdAlwaysReset;
 	    break;
 	    /* VT4xx */
-	case srm_DECHCCM:	/* vt420:Horizontal Cursor-Coupling Mode */
-	case srm_DECKBUM:	/* vt420:Keyboard Usage mode */
 	case srm_DECKPM:	/* vt420:Key Position Mode */
-	case srm_DECPCCM:	/* vt420:Page Cursor-Coupling Mode */
-	case srm_DECVCCM:	/* vt420:Vertical Cursor-Coupling Mode */
-	case srm_DECXRLM:	/* vt420:Transmit Rate Limiting */
 	    if (screen->vtXX_level >= 4)
 		result = mdAlwaysReset;
 	    break;

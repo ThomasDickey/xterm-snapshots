@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1126 2024/09/24 00:18:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1127 2024/09/29 17:14:18 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -340,7 +340,8 @@ typedef Char *UString;
 
 #define CASETYPE(name) case name: result = #name; break
 
-#define CharOf(n) ((Char)(n))
+#define AsciiOf(n) (0x7f & (n))		/* extract 7-bit character */
+#define CharOf(n) ((Char)(n))		/* extract 8-bit character */
 
 typedef struct {
     int row;

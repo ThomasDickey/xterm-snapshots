@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2038 2024/09/24 22:03:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2044 2024/09/29 23:22:27 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1903,7 +1903,8 @@ xtermDecodeSCS(XtermWidget xw, int which, int sgroup, int prefix, int suffix)
     Cardinal n;
     DECNRCM_codes result = nrc_Unknown;
 
-    suffix &= 0x7f;
+    prefix = AsciiOf(prefix);
+    suffix = AsciiOf(suffix);
     for (n = 0; n < XtNumber(scs_table); ++n) {
 	if (prefix == scs_table[n].prefix
 	    && suffix == scs_table[n].suffix
@@ -2936,6 +2937,8 @@ update_vt52_vt100_settings(void)
 }
 #endif
 
+#define TRACE_GSETS(name) TRACE(("CASE_GSETS%s(%d) = '%c'\n", name, sp->scstype, AsciiOf(c)))
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -3044,7 +3047,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
 	    if (nparam < NPARAM - 1) {
-		SetParam(nparam++, (int) (c & 0x7f) - 32);
+		SetParam(nparam++, (int) AsciiOf(c) - 32);
 		parms.is_sub[nparam] = 0;
 	    }
 	    if (nparam < 2)
@@ -3209,7 +3212,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * doing this for so long we shouldn't change this behavior.
 	     */
 	    if (screen->vtXX_level < 1)
-		c &= 0x7f;
+		c = AsciiOf(c);
 #endif
 	    sp->print_area[sp->print_used++] = (IChar) c;
 	    sp->lastchar = thischar = (int) c;
@@ -3253,7 +3256,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    else if (sp->string_args == sa_SIXEL) {
 		/* avoid adding the string-terminator */
 		if (sos_table[CharOf(c)] == CASE_IGNORE)
-		    parse_sixel_char((char) c);
+		    parse_sixel_char(AsciiOf(c));
 	    }
 #endif
 	    else if (sp->string_skip) {
@@ -3276,7 +3279,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * parameters to the first non-parameter character and
 		 * inspecting it.  Since both are DCS, we can also ignore OSC.
 		 */
-		sp->string_area[(sp->string_used)++] = CharOf(c);
+		sp->string_area[(sp->string_used)++] = AsciiOf(c);
 		if (sp->string_args < sa_LAST) {
 		    switch (c) {
 		    case ':':
@@ -3540,16 +3543,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECDHL:
-	    xterm_DECDHL(xw, c == '3');
+	    TRACE(("CASE_DECDHL - double-height line: %s\n",
+		   (AsciiOf(c) == '3') ? "top" : "bottom"));
+	    xterm_DECDHL(xw, AsciiOf(c) == '3');
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSWL:
+	    TRACE(("CASE_DECSWL - single-width line\n"));
 	    xterm_DECSWL(xw);
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECDWL:
+	    TRACE(("CASE_DECDWL - double-width line\n"));
 	    xterm_DECDWL(xw);
 	    ResetState(sp);
 	    break;
@@ -3603,7 +3610,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* digit in csi or dec mode */
 	    if (nparam > 0) {
 		value = zero_if_default(nparam - 1);
-		SetParam(nparam - 1, (10 * value) + ((int) c - '0'));
+		SetParam(nparam - 1, (10 * value) + (int) (AsciiOf(c) - '0'));
 		if (GetParam(nparam - 1) > MAX_I_PARAM)
 		    SetParam(nparam - 1, MAX_I_PARAM);
 		if (sp->parsestate == csi_table)
@@ -4557,7 +4564,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS5:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS5(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("5");
 		xtermDecodeSCS(xw, sp->scstype, 5, 0, (int) c);
 	    }
 	    ResetState(sp);
@@ -4565,18 +4572,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS3:
 	    if (screen->vtXX_level >= 3) {
-		TRACE(("CASE_GSETS3(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("3");
 		xtermDecodeSCS(xw, sp->scstype, 3, 0, (int) c);
 	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_GSETS:
-	    if (strchr("012AB", (int) c) != 0) {
-		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+	    if (strchr("012AB", AsciiOf(c)) != 0) {
+		TRACE_GSETS("");
 		xtermDecodeSCS(xw, sp->scstype, 1, 0, (int) c);
 	    } else if (screen->vtXX_level >= 2) {
-		TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("");
 		xtermDecodeSCS(xw, sp->scstype, 2, 0, (int) c);
 	    }
 	    ResetState(sp);
@@ -5928,19 +5935,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_UTF8 wide:%d, utf8:%d, req:%s\n",
 		   screen->wide_chars,
 		   screen->utf8_mode,
-		   BtoS(c == 'G')));
-	    if ((!screen->wide_chars) && (c == 'G')) {
+		   BtoS(AsciiOf(c) == 'G')));
+	    if ((!screen->wide_chars) && (AsciiOf(c) == 'G')) {
 		WriteNow();
 		ChangeToWide(xw);
 	    }
 	    if (screen->wide_chars
 		&& !screen->utf8_always) {
-		switchPtyData(screen, c == 'G');
+		switchPtyData(screen, AsciiOf(c) == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
 	    } else {
 		TRACE(("UTF8 mode NOT turned %s (%s)\n",
-		       BtoS(c == 'G'),
+		       BtoS(AsciiOf(c) == 'G'),
 		       (screen->utf8_mode == uAlways)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
@@ -5955,7 +5962,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_DQUOTE:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS_DQUOTE(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("_DQUOTE");
 		xtermDecodeSCS(xw, sp->scstype, 5, '"', (int) c);
 	    }
 	    ResetState(sp);
@@ -5968,7 +5975,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_AMPRSND:
 	    if (screen->vtXX_level >= 5) {
-		TRACE(("CASE_GSETS_AMPRSND(%d) = '%c'\n", sp->scstype, c));
+		TRACE_GSETS("_AMPRSND");
 		xtermDecodeSCS(xw, sp->scstype, 5, '&', (int) c);
 	    }
 	    ResetState(sp);
@@ -5981,8 +5988,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_PERCENT:
 	    if (screen->vtXX_level >= 3) {
-		TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-		switch (c) {
+		TRACE_GSETS("_PERCENT");
+		switch (AsciiOf(c)) {
 		case '0':	/* DEC Turkish */
 		case '2':	/* Turkish */
 		case '=':	/* Hebrew */
