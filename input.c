@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.371 2024/09/01 22:49:10 tom Exp $ */
+/* $XTermId: input.c,v 1.373 2024/09/30 07:48:35 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -57,10 +57,6 @@
 #include <xterm.h>
 
 #include <X11/keysym.h>
-
-#ifdef VMS
-#include <X11/keysymdef.h>
-#endif
 
 #if HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
@@ -1170,7 +1166,7 @@ Input(XtermWidget xw,
 		 && (dec_code >= 11 && dec_code <= 14)) {
 	    reply.a_type = ANSI_SS3;
 	    VT52_CURSOR_KEYS;
-	    reply.a_final = (Char) A2E(dec_code - 11 + E2A('P'));
+	    reply.a_final = (Char) (dec_code - 11 + 'P');
 	    modifyCursorKey(&reply,
 			    keyboard->modify_now.function_keys,
 			    &modify_parm);

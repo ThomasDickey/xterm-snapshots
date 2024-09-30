@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.127 2024/09/21 00:24:17 tom Exp $ */
+/* $XTermId: charsets.c,v 1.128 2024/09/30 07:37:36 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -361,7 +361,7 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 #endif
 
     for (s = buf; s < ptr; ++s) {
-	int eight = CharOf(E2A(*s));
+	int eight = CharOf(*s);
 	int seven = eight & 0x7f;
 	DECNRCM_codes cs = (eight >= 128) ? rightset : leftset;
 	int chr = eight;
@@ -576,7 +576,7 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	} else {
 	    if (eight >= 128 && chr < 128 && chr > 32)
 		chr |= 128;
-	    *s = (IChar) A2E(chr);
+	    *s = (IChar) chr;
 	}
     }
     TRACE(("%d\t%s\n",

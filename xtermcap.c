@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.59 2023/12/25 21:18:03 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.61 2024/09/30 08:12:14 tom Exp $ */
 
 /*
- * Copyright 2007-2020,2023 by Thomas E. Dickey
+ * Copyright 2007-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,10 +35,6 @@
 
 #include <X11/keysym.h>
 #include <ctype.h>
-
-#ifdef VMS
-#include <X11/keysymdef.h>
-#endif
 
 #include <xstrings.h>
 

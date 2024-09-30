@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.142 2024/09/02 12:07:36 tom Exp $ */
+/* $XTermId: data.h,v 1.143 2024/09/30 07:48:05 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2024 by Thomas E. Dickey
@@ -59,21 +59,6 @@
 extern Widget toplevel;
 
 extern XtAppContext app_con;
-
-#ifdef VMS
-/* actually in vms.c */
-extern int tt_width;
-extern int tt_length;
-extern int tt_changed;
-extern int tt_pasting;
-extern int tt_new_output;
-#define VMS_TERM_BUFFER_SIZE	500
-struct q_head {
-    int flink;
-    int blink;
-};
-extern struct q_head read_queue;
-#endif
 
 #if OPT_TEK4014
 extern Char *Tpushb;

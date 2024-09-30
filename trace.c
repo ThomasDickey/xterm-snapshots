@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.242 2024/09/21 00:31:47 tom Exp $ */
+/* $XTermId: trace.c,v 1.243 2024/09/30 07:36:29 tom Exp $ */
 
 /*
  * Copyright 1997-2023,2024 by Thomas E. Dickey
@@ -223,7 +223,7 @@ formatAscii(char *dst, unsigned value)
 	sprintf(dst, "\\t");
 	break;
     default:
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	if (value < 32 || (value >= 127 && value < 160))
 	    sprintf(dst, "\\%03o", value & 0xff);
 	else
 	    sprintf(dst, "%c", CharOf(value));

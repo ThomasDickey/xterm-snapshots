@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1097 2024/09/25 22:50:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.1098 2024/09/30 07:54:37 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -104,13 +104,6 @@
 #else
 #define MakeTemp(f) mktemp(f)
 #endif
-
-#ifdef VMS
-#define XTERM_VMS_LOGFILE "SYS$SCRATCH:XTERM_LOG.TXT"
-#ifdef ALLOWLOGFILEEXEC
-#undef ALLOWLOGFILEEXEC
-#endif
-#endif /* VMS */
 
 #if USE_DOUBLE_BUFFER
 #include <X11/extensions/Xdbe.h>
@@ -2116,11 +2109,7 @@ Redraw(void)
 #endif
 }
 
-#ifdef VMS
-#define TIMESTAMP_FMT "%s%d-%02d-%02d-%02d-%02d-%02d"
-#else
 #define TIMESTAMP_FMT "%s%d-%02d-%02d.%02d:%02d:%02d"
-#endif
 
 void
 timestamp_filename(char *dst, const char *src)
@@ -2149,9 +2138,7 @@ create_printfile(XtermWidget xw, const char *suffix)
     int fd;
     FILE *fp;
 
-#ifdef VMS
-    sprintf(fname, "sys$scratch:xterm%s", suffix);
-#elif defined(HAVE_STRFTIME)
+#if defined(HAVE_STRFTIME)
     {
 	char format[1024];
 	time_t now;
@@ -2181,17 +2168,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     int fd;
     struct stat sb;
 
-#ifdef VMS
-    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
-	int the_error = errno;
-	xtermWarning("cannot open %s: %d:%s\n",
-		     path,
-		     the_error,
-		     SysErrorMsg(the_error));
-	return -1;
-    }
-    chown(path, uid, gid);
-#else
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
 	|| (creat_as(uid, gid, append, path, 0644) <= 0)
 	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
@@ -2202,7 +2178,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
 		     SysErrorMsg(the_error));
 	return -1;
     }
-#endif
 
     /*
      * Doublecheck that the user really owns the file that we've opened before
@@ -2218,7 +2193,6 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     return fd;
 }
 
-#ifndef VMS
 /*
  * Create a file only if we could with the permissions of the real user id.
  * We could emulate this with careful use of access() and following
@@ -2321,7 +2295,6 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 	return retval;
     }
 }
-#endif /* !VMS */
 #endif /* OPT_SCREEN_DUMPS || defined(ALLOWLOGGING) */
 
 int
@@ -2496,13 +2469,6 @@ StartLog(XtermWidget xw)
 
     if (screen->logging || (screen->inhibit & I_LOG))
 	return;
-#ifdef VMS			/* file name is fixed in VMS variant */
-    screen->logfd = open(XTERM_VMS_LOGFILE,
-			 O_CREAT | O_TRUNC | O_APPEND | O_RDWR,
-			 0640);
-    if (screen->logfd < 0)
-	return;			/* open failed */
-#else /*VMS */
 
     /* if we weren't supplied with a logfile path, generate one */
     if (IsEmpty(screen->logfile))
@@ -2529,7 +2495,6 @@ StartLog(XtermWidget xw)
 					   True)) < 0)
 	    return;
     }
-#endif /*VMS */
     screen->logstart = VTbuffer->next;
     screen->logging = True;
     update_logging();
@@ -2557,12 +2522,6 @@ FlushLog(XtermWidget xw)
 	Char *cp;
 	size_t i;
 
-#ifdef VMS			/* avoid logging output loops which otherwise occur sometimes
-				   when there is no output and cp/screen->logstart are 1 apart */
-	if (!tt_new_output)
-	    return;
-	tt_new_output = False;
-#endif /* VMS */
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
 	    && (i = (size_t) (cp - screen->logstart)) > 0) {
@@ -6590,7 +6549,6 @@ validProgram(const char *pathname)
     return result;
 }
 
-#ifndef VMS
 #ifndef PATH_MAX
 #define PATH_MAX 512		/* ... is not defined consistently in Xos.h */
 #endif
@@ -6664,7 +6622,6 @@ xtermFindShell(char *leaf, Bool warning)
 	result = x_strdup(result);
     return result;
 }
-#endif /* VMS */
 
 #define ENV_HUNK(n)	(unsigned) ((((n) + 1) | 31) + 1)
 

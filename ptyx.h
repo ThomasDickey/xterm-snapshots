@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1127 2024/09/29 17:14:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1130 2024/09/30 08:03:20 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -186,9 +186,6 @@
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
-#elif defined(VMS)
-#undef USE_PTY_DEVICE
-#undef USE_PTY_SEARCH
 #elif defined(PUCC_PTYD)
 #undef USE_PTY_SEARCH
 #elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
@@ -204,7 +201,7 @@
 
 #if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
-#elif (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386))
+#elif (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386))
 #define USE_USG_PTYS
 #endif
 
@@ -221,8 +218,6 @@
 #ifndef PTYDEV
 #if defined(__hpux)
 #define	PTYDEV		"/dev/ptym/ptyxx"
-#elif defined(__MVS__)
-#define	PTYDEV		"/dev/ptypxxxx"
 #else
 #define	PTYDEV		"/dev/ptyxx"
 #endif
@@ -231,8 +226,6 @@
 #ifndef TTYDEV
 #if defined(__hpux)
 #define TTYDEV		"/dev/pty/ttyxx"
-#elif defined(__MVS__)
-#define TTYDEV		"/dev/ptypxxxx"
 #elif defined(USE_PTS_DEVICE)
 #define TTYDEV		"/dev/pts/0"
 #else
@@ -263,8 +256,6 @@
 #ifndef TTYFORMAT
 #if defined(CRAY)
 #define TTYFORMAT "/dev/ttyp%03d"
-#elif defined(__MVS__)
-#define TTYFORMAT "/dev/ttyp%04d"
 #else
 #define TTYFORMAT "/dev/ttyp%d"
 #endif
@@ -273,8 +264,6 @@
 #ifndef PTYFORMAT
 #ifdef CRAY
 #define PTYFORMAT "/dev/pty/%03d"
-#elif defined(__MVS__)
-#define PTYFORMAT "/dev/ptyp%04d"
 #else
 #define PTYFORMAT "/dev/ptyp%d"
 #endif
@@ -283,8 +272,6 @@
 #ifndef PTYCHARLEN
 #ifdef CRAY
 #define PTYCHARLEN 3
-#elif defined(__MVS__)
-#define PTYCHARLEN 8     /* OS/390 stores, e.g. ut_id="ttyp1234"  */
 #else
 #define PTYCHARLEN 2
 #endif
@@ -610,14 +597,6 @@ typedef enum {
 
 #ifndef OPT_DOUBLE_BUFFER
 #define OPT_DOUBLE_BUFFER 0 /* true if using double-buffering */
-#endif
-
-#ifndef OPT_EBCDIC
-#ifdef __MVS__
-#define OPT_EBCDIC 1
-#else
-#define OPT_EBCDIC 0
-#endif
 #endif
 
 #ifndef OPT_EXEC_SELECTION
@@ -1661,18 +1640,10 @@ typedef enum {
 
 /***====================================================================***/
 
-#if OPT_EBCDIC
-extern int E2A(int);
-extern int A2E(int);
-#else
-#define E2A(a) (a)
-#define A2E(a) (a)
-#endif
+#define CONTROL(a) ((a) & 037)
 
-#define CONTROL(a) (A2E(E2A(a)&037))
-
-#define XTERM_ERASE A2E(CONTROL('H'))
-#define XTERM_LNEXT A2E(CONTROL('V'))
+#define XTERM_ERASE CONTROL('H')
+#define XTERM_LNEXT CONTROL('V')
 
 /***====================================================================***/
 

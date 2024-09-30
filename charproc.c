@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2044 2024/09/29 23:22:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2046 2024/09/30 07:47:49 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -870,14 +870,7 @@ static void VTResize(Widget w);
 static void VTInitI18N(XtermWidget);
 #endif
 
-#ifdef VMS
-globaldef {
-    "xtermclassrec"
-} noshare
-
-#else
 static
-#endif				/* VMS */
 WidgetClassRec xtermClassRec =
 {
     {
@@ -917,12 +910,6 @@ WidgetClassRec xtermClassRec =
     }
 };
 
-#ifdef VMS
-globaldef {
-    "xtermwidgetclass"
-}
-noshare
-#endif /* VMS */
 WidgetClass xtermWidgetClass = (WidgetClass) & xtermClassRec;
 
 /*
@@ -2317,7 +2304,7 @@ static void
 illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
     ResetState(sp);
-    sp->nextstate = sp->parsestate[E2A(c)];
+    sp->nextstate = sp->parsestate[c];
     Bell(xw, XkbBI_MinorError, 0);
 }
 
@@ -3092,7 +3079,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	} else
 #endif
-	    sp->nextstate = sp->parsestate[E2A(c)];
+	    sp->nextstate = sp->parsestate[c];
 
 #if OPT_BROKEN_OSC
 	/*
@@ -3161,7 +3148,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& (c >= 128 && c < 256)) {
 		sp->nextstate = (sp->parsestate == esc_table
 				 ? CASE_ESC_IGNORE
-				 : sp->parsestate[E2A(160)]);
+				 : sp->parsestate[160]);
 		TRACE(("allowC1Printable %04X %s ->%s\n",
 		       c, which_table(sp->parsestate),
 		       visibleVTparse(sp->nextstate)));
@@ -6230,17 +6217,10 @@ v_write(int f, const Char *data, size_t len)
 	fprintf(stderr, "\n");
     });
 
-#ifdef VMS
-    if ((1 << f) != pty_mask) {
-	tt_write((const char *) data, len);
-	return;
-    }
-#else /* VMS */
     if (!FD_ISSET(f, &pty_mask)) {
 	IGNORE_RC(write(f, (const char *) data, (size_t) len));
 	return;
     }
-#endif /* VMS */
 
     /*
      * Append to the block we already have.
@@ -6314,20 +6294,11 @@ v_write(int f, const Char *data, size_t len)
     if (v_bufptr > v_bufstr) {
 	int riten;
 
-#ifdef VMS
-	riten = tt_write(v_bufstr,
-			 (size_t) ((v_bufptr - v_bufstr <= VMS_TERM_BUFFER_SIZE)
-				   ? v_bufptr - v_bufstr
-				   : VMS_TERM_BUFFER_SIZE));
-	if (riten == 0)
-	    return (riten);
-#else /* VMS */
 	riten = (int) write(f, v_bufstr,
 			    (size_t) ((v_bufptr - v_bufstr <= MAX_PTY_WRITE)
 				      ? v_bufptr - v_bufstr
 				      : MAX_PTY_WRITE));
 	if (riten < 0)
-#endif /* VMS */
 	{
 	    if_DEBUG({
 		perror("write");
@@ -6422,84 +6393,6 @@ update_the_screen(XtermWidget xw)
 	updateCursor(xw);
     }
 }
-
-#ifdef VMS
-#define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
-
-static void
-in_put(XtermWidget xw)
-{
-    static PtySelect select_mask;
-    static PtySelect write_mask;
-    int update = VTbuffer->update;
-    int size;
-
-    int status;
-    Dimension replyWidth, replyHeight;
-    XtGeometryResult stat;
-
-    TScreen *screen = TScreenOf(xw);
-    char *cp;
-    int i;
-
-    select_mask = pty_mask;	/* force initial read */
-    for (;;) {
-
-	/* if the terminal changed size, resize the widget */
-	if (tt_changed) {
-	    tt_changed = False;
-
-	    stat = REQ_RESIZE((Widget) xw,
-			      ((Dimension) FontWidth(screen)
-			       * (tt_width)
-			       + 2 * screen->border
-			       + screen->fullVwin.sb_info.width),
-			      ((Dimension) FontHeight(screen)
-			       * (tt_length)
-			       + 2 * screen->border),
-			      &replyWidth, &replyHeight);
-
-	    if (stat == XtGeometryYes || stat == XtGeometryDone) {
-		xw->core.width = replyWidth;
-		xw->core.height = replyHeight;
-
-		ScreenResize(xw, replyWidth, replyHeight, &xw->flags);
-	    }
-	    repairSizeHints();
-	}
-
-	if (screen->eventMode == NORMAL
-	    && readPtyData(xw, &select_mask, VTbuffer)) {
-	    if (screen->scrollWidget
-		&& screen->scrollttyoutput
-		&& screen->topline < 0)
-		/* Scroll to bottom */
-		WindowScroll(xw, 0, False);
-	    break;
-	}
-	update_the_screen(xw);
-
-	if (QLength(screen->display)) {
-	    select_mask = X_mask;
-	} else {
-	    write_mask = ptymask();
-	    XFlush(screen->display);
-	    select_mask = Select_mask;
-	    if (screen->eventMode != NORMAL)
-		select_mask = X_mask;
-	}
-	if (write_mask & ptymask()) {
-	    v_write(screen->respond, 0, 0);	/* flush buffer */
-	}
-
-	if (select_mask & X_mask) {
-	    xevents(xw);
-	    if (VTbuffer->update != update)
-		break;
-	}
-    }
-}
-#else /* VMS */
 
 static void
 init_timeval(struct timeval *target, long usecs)
@@ -6695,7 +6588,6 @@ in_put(XtermWidget xw)
 
     }
 }
-#endif /* VMS */
 
 static IChar
 doinput(XtermWidget xw)
@@ -9075,8 +8967,8 @@ unparseputc1(XtermWidget xw, int c)
 {
     if (c >= 0x80 && c <= 0x9F) {
 	if (!TScreenOf(xw)->control_eight_bits) {
-	    unparseputc(xw, A2E(ANSI_ESC));
-	    c = A2E(c - 0x40);
+	    unparseputc(xw, ANSI_ESC);
+	    c = c - 0x40;
 	}
     }
     unparseputc(xw, c);
@@ -9229,11 +9121,7 @@ unparse_end(XtermWidget xw)
 	TRACE(("unparse_end %u:%s\n",
 	       screen->unparse_len,
 	       visibleIChars(screen->unparse_bfr, (size_t) screen->unparse_len)));
-#ifdef VMS
-	tt_write(screen->unparse_bfr, screen->unparse_len);
-#else /* VMS */
 	writePtyData(screen->respond, screen->unparse_bfr, (size_t) screen->unparse_len);
-#endif /* VMS */
 	screen->unparse_len = 0;
     }
 }

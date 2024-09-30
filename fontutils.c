@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.785 2024/09/01 21:28:27 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.786 2024/09/30 07:35:30 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -3882,7 +3882,7 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 	if (ch < 256)
 #endif
 	{
-	    CI_GET_CHAR_INFO_1D(fs, E2A(ch), pc);
+	    CI_GET_CHAR_INFO_1D(fs, ch, pc);
 	}
     }
 #if OPT_WIDE_CHARS
