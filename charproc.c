@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2046 2024/09/30 07:47:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2047 2024/10/03 22:56:45 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1827,6 +1827,8 @@ static const struct {
     /* VT5xx */
     { nrc_Greek,             '"', '>', 5, 9, 1, 0 },
     { nrc_Hebrew,            '%', '=', 5, 9, 1, 0 },
+    { nrc_Russian,	     '&', '5', 5, 9, 1, 0 },
+    { nrc_SCS_NRCS,	     '%', '3', 5, 9, 1, 0 },
     { nrc_Turkish,	     '%', '2', 5, 9, 1, 0 },
     { nrc_DEC_Cyrillic,      '&', '4', 5, 9, 0, 0 },
     { nrc_DEC_Greek_Supp,    '"', '?', 5, 9, 0, 0 },
@@ -1837,11 +1839,6 @@ static const struct {
     { nrc_ISO_Latin_2_Supp,  0,   'B', 5, 9, 0, 1 },
     { nrc_ISO_Latin_5_Supp,  0,   'M', 5, 9, 0, 1 },
     { nrc_ISO_Latin_Cyrillic,0,   'L', 5, 9, 0, 1 },
-    /* VT5xx (not implemented) */
-#if 0
-    { nrc_Russian,           '&', '5', 5, 9, 1, 0 },
-    { nrc_SCS_NRCS,          '%', '3', 5, 9, 0, 0 },
-#endif
 };
 /* *INDENT-ON* */
 

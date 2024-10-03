@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.128 2024/09/30 07:37:36 tom Exp $ */
+/* $XTermId: charsets.c,v 1.129 2024/10/03 22:21:32 tom Exp $ */
 
 /*
  * Copyright 1998-2023,2024 by Thomas E. Dickey
@@ -268,8 +268,12 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 	map_NRCS_Portuguese(code);
 	break;
 
+    case nrc_Russian:
+	map_NRCS_Russian(code);
+	break;
+
     case nrc_SCS_NRCS:		/* vt5xx - Serbo/Croatian */
-	/* FIXME */
+	map_NRCS_Serbo_Croatian(code);
 	break;
 
     case nrc_Spanish:
@@ -299,7 +303,6 @@ xtermCharSetIn(XtermWidget xw, unsigned code, DECNRCM_codes charset)
 
     case nrc_ISO_Latin_1_Supp:
     case nrc_British_Latin_1:
-    case nrc_Russian:
     case nrc_French_Canadian2:
     case nrc_Unknown:
     case nrc_DEC_UPSS:
@@ -525,8 +528,12 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_NRCS_Portuguese(chr = seven);
 	    break;
 
+	case nrc_Russian:
+	    map_NRCS_Russian(chr = seven);
+	    break;
+
 	case nrc_SCS_NRCS:	/* vt5xx - Serbo/Croatian */
-	    /* FIXME */
+	    map_NRCS_Serbo_Croatian(chr = seven);
 	    break;
 
 	case nrc_Spanish:
@@ -554,7 +561,6 @@ xtermCharSetOut(XtermWidget xw, Cardinal length, DECNRCM_codes leftset)
 	    map_DEC_Cyrillic(chr = seven);
 	    break;
 
-	case nrc_Russian:
 	case nrc_Unknown:
 	default:		/* any character sets we don't recognize */
 	    break;
@@ -759,6 +765,14 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		unmap_NRCS_Portuguese(chr, DFT_94(chr));
 		break;
 
+	    case nrc_Russian:
+		unmap_NRCS_Russian(chr, DFT_94(chr));
+		break;
+
+	    case nrc_SCS_NRCS:
+		unmap_NRCS_Serbo_Croatian(chr, DFT_94(chr));
+		break;
+
 	    case nrc_Spanish:
 		unmap_NRCS_Spanish(chr, DFT_94(chr));
 		break;
@@ -781,8 +795,6 @@ xtermCharSetDec(XtermWidget xw, IChar chr, DECNRCM_codes cs)
 		break;
 
 	    case nrc_British_Latin_1:
-	    case nrc_SCS_NRCS:
-	    case nrc_Russian:
 	    case nrc_Unknown:
 	    case nrc_DEC_UPSS:
 	    default:		/* anything we cannot unmap */

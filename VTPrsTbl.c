@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.119 2024/09/23 20:18:02 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.120 2024/10/03 23:02:04 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -8601,7 +8601,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	4		5		6		7	*/
 CASE_GSETS_AMPRSND,
-CASE_GROUND_STATE,
+CASE_GSETS_AMPRSND,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	8		9		:		;	*/
@@ -8761,7 +8761,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      acute           mu              paragraph       periodcentered  */
 CASE_GSETS_AMPRSND,
-CASE_GROUND_STATE,
+CASE_GSETS_AMPRSND,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      cedilla         onesuperior     masculine       guillemotright  */

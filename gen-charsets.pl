@@ -1,5 +1,5 @@
 #! /usr/bin/env perl
-# $XTermId: gen-charsets.pl,v 1.40 2024/09/24 22:06:33 tom Exp $
+# $XTermId: gen-charsets.pl,v 1.41 2024/10/03 22:01:13 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -61,6 +61,8 @@ our %wide_chars = qw(
   map_JIS_Katakana 1
   map_NRCS_Greek 1
   map_NRCS_Hebrew 1
+  map_NRCS_Serbo_Croatian 1
+  map_NRCS_Russian 1
   map_NRCS_Turkish 1
 );
 

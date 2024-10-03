@@ -1,5 +1,5 @@
 /*
- * $XTermId: charsets.h,v 1.33 2024/09/24 22:06:44 tom Exp $
+ * $XTermId: charsets.h,v 1.34 2024/10/03 22:01:16 tom Exp $
  */
 
 /*
@@ -2350,6 +2350,68 @@
 #define unmap_NRCS_Hebrew(code,dft) /* nothing */
 
 /*
+ * VT520/VT525 manual p 4-35 explains "SCS" as Serbo-Croatian.  The remaining
+ * "S" may be Slovene.  With that clue, choose ISO-IR-141, which provides a
+ * chart with names of suitable replacement characters. 
+ */
+#define map_NRCS_Serbo_Croatian(code) \
+	switch (code) { \
+	    UNI(0x40, 0x017D)		/* LATIN CAPITAL LETTER Z WITH CARON */ \
+	    UNI(0x5B, 0x0160)		/* LATIN CAPITAL LETTER S WITH CARON */ \
+	    UNI(0x5C, 0x0110)		/* LATIN CAPITAL LETTER D WITH STROKE */ \
+	    UNI(0x5D, 0x0106)		/* LATIN CAPITAL LETTER C WITH ACUTE */ \
+	    UNI(0x5E, 0x010C)		/* LATIN CAPITAL LETTER C WITH CARON */ \
+	    UNI(0x60, 0x017E)		/* LATIN SMALL LETTER Z WITH CARON */ \
+	    UNI(0x7B, 0x0161)		/* LATIN SMALL LETTER S WITH CARON */ \
+	    UNI(0x7C, 0x0111)		/* LATIN SMALL LETTER D WITH STROKE */ \
+	    UNI(0x7D, 0x0107)		/* LATIN SMALL LETTER C WITH ACUTE */ \
+	    UNI(0x7E, 0x010D)		/* LATIN SMALL LETTER C WITH CARON */ \
+	}
+
+#define unmap_NRCS_Serbo_Croatian(code,dft) /* nothing */
+
+/*
+ * VT520/VT525 manual p 7-2 explains "Russian" as KOI-7, though the dialect
+ * is unknown.  Choose the one Kermit used.
+ */
+#define map_NRCS_Russian(code) \
+	switch (code) { \
+	    UNI(0x60, 0x042E)		/* CYRILLIC CAPITAL LETTER YU */ \
+	    UNI(0x61, 0x0410)		/* CYRILLIC CAPITAL LETTER A */ \
+	    UNI(0x62, 0x0411)		/* CYRILLIC CAPITAL LETTER BE */ \
+	    UNI(0x63, 0x0426)		/* CYRILLIC CAPITAL LETTER TSE */ \
+	    UNI(0x64, 0x0414)		/* CYRILLIC CAPITAL LETTER DE */ \
+	    UNI(0x65, 0x0415)		/* CYRILLIC CAPITAL LETTER IE */ \
+	    UNI(0x66, 0x0424)		/* CYRILLIC CAPITAL LETTER EF */ \
+	    UNI(0x67, 0x0413)		/* CYRILLIC CAPITAL LETTER GHE */ \
+	    UNI(0x68, 0x0425)		/* CYRILLIC CAPITAL LETTER HA */ \
+	    UNI(0x69, 0x0418)		/* CYRILLIC CAPITAL LETTER I */ \
+	    UNI(0x6A, 0x0419)		/* CYRILLIC CAPITAL LETTER SHORT I */ \
+	    UNI(0x6B, 0x041A)		/* CYRILLIC CAPITAL LETTER KA */ \
+	    UNI(0x6C, 0x041B)		/* CYRILLIC CAPITAL LETTER EL */ \
+	    UNI(0x6D, 0x041C)		/* CYRILLIC CAPITAL LETTER EM */ \
+	    UNI(0x6E, 0x041D)		/* CYRILLIC CAPITAL LETTER EN */ \
+	    UNI(0x6F, 0x041E)		/* CYRILLIC CAPITAL LETTER O */ \
+	    UNI(0x70, 0x041F)		/* CYRILLIC CAPITAL LETTER PE */ \
+	    UNI(0x71, 0x042F)		/* CYRILLIC CAPITAL LETTER YA */ \
+	    UNI(0x72, 0x0420)		/* CYRILLIC CAPITAL LETTER ER */ \
+	    UNI(0x73, 0x0421)		/* CYRILLIC CAPITAL LETTER ES */ \
+	    UNI(0x74, 0x0422)		/* CYRILLIC CAPITAL LETTER TE */ \
+	    UNI(0x75, 0x0423)		/* CYRILLIC CAPITAL LETTER U */ \
+	    UNI(0x76, 0x0416)		/* CYRILLIC CAPITAL LETTER ZHE */ \
+	    UNI(0x77, 0x0412)		/* CYRILLIC CAPITAL LETTER VE */ \
+	    UNI(0x78, 0x042C)		/* CYRILLIC CAPITAL LETTER SOFT SIGN */ \
+	    UNI(0x79, 0x042B)		/* CYRILLIC CAPITAL LETTER YERU */ \
+	    UNI(0x7A, 0x0417)		/* CYRILLIC CAPITAL LETTER ZE */ \
+	    UNI(0x7B, 0x0428)		/* CYRILLIC CAPITAL LETTER SHA */ \
+	    UNI(0x7C, 0x042D)		/* CYRILLIC CAPITAL LETTER E */ \
+	    UNI(0x7D, 0x0429)		/* CYRILLIC CAPITAL LETTER SHCHA */ \
+	    UNI(0x7E, 0x0427)		/* CYRILLIC CAPITAL LETTER CHE */ \
+	}
+
+#define unmap_NRCS_Russian(code,dft) /* nothing */
+
+/*
  * figure A-26 "DEC 7-Bit Turkish Character Set"
  */
 #define map_NRCS_Turkish(code) \
@@ -2397,6 +2459,10 @@
 #define unmap_NRCS_Greek(code,dft) dft
 #define map_NRCS_Hebrew(code)	/* nothing */
 #define unmap_NRCS_Hebrew(code,dft) dft
+#define map_NRCS_Russian(code)	/* nothing */
+#define unmap_NRCS_Russian(code,dft) dft
+#define map_NRCS_Serbo_Croatian(code)	/* nothing */
+#define unmap_NRCS_Serbo_Croatian(code,dft) dft
 #define map_NRCS_Turkish(code)	/* nothing */
 #define unmap_NRCS_Turkish(code,dft) dft
 #endif /* OPT_WIDE_CHARS */
