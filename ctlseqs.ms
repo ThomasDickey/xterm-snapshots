@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.724 2024/09/25 00:38:10 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.726 2024/10/14 16:52:40 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #395
-.ds RF 2024/09/24
+.ds RF 2024/10/14
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -474,7 +474,8 @@ are handled within control sequences.)
 .ft R
 .IP
 The reason for that is because ECMA-48 presents 7-bit controls as an
-alternative to 8-bit controls.  It says this:
+alternative to 8-bit controls.
+It says this:
 .in +4n
 .ft \*(CW
 .sp
@@ -981,6 +982,7 @@ The string following the \*(``q\*('' is one of the following:
   \*$\*|	\(-> DECSCPP
   \*$\*}	\(-> DECSASD
   \*$\*~	\(-> DECSSDT
+  \*)\*{	\(-> DECSTGLT (VT525 only)
   \**\*x	\(-> DECSACE
   \**\*|	\(-> DECSNLS
   \*,\*|	\(-> DECAC (VT525 only)
@@ -4743,6 +4745,14 @@ Besides the Sun-derived OSC controls for setting window title and icon label,
 The \fICDE\fP source was unavailable for inspection until 2012,
 so that clarification of the details of the window operations
 relied upon \fIvttest\fP.
+However, the manual page for the control sequences
+(i.e., \fB\%dtterm\fP(5) in the file formats section) was readily available.
+DEC adapted the control sequences for setting the window and icon
+labels in the VT525.
+In doing so, DEC's VT520/VT525 manual changed
+the letter \fBl\fP to a number \fB1\fP,
+and added a parameter \fB2\fP before the \fIl/L\fP (or \fI1/L\fP) code used to
+distinguish the window and icon labels.
 .bP
 The SCOSC/SCORC control sequences for saving/restoring the cursor and
 for saving/restoring \*(``DEC Private Mode Values\*(''
