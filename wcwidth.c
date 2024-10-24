@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.74 2024/09/11 07:51:20 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.75 2024/10/23 22:08:40 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -711,6 +711,7 @@ int mk_wcwidth(wchar_t ucs)
 }
 
 
+#ifdef UNUSED
 int mk_wcswidth(const wchar_t *pwcs, size_t n)
 {
   int width = 0;
@@ -726,6 +727,7 @@ int mk_wcswidth(const wchar_t *pwcs, size_t n)
 
   return width;
 }
+#endif /* UNUSED */
 
 
 /*
@@ -826,6 +828,7 @@ int mk_wcwidth_cjk(wchar_t ucs)
 }
 
 
+#ifdef UNUSED
 int mk_wcswidth_cjk(const wchar_t *pwcs, size_t n)
 {
   int width = 0;
@@ -841,6 +844,7 @@ int mk_wcswidth_cjk(const wchar_t *pwcs, size_t n)
 
   return width;
 }
+#endif /* UNUSED */
 
 #ifdef TEST_DRIVER
 static int opt_all = 0;
