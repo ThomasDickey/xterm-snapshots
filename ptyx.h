@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1130 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1131 2024/11/20 23:31:26 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1001,6 +1001,10 @@ typedef enum {
 } TitleModes;
 
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
+
+#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
+			 || ((xw)->screen.utf8_title) \
+			 || ((xw)->screen.c1_printable))
 
 #include <xcharmouse.h>
 

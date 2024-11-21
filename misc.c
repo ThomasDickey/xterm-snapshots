@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1099 2024/10/14 16:00:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.1100 2024/11/20 23:31:12 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3416,10 +3416,6 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 #endif /* OPT_PASTE64 */
 
 /***====================================================================***/
-
-#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
-			 || (xw->screen.utf8_title) \
-			 || (xw->screen.c1_printable))
 
 static Bool
 xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)

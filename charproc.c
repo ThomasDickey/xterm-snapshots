@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2047 2024/10/03 22:56:45 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2048 2024/11/21 00:47:42 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3251,6 +3251,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		FreeAndNull(sp->string_area);
 		sp->string_size = 0;
 	    } else {
+		Boolean utf8Title;
+
 		SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
 		if (new_string == 0) {
 		    xtermWarning("Cannot allocate %lu bytes for string mode %#02x\n",
@@ -3258,12 +3260,32 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    continue;
 		}
 		SafeFree(sp->string_area, sp->string_size);
+
+		/*
+		 * Provide for special case where xterm allows an OSC string to
+		 * contain 8-bit data.  Otherwise, ECMA-48 section 9 recommends
+		 * parsing controls with a 7-bit table, precluding the use of
+		 * 8-bit data.
+		 */
+#if OPT_WIDE_CHARS
+		utf8Title = (sp->string_mode == ANSI_OSC
+			     && IsSetUtf8Title(xw)
+			     && (sp->string_used >= 2)
+			     && (sp->string_area[0] == '0'
+				 || sp->string_area[0] == '2')
+			     && sp->string_area[1] == ';');
+#else
+		utf8Title = False;
+#endif
+
 		/*
 		 * ReGIS and SIXEL data can be detected by skipping over (only)
 		 * parameters to the first non-parameter character and
 		 * inspecting it.  Since both are DCS, we can also ignore OSC.
 		 */
-		sp->string_area[(sp->string_used)++] = AsciiOf(c);
+		sp->string_area[(sp->string_used)++] = (utf8Title
+							? CharOf(c)
+							: AsciiOf(c));
 		if (sp->string_args < sa_LAST) {
 		    switch (c) {
 		    case ':':
