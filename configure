@@ -2965,7 +2965,7 @@ done
 
 case "x$LINT" in
 (xcppcheck|x*/cppcheck)
-	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all"
+	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all -D__CPPCHECK__"
 	;;
 esac
 

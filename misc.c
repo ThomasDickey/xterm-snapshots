@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1100 2024/11/20 23:31:12 tom Exp $ */
+/* $XTermId: misc.c,v 1.1103 2024/11/22 20:03:20 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3332,8 +3332,6 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 	    PDATA('7', CUT_BUFFER7),
     };
     char target_used[XtNumber(table)];
-    char select_code[XtNumber(table) + 1];
-    String select_args[XtNumber(table) + 1];
 
     const char *base = buf;
     Cardinal j;
@@ -3347,6 +3345,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
     }
 
     if (*buf == ';') {
+	char select_code[XtNumber(table) + 1];
+	String select_args[XtNumber(table) + 1];
 
 	*buf++ = '\0';
 	if (*base == '\0')
@@ -3968,6 +3968,7 @@ report_allowed_ops(XtermWidget xw, int final)
     CASE(allowTcapOps);
     CASE(allowTitleOps);
     CASE(allowWindowOps);
+    (void) delimiter;
 #undef CASE
 
     unparseputc1(xw, final);
@@ -4889,10 +4890,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
-			(screen->vtXX_level >= 2)
-			? (screen->control_eight_bits
-			   ? ";0" : ";1")
-			: "",
+			(screen->control_eight_bits
+			 ? ";0" : ";1"),
 			cp);
 	    } else if (!strcmp(cp, "r")) {	/* DECSTBM */
 		TRACE(("DECRQSS -> DECSTBM\n"));
@@ -7006,7 +7005,7 @@ cmp_resources(const void *a, const void *b)
 }
 
 XrmOptionDescRec *
-sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
+sortedOptDescs(const XrmOptionDescRec * descs, Cardinal res_count)
 {
     static XrmOptionDescRec *res_array = 0;
 

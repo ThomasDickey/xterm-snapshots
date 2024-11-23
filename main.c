@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.927 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: main.c,v 1.928 2024/11/22 01:04:54 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -1698,13 +1698,10 @@ parseArg(int *num, char **argv, char **valuep)
     Cardinal inlist;
     Cardinal limit = XtNumber(optionDescList) + XtNumber(opTable);
     int atbest = -1;
-    int best = -1;
-    int test;
     Boolean exact = False;
     int ambiguous1 = -1;
     int ambiguous2 = -1;
     char *option;
-    char *value;
 
 #define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
 		 ? &optionDescList[n] \
@@ -1713,6 +1710,8 @@ parseArg(int *num, char **argv, char **valuep)
     if ((option = argv[*num]) != 0) {
 	Boolean need_value;
 	Boolean have_value = False;
+	int best = -1;
+	char *value;
 
 	TRACE(("parseArg %s\n", option));
 	if ((value = argv[(*num) + 1]) != 0) {
@@ -1720,6 +1719,7 @@ parseArg(int *num, char **argv, char **valuep)
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
+	    int test;
 
 	    test = matchArg(check, option);
 	    if (test < 0)
@@ -2291,12 +2291,14 @@ lookup_baudrate(const char *value)
     };
 #undef DATA
     unsigned result = 0;
-    long check;
-    char *next;
+
     if (x_toupper(*value) == 'B')
 	value++;
+
     if (isdigit(CharOf(*value))) {
-	check = strtol(value, &next, 10);
+	char *next;
+	long check = strtol(value, &next, 10);
+
 	if (FullS2L(value, next) && (check > 0)) {
 	    Cardinal n;
 	    for (n = 0; n < XtNumber(speeds); ++n) {
@@ -2338,21 +2340,16 @@ get_tty_erase(int fd, int default_erase, const char *tag)
 int
 get_tty_lnext(int fd, int default_lnext, const char *tag)
 {
-    int result = default_lnext;
-    int rc;
-
 #ifdef TERMIO_STRUCT
     TERMIO_STRUCT my_tio;
-    rc = ttyGetAttr(fd, &my_tio);
-    if (rc == 0)
-	result = my_tio.c_cc[VLNEXT];
+    int rc = ttyGetAttr(fd, &my_tio);
+    int result = (rc == 0) ? my_tio.c_cc[VLNEXT] : default_lnext;
 #elif defined(HAS_LTCHARS)
     struct ltchars my_ltc;
-    rc = ioctl(fd, TIOCGLTC, (char *) &my_ltc);
-    if (rc == 0)
-	result = my_ltc.t_lnextc;
+    int rc = ioctl(fd, TIOCGLTC, (char *) &my_ltc);
+    int result = (rc == 0) ? my_ltc.t_lnextc : default_lnext;
 #else
-    result = XTERM_LNEXT;
+    int result = XTERM_LNEXT;
 #endif /* TERMIO_STRUCT */
     TRACE(("%s lnext:%d (from %s)\n", (rc == 0) ? "OK" : "FAIL", result, tag));
     (void) tag;
@@ -2436,12 +2433,13 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     restart_params = 0;
     if (argc > 1) {
-	XrmOptionDescRec *option_ptr;
-	char *option_value;
 	int n;
 	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
+	    XrmOptionDescRec *option_ptr;
+	    char *option_value;
+
 	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
 		if (argv[n] == 0) {
 		    break;
@@ -2912,13 +2910,19 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 	command_length_with_luit = x_countargv(command_to_exec_with_luit);
 	if (count_exec) {
-	    static char *fixup_shell[] =
-	    {(char *) "sh", (char *) "-c", 0};
 	    char *delimiter[2];
 	    delimiter[0] = x_strdup("--");
 	    delimiter[1] = 0;
 	    x_appendargv(command_to_exec_with_luit, delimiter);
 	    if (complex_command(command_to_exec)) {
+		static char shell_name[] = "sh";
+		static char c_option[] = "-c";
+		static char *fixup_shell[] =
+		{
+		    shell_name,
+		    c_option,
+		    NULL
+		};
 		x_appendargv(command_to_exec_with_luit, fixup_shell);
 	    }
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
@@ -3672,12 +3676,13 @@ findValidShell(const char *haystack, const char *needle)
     int result = -1;
     int count = -1;
     const char *s, *t;
-    size_t have;
     size_t want = strlen(needle);
 
     TRACE(("findValidShell:\n%s\n", NonNull(haystack)));
 
     for (s = haystack; (s != 0) && (*s != '\0'); s = t) {
+	size_t have;
+
 	++count;
 	if ((t = strchr(s, '\n')) == 0) {
 	    t = s + strlen(s);
@@ -3909,7 +3914,6 @@ static int
 spawnXTerm(XtermWidget xw, unsigned line_speed)
 {
     TScreen *screen = TScreenOf(xw);
-    Cardinal nn;
 #if OPT_PTY_HANDSHAKE
     Bool got_handshake_size = False;
     handshake_t handshake;
@@ -3925,6 +3929,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     char *newtc;
 
 #ifdef TERMIO_STRUCT
+    Cardinal nn;
     TERMIO_STRUCT tio;
 #ifdef TIOCLSET
     unsigned lmode;

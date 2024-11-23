@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.373 2024/09/30 07:48:35 tom Exp $ */
+/* $XTermId: input.c,v 1.374 2024/11/22 01:18:22 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1773,7 +1773,7 @@ keyCanInsert(const char *parse)
  * Strip the entire action, to avoid matching it.
  */
 static char *
-stripAction(char *base, char *last)
+stripAction(const char *base, char *last)
 {
     while (last != base) {
 	if (*--last == '\n') {
@@ -1784,7 +1784,7 @@ stripAction(char *base, char *last)
 }
 
 static char *
-stripBlanks(char *base, char *last)
+stripBlanks(const char *base, char *last)
 {
     while (last != base) {
 	int ch = CharOf(last[-1]);

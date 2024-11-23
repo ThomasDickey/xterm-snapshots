@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.529 2024/11/20 21:42:32 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.530 2024/11/22 22:05:37 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2504,7 +2504,7 @@ AC_DEFUN([CF_PROG_LINT],
 AC_CHECK_PROGS(LINT, lint cppcheck splint)
 case "x$LINT" in
 (xcppcheck|x*/cppcheck)
-	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all"
+	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all -D__CPPCHECK__"
 	;;
 esac
 AC_SUBST(LINT_OPTS)

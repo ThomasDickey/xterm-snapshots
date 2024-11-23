@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2048 2024/11/21 00:47:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2049 2024/11/22 00:49:18 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3030,6 +3030,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
+	    int row, col;
 	    if (nparam < NPARAM - 1) {
 		SetParam(nparam++, (int) AsciiOf(c) - 32);
 		parms.is_sub[nparam] = 0;
@@ -3037,7 +3038,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam < 2)
 		continue;
 	    sp->vt52_cup = False;
-	    CursorSet(screen, zero_if_default(0), zero_if_default(1), xw->flags);
+	    /*
+	     * According to EK-VT5X-OP-001 DECscope User's Guide, if the row
+	     * is out of range, no vertical movement occurs, while if the
+	     * column is out of range, it is set to the rightmost column.
+	     */
+	    if ((row = GetParam(0)) > screen->max_row)
+		row = screen->cur_row;
+	    if ((col = GetParam(1)) > screen->max_col)
+		col = screen->max_col;
+	    CursorSet(screen, row, col, xw->flags);
 	    sp->parsestate = vt52_table;
 	    SetParam(0, 0);
 	    SetParam(1, 0);
@@ -6317,8 +6327,7 @@ v_write(int f, const Char *data, size_t len)
 			    (size_t) ((v_bufptr - v_bufstr <= MAX_PTY_WRITE)
 				      ? v_bufptr - v_bufstr
 				      : MAX_PTY_WRITE));
-	if (riten < 0)
-	{
+	if (riten < 0) {
 	    if_DEBUG({
 		perror("write");
 	    });

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.952 2024/09/30 08:03:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.954 2024/11/22 09:13:48 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1039,7 +1039,7 @@ extern void HandleSelectStart          PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend          PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen * /* screen */, int /* rows */, int /* cols */);
 extern void ScrollSelection (TScreen * /* screen */, int /* amount */,  Bool /* always */);
-extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL * /* start */, int /* firstrow */, int /* lastrow */);
+extern void TrackMouse (XtermWidget /* xw */, int /* func */, const CELL * /* start */, int /* firstrow */, int /* lastrow */);
 extern void ViButton                   PROTO_XT_ACTIONS_ARGS;
 
 extern void UnmapSelections (XtermWidget /* xw */);
@@ -1299,7 +1299,7 @@ extern String xtermEnvLocale (void);
 extern Widget xtermOpenApplication (XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, char **/* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
 extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
-extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
+extern XrmOptionDescRec * sortedOptDescs (const XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
 extern XVisualInfo *getVisualInfo (XtermWidget /* xw */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.652 2024/09/01 19:16:42 tom Exp $ */
+/* $XTermId: screen.c,v 1.653 2024/11/22 00:44:29 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1280,7 +1280,6 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     int last = ScrnRightMargin(xw);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    int j;
     LineData *ld;
 
     if (col < first || col > last) {
@@ -1309,6 +1308,8 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     });
 
     if ((ld = getLineData(screen, row)) != 0) {
+	int j;
+
 	MemMove(ld->charData);
 	MemMove(ld->attribs);
 
@@ -1342,7 +1343,6 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     int last = ScrnRightMargin(xw) + 1;
     int row = screen->cur_row;
     int col = screen->cur_col;
-    int j;
     LineData *ld;
 
     if (col < first || col > last) {
@@ -1367,6 +1367,8 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     });
 
     if ((ld = getLineData(screen, row)) != 0) {
+	int j;
+
 	MemMove(ld->charData);
 	MemMove(ld->attribs);
 
@@ -2330,11 +2332,12 @@ non_blank_line(TScreen *screen,
 	       int col,
 	       int len)
 {
-    int i;
     Bool found = False;
     LineData *ld = getLineData(screen, row);
 
     if (ld != 0) {
+	int i;
+
 	for (i = col; i < len; i++) {
 	    if (ld->charData[i]) {
 		found = True;
@@ -2854,7 +2857,6 @@ ScrnWipeRectangle(XtermWidget xw,
 		 && (ld->attribs[col] & PROTECTED))
 
     if (validRect(xw, target)) {
-	LineData *ld;
 	int top = target->top - 1;
 	int left = target->left - 1;
 	int right = target->right - 1;
@@ -2866,6 +2868,8 @@ ScrnWipeRectangle(XtermWidget xw,
 	int b_right = 0;
 
 	for (row = top; row <= bottom; ++row) {
+	    LineData *ld;
+
 	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
 
 	    ld = getLineData(screen, row);
@@ -3010,9 +3014,8 @@ xtermCheckRect(XtermWidget xw,
 		if (first || (ch != ' ') || (ld->attribs[col] & DRAWX_MASK)) {
 		    trimmed += ch + embedded;
 		    embedded = 0;
-		} else if (ch == ' ') {
-		    if ((mode & csNOTRIM))
-			embedded += ch;
+		} else if ((mode & csNOTRIM)) {
+		    embedded += ch;
 		}
 		total += ch;
 		if_OPT_WIDE_CHARS(screen, {

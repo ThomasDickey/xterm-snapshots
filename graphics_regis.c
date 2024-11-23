@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.150 2024/09/01 22:49:10 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.151 2024/11/22 22:03:27 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -1377,6 +1377,9 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 #endif
 
     assert(n > 2);		/* need at least 4 points P[0]..P[n] */
+#ifdef __CPPCHECK__
+    memset(m, 0, sizeof(m));	/* work around false-positive */
+#endif
 
 #ifdef DEBUG_SPLINE_POINTS
     {

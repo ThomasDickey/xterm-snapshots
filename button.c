@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.666 2024/09/30 07:44:57 tom Exp $ */
+/* $XTermId: button.c,v 1.667 2024/11/22 09:14:33 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -190,15 +190,15 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
-static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool
-			  extend, Bool normal);
+static void ComputeSelect(XtermWidget xw, const CELL *startc, const CELL *endc,
+			  Bool extend, Bool normal);
 static void EditorButton(XtermWidget xw, XButtonEvent *event);
 static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
 		      num_params, Bool use_cursor_loc);
 static void ExtendExtend(XtermWidget xw, const CELL *cell);
 static void PointToCELL(TScreen *screen, int y, int x, CELL *cell);
-static void ReHiliteText(XtermWidget xw, CELL *first, CELL *last);
-static void SaltTextAway(XtermWidget xw, int which, CELL *cellc, CELL *cell);
+static void ReHiliteText(XtermWidget xw, const CELL *first, const CELL *last);
+static void SaltTextAway(XtermWidget xw, int which, const CELL *cellc, const CELL *cell);
 static void SelectSet(XtermWidget xw, XEvent *event, String *params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
 static void StartSelect(XtermWidget xw, const CELL *cell);
@@ -3018,7 +3018,7 @@ TrackDown(XtermWidget xw, XButtonEvent *event)
 void
 TrackMouse(XtermWidget xw,
 	   int func,
-	   CELL *start,
+	   const CELL *start,
 	   int firstrow,
 	   int lastrow)
 {
@@ -3581,7 +3581,7 @@ SetCharacterClassRange(int low,	/* in range of [0..255] */
 #endif
 
 static int
-class_of(LineData *ld, CELL *cell)
+class_of(LineData *ld, const CELL *cell)
 {
     CELL temp = *cell;
     int result = 0;
@@ -3901,7 +3901,7 @@ make_indexed_text(TScreen *screen, int row, unsigned length, int *indexed)
  * index constructed in make_indexed_text().
  */
 static int
-indexToCol(int *indexed, int len, int off)
+indexToCol(const int *indexed, int len, int off)
 {
     int col = 0;
     while (indexed[col] < len) {
@@ -4086,8 +4086,8 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
  */
 static void
 ComputeSelect(XtermWidget xw,
-	      CELL *startc,
-	      CELL *endc,
+	      const CELL *startc,
+	      const CELL *endc,
 	      Bool extend,
 	      Bool normal)
 {
@@ -4353,8 +4353,8 @@ UnHiliteText(XtermWidget xw)
 /* Guaranteed that (first->row, first->col) <= (last->row, last->col) */
 static void
 ReHiliteText(XtermWidget xw,
-	     CELL *firstp,
-	     CELL *lastp)
+	     const CELL *firstp,
+	     const CELL *lastp)
 {
     TScreen *screen = TScreenOf(xw);
     CELL first = *firstp;
@@ -4401,8 +4401,8 @@ ReHiliteText(XtermWidget xw,
 static void
 SaltTextAway(XtermWidget xw,
 	     int which,
-	     CELL *cellc,
-	     CELL *cell)
+	     const CELL *cellc,
+	     const CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
     SelectedCells *scp;
@@ -5609,7 +5609,7 @@ doSelectionFormat(XtermWidget xw,
 		  Widget w,
 		  XEvent *event,
 		  String *params,
-		  Cardinal *num_params,
+		  const Cardinal *num_params,
 		  FormatSelect format_select)
 {
     TScreen *screen = TScreenOf(xw);
