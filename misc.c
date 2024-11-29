@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1103 2024/11/22 20:03:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.1106 2024/11/29 01:13:15 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -4550,7 +4550,7 @@ parse_decdld(ANSI *params, const char *string)
 
 	    ch = CharOf(ch - 0x3f);
 	    for (n = 0; n < 6; ++n) {
-		bits[row + n][col] = CharOf((ch & (1 << n)) ? '*' : '.');
+		bits[row + n][col] = CharOf((ch & xBIT(n)) ? '*' : '.');
 	    }
 	    col += 1;
 	    prior = True;
@@ -5025,7 +5025,44 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 	    } else
 #endif
-	    {
+		/*
+		 * This query returns the settings assuming the default value
+		 * of DEF_TITLE_MODES, which is zero.  Someone could in
+		 * principle alter that (so that some states could only be
+		 * reached by removing rather than consistently by setting),
+		 * but the default value could be discovered by resetting the
+		 * title modes, querying the resulting reset state.
+		 */
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "t")) {	/* XTSMTITLE */
+		char buffer[80];
+		int n;
+
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+		*buffer = '\0';
+		if (ival == -1) {	/* DEFAULT */
+		    for (n = 0; n <= MAX_TITLEMODE; ++n) {
+			int check = xBIT(n);
+			char *s = buffer + strlen(buffer);
+			if (s != buffer)
+			    *s++ = ';';
+			sprintf(s, "%d",
+				((check & screen->title_modes) != 0
+				 ? 1
+				 : 0));
+		    }
+		} else if (ival >= 0 && ival <= MAX_TITLEMODE) {
+		    sprintf(buffer, "%d",
+			    ((xBIT(ival) & screen->title_modes) != 0
+			     ? 1
+			     : 0));
+		} else {
+		    okay = False;
+		}
+		if (okay)
+		    sprintf(reply, ">%st", buffer);
+	    } else {
 		okay = False;
 	    }
 
@@ -7908,6 +7945,19 @@ xtermFreeTitle(SaveTitle * item)
 }
 
 #if OPT_XTERM_SGR
+void
+xtermReportTitleStack(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    char reply[100];
+
+    sprintf(reply, "%d;%d", screen->saved_titles.used, MAX_SAVED_TITLES);
+    unparseputc1(xw, ANSI_CSI);
+    unparseputs(xw, reply);
+    unparseputc(xw, '#');
+    unparseputc(xw, 'S');
+    unparse_end(xw);
+}
 
 #if OPT_TRACE
 static char *

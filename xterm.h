@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.954 2024/11/22 09:13:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.955 2024/11/29 00:47:16 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -1379,6 +1379,7 @@ extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern Boolean xtermPopTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
 extern void xtermPushTitle(TScreen * /* screen */, int /* which */, SaveTitle * /* item */);
 extern void xtermFreeTitle(SaveTitle *item);
+extern void xtermReportTitleStack(XtermWidget /* xw */);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;

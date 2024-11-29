@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.726 2024/10/14 16:52:40 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.729 2024/11/29 00:54:36 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #395
-.ds RF 2024/10/14
+.ds LF Patch #396
+.ds RF 2024/11/28
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -988,6 +988,7 @@ The string following the \*(``q\*('' is one of the following:
   \*,\*|	\(-> DECAC (VT525 only)
   \*,\*}	\(-> DECATC (VT525 only)
   \*>\*(Pm\*s\*m \(-> XTQMODKEYS (xterm)
+  \*>\*(Pm\*s\*t \(-> XTSMTITLE (xterm)
 .br
 \fI\*(xt\fP responds with
 \*(Dc\*1\*$\*r\*(Pt\*s\*(ST
@@ -1292,6 +1293,9 @@ Reset title mode features to default value (XTRMTITLE), \fI\*(xt\fP.
 Normally, \*(``reset\*('' disables the feature.
 It is possible to disable the ability to reset features
 by compiling a different default for the title modes into \fI\*(xt\fP.
+.iP
+If no parameters are given, all title mode features are reset to
+the initial (compiled-in) default.
 .iP
   \*(Ps = \*0 \(-> Do not set window/icon labels using hexadecimal.
   \*(Ps = \*1 \(-> Do not query window/icon labels using hexadecimal.
@@ -2316,6 +2320,9 @@ Each parameter enables a single feature.
   \*(Ps = \*2 \(-> Set window/icon labels using UTF-8.
   \*(Ps = \*3 \(-> Query window/icon labels using UTF-8.
 (See discussion of \fBTitle Modes\fP)
+.iP
+If no parameters are given, title mode features are set to the initial
+(compiled-in) default.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*t
@@ -2324,6 +2331,17 @@ Set warning-bell volume (DECSWBV), VT520.
   \*(Ps = \*2, \*3 or \*4 \(-> low.
   \*(Ps = \*5, \*6, \*7, or \*8 \(-> high.
 .
+.iP
+.IP \\*(Cs\\*#\\*t
+Report position on title-stack (XTTITLEPOS), \fI\*(xt\fP.
+.br
+Response is the same format, with parameters:
+  \*(Cs\*(Pn\*;\*(Pm\*s\*#\*t
+.br
+where
+.br
+  \*(Pn is the current index into the title stack
+  \*(Pm is the maximum index for the title stack
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*t
 Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.

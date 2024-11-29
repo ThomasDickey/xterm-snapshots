@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2049 2024/11/22 00:49:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2051 2024/11/29 01:13:30 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -5755,7 +5755,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-#if OPT_XTERM_SGR
+#if OPT_XTERM_SGR		/* most are related, all use csi_hash_table[] */
 	case CASE_CSI_HASH_STATE:
 	    TRACE(("CASE_CSI_HASH_STATE\n"));
 	    /* csi hash (#) */
@@ -5837,6 +5837,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_XTERM_REPORT_COLORS:
 	    TRACE(("CASE_XTERM_REPORT_COLORS\n"));
 	    xtermReportColors(xw);
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_TITLE_STACK:
+	    xtermReportTitleStack(xw);
 	    ResetState(sp);
 	    break;
 #endif
@@ -6080,10 +6085,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_XTERM_SM_TITLE:
 	    TRACE(("CASE_XTERM_SM_TITLE\n"));
 	    if (nparam >= 1) {
-		int n;
-		for (n = 0; n < nparam; ++n) {
-		    if (GetParam(n) != DEFAULT)
-			screen->title_modes |= (1 << GetParam(n));
+		for (count = 0; count < nparam; ++count) {
+		    value = GetParam(count);
+		    if (ValidTitleMode(value))
+			screen->title_modes |= xBIT(value);
 		}
 	    } else {
 		screen->title_modes = DEF_TITLE_MODES;
@@ -6095,10 +6100,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_XTERM_RM_TITLE:
 	    TRACE(("CASE_XTERM_RM_TITLE\n"));
 	    if (nparam >= 1) {
-		int n;
-		for (n = 0; n < nparam; ++n) {
-		    if (GetParam(n) != DEFAULT)
-			screen->title_modes &= ~(1 << GetParam(n));
+		for (count = 0; count < nparam; ++count) {
+		    value = GetParam(count);
+		    if (ValidTitleMode(value))
+			screen->title_modes &= ~xBIT(value);
 		}
 	    } else {
 		screen->title_modes = DEF_TITLE_MODES;

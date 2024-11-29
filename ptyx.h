@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1131 2024/11/20 23:31:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1132 2024/11/28 16:03:53 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -995,11 +995,15 @@ typedef enum {
     tmSetBase16 = 1		/* set title using hex-string */
     , tmGetBase16 = 2		/* get title using hex-string */
 #if OPT_WIDE_CHARS
+#define MAX_TITLEMODE 3
     , tmSetUtf8 = 4		/* like utf8Title, but controllable */
     , tmGetUtf8 = 8		/* retrieve title encoded as UTF-8 */
+#else
+#define MAX_TITLEMODE 1
 #endif
 } TitleModes;
 
+#define ValidTitleMode(code) ((code) >= 0 && (code) <= MAX_TITLEMODE)
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
 
 #define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) \
@@ -1827,7 +1831,7 @@ typedef unsigned CellColor;
 #define isSameCColor(p,q)	((p) == (q))
 #endif
 
-#define BITS2MASK(b)		((1 << b) - 1)
+#define BITS2MASK(b)		(xBIT(b) - 1)
 
 #define COLOR_MASK		BITS2MASK(COLOR_BITS)
 

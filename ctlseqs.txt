@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2024)
-               updated for XTerm Patch #395 (2024/10/14)
+               updated for XTerm Patch #396 (2024/11/28)
 
 
 
@@ -494,6 +494,7 @@ DCS $ q Pt ST
             , |     -> DECAC (VT525 only)
             , }     -> DECATC (VT525 only)
             > Pm m  -> XTQMODKEYS (xterm)
+            > Pm t  -> XTSMTITLE (xterm)
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r  ST for invalid requests.
@@ -713,6 +714,9 @@ CSI > Pm T
           Normally, "reset" disables the feature.  It is possible to
           disable the ability to reset features by compiling a different
           default for the title modes into xterm.
+
+          If no parameters are given, all title mode features are reset
+          to the initial (compiled-in) default.
 
             Ps = 0  -> Do not set window/icon labels using hexadecimal.
             Ps = 1  -> Do not query window/icon labels using
@@ -1613,11 +1617,21 @@ CSI > Pm t
             Ps = 3  -> Query window/icon labels using UTF-8.  (See
           discussion of Title Modes)
 
+          If no parameters are given, title mode features are set to the
+          initial (compiled-in) default.
+
 CSI Ps SP t
           Set warning-bell volume (DECSWBV), VT520.
             Ps = 0  or 1  -> off.
             Ps = 2 , 3  or 4  -> low.
             Ps = 5 , 6 , 7 , or 8  -> high.
+
+CSI # t   Report position on title-stack (XTTITLEPOS), xterm.
+          Response is the same format, with parameters:
+            CSI Pn; Pm # t
+          where
+            Pn is the current index into the title stack
+            Pm is the maximum index for the title stack
 
 CSI Pt ; Pl ; Pb ; Pr ; Pm $ t
           Reverse Attributes in Rectangular Area (DECRARA), VT400 and

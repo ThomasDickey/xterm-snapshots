@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.530 2024/11/22 22:05:37 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.531 2024/11/25 09:12:45 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2497,7 +2497,7 @@ AC_SUBST(GROFF_NOTE)
 AC_SUBST(NROFF_NOTE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_LINT version: 5 updated: 2022/08/20 15:44:13
+dnl CF_PROG_LINT version: 6 updated: 2024/11/22 17:05:37
 dnl ------------
 AC_DEFUN([CF_PROG_LINT],
 [
@@ -5335,7 +5335,7 @@ AC_CHECK_HEADER(X11/extensions/Xdbe.h,
 				   cf_x_ext_double_buffer=yes]))
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTCONFIG version: 7 updated: 2020/03/10 18:53:47
+dnl CF_X_FONTCONFIG version: 8 updated: 2024/11/25 04:10:12
 dnl ---------------
 dnl Check for fontconfig library, a dependency of the X FreeType library.
 AC_DEFUN([CF_X_FONTCONFIG],
@@ -5345,6 +5345,7 @@ AC_REQUIRE([CF_X_FREETYPE])
 if test "$cf_cv_found_freetype" = yes ; then
 AC_CACHE_CHECK(for usable Xft/fontconfig package,cf_cv_xft_compat,[
 AC_TRY_LINK([
+#include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 ],[
 	XftPattern *pat = 0;

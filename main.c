@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.928 2024/11/22 01:04:54 tom Exp $ */
+/* $XTermId: main.c,v 1.929 2024/11/25 08:43:20 tom Exp $ */
 
 /*
  * Copyright 2002-2023,2024 by Thomas E. Dickey
@@ -1976,7 +1976,7 @@ my_pty_id(char *device)
 	if (PTYCHARLEN < len)
 	    leaf = leaf + (len - PTYCHARLEN);
     }
-    TRACE(("my_pty_id  (%s) -> '%s'\n", device, leaf));
+    TRACE(("my_pty_id  (%s) -> '%s'\n", NonNull(device), NonNull(leaf)));
     return leaf;
 }
 
