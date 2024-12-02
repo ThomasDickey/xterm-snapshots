@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2051 2024/11/29 01:13:30 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2053 2024/12/01 19:34:23 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -903,7 +903,7 @@ WidgetClassRec xtermClassRec =
 	NULL,			/* accept_focus                 */
 	XtVersion,		/* version                      */
 	NULL,			/* callback_offsets             */
-	0,			/* tm_table                     */
+	NULL,			/* tm_table                     */
 	XtInheritQueryGeometry,	/* query_geometry               */
 	XtInheritDisplayAccelerator,	/* display_accelerator  */
 	NULL			/* extension                    */
@@ -1674,8 +1674,8 @@ dump_params(void)
 		} else if (used+1 >= new_length) { \
 		    new_length = size * 2; \
 		    new_string = TypeMallocN(type, new_length); \
-		    if (new_string != 0 \
-		     && area != 0 \
+		    if (new_string != NULL \
+		     && area != NULL \
 		     && used != 0) { \
 			memcpy(new_string, area, used * sizeof(type)); \
 		     } \
@@ -2333,7 +2333,7 @@ static void
 deferparsing(unsigned c, struct ParseState *sp)
 {
     SafeAlloc(Char, sp->defer_area, sp->defer_used, sp->defer_size);
-    if (new_string == 0) {
+    if (new_string == NULL) {
 	xtermWarning("Cannot allocate %lu bytes for deferred parsing of %u\n",
 		     (unsigned long) new_length, c);
 	return;
@@ -2638,7 +2638,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 		    StatusPutChars(xw, xtermVersion(), -1);
 		} else if (!strncmp(found, "%{unixtime%}", length)) {
 		    char *t = x_strtrim(ctime(&now));
-		    if (t != 0) {
+		    if (t != NULL) {
 			StatusPutChars(xw, t, -1);
 			free(t);
 		    }
@@ -3012,7 +3012,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (used) {
 		if (!screen->scroll_amt)
 		    ScrnUpdate(xw, use_row, use_col, 1, 1, 1);
-		continue;
+		break;
 	    }
 	}
 #endif
@@ -3020,7 +3020,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	/* Intercept characters for printer controller mode */
 	if (PrinterOf(screen).printer_controlmode == 2) {
 	    if ((c = (unsigned) xtermPrinterControl(xw, (int) c)) == 0)
-		continue;
+		break;
 	}
 
 	/*
@@ -3036,7 +3036,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		parms.is_sub[nparam] = 0;
 	    }
 	    if (nparam < 2)
-		continue;
+		break;
 	    sp->vt52_cup = False;
 	    /*
 	     * According to EK-VT5X-OP-001 DECscope User's Guide, if the row
@@ -3051,7 +3051,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = vt52_table;
 	    SetParam(0, 0);
 	    SetParam(1, 0);
-	    continue;
+	    break;
 	}
 #endif
 
@@ -3193,10 +3193,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (sp->nextstate == CASE_PRINT) {
 	    SafeAlloc(IChar, sp->print_area, sp->print_used, sp->print_size);
-	    if (new_string == 0) {
+	    if (new_string == NULL) {
 		xtermWarning("Cannot allocate %lu bytes for printable text\n",
 			     (unsigned long) new_length);
-		continue;
+		break;
 	    }
 	    SafeFree(sp->print_area, sp->print_size);
 #if OPT_VT52_MODE
@@ -3214,7 +3214,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->last_was_wide = this_is_wide;
 #endif
 	    if (morePtyData(screen, VTbuffer)) {
-		continue;
+		break;
 	    }
 	}
 
@@ -3264,10 +3264,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		Boolean utf8Title;
 
 		SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
-		if (new_string == 0) {
+		if (new_string == NULL) {
 		    xtermWarning("Cannot allocate %lu bytes for string mode %#02x\n",
 				 (unsigned long) new_length, sp->string_mode);
-		    continue;
+		    break;
 		}
 		SafeFree(sp->string_area, sp->string_size);
 
@@ -3378,7 +3378,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		TRACE(("...unexpected subparam usage\n"));
 		ResetState(sp);
-		continue;
+		break;
 	    }
 	}
 
@@ -4055,7 +4055,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * Only SGR 38/48 accept subparameters, and in those cases
 		 * the values will not be seen at this point.
 		 */
-		if ((skip = param_has_subparams(item))) {
+		if ((skip = param_has_subparams(item)) != 0) {
 		    switch (op) {
 		    case 38:
 			/* FALLTHRU */
@@ -4573,7 +4573,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    resetMargins(xw);
 	    xterm_ResetDouble(xw);
 	    CursorSet(screen, 0, 0, xw->flags);
-	    xtermParseRect(xw, 0, 0, &myRect);
+	    xtermParseRect(xw, 0, NULL, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
 	    ResetState(sp);
 	    break;
@@ -4595,7 +4595,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_GSETS:
-	    if (strchr("012AB", AsciiOf(c)) != 0) {
+	    if (strchr("012AB", AsciiOf(c)) != NULL) {
 		TRACE_GSETS("");
 		xtermDecodeSCS(xw, sp->scstype, 1, 0, (int) c);
 	    } else if (screen->vtXX_level >= 2) {
@@ -6598,7 +6598,7 @@ in_put(XtermWidget xw)
 	    NormalExit();
 	xtermFlushDbe(xw);
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
-		   (time_select ? &my_timeout : 0));
+		   (time_select ? &my_timeout : NULL));
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -6646,7 +6646,7 @@ PreeditPosition(XtermWidget xw)
     XVaNestedList list;
 
     if (input && input->xic
-	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != NULL) {
 	spot.x = (short) LineCursorX(screen, ld, screen->cur_col);
 	spot.y = (short) (CursorY(screen, screen->cur_row) + xw->work.xim_fs_ascent);
 	list = XVaCreateNestedList(0,
@@ -6666,7 +6666,7 @@ WrapLine(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     LineData *ld = getLineData(screen, screen->cur_row);
 
-    if (ld != 0) {
+    if (ld != NULL) {
 	/* mark that we had to wrap this line */
 	LineSetFlag(ld, LINEWRAPPED);
 	ShowWrapMarks(xw, screen->cur_row, ld);
@@ -6944,7 +6944,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
     TScreen *screen = TScreenOf(xw);
 
     (void) screen;
-    TRACE_EVENT("HandleStructNotify", event, NULL, 0);
+    TRACE_EVENT("HandleStructNotify", event, NULL, NULL);
     switch (event->type) {
     case MapNotify:
 	resetZIconBeep(xw);
@@ -8507,7 +8507,7 @@ property_to_string(XtermWidget xw, XTextProperty * text)
 {
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
-    char *result = 0;
+    char *result = NULL;
     char **list = NULL;
     int length = 0;
     int rc;
@@ -8552,12 +8552,12 @@ property_to_string(XtermWidget xw, XTextProperty * text)
 		result[need] = '\0';
 	    else
 		result = malloc(need + 1);
-	    if (result == 0)
+	    if (result == NULL)
 		break;
 	}
 	XFreeStringList(list);
     }
-    if (text->value != 0)
+    if (text->value != NULL)
 	XFree(text->value);
 
     return result;
@@ -8567,7 +8567,7 @@ static char *
 get_icon_label(XtermWidget xw)
 {
     XTextProperty text;
-    char *result = 0;
+    char *result = NULL;
 
     if (XGetWMIconName(TScreenOf(xw)->display, VShellWindow(xw), &text)) {
 	result = property_to_string(xw, &text);
@@ -8579,7 +8579,7 @@ static char *
 get_window_label(XtermWidget xw)
 {
     XTextProperty text;
-    char *result = 0;
+    char *result = NULL;
 
     if (XGetWMName(TScreenOf(xw)->display, VShellWindow(xw), &text)) {
 	result = property_to_string(xw, &text);
@@ -8600,7 +8600,7 @@ report_win_label(XtermWidget xw,
     unparseputc(xw, ']');
     unparseputc(xw, code);
 
-    if (text != 0) {
+    if (text != NULL) {
 	int copy = IsTitleMode(xw, tmGetBase16);
 	if (copy) {
 	    TRACE(("Encoding hex:%s\n", text));
@@ -8746,7 +8746,7 @@ window_ops(XtermWidget xw)
 		result_x = 0;
 		{
 		    Widget mw;
-		    for (mw = (Widget) xw; mw != 0; mw = XtParent(mw)) {
+		    for (mw = (Widget) xw; mw != NULL; mw = XtParent(mw)) {
 			result_x += mw->core.x;
 			result_y += mw->core.y;
 			if (mw == SHELL_OF(xw))
@@ -9089,7 +9089,7 @@ unparseputn(XtermWidget xw, unsigned n)
 void
 unparseputs(XtermWidget xw, const char *s)
 {
-    if (s != 0) {
+    if (s != NULL) {
 	while (*s)
 	    unparseputc(xw, *s++);
     }
@@ -9243,9 +9243,9 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 Bool
 CheckBufPtrs(TScreen *screen)
 {
-    return (screen->visbuf != 0
-	    && screen->editBuf_index[0] != 0
-	    && screen->editBuf_index[1] != 0);
+    return (screen->visbuf != NULL
+	    && screen->editBuf_index[0] != NULL
+	    && screen->editBuf_index[1] != NULL);
 }
 
 /*
@@ -9621,10 +9621,10 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
     dst->Tcolors[offset] = src->Tcolors[offset];
     dst->Tcolors[offset].mode = False;
 
-    if ((name = x_strtrim(dst->Tcolors[offset].resource)) != 0)
+    if ((name = x_strtrim(dst->Tcolors[offset].resource)) != NULL)
 	dst->Tcolors[offset].resource = name;
 
-    if (name == 0) {
+    if (name == NULL) {
 	dst->Tcolors[offset].value = target->dft_foreground;
     } else if (isDefaultForeground(name)) {
 	dst->Tcolors[offset].value = ((offset == TEXT_FG || offset == TEXT_BG)
@@ -9642,7 +9642,7 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
 	    dst->Tcolors[offset].value = temp.colors[offset];
 	} else if (offset == TEXT_FG || offset == TEXT_BG) {
 	    free(name);
-	    dst->Tcolors[offset].resource = 0;
+	    dst->Tcolors[offset].resource = NULL;
 	}
     }
     return dst->Tcolors[offset].value;
@@ -9658,13 +9658,13 @@ repairColors(XtermWidget target)
 {
     TScreen *screen = TScreenOf(target);
 
-    if (screen->Tcolors[TEXT_FG].resource == 0 ||
-	screen->Tcolors[TEXT_BG].resource == 0) {
+    if (screen->Tcolors[TEXT_FG].resource == NULL ||
+	screen->Tcolors[TEXT_BG].resource == NULL) {
 	xtermWarning("unable to allocate fg/bg colors\n");
 	screen->Tcolors[TEXT_FG].resource = x_strdup(XtDefaultForeground);
 	screen->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultBackground);
-	if (screen->Tcolors[TEXT_FG].resource == 0 ||
-	    screen->Tcolors[TEXT_BG].resource == 0) {
+	if (screen->Tcolors[TEXT_FG].resource == NULL ||
+	    screen->Tcolors[TEXT_BG].resource == NULL) {
 	    Exit(ERROR_MISC);
 	}
 	screen->Tcolors[TEXT_FG].value = target->dft_foreground;
@@ -9876,7 +9876,7 @@ ParseList(const char **source)
 {
     const char *base = *source;
     const char *next;
-    char *value = 0;
+    char *value = NULL;
     char *result;
 
     /* ignore empty values */
@@ -9891,7 +9891,7 @@ ParseList(const char **source)
 	    ++next;
 	size = (size_t) (1 + next - base);
 	value = malloc(size);
-	if (value != 0) {
+	if (value != NULL) {
 	    memcpy(value, base, size);
 	    value[size - 1] = '\0';
 	}
@@ -9916,7 +9916,7 @@ set_flags_from_list(char *target,
 	Boolean found = False;
 	char flag = 1;
 
-	if (next == 0)
+	if (next == NULL)
 	    break;
 	if (*next == '~') {
 	    flag = 0;
@@ -9928,7 +9928,7 @@ set_flags_from_list(char *target,
 	    if (!FullS2L(next, temp)) {
 		xtermWarning("Expected a number: %s\n", next);
 	    } else {
-		for (n = 0; list[n].name != 0; ++n) {
+		for (n = 0; list[n].name != NULL; ++n) {
 		    if (list[n].code == value) {
 			target[value] = flag;
 			found = True;
@@ -9938,7 +9938,7 @@ set_flags_from_list(char *target,
 		}
 	    }
 	} else {
-	    for (n = 0; list[n].name != 0; ++n) {
+	    for (n = 0; list[n].name != NULL; ++n) {
 		if (!x_wildstrcmp(next, list[n].name)) {
 		    int value = list[n].code;
 		    target[value] = flag;
@@ -9963,7 +9963,7 @@ static XtResource *
 findVT100Resource(const char *name)
 {
     Cardinal n;
-    XtResource *result = 0;
+    XtResource *result = NULL;
 
     if (!IsEmpty(name)) {
 	XrmQuark quarkName = XrmPermStringToQuark(name);
@@ -10024,7 +10024,7 @@ vt100ResourceToString(XtermWidget xw, const char *name)
     XtResource *data;
     char *result = NULL;
 
-    if ((data = findVT100Resource(name)) != 0) {
+    if ((data = findVT100Resource(name)) != NULL) {
 	int fake_offset = (int) data->resource_offset;
 	void *res_addr;
 	int real_offset;
@@ -10047,17 +10047,17 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 	    char *value = *(char **) res_addr;
 	    if (value != NULL) {
 		size_t need = strlen(value);
-		if ((result = malloc(1 + need)) != 0)
+		if ((result = malloc(1 + need)) != NULL)
 		    strcpy(result, value);
 	    }
 	} else if (!strcmp(res_type, XtRInt)) {
-	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != 0)
+	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != NULL)
 		sprintf(result, "%d", *(int *) res_addr);
 	} else if (!strcmp(res_type, XtRFloat)) {
-	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != 0)
+	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != NULL)
 		sprintf(result, "%f", (double) (*(float *) res_addr));
-	} else if (!strcmp(res_type, XtRBoolean)) {
-	    if ((result = malloc((size_t) 6)) != 0)
+        } else if (!strcmp(res_type, XtRBoolean)) {
+            if ((result = malloc((size_t) 6)) != NULL)
 		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
 	}
     }
@@ -10441,7 +10441,7 @@ VTInitialize(Widget wrequest,
     screen->display = wnew->core.screen->display;
 
     /* prep getVisualInfo() */
-    wnew->visInfo = 0;
+    wnew->visInfo = NULL;
     wnew->numVisuals = 0;
     (void) getVisualInfo(wnew);
 
@@ -10894,7 +10894,7 @@ VTInitialize(Widget wrequest,
 
     screen->menu_font_number = fontMenu_default;
     init_Sres(screen.initial_font);
-    if (screen->initial_font != 0) {
+    if (screen->initial_font != NULL) {
 	int result = xtermGetFont(screen->initial_font);
 	if (result >= 0)
 	    screen->menu_font_number = result;
@@ -10985,7 +10985,7 @@ VTInitialize(Widget wrequest,
 	if (i >= MIN_ANSI_COLORS && i < NUM_ANSI_COLORS) {
 	    screen->Acolors[i].resource =
 		x_strtrim(fake_resources[i - MIN_ANSI_COLORS].default_addr);
-	    if (screen->Acolors[i].resource == 0)
+	    if (screen->Acolors[i].resource == NULL)
 		screen->Acolors[i].resource = XtDefaultForeground;
 	} else {
 	    screen->Acolors[i] = TScreenOf(request)->Acolors[i];
@@ -11045,7 +11045,7 @@ VTInitialize(Widget wrequest,
 	screen->maxClicks = ck;
 	if (i == Select_CHAR)
 	    screen->selectMap[i] = Select_CHAR;
-	else if (TScreenOf(request)->onClick[i] != 0)
+	else if (TScreenOf(request)->onClick[i] != NULL)
 	    ParseOnClicks(wnew, request, (unsigned) i);
 	else if (i <= Select_LINE)
 	    screen->selectMap[i] = (SelectUnit) i;
@@ -11501,7 +11501,7 @@ VTInitialize(Widget wrequest,
 
 	sprintf(value, "%d", wnew->misc.resizeGravity);
 	temp[0] = value;
-	temp[1] = 0;
+	temp[1] = NULL;
 	XtAppWarningMsg(app_con, "rangeError", "resizeGravity", "XTermError",
 			"unsupported resizeGravity resource value (%s)",
 			temp, &nparams);
@@ -11613,7 +11613,7 @@ releaseWindowGCs(XtermWidget xw, VTwin *win)
 	if (part) { \
 	    TRACE(("freed %s " #part ": %p\n", name, (const void *) part)); \
 	    XFreeGC(dpy, part); \
-	    part = 0; \
+	    part = NULL; \
 	}
 
 #if OPT_INPUT_METHOD
@@ -11624,7 +11624,7 @@ cleanupInputMethod(XtermWidget xw)
 
     if (input && input->xim) {
 	XCloseIM(input->xim);
-	input->xim = 0;
+	input->xim = NULL;
 	TRACE(("freed screen->xim\n"));
     }
 }
@@ -11774,7 +11774,7 @@ VTDestroy(Widget w GCC_UNUSED)
     discardRenderDraw(screen);
     {
 	ListXftFonts *p;
-	while ((p = screen->list_xft_fonts) != 0) {
+	while ((p = screen->list_xft_fonts) != NULL) {
 	    screen->list_xft_fonts = p->next;
 	    free(p);
 	}
@@ -11940,10 +11940,10 @@ getProperty(Display *dpy,
     int actual_format_return = 0;
     unsigned long nitems_return = 0;
     unsigned long bytes_after_return = 0;
-    unsigned char *prop_return = 0;
+    unsigned char *prop_return = NULL;
     long long_length = 1024;
     size_t limit;
-    char *result = 0;
+    char *result = NULL;
 
     TRACE(("getProperty %s(%s)\n", prop_name,
 	   req_type ? TraceAtomName(dpy, req_type) : "?"));
@@ -11961,7 +11961,7 @@ getProperty(Display *dpy,
 			 &bytes_after_return,
 			 &prop_return)) {
 	TRACE((".. Cannot get %s property.\n", prop_name));
-    } else if (prop_return != 0) {
+    } else if (prop_return != NULL) {
 
 	if (nitems_return != 0 &&
 	    actual_format_return != 0 &&
@@ -11977,7 +11977,7 @@ getProperty(Display *dpy,
 		/* manpage is misleading - X really uses 'long', not 32-bits */
 		limit = sizeof(long) * nitems_return;
 	    }
-	    if ((result = malloc(limit + 1)) != 0) {
+	    if ((result = malloc(limit + 1)) != NULL) {
 		memcpy(result, prop_return, limit);
 		result[limit] = '\0';
 	    }
@@ -12010,12 +12010,12 @@ getWindowManagerName(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
     Window *sup_window = NULL;
-    char *result = 0;
+    char *result = NULL;
 
     TRACE(("getWindowManagerName\n"));
 #define getWinProp(type, name) \
     (Window *)getProperty(dpy, DefaultRootWindow(dpy), type, name)
-    if ((sup_window = getWinProp(XA_WINDOW, "_NET_SUPPORTING_WM_CHECK")) == 0) {
+    if ((sup_window = getWinProp(XA_WINDOW, "_NET_SUPPORTING_WM_CHECK")) == NULL) {
 	sup_window = getWinProp(XA_CARDINAL, "_WIN_SUPPORTING_WM_CHECK");
     }
 
@@ -12026,19 +12026,19 @@ getWindowManagerName(XtermWidget xw)
      * conventionally it is mixed case.  In practice, the former is more often
      * set; the latter is not given (or is a lowercased version of the former).
      */
-    if (sup_window != 0) {
+    if (sup_window != NULL) {
 #define getStringProp(type,name) \
 	(char *)getProperty(dpy, *sup_window, type, name)
-	if ((result = getStringProp(XA_UTF8_STRING(dpy), "_NET_WM_NAME")) == 0
-	    && (result = getStringProp(XA_STRING, "_NET_WM_NAME")) == 0
-	    && (result = getStringProp(XA_STRING, "WM_CLASS")) == 0) {
+	if ((result = getStringProp(XA_UTF8_STRING(dpy), "_NET_WM_NAME")) == NULL
+	    && (result = getStringProp(XA_STRING, "_NET_WM_NAME")) == NULL
+	    && (result = getStringProp(XA_STRING, "WM_CLASS")) == NULL) {
 	    TRACE(("... window manager does not tell its name\n"));
 	}
 	free(sup_window);
     } else {
 	TRACE(("... Cannot get window manager info properties\n"));
     }
-    if (result == 0)
+    if (result == NULL)
 	result = x_strdup("unknown");
     TRACE(("... window manager name is %s\n", result));
     return result;
@@ -12145,7 +12145,7 @@ initBorderGC(XtermWidget xw, VTwin *win)
 #endif
     else {
 	TRACE((" border unused\n"));
-	win->border_gc = 0;
+	win->border_gc = NULL;
     }
 
     /*
@@ -12410,7 +12410,7 @@ VTRealize(Widget w,
      * iconFont resource, try with font1 aka "Unreadable".
      */
     screen->icon_fontnum = -1;
-    if (getIconicFont(screen)->fs == 0) {
+    if (getIconicFont(screen)->fs == NULL) {
 	getIconicFont(screen)->fs =
 	    xtermLoadQueryFont(xw, screen->MenuFontName(fontMenu_font1));
 	ReportIcons(("%susing font1 '%s' as iconFont\n",
@@ -12427,7 +12427,7 @@ VTRealize(Widget w,
      * particularly at small sizes.
      */
     if (UsingRenderFont(xw)
-	&& getIconicFont(screen)->fs == 0) {
+	&& getIconicFont(screen)->fs == NULL) {
 	screen->icon_fontnum = fontMenu_default;
 	getIconicFont(screen)->fs = GetNormalFont(screen, fNorm)->fs;	/* need for next-if */
 	ReportIcons(("using TrueType font as iconFont\n"));
@@ -12629,7 +12629,7 @@ xim_create_fs(XtermWidget xw)
     int missing_charset_count;
     unsigned i, j;
 
-    if (xw->work.xim_fs == 0) {
+    if (xw->work.xim_fs == NULL) {
 	xw->work.xim_fs = XCreateFontSet(XtDisplay(xw),
 					 xw->misc.f_x,
 					 &missing_charset_list,
@@ -12691,9 +12691,9 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 	return;
     }
 
-    if (input == 0) {
+    if (input == NULL) {
 	for (i = 0; i < NINPUTWIDGETS; ++i) {
-	    if (xw->work.inputs[i].w == 0) {
+	    if (xw->work.inputs[i].w == NULL) {
 		input = xw->work.inputs + i;
 		input->w = theInput;
 		break;
@@ -12701,7 +12701,7 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 	}
     }
 
-    if (input == 0) {
+    if (input == NULL) {
 	xtermWarning("attempted to add too many input widgets\n");
 	return;
     }
@@ -12726,7 +12726,7 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 		    s++;
 		if (!*s)
 		    break;
-		if ((ns = end = strchr(s, ',')) == 0)
+		if ((ns = end = strchr(s, ',')) == NULL)
 		    end = s + strlen(s);
 		while ((end != s) && isspace(CharOf(end[-1])))
 		    end--;
@@ -12735,11 +12735,11 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 		    strcpy(t, "@im=");
 		    strncat(t, s, (size_t) (end - s));
 
-		    if ((p = XSetLocaleModifiers(t)) != 0 && *p
+		    if ((p = XSetLocaleModifiers(t)) != NULL && *p
 			&& (input->xim = XOpenIM(myDisplay,
 						 NULL,
 						 NULL,
-						 NULL)) != 0) {
+						 NULL)) != NULL) {
 			break;
 		    }
 
@@ -12777,7 +12777,7 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 	    s++;
 	if (!*s)
 	    break;
-	if ((ns = end = strchr(s, ',')) != 0)
+	if ((ns = end = strchr(s, ',')) != NULL)
 	    ns++;
 	else
 	    end = s + strlen(s);
@@ -12905,7 +12905,7 @@ VTInitI18N(XtermWidget xw)
 TInput *
 lookupTInput(XtermWidget xw, Widget w)
 {
-    TInput *result = 0;
+    TInput *result = NULL;
     unsigned n;
 
     for (n = 0; n < NINPUTWIDGETS; ++n) {
@@ -13113,7 +13113,7 @@ ShowCursor(XtermWidget xw)
     int my_col = 0;
 #endif
     int cursor_col;
-    CLineData *ld = 0;
+    CLineData *ld = NULL;
 
     if (screen->cursor_state == BLINKED_OFF)
 	return;
@@ -13375,7 +13375,7 @@ ShowCursor(XtermWidget xw)
 			      T_COLOR(screen, TEXT_CURSOR));
 
 	outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
-	if (outlineGC == 0)
+	if (outlineGC == NULL)
 	    outlineGC = currentGC;
 
 	if (isCursorUnderline(screen)) {
@@ -13496,7 +13496,7 @@ HideCursor(XtermWidget xw)
     int my_col = 0;
 #endif
     int cursor_col;
-    CLineData *ld = 0;
+    CLineData *ld = NULL;
 #if OPT_WIDE_ATTRS
     int which_Cgs = gcMAX;
     unsigned attr_flags;
@@ -13693,7 +13693,7 @@ Bool
 LineHasBlinking(TScreen *screen, CLineData *ld)
 {
     Bool result = False;
-    if (ld != 0) {
+    if (ld != NULL) {
 	int col;
 
 	for (col = 0; col < MaxCols(screen); ++col) {
@@ -13755,7 +13755,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	for (row = start_row; row >= 0; row--) {
 	    LineData *ld = getLineData(screen, ROW2INX(screen, row));
 
-	    if (ld != 0 && LineTstBlinked(ld)) {
+	    if (ld != NULL && LineTstBlinked(ld)) {
 		if (LineHasBlinking(screen, ld)) {
 		    resume = True;
 		    if (row > last_row)
@@ -13811,7 +13811,7 @@ RestartBlinking(XtermWidget xw)
 	    for (row = screen->max_row; row >= 0; row--) {
 		CLineData *ld = getLineData(screen, ROW2INX(screen, row));
 
-		if (ld != 0 && LineTstBlinked(ld)) {
+		if (ld != NULL && LineTstBlinked(ld)) {
 		    if (LineHasBlinking(screen, ld)) {
 			resume = True;
 			break;
@@ -14088,7 +14088,7 @@ set_character_class(char *s)
 
 	for (i = 0; i < len; ++i) {
 	    int ch = CharOf(s[i]);
-	    char *t = 0;
+	    char *t = NULL;
 	    long value = 0;
 
 	    if (isspace(ch))
@@ -14134,6 +14134,7 @@ set_character_class(char *s)
 		break;
 
 	      parse_class:
+		/* FALLTHRU */
 	    case ccCOLON:
 		if (ch == ':') {
 		    state = ccID;
@@ -14152,6 +14153,7 @@ set_character_class(char *s)
 		break;
 
 	      apply_class:
+		/* FALLTHRU */
 	    case ccCOMMA:
 		if (SetCharacterClassRange(arg[0], arg[1], arg[2]) != 0) {
 		    xtermWarning(FMT, "bad range", s, i);
@@ -14191,7 +14193,7 @@ getKeymapResources(Widget w,
     key_resources[0].resource_size = (Cardinal) size;
     key_resources[0].resource_offset = 0;
     key_resources[0].default_type = key_resources[0].resource_type;
-    key_resources[0].default_addr = 0;
+    key_resources[0].default_addr = NULL;
     XtGetSubresources(w, (XtPointer) result, mapName, mapClass,
 		      key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
 }
@@ -14290,7 +14292,7 @@ HandleIgnore(Widget w,
 
     TRACE(("Handle ignore for %p %s\n",
 	   (void *) w, visibleEventType(event->type)));
-    if ((xw = getXtermWidget(w)) != 0) {
+    if ((xw = getXtermWidget(w)) != NULL) {
 	/* do nothing, but check for funny escape sequences */
 	switch (event->type) {
 	case ButtonPress:
@@ -14314,7 +14316,7 @@ DoSetSelectedFont(Widget w,
 {
     XtermWidget xw = getXtermWidget(w);
 
-    if (xw == 0) {
+    if (xw == NULL) {
 	xtermWarning("unexpected widget in DoSetSelectedFont\n");
     } else if (*type != XA_STRING || *format != 8) {
 	Bell(xw, XkbBI_MinorError, 0);
@@ -14336,7 +14338,7 @@ DoSetSelectedFont(Widget w,
 	    }
 	}
 
-	if (len > 0 && (val = TypeMallocN(char, len + 1)) != 0) {
+	if (len > 0 && (val = TypeMallocN(char, len + 1)) != NULL) {
 	    char *used;
 
 	    memcpy(val, value, (size_t) len);
@@ -14348,9 +14350,9 @@ DoSetSelectedFont(Widget w,
 	       XLFD allows up to 255 characters and no control characters;
 	       we are a little more liberal here. */
 	    if (len < 1000
-		&& used != 0
+		&& used != NULL
 		&& !strchr(used, '\n')
-		&& (test = x_strdup(used)) != 0) {
+		&& (test = x_strdup(used)) != NULL) {
 		TScreenOf(xw)->SelectFontName() = test;
 		if (!xtermLoadFont(xw,
 				   xtermFontName(used),
@@ -14404,7 +14406,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     target = XmuInternAtom(XtDisplay(xw), *pAtom);
     if (justprobe) {
 	screen->SelectFontName() =
-	    XGetSelectionOwner(XtDisplay(xw), target) ? _Font_Selected_ : 0;
+	    XGetSelectionOwner(XtDisplay(xw), target) ? _Font_Selected_ : NULL;
 	TRACE(("...selected fontname '%s'\n",
 	       NonNull(screen->SelectFontName())));
     } else {
@@ -14449,14 +14451,14 @@ set_cursor_gcs(XtermWidget xw)
      */
 
     TRACE(("set_cursor_gcs cc=%#lx, fg=%#lx, bg=%#lx\n", cc, fg, bg));
-    if (win != 0 && (cc != bg)) {
+    if (win != NULL && (cc != bg)) {
 	Pixel xx = ((fg == cc) ? bg : cc);
 
 	/* set the fonts to the current one */
-	setCgsFont(xw, win, gcVTcursNormal, 0);
-	setCgsFont(xw, win, gcVTcursFilled, 0);
-	setCgsFont(xw, win, gcVTcursReverse, 0);
-	setCgsFont(xw, win, gcVTcursOutline, 0);
+	setCgsFont(xw, win, gcVTcursNormal, NULL);
+	setCgsFont(xw, win, gcVTcursFilled, NULL);
+	setCgsFont(xw, win, gcVTcursReverse, NULL);
+	setCgsFont(xw, win, gcVTcursOutline, NULL);
 
 	/* we have a colored cursor */
 	setCgsFore(xw, win, gcVTcursNormal, fg);
@@ -14603,7 +14605,7 @@ VTInitTranslations(void)
 #undef DATA
     /* *INDENT-ON* */
 
-    char *result = 0;
+    char *result = NULL;
 
     int pass;
     Cardinal item;
@@ -14632,7 +14634,7 @@ VTInitTranslations(void)
 	char *value;
 	const char *source = resource.omitTranslation;
 
-	while (*source != '\0' && (value = ParseList(&source)) != 0) {
+	while (*source != '\0' && (value = ParseList(&source)) != NULL) {
 	    size_t len = strlen(value);
 
 	    TRACE(("parsed:%s\n", value));

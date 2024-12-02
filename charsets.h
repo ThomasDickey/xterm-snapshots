@@ -1,5 +1,5 @@
 /*
- * $XTermId: charsets.h,v 1.34 2024/10/03 22:01:16 tom Exp $
+ * $XTermId: charsets.h,v 1.35 2024/12/01 23:50:59 tom Exp $
  */
 
 /*
@@ -2352,7 +2352,7 @@
 /*
  * VT520/VT525 manual p 4-35 explains "SCS" as Serbo-Croatian.  The remaining
  * "S" may be Slovene.  With that clue, choose ISO-IR-141, which provides a
- * chart with names of suitable replacement characters. 
+ * chart with names of suitable replacement characters.
  */
 #define map_NRCS_Serbo_Croatian(code) \
 	switch (code) { \

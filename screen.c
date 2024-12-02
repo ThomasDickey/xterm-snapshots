@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.653 2024/11/22 00:44:29 tom Exp $ */
+/* $XTermId: screen.c,v 1.655 2024/12/01 20:14:26 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -290,7 +290,7 @@ allocScrnHead(TScreen *screen, unsigned nrow)
     (void) screen;
     AddStatusLineRows(nrow);
     result = (ScrnPtr *) calloc((size_t) nrow, (size_t) size);
-    if (result == 0)
+    if (result == NULL)
 	SysError(ERROR_SCALLOC);
 
     TRACE(("allocScrnHead %d -> %d -> %p..%p\n", nrow, nrow * size,
@@ -345,7 +345,7 @@ sizeofScrnRow(TScreen *screen, unsigned ncol)
 Char *
 allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol, Bool bottom)
 {
-    Char *result = 0;
+    Char *result = NULL;
     size_t length;
 
     AlignValue(ncol);
@@ -354,7 +354,7 @@ allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol, Bool bottom)
     }
     length = (nrow * sizeofScrnRow(screen, ncol));
     if (length == 0
-	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
+	|| (result = (Char *) calloc(length, sizeof(Char))) == NULL)
 	  SysError(ERROR_SCALLOC2);
 
     TRACE(("allocScrnData %ux%u -> %lu -> %p..%p\n",
@@ -379,7 +379,7 @@ ScrnBuf
 allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
 {
     TScreen *screen = TScreenOf(xw);
-    ScrnBuf base = 0;
+    ScrnBuf base = NULL;
 
     if (nrow != 0) {
 	base = allocScrnHead(screen, nrow);
@@ -602,7 +602,7 @@ ReallocateFifoIndex(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (screen->savelines > 0 && screen->saveBuf_index != 0) {
+    if (screen->savelines > 0 && screen->saveBuf_index != NULL) {
 	ScrnBuf newBufHead;
 	LineData *dstPtrs;
 	LineData *srcPtrs;
@@ -1116,7 +1116,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
  * lines.  Check the pointer that's sure to work.
  */
 
-#define OkAllocBuf(screen) (screen->editBuf_index[0] != 0)
+#define OkAllocBuf(screen) (screen->editBuf_index[0] != NULL)
 
 void
 ScrnAllocBuf(XtermWidget xw)
@@ -1134,7 +1134,7 @@ ScrnAllocBuf(XtermWidget xw)
 	    screen->saveBuf_index = allocScrnHead(screen,
 						  (unsigned) (screen->savelines));
 	} else {
-	    screen->saveBuf_index = 0;
+	    screen->saveBuf_index = NULL;
 	}
 	screen->editBuf_index[0] = allocScrnBuf(xw,
 						(unsigned) nrows,
@@ -1156,7 +1156,7 @@ ScrnPointers(TScreen *screen, size_t len)
 	else
 	    screen->save_ptr = (ScrnPtr *) malloc(result);
 	screen->save_len = len;
-	if (screen->save_ptr == 0)
+	if (screen->save_ptr == NULL)
 	    SysError(ERROR_SAVE_PTR);
     }
     TRACE2(("ScrnPointers %ld ->%p\n", (long) len, screen->save_ptr));
@@ -1238,7 +1238,7 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 	/* we shouldn't be editing the saveBuf, only scroll into it */
 	assert(last >= screen->savelines);
 
-	if (sb != 0) {
+	if (sb != NULL) {
 	    /* copy lines from editBuf to saveBuf (allocating as we go...) */
 	    saveEditBufLines(screen, n);
 	}
@@ -1307,7 +1307,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	}
     });
 
-    if ((ld = getLineData(screen, row)) != 0) {
+    if ((ld = getLineData(screen, row)) != NULL) {
 	int j;
 
 	MemMove(ld->charData);
@@ -1366,7 +1366,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
 
-    if ((ld = getLineData(screen, row)) != 0) {
+    if ((ld = getLineData(screen, row)) != NULL) {
 	int j;
 
 	MemMove(ld->charData);
@@ -1509,7 +1509,7 @@ ScrnRefresh(XtermWidget xw,
 
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
-	CellColor *fb = 0;
+	CellColor *fb = NULL;
 #define ColorOf(col) (fb ? fb[col] : initCColor)
 #endif
 #if OPT_WIDE_CHARS
@@ -1547,9 +1547,9 @@ ScrnRefresh(XtermWidget xw,
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
 		row, lastind, ROW2INX(screen, lastind)));
 
-	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0
-	    || ld->charData == 0
-	    || ld->attribs == 0) {
+	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == NULL
+	    || ld->charData == NULL
+	    || ld->attribs == NULL) {
 	    break;
 	}
 
@@ -1742,7 +1742,7 @@ ScrnRefresh(XtermWidget xw,
 			    int my_x = LineCursorX(screen, ld, i);
 			    IChar base = chars[i];
 
-			    if ((params.on_wide = isWide((int) base)))
+			    if ((params.on_wide = isWide((int) base)) != 0)
 				my_x = LineCursorX(screen, ld, i - 1);
 
 			    if (com_off[i] != 0)
@@ -1817,7 +1817,7 @@ ScrnRefresh(XtermWidget xw,
 		    int my_x = LineCursorX(screen, ld, i);
 		    int base = (int) chars[i];
 
-		    if ((params.on_wide = isWide(base)))
+		    if ((params.on_wide = isWide(base)) != 0)
 			my_x = LineCursorX(screen, ld, i - 1);
 
 		    if (com_off[i] != 0)
@@ -1900,7 +1900,7 @@ ClearBufRows(XtermWidget xw,
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
 	LineData *ld = getLineData(screen, row);
-	if (ld != 0) {
+	if (ld != NULL) {
 	    if_OPT_DEC_CHRSET({
 		/* clearing the whole row resets the doublesize characters */
 		SetLineDblCS(ld, CSET_SWL);
@@ -2116,7 +2116,7 @@ ScreenResize(XtermWidget xw,
 	     */
 	    if (GravityIsSouthWest(xw)
 		&& delta_rows
-		&& screen->saveBuf_index != 0) {
+		&& screen->saveBuf_index != NULL) {
 
 		if (delta_rows < 0) {
 		    unsigned move_up = (unsigned) (-delta_rows);
@@ -2335,7 +2335,7 @@ non_blank_line(TScreen *screen,
     Bool found = False;
     LineData *ld = getLineData(screen, row);
 
-    if (ld != 0) {
+    if (ld != NULL) {
 	int i;
 
 	for (i = col; i < len; i++) {
@@ -2425,7 +2425,7 @@ static Bool
 validRect(XtermWidget xw, XTermRect *target)
 {
     TScreen *screen = TScreenOf(xw);
-    Bool result = (target != 0
+    Bool result = (target != NULL
 		   && target->top >= minRectRow(screen)
 		   && target->left >= minRectCol(screen)
 		   && target->top <= target->bottom
@@ -2577,7 +2577,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 
 	    CellData *cells = newCellData(xw, size);
 
-	    if (cells != 0) {
+	    if (cells != NULL) {
 
 		TRACE(("OK - make copy %dx%d\n", high, wide));
 		target.bottom = target.top + (int) (high - 1);
@@ -2585,7 +2585,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 
 		for (row = source->top - 1; row < source->bottom; ++row) {
 		    ld = getLineData(screen, row);
-		    if (ld == 0)
+		    if (ld == NULL)
 			continue;
 		    j = (Cardinal) (row - (source->top - 1));
 		    TRACE2(("ROW %d\n", row + 1));
@@ -2598,7 +2598,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 		}
 		for (row = target.top - 1; row < target.bottom; ++row) {
 		    ld = getLineData(screen, row);
-		    if (ld == 0)
+		    if (ld == NULL)
 			continue;
 		    j = (Cardinal) (row - (target.top - 1));
 		    TRACE2(("ROW %d\n", row + 1));
@@ -2953,7 +2953,7 @@ xtermCheckRect(XtermWidget xw,
 	    int ch;
 
 	    ld = getLineData(screen, row);
-	    if (ld == 0)
+	    if (ld == NULL)
 		continue;
 	    for (col = left; col <= right && col < (int) ld->lineSize; ++col) {
 		if (!(ld->attribs[col] & CHARDRAWN)) {
@@ -3100,7 +3100,7 @@ ewmhProperty(int mode)
     _Xconst char *result;
     switch (mode) {
     default:
-	result = 0;
+	result = NULL;
 	break;
     case 1:
 	result = "_NET_WM_STATE_FULLSCREEN";

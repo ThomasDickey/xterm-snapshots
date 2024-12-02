@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.106 2023/12/31 20:12:06 tom Exp $ */
+/* $XTermId: linedata.c,v 1.107 2024/12/01 20:27:00 tom Exp $ */
 
 /*
- * Copyright 2009-2022,2023 by Thomas E. Dickey
+ * Copyright 2009-2023,2024 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -44,14 +44,14 @@
 LineData *
 getLineData(TScreen *screen, int row)
 {
-    LineData *result = 0;
+    LineData *result = NULL;
     ScrnBuf buffer;
     int max_row = LastRowNumber(screen);
 
     if (row >= 0) {
 	buffer = screen->visbuf;
     } else {
-	buffer = 0;
+	buffer = NULL;
 	result = getScrollback(screen, row);
     }
     if (row >= 0 && row <= max_row) {

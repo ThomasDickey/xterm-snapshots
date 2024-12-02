@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.252 2024/09/30 07:44:22 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.254 2024/12/01 20:21:19 tom Exp $ */
 
 /*
  * Copyright 2001-2022,2024 by Thomas E. Dickey
@@ -358,7 +358,7 @@ TekInit(void)
     Dimension menu_high;
 
     if (!Tfailed
-	&& tekWidget == 0) {
+	&& tekWidget == NULL) {
 	Cardinal nargs = 0;
 	Arg myArgs[3];
 	Boolean iconic = 0;
@@ -413,7 +413,7 @@ TekInit(void)
 static int
 TekPtyData(void)
 {
-    if (Tpushb == 0 && !Tfailed) {
+    if (Tpushb == NULL && !Tfailed) {
 	if ((Tpushb = TypeMallocN(Char, 10)) == NULL
 	    || (Tline = TypeMallocN(XSegment, MAX_VTX)) == NULL) {
 	    xtermWarning("Not enough core for Tek mode\n");
@@ -768,7 +768,7 @@ Tekparse(TekWidget tw)
 		IChar c2;
 		size_t len = 0;
 		while ((c2 = input()) != ANSI_BEL) {
-		    if (!isprint((int) (c2 & 0x7f))
+		    if (!isprint(CharOf(c2 & 0x7f))
 			|| len + 2 >= (int) sizeof(buf2))
 			break;
 		    buf2[len++] = (Char) c2;
@@ -802,7 +802,7 @@ Tinput(TekWidget tw)
     if (tekRefreshList) {
 	if (rcnt-- > 0)
 	    return (IChar) (*rptr++);
-	if ((tek = tekRefreshList->next) != 0) {
+	if ((tek = tekRefreshList->next) != NULL) {
 	    tekRefreshList = tek;
 	    rptr = tek->data;
 	    rcnt = tek->count - 1;
@@ -860,7 +860,7 @@ Tinput(TekWidget tw)
     tek = TekRecord;
     if (tek->count >= TEK_LINK_BLOCK_SIZE
 	|| tek->fontsize != tekscr->cur.fontsize) {
-	if ((TekRecord = tek->next = CastMalloc(TekLink)) == 0) {
+	if ((TekRecord = tek->next = CastMalloc(TekLink)) == NULL) {
 	    Panic("Tinput: malloc error (%d)\n", errno);
 	} else {
 	    tek = tek->next;
@@ -948,7 +948,7 @@ static void
 TekResize(Widget w)
 {
     TekWidget tw = getTekWidget(w);
-    if (tw != 0) {
+    if (tw != NULL) {
 
 	TRACE(("TekResize " TRACE_L "\n"));
 	TekClear(tw);
@@ -966,7 +966,7 @@ TekExpose(Widget w,
 	  Region region GCC_UNUSED)
 {
     TekWidget tw = getTekWidget(w);
-    if (tw != 0) {
+    if (tw != NULL) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	TRACE(("TekExpose " TRACE_L "\n"));
@@ -1002,7 +1002,7 @@ TekExpose(Widget w,
 void
 TekRefresh(TekWidget tw)
 {
-    if (tw != 0) {
+    if (tw != NULL) {
 	TScreen *screen = TScreenOf(tw->vt);
 	TekScreen *tekscr = TekScreenOf(tw);
 	static Cursor wait_cursor = None;
@@ -1317,11 +1317,11 @@ TekRun(void)
 {
     XtermWidget xw = term;
 
-    assert(xw != 0);
-    if (tekWidget == 0) {
+    assert(xw != NULL);
+    if (tekWidget == NULL) {
 	TekInit();
     }
-    if (tekWidget != 0) {
+    if (tekWidget != NULL) {
 	TRACE(("TekRun ...\n"));
 
 	if (!TEK4014_SHOWN(xw) && !resource.notMapped) {
@@ -1671,7 +1671,7 @@ TekRealize(Widget gw,
     TekBackground(tw, vtscr);
 
     tekscr->margin = MARGIN1;	/* Margin 1             */
-    tekscr->TekGIN = False;	/* GIN off              */
+    tekscr->TekGIN = NULL;	/* GIN off              */
 
     XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
 
@@ -1756,7 +1756,7 @@ TekGetFontSize(const char *param)
 void
 TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 {
-    if (tw != 0) {
+    if (tw != NULL) {
 	TekScreen *tekscr = TekScreenOf(tw);
 	int oldsize = tekscr->cur.fontsize;
 	int newsize = MI2FS(newitem);
@@ -1910,11 +1910,11 @@ TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
     int c, x, y;
     unsigned cellwidth, cellheight;
 
-    if (tw == 0)
+    if (tw == NULL)
 	return;
-    if ((tekscr = TekScreenOf(tw)) == 0)
+    if ((tekscr = TekScreenOf(tw)) == NULL)
 	return;
-    if ((xw = tw->vt) == 0)
+    if ((xw = tw->vt) == NULL)
 	return;
     if (!TEK4014_SHOWN(xw))
 	return;
@@ -1966,7 +1966,7 @@ TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
 void
 TekSimulatePageButton(TekWidget tw, Bool reset)
 {
-    if (tw != 0) {
+    if (tw != NULL) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (reset) {
@@ -1985,7 +1985,7 @@ void
 TekCopy(TekWidget tw)
 {
 #ifdef ALLOWLOGGING
-    if (tw != 0) {
+    if (tw != NULL) {
 	TekScreen *tekscr = TekScreenOf(tw);
 	TScreen *screen = TScreenOf(tw->vt);
 
@@ -2034,7 +2034,7 @@ HandleGINInput(Widget w,
 {
     TekWidget tw = getTekWidget(w);
 
-    if (tw != 0) {
+    if (tw != NULL) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (tekscr->TekGIN && *nparamsp == 1) {
@@ -2067,10 +2067,10 @@ getTekWidget(Widget w)
 {
     TekWidget tw;
 
-    if (w == 0) {
+    if (w == NULL) {
 	tw = (TekWidget) CURRENT_EMU();
 	if (!IsTekWidget(tw)) {
-	    tw = 0;
+	    tw = NULL;
 	}
     } else if (IsTekWidget(w)) {
 	tw = (TekWidget) w;

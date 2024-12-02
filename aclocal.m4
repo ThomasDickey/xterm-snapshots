@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.531 2024/11/25 09:12:45 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.532 2024/11/30 19:37:45 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2497,12 +2497,15 @@ AC_SUBST(GROFF_NOTE)
 AC_SUBST(NROFF_NOTE)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_LINT version: 6 updated: 2024/11/22 17:05:37
+dnl CF_PROG_LINT version: 7 updated: 2024/11/30 14:37:45
 dnl ------------
 AC_DEFUN([CF_PROG_LINT],
 [
 AC_CHECK_PROGS(LINT, lint cppcheck splint)
 case "x$LINT" in
+(xlint|x*/lint) # NetBSD 10
+	test -z "$LINT_OPTS" && LINT_OPTS="-chapbrxzgFS -v -Ac11"
+	;;
 (xcppcheck|x*/cppcheck)
 	test -z "$LINT_OPTS" && LINT_OPTS="--enable=all -D__CPPCHECK__"
 	;;

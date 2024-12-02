@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.955 2024/11/29 00:47:16 tom Exp $ */
+/* $XTermId: xterm.h,v 1.957 2024/12/01 19:45:14 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -265,6 +265,7 @@ extern void free();
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#undef HAVE_UNISTD_H
 #endif
 
 #ifdef HAVE_SYS_WAIT_H
@@ -401,7 +402,7 @@ extern char **environ;
 #define Maybe		2
 
 #define ALLOC_STRING(name) \
-	if (name != 0) \
+	if (name != NULL) \
 	    name = x_strdup(name)
 #define FREE_STRING(name) \
 	    free_string(name)

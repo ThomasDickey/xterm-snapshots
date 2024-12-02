@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.374 2024/11/22 01:18:22 tom Exp $ */
+/* $XTermId: input.c,v 1.375 2024/12/01 20:30:19 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -119,7 +119,7 @@
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
-#define TEK4014_GIN(tw) (tw != 0 && TekScreenOf(tw)->TekGIN)
+#define TEK4014_GIN(tw) (tw != NULL && TekScreenOf(tw)->TekGIN)
 
 typedef struct {
     KeySym keysym;
@@ -1154,7 +1154,7 @@ Input(XtermWidget xw,
 #if OPT_SUNPC_KBD
 	    && keyboard->type == keyboardIsVT220
 #endif
-	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != 0)) {
+	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != NULL)) {
 	    /* UIntClr(evt_state, ShiftMask); */
 	    while (kd.nbytes-- > 0)
 		unparseputc(xw, CharOf(*string++));
@@ -1802,12 +1802,12 @@ stripBlanks(const char *base, char *last)
 static char *
 stripTranslations(const char *s, Bool onlyInsert)
 {
-    char *dst = 0;
+    char *dst = NULL;
 
-    if (s != 0) {
+    if (s != NULL) {
 	dst = TypeMallocN(char, strlen(s) + 1);
 
-	if (dst != 0) {
+	if (dst != NULL) {
 	    int state = 0;
 	    int prv = 0;
 	    char *d = dst;
@@ -1819,7 +1819,7 @@ stripTranslations(const char *s, Bool onlyInsert)
 		    if (d != dst)
 			*d++ = (char) ch;
 		    state = 0;
-		} else if (strchr(":!#", ch) != 0) {
+		} else if (strchr(":!#", ch) != NULL) {
 		    d = stripBlanks(dst, d);
 		    if (onlyInsert && (ch == ':') && !keyCanInsert(s)) {
 			d = stripAction(dst, d);
@@ -1865,16 +1865,17 @@ TranslationsUseKeyword(Widget w, char **cache, const char *keyword, Bool onlyIns
     char *copy;
     char *test;
 
-    if ((test = stripTranslations(keyword, onlyInsert)) != 0) {
-	if (*cache == 0) {
-	    String data = 0;
+    if ((test = stripTranslations(keyword, onlyInsert)) != NULL) {
+	if (*cache == NULL) {
+	    String data = NULL;
 	    getKeymapResources(w, "vt100", "VT100", XtRString, &data, sizeof(data));
-	    if (data != 0 && (copy = stripTranslations(data, onlyInsert)) != 0) {
+	    if (data != NULL
+		&& (copy = stripTranslations(data, onlyInsert)) != NULL) {
 		*cache = copy;
 	    }
 	}
 
-	if (*cache != 0) {
+	if (*cache != NULL) {
 	    char *p = *cache;
 	    int state = 0;
 	    int now = ' ';
@@ -1937,7 +1938,7 @@ addTranslation(XtermWidget xw, const char *fromString, const char *toString)
     if (!xtermHasTranslation(xw, fromString, False)) {
 	xw->keyboard.extra_translations
 	    = TypeRealloc(char, need, xw->keyboard.extra_translations);
-	if ((xw->keyboard.extra_translations) != 0) {
+	if ((xw->keyboard.extra_translations) != NULL) {
 	    TRACE(("adding %s: %s\n", fromString, toString));
 	    if (have)
 		strcat(xw->keyboard.extra_translations, " \\n\\");
@@ -1970,7 +1971,7 @@ VTInitModifiers(XtermWidget xw)
     KeySym keysym;
     int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
-    if (keymap != 0) {
+    if (keymap != NULL) {
 	KeySym *theMap;
 	int keycode_count;
 
@@ -1983,7 +1984,7 @@ VTInitModifiers(XtermWidget xw)
 				     keycode_count,
 				     &keysyms_per_keycode);
 
-	if (theMap != 0) {
+	if (theMap != NULL) {
 	    int i, j, k, l;
 	    unsigned long mask;
 

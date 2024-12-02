@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1132 2024/11/28 16:03:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1133 2024/12/01 19:28:23 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -315,7 +315,7 @@ typedef const Char *UString;
 typedef Char *UString;
 #endif
 
-#define IsEmpty(s) ((s) == 0 || *(s) == '\0')
+#define IsEmpty(s) ((s) == NULL || *(s) == '\0')
 #define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 
 /*
@@ -323,7 +323,7 @@ typedef Char *UString;
  * "PartS2L" when more data may follow in the string.
  */
 #define FullS2L(s,d) (PartS2L(s,d) && (*(d) == '\0'))
-#define PartS2L(s,d) (isdigit(CharOf(*(s))) && (d) != (s) && (d) != 0)
+#define PartS2L(s,d) (isdigit(CharOf(*(s))) && (d) != (s) && (d) != NULL)
 
 #define CASETYPE(name) case name: result = #name; break
 
@@ -3724,7 +3724,7 @@ typedef struct {
 
 #endif /* NO_ACTIVE_ICON */
 
-#define okFont(font) ((font) != 0 && (font)->fid != 0)
+#define okFont(font) ((font) != NULL && (font)->fid != 0)
 
 /*
  * Macro to check if we are iconified; do not use render for that case.

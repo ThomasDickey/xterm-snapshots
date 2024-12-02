@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.151 2024/11/22 22:03:27 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.153 2024/12/01 20:21:19 tom Exp $ */
 
 /*
  * Copyright 2014-2023,2024 by Thomas E. Dickey
@@ -1951,7 +1951,7 @@ find_best_xft_font_size(XtermWidget xw,
 	    XftPattern *match;
 	    XftResult status;
 
-	    if ((pat = XftNameParse(fontname))) {
+	    if ((pat = XftNameParse(fontname)) != NULL) {
 #ifdef DEBUG_FONT_SIZE_SEARCH
 		TRACE(("trying targeth=%g\n", targeth / 10.0));
 #endif
@@ -1964,7 +1964,7 @@ find_best_xft_font_size(XtermWidget xw,
 				NULL);
 		if ((match = XftFontMatch(display,
 					  XScreenNumberOfScreen(screen),
-					  pat, &status))) {
+					  pat, &status)) != NULL) {
 		    font = XftFontOpenPattern(display, match);
 		    maybeXftCache(xw, font);
 		}
@@ -3859,7 +3859,7 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
     char const *ypart;
 
     xpart = extent;
-    if ((ypart = strchr(extent, ','))) {
+    if ((ypart = strchr(extent, ',')) != NULL) {
 	ypart++;
     } else {
 	ypart = "";
