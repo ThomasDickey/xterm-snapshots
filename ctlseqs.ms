@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.729 2024/11/29 00:54:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.731 2024/12/04 23:32:43 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #396
-.ds RF 2024/11/28
+.ds RF 2024/12/04
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1210,6 +1210,18 @@ palettes stored on the stack, using the same form as XTPOPCOLOR
 Scroll up \*(Ps lines (default = 1) (SU), VT420, ECMA-48.
 .
 .iP
+.IP \\*(Cs\\*#\\*S
+Report position on title-stack (XTTITLEPOS), \fI\*(xt\fP.
+.br
+Response is the same format, with parameters:
+  \*(Cs\*(Pn\*;\*(Pm\*s\*#\*S
+.br
+where
+.br
+  \*(Pn is the current index into the title stack
+  \*(Pm is the maximum index for the title stack
+.
+.iP
 .IP \\*(Cs\\*?\\*(Pi\\*s\\*;\\*(Pa\\*s\\*;\\*(Pv\\*s\\*S
 Set or request graphics attribute (XTSMGRAPHICS), \fI\*(xt\fP.
 If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
@@ -2331,17 +2343,6 @@ Set warning-bell volume (DECSWBV), VT520.
   \*(Ps = \*2, \*3 or \*4 \(-> low.
   \*(Ps = \*5, \*6, \*7, or \*8 \(-> high.
 .
-.iP
-.IP \\*(Cs\\*#\\*t
-Report position on title-stack (XTTITLEPOS), \fI\*(xt\fP.
-.br
-Response is the same format, with parameters:
-  \*(Cs\*(Pn\*;\*(Pm\*s\*#\*t
-.br
-where
-.br
-  \*(Pn is the current index into the title stack
-  \*(Pm is the maximum index for the title stack
 .iP
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*;\\*(Pm\\*s\\*$\\*t
 Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
