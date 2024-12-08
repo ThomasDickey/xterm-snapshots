@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2053 2024/12/01 19:34:23 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2056 2024/12/08 23:17:44 tom Exp $ */
 
 /*
  * Copyright 1999-2023,2024 by Thomas E. Dickey
@@ -3042,11 +3042,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * According to EK-VT5X-OP-001 DECscope User's Guide, if the row
 	     * is out of range, no vertical movement occurs, while if the
 	     * column is out of range, it is set to the rightmost column.
+	     *
+	     * However, DEC 070 (VSRM - VT52 Emulation EL-00070-0A, page A-28)
+	     * differs from that, updating the column only when the parameter
+	     * is in range, i.e., not mentioning the rightmost column.
 	     */
 	    if ((row = GetParam(0)) > screen->max_row)
 		row = screen->cur_row;
 	    if ((col = GetParam(1)) > screen->max_col)
-		col = screen->max_col;
+		col = ((screen->terminal_id < 100)
+		       ? screen->max_col	/* real VT52 */
+		       : screen->cur_col);	/* emulated VT52 */
 	    CursorSet(screen, row, col, xw->flags);
 	    sp->parsestate = vt52_table;
 	    SetParam(0, 0);
@@ -3841,9 +3847,27 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECID:
 	    TRACE(("CASE_DECID\n"));
 	    if_OPT_VT52_MODE(screen, {
+		/*
+		 * If xterm's started in VT52 mode, it's not emulating VT52
+		 * within VT100, etc., so the terminal identifies differently. 
+		 */
+		switch (screen->terminal_id) {
+		case 50:
+		    value = 'A';
+		    break;
+		case 52:
+		    value = 'K';
+		    break;
+		case 55:
+		    value = 'C';
+		    break;
+		default:
+		    value = 'Z';
+		    break;
+		}
 		unparseputc(xw, ANSI_ESC);
 		unparseputc(xw, '/');
-		unparseputc(xw, 'Z');
+		unparseputc(xw, value);
 		unparse_end(xw);
 		ResetState(sp);
 		break;
@@ -10056,8 +10080,8 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 	} else if (!strcmp(res_type, XtRFloat)) {
 	    if ((result = malloc(1 + (size_t) (3 * data->resource_size))) != NULL)
 		sprintf(result, "%f", (double) (*(float *) res_addr));
-        } else if (!strcmp(res_type, XtRBoolean)) {
-            if ((result = malloc((size_t) 6)) != NULL)
+	} else if (!strcmp(res_type, XtRBoolean)) {
+	    if ((result = malloc((size_t) 6)) != NULL)
 		strcpy(result, *(Boolean *) res_addr ? "true" : "false");
 	}
     }

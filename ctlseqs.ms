@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.731 2024/12/04 23:32:43 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.733 2024/12/08 23:28:02 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2023,2024 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #396
-.ds RF 2024/12/04
+.ds LF Patch #397
+.ds RF 2024/12/08
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2452,15 +2452,15 @@ Modes \*0 and \*1 are the \fIstream\fP modes
 of the DECCARA and DECRARA controls.
 There are several aspects to \fIstream\fP versus \fIrectangle\fP modes:
 .br
-1. In both \fIstream\fP and \fIrectangle\fP modes, the
+1) In both \fIstream\fP and \fIrectangle\fP modes, the
 row- and column-positions are affected by Origin Mode.
 .br
-2. In \fIrectangle\fP mode, cells outside the row- and column-positions
+2) In \fIrectangle\fP mode, cells outside the row- and column-positions
 are unaffected.
 In \fIstream\fP mode, the row- and column-positions are the starting
 and ending cells, with wrapping which ignores Origin Mode.
 .br
-3. In \fIstream\fP mode,
+3) In \fIstream\fP mode,
 those controls affect only cells where a character was drawn.
 In \fIrectangle\fP mode, cells where no character was drawn
 are first filled in with a space.
@@ -4284,7 +4284,15 @@ Move the cursor to given row and column.
 .iP
 .IP \\*(Es\\*Z
 Identify.
-  \(-> \*(Es\*s\*/\*s\*Z (\*(``I am a VT52.\*('').
+.br
+  \(-> \*(Es\*s\*/\*s\*Z (\*(``I am a VT52 emulated by VT100.\*('').
+.br
+or
+.br
+  \(-> \*(Es\*s\*/\*s\*K (\*(``I am a VT52.\*('').
+.br
+depending on whether \fI\*(xt\fP is started as a VT52 by setting the
+\fB\%decTerminalID\fP resource to \*(``52\*('' or not.
 .Ed
 .
 .Sh "Further reading"

@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2664 2024/12/04 22:00:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.2666 2024/12/08 23:26:12 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1075,6 +1075,12 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>if started as a VT52, identify the terminal as a real VT52
+    rather than VT52 emulated by VT100.</li>
+
+    <li>amend change to VT52 cursor-addressing per DEC 070 (mintty
+    #1299).</li>
+
     <li>correct <tt>ctlseqs.ms</tt> suffix for
     <tt>XTTITLEPOS</tt></li>
   </ul>
