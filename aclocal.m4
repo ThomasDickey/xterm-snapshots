@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.532 2024/11/30 19:37:45 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.533 2024/12/21 13:44:12 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -567,7 +567,7 @@ if test "x$ifelse([$2],,CLANG_COMPILER,[$2])" = "xyes" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_CONST_X_STRING version: 8 updated: 2023/12/01 17:22:50
+dnl CF_CONST_X_STRING version: 9 updated: 2024/12/04 03:49:57
 dnl -----------------
 dnl The X11R4-X11R6 Xt specification uses an ambiguous String type for most
 dnl character-strings.
@@ -594,7 +594,7 @@ CF_SAVE_XTRA_FLAGS([CF_CONST_X_STRING])
 
 AC_TRY_COMPILE(
 [
-#include <stdlib.h>
+$ac_includes_default
 #include <X11/Intrinsic.h>
 ],
 [String foo = malloc(1); free((void*)foo)],[
@@ -605,7 +605,7 @@ AC_CACHE_CHECK(for X11/Xt const-feature,cf_cv_const_x_string,[
 #undef  _CONST_X_STRING
 #define _CONST_X_STRING	/* X11R7.8 (perhaps) */
 #undef  XTSTRINGDEFINES	/* X11R5 and later */
-#include <stdlib.h>
+$ac_includes_default
 #include <X11/Intrinsic.h>
 		],[String foo = malloc(1); *foo = 0],[
 			cf_cv_const_x_string=no
@@ -1343,7 +1343,7 @@ CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 41 updated: 2021/01/01 16:53:59
+dnl CF_GCC_WARNINGS version: 43 updated: 2024/12/21 08:44:12
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -2514,7 +2514,7 @@ AC_SUBST(LINT_OPTS)
 AC_SUBST(LINT_LIBS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 18 updated: 2021/01/01 16:53:59
+dnl CF_REGEX version: 19 updated: 2024/12/14 16:09:34
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -2585,8 +2585,9 @@ case "$cf_regex_func" in
 	for cf_regex_hdr in regex.h
 	do
 		AC_TRY_LINK([#include <sys/types.h>
+#include <stdio.h>
 #include <$cf_regex_hdr>],[
-			regex_t *p = 0;
+			regex_t *p = NULL;
 			int x = regcomp(p, "", 0);
 			int y = regexec(p, "", 0, 0, 0);
 			(void)x;

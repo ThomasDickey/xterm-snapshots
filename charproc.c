@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.2056 2024/12/08 23:17:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2057 2025/01/03 00:35:38 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -14599,6 +14599,13 @@ VTInitTranslations(void)
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \n\
 "
 	),
+#if OPT_BLOCK_SELECT
+	DATA("block-select",
+"\
+                 Meta <Btn1Down>:select-start(block) \n\
+"
+	),
+#endif
 	DATA("wheel-mouse",
 "\
                  Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\

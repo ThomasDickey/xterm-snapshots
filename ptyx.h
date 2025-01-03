@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1133 2024/12/01 19:28:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1134 2025/01/03 01:03:23 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -517,6 +517,10 @@ typedef enum {
 
 #ifndef OPT_BLINK_TEXT
 #define OPT_BLINK_TEXT  OPT_BLINK_CURS /* true if xterm has blinking text capability */
+#endif
+
+#ifndef OPT_BLOCK_SELECT
+#define OPT_BLOCK_SELECT 0 /* true if block-select is supported */
 #endif
 
 #ifndef OPT_BOX_CHARS
@@ -2980,6 +2984,11 @@ typedef struct {
 	int		startHCoord, endHCoord;
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
+
+#if OPT_BLOCK_SELECT
+	int		lastSelectWasBlock;
+	int		blockSelecting;	/* non-zero if block selection */
+#endif
 
 	Boolean		selectToBuffer;	/* copy selection to buffer	*/
 	InternalSelect	internal_select;

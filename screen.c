@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.655 2024/12/01 20:14:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.657 2025/01/03 01:31:13 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1455,6 +1455,93 @@ ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
     }
 }
 
+#if OPT_BLOCK_SELECT
+/*
+ * Return the start and end cols of a block selection
+ */
+static void
+blockSelectBounds(TScreen *screen,
+		  int *start,
+		  int *end)
+{
+    assert(screen->blockSelecting);
+    if (screen->startH.col < screen->endH.col) {
+	*start = screen->startH.col;
+	*end = screen->endH.col;
+    } else {
+	*start = screen->endH.col;
+	*end = screen->startH.col;
+    }
+}
+
+/*
+ * Return 1 if any part of [col, maxcol] intersects with the selection.
+ */
+static int
+intersectsSelection(TScreen *screen,
+		    int row,
+		    int col,
+		    int maxcol)
+{
+    if (screen->blockSelecting) {
+	int start, end;
+	blockSelectBounds(screen, &start, &end);
+	return start != end
+	    && (row >= screen->startH.row && row <= screen->endH.row)
+	    && ((start >= col && start <= maxcol)
+		|| (end > col && end < maxcol)) ? 1 : 0;
+    }
+    return !(row < screen->startH.row || row > screen->endH.row
+	     || (row == screen->startH.row && maxcol < screen->startH.col)
+	     || (row == screen->endH.row && col >= screen->endH.col)) ? 1 : 0;
+}
+
+/*
+ * If there are any parts of [col, maxcol] not in the selection,
+ * invoke ScrnRefresh on them, then adjust [col, maxcol] to be fully
+ * inside the selection. The intent is to optimize the loop at the
+ * end of ScrnRefresh, so that we are painting either all highlighted
+ * or all unhighlighted cells.
+ */
+static void
+recurseForNotSelectedAndAdjust(XtermWidget xw,
+			       int row,
+			       int *col,
+			       int *maxcol,
+			       int force)
+{
+    TScreen *screen = TScreenOf(xw);
+    if (screen->blockSelecting) {
+	int start, end;
+	blockSelectBounds(screen, &start, &end);
+	if (*col < start) {
+	    ScrnRefresh(xw, row, *col, 1, start - *col, force);
+	    *col = start;
+	}
+	if (*maxcol >= end) {
+	    ScrnRefresh(xw, row, end, 1, *maxcol - end + 1, force);
+	    *maxcol = end - 1;
+	}
+    } else {
+	if (row == screen->startH.row && *col < screen->startH.col) {
+	    ScrnRefresh(xw, row, *col, 1, screen->startH.col - *col,
+			force);
+	    *col = screen->startH.col;
+	}
+	if (row == screen->endH.row && *maxcol >= screen->endH.col) {
+	    ScrnRefresh(xw, row, screen->endH.col, 1,
+			*maxcol - screen->endH.col + 1, force);
+	    *maxcol = screen->endH.col - 1;
+	}
+    }
+}
+#else
+#define intersectsSelection(screen, row, col, maxcol) \
+	((row >= screen->startH.row && row <= screen->endH.row) \
+	 && (row != screen->startH.row || maxcol >= screen->startH.col) \
+	 && (row != screen->endH.row || col < screen->endH.col))
+#endif /* OPT_BLOCK_SELECT */
+
 /*
  * Repaints the area enclosed by the parameters.
  * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
@@ -1582,9 +1669,7 @@ ScrnRefresh(XtermWidget xw,
 	    }
 	});
 
-	if (row < screen->startH.row || row > screen->endH.row ||
-	    (row == screen->startH.row && maxcol < screen->startH.col) ||
-	    (row == screen->endH.row && col >= screen->endH.col)) {
+	if (!intersectsSelection(screen, row, col, maxcol)) {
 #if OPT_DEC_CHRSET
 	    /*
 	     * Temporarily change dimensions to double-sized characters so
@@ -1596,9 +1681,14 @@ ScrnRefresh(XtermWidget xw,
 	    }
 #endif
 	    /*
-	     * If row does not intersect selection; don't hilite blanks.
+	     * If row does not intersect selection; don't hilite blanks
+	     * unless block selecting.
 	     */
-	    if (!force) {
+	    if (!force
+#if OPT_BLOCK_SELECT
+		&& !screen->blockSelecting
+#endif
+		) {
 		while (col <= maxcol && (attrs[col] & ~BOLD) == 0 &&
 		       BLANK_CEL(col))
 		    col++;
@@ -1615,6 +1705,13 @@ ScrnRefresh(XtermWidget xw,
 #endif
 	    hilite = False;
 	} else {
+#if OPT_BLOCK_SELECT
+	    /* row intersects selection; recurse for the unselected pieces
+	     * of col to maxcol, then adjust col and maxcol so that they are
+	     * strictly inside the selection.
+	     */
+	    recurseForNotSelectedAndAdjust(xw, row, &col, &maxcol, force);
+#else
 	    /* row intersects selection; split into pieces of single type */
 	    if (row == screen->startH.row && col < screen->startH.col) {
 		ScrnRefresh(xw, row, col, 1, screen->startH.col - col,
@@ -1626,6 +1723,7 @@ ScrnRefresh(XtermWidget xw,
 			    maxcol - screen->endH.col + 1, force);
 		maxcol = screen->endH.col - 1;
 	    }
+#endif
 
 	    /*
 	     * If we're highlighting because the user is doing cut/paste,
@@ -1635,7 +1733,7 @@ ScrnRefresh(XtermWidget xw,
 	     * anyway.
 	     *
 	     * We don't do this if the mouse-hilite mode is set because that
-	     * would be too confusing.
+	     * would be too confusing.  The same applies to block select mode.
 	     *
 	     * The default if the highlightSelection resource isn't set will
 	     * highlight the whole width of the terminal, which is easy to
@@ -1643,6 +1741,9 @@ ScrnRefresh(XtermWidget xw,
 	     * apparent).
 	     */
 	    if (screen->highlight_selection
+#if OPT_BLOCK_SELECT
+		&& !screen->blockSelecting
+#endif
 		&& screen->send_mouse_pos != VT200_HIGHLIGHT_MOUSE) {
 		hi_col = screen->max_col;
 		while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))

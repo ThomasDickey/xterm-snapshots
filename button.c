@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.668 2024/12/01 19:21:45 tom Exp $ */
+/* $XTermId: button.c,v 1.669 2025/01/03 00:20:00 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2914,6 +2914,15 @@ EvalSelectUnit(XtermWidget xw,
 	delta = (int) ((((Time) ~ 0) - screen->lastButtonUpTime) + buttonDownTime);
     }
 
+#if OPT_BLOCK_SELECT
+    if (screen->blockSelecting
+	|| screen->blockSelecting != screen->lastSelectWasBlock) {
+	/* No word, line, paragraph selecting when block selecting
+	   or when our last click was a block select */
+	screen->numberOfClicks = 1;
+	result = defaultUnit;
+    } else
+#endif
     if (delta > screen->multiClickTime) {
 	screen->numberOfClicks = 1;
 	result = defaultUnit;
@@ -2967,6 +2976,11 @@ HandleSelectStart(Widget w,
 
 #if OPT_READLINE
 	ExtendingSelection = 0;
+#endif
+
+#if OPT_BLOCK_SELECT
+	screen->blockSelecting =
+	    (*num_params >= 1 && !strcmp(params[0], "block")) ? 1 : 0;
 #endif
 
 	do_select_start(xw, event, &cell);
@@ -3086,6 +3100,9 @@ EndExtend(XtermWidget xw,
 
     screen->lastButtonUpTime = event->xbutton.time;
     screen->lastButton = event->xbutton.button;
+#if OPT_BLOCK_SELECT
+    screen->lastSelectWasBlock = screen->blockSelecting;
+#endif
 
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
 	if (screen->replyToEmacs) {
@@ -4139,6 +4156,11 @@ ComputeSelect(XtermWidget xw,
 
     switch (screen->selectUnit) {
     case Select_CHAR:
+#if OPT_BLOCK_SELECT
+	/* Allow block selecting past EOL */
+	if (screen->blockSelecting)
+	    break;
+#endif
 	(void) okPosition(screen, &(ld.startSel), &(screen->startSel));
 	(void) okPosition(screen, &(ld.endSel), &(screen->endSel));
 	break;
@@ -4320,8 +4342,23 @@ TrackText(XtermWidget xw,
     screen->endH = last;
     from = Coordinate(screen, &screen->startH);
     to = Coordinate(screen, &screen->endH);
-    if (to <= screen->startHCoord || from > screen->endHCoord) {
-	/* No overlap whatsoever between old and new hilite */
+    if (to <= screen->startHCoord || from > screen->endHCoord
+#if OPT_BLOCK_SELECT
+	|| screen->blockSelecting
+	|| screen->blockSelecting != screen->lastSelectWasBlock
+#endif
+	) {
+#if OPT_BLOCK_SELECT
+	/* Either no overlap whatsoever between old and new hilite,
+	   or we're in block select mode (or just came from it),
+	   in which case there is no optimization possible. */
+	if (screen->lastSelectWasBlock) {
+	    /* If we just came from block select mode, we need to
+	       unhighlight more aggressively. */
+	    old_start.col = 0;
+	    old_end.col = MaxCols(screen);
+	}
+#endif
 	ReHiliteText(xw, &old_start, &old_end);
 	ReHiliteText(xw, &first, &last);
     } else {
@@ -4377,6 +4414,18 @@ ReHiliteText(XtermWidget xw,
     if (isSameCELL(&first, &last))
 	return;
 
+#if OPT_BLOCK_SELECT
+    if (screen->blockSelecting) {
+	/* In block select mode, there is no special case for the first or
+	   last rows. Also, unlike normal selections, there can be
+	   unselected text on both sides of the selection per row, so we
+	   refresh all columns. */
+	int row;
+	for (row = first.row; row <= last.row; row++) {
+	    ScrnRefresh(xw, row, 0, 1, MaxCols(screen), True);
+	}
+    } else
+#endif
     if (!isSameRow(&first, &last)) {	/* do multiple rows */
 	int i;
 	if ((i = screen->max_col - first.col + 1) > 0) {	/* first row */
@@ -4472,7 +4521,27 @@ SaltTextAway(XtermWidget xw,
     lp = line;			/* lp points to where to save the text */
     if (isSameRow(&last, &first)) {
 	lp = SaveText(screen, last.row, first.col, last.col, lp, &eol);
-    } else {
+    }
+#if OPT_BLOCK_SELECT
+    else if (screen->blockSelecting) {
+	/* In block select mode, find the left most column of the block.
+	   This can be from either the start or the end of the selection. */
+	int blockFirst, blockLast;
+	if (first.col < last.col) {
+	    blockFirst = first.col;
+	    blockLast = last.col;
+	} else {
+	    blockFirst = last.col;
+	    blockLast = first.col;
+	}
+	for (i = first.row; i <= last.row; i++) {
+	    lp = SaveText(screen, i, blockFirst, blockLast, lp, &eol);
+	    if (i < last.row || eol)
+		*lp++ = '\n';
+	}
+    }
+#endif
+    else {
 	lp = SaveText(screen, first.row, first.col, screen->max_col, lp, &eol);
 	if (eol)
 	    *lp++ = '\n';	/* put in newline at end of line */
@@ -5157,7 +5226,11 @@ SaveText(TScreen *screen,
     *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
 	unsigned c;
-	assert(i < (int) ld->lineSize);
+	if (i >= (int) ld->lineSize) {
+	    /* The terminal was probably resized */
+	    *lp++ = CharOf(' ');
+	    continue;
+	}
 	c = ld->charData[i];
 	if (ld->attribs[i] & INVISIBLE)
 	    continue;

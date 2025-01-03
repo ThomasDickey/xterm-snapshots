@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.908 2024/09/30 07:57:01 tom Exp $
+.\" $XTermId: xterm.man,v 1.910 2025/01/03 08:39:44 tom Exp $
 .\"
-.\" Copyright 1996-2023,2024 by Thomas E. Dickey
+.\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1934,6 +1934,10 @@ with the \fImeta\fP modifier to the \fBclear\-saved\-lines\fP action.
 .TP
 scroll\-lock
 assigns a key\-binding to the \fBscroll\-lock()\fP action.
+.TP
+block\-select
+an optional (compile-time) feature for supporting rectangular selections.
+By default, this is bound to \fIMeta button one\fP.
 .TP
 select
 assigns mouse- and keypress-combinations
@@ -7893,6 +7897,11 @@ without affecting the selection mode.
 This action begins text selection at the current pointer location.
 See
 the section on \fBPOINTER USAGE\fP for information on making selections.
+.IP
+If \fI\*n\fR is configured to support block-selection,
+this action accepts a parameter \*(``block\*(''
+which initiates a block-selection
+rather than the default character-oriented selection.
 .TP 8
 .B "send\-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
@@ -8245,6 +8254,7 @@ These are for the \fIvt100\fP widget:
            !Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
  !Lock Ctrl @Num_Lock <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
      ! @Num_Lock Ctrl <Btn1Down>:\fBpopup\-menu\fP(mainMenu) \\n\\\&
+                 Meta <Btn1Down>:\fBselect\-start\fP(block) \\n\\\&
                 ~Meta <Btn1Down>:\fBselect\-start\fP() \\n\\\&
               ~Meta <Btn1Motion>:\fBselect\-extend\fP() \\n\\\&
                 !Ctrl <Btn2Down>:\fBpopup\-menu\fP(vtMenu) \\n\\\&
