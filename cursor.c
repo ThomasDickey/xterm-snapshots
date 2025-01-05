@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.95 2024/12/01 23:51:16 tom Exp $ */
+/* $XTermId: cursor.c,v 1.96 2025/01/04 00:58:54 tom Exp $ */
 
 /*
- * Copyright 2002-2023,2024 by Thomas E. Dickey
+ * Copyright 2002-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -171,7 +171,9 @@ CursorBack(XtermWidget xw, int n)
 		}
 	    }
 	    ld = NULL;		/* try a reverse-wrap */
-	    --row;
+	    if (--row <= 0) {
+		row = (top == 0) ? bottom : screen->max_row;
+	    }
 	}
 	if (ld == NULL) {
 	    ld = getLineData(screen, ROW2INX(screen, row));

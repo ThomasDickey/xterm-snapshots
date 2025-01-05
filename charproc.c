@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2057 2025/01/03 00:35:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2059 2025/01/05 13:58:20 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3349,6 +3349,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    switch (sp->nextstate) {
 	    case CASE_GROUND_STATE:
 	    case CASE_CSI_IGNORE:
+	    case CASE_SUB:
 		/* FALLTHRU */
 
 	    case CASE_ESC_DIGIT:
@@ -3411,6 +3412,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case CASE_DECSTBM:
 	    case CASE_DECALN:
 	    case CASE_GRAPHICS_ATTRIBUTES:
+	    case CASE_SUB:
 	    case CASE_SPA:
 	    case CASE_EPA:
 	    case CASE_SU:
@@ -3454,6 +3456,35 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_IGNORE:
 	    TRACE(("CASE_IGNORE - Ignore character %02X\n", c));
+	    break;
+
+	case CASE_SUB:
+	    TRACE(("CASE_SUB - substitute/show error\n"));
+	    /*
+	     * ECMA-48 5th edition (June 1991) documents SUB without describing
+	     * its effect.  Earlier editions do not mention it.
+	     *
+	     * DEC's VT100 user guide documents SUB as having the same effect
+	     * as CAN (cancel).  The VT220 reference adds a visible effect
+	     * (display as a reverse "?"), as well as mentioning that device
+	     * control sequences also are cancelled.  DEC 070 comments that a
+	     * "half-tone blotch" is used with VT100, etc.
+	     *
+	     * None of that applies to VT52.
+	     */
+	    if (screen->terminal_id >= 100) {
+		IChar effect = (
+#if OPT_WIDE_CHARS
+				   (screen->terminal_id > 200) ? 0x2426 : 0x2592
+#else
+				   2
+#endif
+		);
+		dotext(xw,
+		       screen->gsets[(int) (screen->curgl)],
+		       &effect, 1);
+	    }
+	    ResetState(sp);
 	    break;
 
 	case CASE_ENQ:
