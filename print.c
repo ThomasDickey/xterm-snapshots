@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.179 2024/12/01 20:10:04 tom Exp $ */
+/* $XTermId: print.c,v 1.180 2025/01/05 20:36:49 tom Exp $ */
 
 /*
- * Copyright 1997-2023,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -398,16 +398,18 @@ charToPrinter(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
 
+    if (!screen->print_rawchars) {
 #if OPT_WIDE_CHARS
-    if (screen->wide_chars && screen->utf8_mode) {
-	if (chr == UCS_REPL) {
-	    stringToPrinter(xw, screen->default_string);
-	    return;
+	if (screen->wide_chars && screen->utf8_mode) {
+	    if (chr == UCS_REPL) {
+		stringToPrinter(xw, screen->default_string);
+		return;
+	    }
 	}
-    }
 #endif
-    if (is_NON_CHAR(chr))
-	return;
+	if (is_NON_CHAR(chr))
+	    return;
+    }
 
     if (!SPS.isOpen && (SPS.toFile || xtermHasPrinter(xw))) {
 	switch (SPS.toFile) {

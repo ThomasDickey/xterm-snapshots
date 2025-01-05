@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.122 2025/01/05 10:10:32 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.123 2025/01/05 20:52:13 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

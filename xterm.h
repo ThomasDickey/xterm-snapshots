@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.957 2024/12/01 19:45:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.959 2025/01/05 21:15:01 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -619,6 +619,7 @@ extern char **environ;
 #define XtNprintModeOnXError	"printModeOnXError"
 #define XtNprintOptsImmediate	"printOptsImmediate"
 #define XtNprintOptsOnXError	"printOptsOnXError"
+#define XtNprintRawChars	"printRawChars"
 #define XtNprinterAutoClose	"printerAutoClose"
 #define XtNprinterCommand	"printerCommand"
 #define XtNprinterControlMode	"printerControlMode"
@@ -875,6 +876,7 @@ extern char **environ;
 #define XtCPrintModeOnXError	"PrintModeOnXError"
 #define XtCPrintOptsImmediate	"PrintOptsImmediate"
 #define XtCPrintOptsOnXError	"PrintOptsOnXError"
+#define XtCPrintRawChars	"PrintRawChars"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
 #define XtCPrinterControlMode	"PrinterControlMode"

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2059 2025/01/05 13:58:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2060 2025/01/05 20:45:50 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -480,6 +480,7 @@ static XtResource xterm_resources[] =
     Bres(XtNoldXtermFKeys, XtCOldXtermFKeys, screen.old_fkeys, False),
     Bres(XtNpopOnBell, XtCPopOnBell, screen.poponbell, False),
     Bres(XtNpreferLatin1, XtCPreferLatin1, screen.prefer_latin1, True),
+    Bres(XtNprintRawChars, XtCPrintRawChars, screen.print_rawchars, False),
     Bres(XtNprinterAutoClose, XtCPrinterAutoClose, SPS.printer_autoclose, False),
     Bres(XtNprinterExtent, XtCPrinterExtent, SPS.printer_extent, False),
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
@@ -10745,6 +10746,7 @@ VTInitialize(Widget wrequest,
 #if OPT_PRINT_COLORS
     init_Ires(SPS.print_attributes);
 #endif
+    init_Bres(screen.print_rawchars);
 
     init_Sres(screen.keyboard_dialect);
 

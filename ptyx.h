@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1134 2025/01/03 01:03:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1135 2025/01/05 20:36:10 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -2639,6 +2639,7 @@ typedef struct {
 
 	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
+	Boolean		print_rawchars;	/* true to ignore printer check	*/
 #if OPT_PRINT_ON_EXIT
 	Boolean		write_error;
 #endif

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.910 2025/01/03 08:39:44 tom Exp $
+.\" $XTermId: xterm.man,v 1.911 2025/01/05 20:50:55 tom Exp $
 .\"
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
@@ -4883,6 +4883,9 @@ The resource value is interpreted the same as in \fBprintOptsImmediate\fP.
 .IP
 The default is \*(``9\*('', which selects the current visible screen
 plus saved lines, with no special case for the alternated screen.
+.TP 8
+.B "printRawChars\fP (class \fBPrintRawChars\fP)"
+If \*(``true\*('', \fI\*n\fR allows Unicode non-characters to be printed.
 .TP 8
 .B "printerAutoClose\fP (class\fB PrinterAutoClose\fP)"
 If \*(``true\*('', \fI\*n\fR will close the printer (a pipe) when the

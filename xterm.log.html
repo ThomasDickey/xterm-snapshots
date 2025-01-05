@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2670 2025/01/05 11:43:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.2671 2025/01/05 20:49:24 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1075,6 +1075,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add resource <tt>printRawChars</tt> to allow bypassing
+    check in <a href="#xterm_389">patch #389</a> which omits
+    Unicode non-characters from printing (request by Adam
+    Saponara).</li>
+
     <li>add visible-effect for <tt>SUB</tt>, per DEC 070 page
     5-132.</li>
 
