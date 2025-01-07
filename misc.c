@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1107 2024/12/01 20:06:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.1108 2025/01/07 21:32:37 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -8047,15 +8047,14 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 {
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
-    CellData working;
+    size_t cell_size = CellDataSize(screen);
+    CellData *working = calloc(1, cell_size);
     int row, col;
     Boolean first = True;
 
-    TRACE(("xtermReportSGR %d,%d - %d,%d\n",
-	   value->top, value->left,
-	   value->bottom, value->right));
+    if (working == NULL)
+	return;
 
-    memset(&working, 0, sizeof(working));
     for (row = value->top - 1; row < value->bottom; ++row) {
 	LineData *ld = getLineData(screen, row);
 	if (ld == NULL)
@@ -8063,31 +8062,32 @@ xtermReportSGR(XtermWidget xw, XTermRect *value)
 	for (col = value->left - 1; col < value->right; ++col) {
 	    if (first) {
 		first = False;
-		saveCellData(screen, &working, 0, ld, NULL, col);
+		saveCellData(screen, working, 0, ld, NULL, col);
 	    }
-	    working.attribs &= ld->attribs[col];
+	    working->attribs &= ld->attribs[col];
 #if OPT_ISO_COLORS
-	    if (working.attribs & FG_COLOR
-		&& GetCellColorFG(working.color)
+	    if (working->attribs & FG_COLOR
+		&& GetCellColorFG(working->color)
 		!= GetCellColorFG(ld->color[col])) {
-		IAttrClr(working.attribs, FG_COLOR);
+		IAttrClr(working->attribs, FG_COLOR);
 	    }
-	    if (working.attribs & BG_COLOR
-		&& GetCellColorBG(working.color)
+	    if (working->attribs & BG_COLOR
+		&& GetCellColorBG(working->color)
 		!= GetCellColorBG(ld->color[col])) {
-		IAttrClr(working.attribs, BG_COLOR);
+		IAttrClr(working->attribs, BG_COLOR);
 	    }
 #endif
 	}
     }
     xtermFormatSGR(xw, reply,
-		   working.attribs,
-		   GetCellColorFG(working.color),
-		   GetCellColorBG(working.color));
+		   working->attribs,
+		   GetCellColorFG(working->color),
+		   GetCellColorBG(working->color));
     unparseputc1(xw, ANSI_CSI);
     unparseputs(xw, reply);
     unparseputc(xw, 'm');
     unparse_end(xw);
+    free(working);
 }
 
 void

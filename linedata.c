@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.107 2024/12/01 20:27:00 tom Exp $ */
+/* $XTermId: linedata.c,v 1.108 2025/01/07 21:31:10 tom Exp $ */
 
 /*
- * Copyright 2009-2023,2024 by Thomas E. Dickey
+ * Copyright 2009-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -152,11 +152,6 @@ copyLineData(LineData *dst, CLineData *src)
     screen->lineExtra = 0; \
     screen->cellExtra = 0
 #endif
-
-/*
- * CellData size depends on the "combiningChars" resource.
- */
-#define CellDataSize(screen) (SizeOfCellData + screen->cellExtra)
 
 #define CellDataAddr(screen, data, cell) \
 	( (CellData *)(void *) ((char *)data + (cell * CellDataSize(screen))) )

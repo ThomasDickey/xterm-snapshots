@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1135 2025/01/05 20:36:10 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1136 2025/01/07 21:31:10 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1957,6 +1957,11 @@ typedef struct {
  */
 #define SizeOfLineData  offsetof(LineData, combData)
 #define SizeOfCellData  offsetof(CellData, combData)
+
+/*
+ * CellData size depends on the "combiningChars" resource.
+ */
+#define CellDataSize(screen) (SizeOfCellData + screen->cellExtra)
 
 	/*
 	 * A "row" is the index within the visible part of the screen, and an
