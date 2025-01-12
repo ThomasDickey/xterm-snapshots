@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2060 2025/01/05 20:45:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2061 2025/01/12 21:56:19 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3350,6 +3350,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    switch (sp->nextstate) {
 	    case CASE_GROUND_STATE:
 	    case CASE_CSI_IGNORE:
+	    case CASE_CAN:
 	    case CASE_SUB:
 		/* FALLTHRU */
 
@@ -3413,6 +3414,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case CASE_DECSTBM:
 	    case CASE_DECALN:
 	    case CASE_GRAPHICS_ATTRIBUTES:
+	    case CASE_CAN:
 	    case CASE_SUB:
 	    case CASE_SPA:
 	    case CASE_EPA:
@@ -3459,6 +3461,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_IGNORE - Ignore character %02X\n", c));
 	    break;
 
+	case CASE_CAN:
+	    /*
+	     * ECMA-48 5th edition (June 1991) documents CAN thusly:
+	     *
+	     *> CAN is used to indicate that the data preceding it in the data
+	     *> stream is in error.  As a result, this data shall be ignored. 
+	     *> The specific meaning of this control function shall be defined
+	     *> for each application and/or between sender and recipient.
+	     *
+	     * The scope of "preceding" is vague.  DEC 070 clarifies it by
+	     * saying that the current control sequence is cancelled, and also
+	     * page 3-30, 3.5.4.4 Termination Conditions
+	     */
+	    if (screen->terminal_id >= 100 && screen->terminal_id < 200) {
+		IChar effect = (
+#if OPT_WIDE_CHARS
+				   0x2592
+#else
+				   2
+#endif
+		);
+		dotext(xw,
+		       screen->gsets[(int) (screen->curgl)],
+		       &effect, 1);
+	    }
+	    ResetState(sp);
+	    break;
+
 	case CASE_SUB:
 	    TRACE(("CASE_SUB - substitute/show error\n"));
 	    /*
@@ -3466,10 +3496,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * its effect.  Earlier editions do not mention it.
 	     *
 	     * DEC's VT100 user guide documents SUB as having the same effect
-	     * as CAN (cancel).  The VT220 reference adds a visible effect
-	     * (display as a reverse "?"), as well as mentioning that device
-	     * control sequences also are cancelled.  DEC 070 comments that a
-	     * "half-tone blotch" is used with VT100, etc.
+	     * as CAN (cancel), which displays the error character (see page 39
+	     * for a note under "checkerboard characters", and page 42).
+	     *
+	     * The VT220 reference improves the visible effect (display as a
+	     * reverse "?"), as well as mentioning that device control
+	     * sequences also are cancelled.
+	     *
+	     * DEC 070 comments that a "half-tone blotch" is used with VT100,
+	     * etc.
 	     *
 	     * None of that applies to VT52.
 	     */
