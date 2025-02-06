@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.911 2025/01/05 20:50:55 tom Exp $
+.\" $XTermId: xterm.man,v 1.912 2025/02/03 00:57:32 tom Exp $
 .\"
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
@@ -2916,6 +2916,62 @@ Specifies whether characters with the blink attribute should be displayed in
 color.
 Note that setting \fBcolorMode\fR off disables all colors, including this.
 The default is \*(``false\*(''.
+.TP
+.B "colorEvents\fP (class\fB ColorEvents\fP)"
+Specifies OSC control codes that can be processed from client messages with
+the type \fBXTERM_CONTROL\fR.
+These events may be generated using the X protocol SendEvent request.
+The resource value is a comma separated list of codes allowed.
+The default is the empty string, disallowing all processing.
+.IP
+The names are listed below.
+\fI\*N\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+Either a name or a number can be used.
+.RS
+.TP 5
+TEXT_FG (10)
+text foreground
+.TP 5
+TEXT_BG (11)
+text background
+.TP 5
+TEXT_CURSOR (12)
+text cursor
+.TP 5
+MOUSE_FG (13)
+mouse foreground
+.TP 5
+MOUSE_BG (14)
+mouse background
+.TP 5
+TEK_FG (15)
+tektronix foreground
+.TP 5
+TEK_BG (16)
+tektronix background
+.TP 5
+HIGHLIGHT_BG (17)
+highlight background
+.TP 5
+TEK_CURSOR (18)
+tektronix cursor
+.TP 5
+HIGHLIGHT_FG (19)
+highlight foreground
+.RE
+.IP
+For example, if messages for the text color are enabled, e.g.,
+by setting the resource to
+.NS
+text_fg, text_bg
+.NE
+.IP
+the text foreground color can be set to black
+by sending a message with this content:
+.NS
+10;#000000
+.NE
 .TP 8
 .B "colorIT\fP (class\fB ColorIT\fP)"
 This specifies the color to use to display italic characters if

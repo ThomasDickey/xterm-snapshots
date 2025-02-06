@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.956 2024/12/01 20:14:26 tom Exp $ */
+/* $XTermId: util.c,v 1.957 2025/02/06 00:54:28 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -5408,7 +5408,7 @@ getXtermCell(TScreen *screen, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
 
-    return ((ld && (col < (int) ld->lineSize))
+    return ((ld && (col >= 0) && (col < (int) ld->lineSize))
 	    ? ld->charData[col]
 	    : (unsigned) ' ');
 }

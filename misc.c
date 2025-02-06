@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1108 2025/01/07 21:32:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.1109 2025/02/02 23:30:04 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3460,32 +3460,6 @@ xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 }
 
 /***====================================================================***/
-
-/*
- * Enum corresponding to the actual OSC codes rather than the internal
- * array indices.  Compare with TermColors.
- */
-typedef enum {
-    OSC_TEXT_FG = 10
-    ,OSC_TEXT_BG
-    ,OSC_TEXT_CURSOR
-    ,OSC_MOUSE_FG
-    ,OSC_MOUSE_BG
-#if OPT_TEK4014
-    ,OSC_TEK_FG = 15
-    ,OSC_TEK_BG
-#endif
-#if OPT_HIGHLIGHT_COLOR
-    ,OSC_HIGHLIGHT_BG = 17
-#endif
-#if OPT_TEK4014
-    ,OSC_TEK_CURSOR = 18
-#endif
-#if OPT_HIGHLIGHT_COLOR
-    ,OSC_HIGHLIGHT_FG = 19
-#endif
-    ,OSC_NCOLORS
-} OscTextColors;
 
 /*
  * Map codes to OSC controls that can reset colors.

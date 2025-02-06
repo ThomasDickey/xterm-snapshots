@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1136 2025/01/07 21:31:10 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1137 2025/02/04 23:36:12 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -973,6 +973,32 @@ typedef enum {
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
+
+/*
+ * Enum corresponding to the actual OSC codes rather than the internal
+ * array indices.  Compare with TermColors.
+ */
+typedef enum {
+    OSC_TEXT_FG = 10
+    ,OSC_TEXT_BG
+    ,OSC_TEXT_CURSOR
+    ,OSC_MOUSE_FG
+    ,OSC_MOUSE_BG
+#if OPT_TEK4014
+    ,OSC_TEK_FG = 15
+    ,OSC_TEK_BG
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_BG = 17
+#endif
+#if OPT_TEK4014
+    ,OSC_TEK_CURSOR = 18
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_FG = 19
+#endif
+    ,OSC_NCOLORS
+} OscTextColors;
 
 /*
  * Definitions for exec-formatted and insert-formatted actions.
@@ -2612,6 +2638,9 @@ typedef struct {
 
 	String		disallowedWinOps;
 	char		disallow_win_ops[ewLAST];
+
+	char		color_events[1+OSC_NCOLORS]; /* ok OSC codes	*/
+	char *		colorEvents;	/* initial color-event codes	*/
 
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/

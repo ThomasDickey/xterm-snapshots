@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.930 2024/12/01 19:57:13 tom Exp $ */
+/* $XTermId: main.c,v 1.932 2025/02/05 23:28:40 tom Exp $ */
 
 /*
- * Copyright 2002-2023,2024 by Thomas E. Dickey
+ * Copyright 2002-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1913,6 +1913,42 @@ DeleteWindow(Widget w,
 
 /* ARGSUSED */
 static void
+xtermColorEvents(Widget w GCC_UNUSED,
+		 XEvent *event,
+		 String *params GCC_UNUSED,
+		 Cardinal *num_params GCC_UNUSED)
+{
+    if (event->xclient.format == 8) {
+#define BSIZE sizeof(event->xclient.data.b)
+	/*
+	 * The OSC must begin with a number (which is enabled in our table),
+	 * not contain "?" (which would force a query/response), and have a
+	 * single parameter after the number, separated by a ";".
+	 */
+	int code;
+	char param;
+	char *source = event->xclient.data.b;
+
+	source[BSIZE - 1] = '\0';
+
+	if (sscanf(source, "%d;%c", &code, &param) == 2
+	    && code > 0
+	    && code < OSC_NCOLORS
+	    && TScreenOf(term)->color_events[code]
+	    && strchr(source, '?') == NULL) {
+	    TRACE(("xtermColorEvents code %d: %s\n", code, source));
+	    do_osc(term, (Char *) source, strlen(source), 1 /* final */ );
+	} else {
+	    TRACE(("xtermColorEvents ignore %s\n", source));
+	}
+    } else {
+	TRACE(("xtermColorEvents invalid format %d, expected 8\n",
+	       event->xclient.format));
+    }
+}
+
+/* ARGSUSED */
+static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent *event,
 		String *params GCC_UNUSED,
@@ -1928,6 +1964,7 @@ KeyboardMapping(Widget w GCC_UNUSED,
 static XtActionsRec actionProcs[] =
 {
     {"DeleteWindow", DeleteWindow},
+    {"ColorEvents", xtermColorEvents},
     {"KeyboardMapping", KeyboardMapping},
 };
 
@@ -3888,7 +3925,8 @@ xtermTrimEnv(void)
 			xtermUnsetenv(my_var);
 			free(my_var);
 			/* When removing an entry, check the same slot again. */
-			j--;
+			if (j != 0)
+			    j--;
 		    }
 		    break;
 		}
@@ -3897,7 +3935,8 @@ xtermTrimEnv(void)
 		if (table[k].trim) {
 		    xtermUnsetenv(table[k].name);
 		    /* When removing an entry, check the same slot again. */
-		    j--;
+		    if (j != 0)
+			j--;
 		}
 		break;
 	    }

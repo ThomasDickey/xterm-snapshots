@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2061 2025/01/12 21:56:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2064 2025/02/06 00:31:42 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -534,6 +534,7 @@ static XtResource xterm_resources[] =
     Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
     Sres(XtNboldFont, XtCBoldFont, misc.default_font.f_b, DEFBOLDFONT),
     Sres(XtNcharClass, XtCCharClass, screen.charClass, NULL),
+    Sres(XtNcolorEvents, XtCColorEvents, screen.colorEvents, DEF_COLOR_EVENTS),
     Sres(XtNdecTerminalID, XtCDecTerminalID, screen.term_id, DFT_DECID),
     Sres(XtNdefaultString, XtCDefaultString, screen.default_string, "#"),
     Sres(XtNdisallowedColorOps, XtCDisallowedColorOps,
@@ -1675,11 +1676,13 @@ dump_params(void)
 		} else if (used+1 >= new_length) { \
 		    new_length = size * 2; \
 		    new_string = TypeMallocN(type, new_length); \
-		    if (new_string != NULL \
-		     && area != NULL \
-		     && used != 0) { \
+		} \
+		if (new_string != NULL) { \
+		    if (area != NULL && used != 0) { \
 			memcpy(new_string, area, used * sizeof(type)); \
-		     } \
+		    } else { \
+			memset(new_string, 0, 3 * sizeof(type)); \
+		    } \
 		}
 #define SafeFree(area, size) \
 		if (area != new_string) { \
@@ -3262,7 +3265,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 	    else if (sp->string_skip) {
 		sp->string_used++;
-	    } else if (sp->string_used > screen->strings_max) {
+	    } else if (sp->string_used >= screen->strings_max) {
 		sp->string_skip = True;
 		sp->string_used++;
 		FreeAndNull(sp->string_area);
@@ -9663,6 +9666,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
 static String xterm_trans =
 "<ClientMessage>WM_PROTOCOLS: DeleteWindow()\n\
+     <ClientMessage>XTERM_CONTROL: ColorEvents()\n\
      <MappingNotify>: KeyboardMapping()\n";
 
 int
@@ -10333,6 +10337,30 @@ static const FlagList tblWindowOps[] =
 };
 #undef DATA
 
+#define DATA(name) { #name, OSC_##name }
+static const FlagList tblColorEvents[] =
+{
+    DATA(TEXT_FG)
+    ,DATA(TEXT_BG)
+    ,DATA(TEXT_CURSOR)
+    ,DATA(MOUSE_FG)
+    ,DATA(MOUSE_BG)
+#if OPT_TEK4014
+    ,DATA(TEK_FG)
+    ,DATA(TEK_BG)
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,DATA(HIGHLIGHT_BG)
+#endif
+#if OPT_TEK4014
+    ,DATA(TEK_CURSOR)
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,DATA(HIGHLIGHT_FG)
+#endif
+};
+#undef DATA
+
 void
 unparse_disallowed_ops(XtermWidget xw, char *value)
 {
@@ -10805,6 +10833,8 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
 
+    init_Sres(screen.colorEvents);
+
 #if OPT_SCROLL_LOCK
     init_Bres(screen.allowScrollLock0);
     init_Bres(screen.autoScrollLock);
@@ -10862,6 +10892,11 @@ VTInitialize(Widget wrequest,
     screen->allowTitleOps = screen->allowTitleOp0;
     screen->allowWindowOps = screen->allowWindowOp0;
 
+    if (!IsEmpty(screen->colorEvents)) {
+	set_flags_from_list(screen->color_events,
+			    screen->colorEvents,
+			    tblColorEvents);
+    }
 #if OPT_SCROLL_LOCK
     screen->allowScrollLock = screen->allowScrollLock0;
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.669 2025/01/03 00:20:00 tom Exp $ */
+/* $XTermId: button.c,v 1.671 2025/02/05 23:33:18 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -28,7 +28,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
  *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -3971,8 +3970,11 @@ cellToColumn(TScreen *screen, CELL *cell)
     int col = cell->col;
     int row = firstRowOfLine(screen, cell->row, False);
     while (row < cell->row) {
-	ld = GET_LINEDATA(screen, row);
-	col += LastTextCol(screen, ld, row++);
+	int adj;
+	if ((ld = GET_LINEDATA(screen, row)) == NULL)
+	    break;
+	if ((adj = LastTextCol(screen, ld, row++)) < 0)
+	col += adj;
     }
 #if OPT_DEC_CHRSET
     if (ld == NULL)
@@ -5195,6 +5197,8 @@ Length(TScreen *screen,
 
     if (ecol > lastcol)
 	ecol = lastcol;
+    if (ecol < scol)
+	ecol = scol;
     return (ecol - scol + 1);
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.959 2025/01/05 21:15:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.960 2025/02/03 00:33:55 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -484,6 +484,7 @@ extern char **environ;
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
 #define XtNcolorBLMode		"colorBLMode"
+#define XtNcolorEvents		"colorEvents"
 #define XtNcolorITMode		"colorITMode"
 #define XtNcolorInnerBorder	"colorInnerBorder"
 #define XtNcolorMode		"colorMode"
@@ -753,6 +754,7 @@ extern char **environ;
 #define XtCChecksumExtension	"ChecksumExtension"
 #define XtCCjkWidth		"CjkWidth"
 #define XtCColorAttrMode	"ColorAttrMode"
+#define XtCColorEvents		"ColorEvents"
 #define XtCColorInnerBorder	"ColorInnerBorder"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"

@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.244 2024/12/01 20:23:01 tom Exp $ */
+/* $XTermId: trace.c,v 1.245 2025/02/02 19:09:46 tom Exp $ */
 
 /*
- * Copyright 1997-2023,2024 by Thomas E. Dickey
+ * Copyright 1997-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -948,6 +948,12 @@ TraceEvent(const char *tag, XEvent *ev, String *params, const Cardinal *num_para
 	TRACE((" property:%s",
 	       TraceAtomName(ev->xselectionrequest.display,
 			     ev->xselectionrequest.property)));
+	break;
+    case ClientMessage:
+	TRACE((" message_type:%s format:%d",
+	       TraceAtomName(ev->xselectionrequest.display,
+			     ev->xclient.message_type),
+	       ev->xclient.format));
 	break;
     default:
 	TRACE((":FIXME"));

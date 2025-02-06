@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.375 2024/12/01 20:30:19 tom Exp $ */
+/* $XTermId: input.c,v 1.376 2025/02/06 00:48:13 tom Exp $ */
 
 /*
- * Copyright 1999-2023,2024 by Thomas E. Dickey
+ * Copyright 1999-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1047,6 +1047,16 @@ Input(XtermWidget xw,
     }
 #endif
 
+#if OPT_TRACE
+#define TRACE_FK(prefix) \
+	if ((kd.keysym >= XK_Fn(1) && kd.keysym <= XK_Fn(24))) \
+	    TRACE((prefix " XK_F%ld\n", kd.keysym - XK_Fn(1) + 1)); \
+	else \
+	    TRACE((prefix " keysym %04X\n", (unsigned) kd.keysym))
+#else
+#define TRACE_FK(prefix)	/* nothing */
+#endif
+
     /*
      * Use the control- and shift-modifiers to obtain more function keys than
      * the keyboard provides.  We can do this if there is no conflicting use of
@@ -1068,18 +1078,18 @@ Input(XtermWidget xw,
 	if (keyboard->type == keyboardIsVT220
 	    || keyboard->type == keyboardIsLegacy) {
 
-	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK("...map");
 	    if (evt_state & ControlMask) {
 		kd.keysym += (KeySym) xw->misc.ctrl_fkeys;
 		UIntClr(evt_state, ControlMask);
 	    }
-	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK(" to");
 
 	}
 #if OPT_MOD_FKEYS
 	else if (keyboard->modify_now.function_keys < 0) {
 
-	    TRACE(("...map XK_F%ld", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK("...map");
 	    if (evt_state & ShiftMask) {
 		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 1);
 		UIntClr(evt_state, ShiftMask);
@@ -1088,7 +1098,7 @@ Input(XtermWidget xw,
 		kd.keysym += (KeySym) (xw->misc.ctrl_fkeys * 2);
 		UIntClr(evt_state, ControlMask);
 	    }
-	    TRACE((" to XK_F%ld\n", kd.keysym - XK_Fn(1) + 1));
+	    TRACE_FK(" to");
 
 	}
 	/*

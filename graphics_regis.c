@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.153 2024/12/01 20:21:19 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.154 2025/02/05 23:05:38 tom Exp $ */
 
 /*
- * Copyright 2014-2023,2024 by Thomas E. Dickey
+ * Copyright 2014-2024,2025 by Thomas E. Dickey
  * Copyright 2014-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -2096,9 +2096,7 @@ find_best_xft_font_size(XtermWidget xw,
 	    cp->xmin = *xmin;
 	    cp->ymin = *ymin;
 	}
-	if (cp != NULL) {
-	    cp->font_data = font;
-	}
+	cp->font_data = font;
 	return font;
     }
 }
