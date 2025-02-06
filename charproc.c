@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2064 2025/02/06 00:31:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2065 2025/02/06 12:42:02 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -2885,7 +2885,8 @@ handle_DECSASD(XtermWidget xw, int value)
 	   BtoS(value),
 	   BtoS(TScreenOf(xw)->status_active)));
 
-    update_status_line(xw, value, -1);
+    if (AllowWindowOps(xw, ewStatusLine))
+	update_status_line(xw, value, -1);
 }
 
 /*
@@ -2905,7 +2906,8 @@ handle_DECSSDT(XtermWidget xw, int value)
 	   value,
 	   TScreenOf(xw)->status_type));
 
-    update_status_line(xw, -1, value);
+    if (AllowWindowOps(xw, ewStatusLine))
+	update_status_line(xw, -1, value);
 }
 
 #else
@@ -7336,7 +7338,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		resetCharsets(screen);
 		InitParams();	/* ignore the remaining params, if any */
 		update_vt52_vt100_settings();
-		RequestResize(xw, -1, 80, True);
+
+		if (AllowWindowOps(xw, ewColumnMode))
+		    RequestResize(xw, -1, 80, True);
 	    }
 #endif
 	    break;
@@ -7356,7 +7360,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif
 		    ClearScreen(xw);
 		}
-		if (willResize)
+		if (AllowWindowOps(xw, ewColumnMode) && willResize)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
 		set_column_mode(xw);
@@ -8188,8 +8192,10 @@ restoremodes(XtermWidget xw)
 		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = (screen->save_modes[DP_DECCOLM] & IN132COLUMNS)
 		     ? 132 : 80) != ((xw->flags & IN132COLUMNS)
-				     ? 132 : 80) || j != MaxCols(screen))
-		    RequestResize(xw, -1, j, True);
+				     ? 132 : 80) || j != MaxCols(screen)) {
+		    if (AllowWindowOps(xw, ewColumnMode))
+			RequestResize(xw, -1, j, True);
+		}
 		bitcpy(&xw->flags,
 		       screen->save_modes[DP_DECCOLM],
 		       IN132COLUMNS);
@@ -10333,6 +10339,8 @@ static const FlagList tblWindowOps[] =
     ,DATA(SetSelection)
     ,DATA(GetChecksum)
     ,DATA(SetChecksum)
+    ,DATA(StatusLine)
+    ,DATA(ColumnMode)
     ,DATA_END
 };
 #undef DATA
@@ -14138,7 +14146,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	screen->paste_literal_nl = OFF;
 #endif /* OPT_READLINE */
 
-	if (screen->c132 && (saveflags & IN132COLUMNS)) {
+	if (screen->c132
+	    && AllowWindowOps(xw, ewColumnMode)
+	    && (saveflags & IN132COLUMNS)) {
 	    TRACE(("Making resize-request to restore 80-columns %dx%d\n",
 		   MaxRows(screen), MaxCols(screen)));
 	    RequestResize(xw, MaxRows(screen), 80, True);
