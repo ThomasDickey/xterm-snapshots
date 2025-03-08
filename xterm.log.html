@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2679 2025/02/06 13:51:41 tom Exp $
+  $XTermId: xterm.log.html,v 1.2680 2025/03/07 00:31:14 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1077,6 +1077,19 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add two extensions to <tt>modifyOtherKeys</tt>:
+      <ul>
+        <li>setting <tt>modifyOtherKeys</tt> to 3 makes all
+        keyboard input send escape sequences, using parameter 1
+        where no modifiers are given.</li>
+
+        <li>a subparameter can be added to the <tt>XTMODKEYS</tt>
+        control sequence, telling xterm to factor-out the
+        corresponding modifier mask from available parameters in
+        the <tt>modifyOtherKeys</tt> feature.</li>
+      </ul>
+    </li>
+
     <li>add items <tt>ColumnMode</tt> and <tt>StatusLine</tt> to
     <tt>disallowWindowOps</tt>, for <tt>DECCOLM</tt>,
     <tt>DECANM</tt> and <tt>DECSASD</tt>, <tt>DECSSDT</tt>

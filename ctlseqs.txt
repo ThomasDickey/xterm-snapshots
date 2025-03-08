@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2024)
-               updated for XTerm Patch #397 (2024/12/08)
+                    invisible-island.net (2006-2025)
+               updated for XTerm Patch #398 (2025/03/07)
 
 
 
@@ -1274,7 +1274,8 @@ CSI > Pp m
             Pp = 4  -> modifyOtherKeys.
 
           If no parameters are given, all resources are reset to their
-          initial values.
+          initial values.  See Alt and Meta Keys for more details on the
+          modifyOtherKeys feature.
 
 CSI ? Pp m
           Query key modifier options (XTQMODKEYS), xterm.
@@ -2235,11 +2236,19 @@ o   When modifyOtherKeys is set to 2, all of the modifiers apply.  For
     example, shift-Tab sends CSI 2 7 ; 2 ; 9 ~ rather than CSI Z (the
     second parameter is "2" for shift).
 
+o   If modifyOtherKeys is set to 3, unmodified keys also are sent as
+    escape sequences.  For example, space sends CSI 2 7 ; 1 ; 3 2 ~
+
 The formatOtherKeys resource tells n  to change the format of the escape
 sequences sent when modifyOtherKeys applies.  When modifyOtherKeys is
 set to 1, for example alt-Tab sends CSI 9 ; 3 u (changing the order of
 parameters).  One drawback to this format is that applications may
 confuse it with CSI u  (restore-cursor).
+
+The modifyOtherKeys control accepts a single subparameter, which is
+interpreted as a mask of modifier bits to factor out of the parameter
+encoding of the escape sequence.  For example CSI > 4 : 1  m factors out
+the shift modifier.
 
 The xterm FAQ sections
 
@@ -3620,44 +3629,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi(1), for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
+    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
     documented long afterwards).
 
-    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
-    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
-    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
+    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
+    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
+    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
     supported by SCO and other vendors.
 
-    The  SCOSC/SCORC pair is considered a private mode because the final
+    The SCOSC/SCORC pair is considered a private mode because the  final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to  octal 0176).  Other private control sequences can be constructed
+    to octal 0176).  Other private control sequences can be  constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals  may  behave differently.  For example, DEC (a contributor
-    to the early xterm as well as a manufacturer of terminals)  used  an
-    incompatible  private control in one of its terminals more than five
+    terminals may behave differently.  For example, DEC  (a  contributor
+    to  the  early xterm as well as a manufacturer of terminals) used an
+    incompatible private control in one of its terminals more than  five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In that model of the VT420, CSI ? Pm ; Pc  r  selects  the  PC  TERM
-    emulation  mode.  When this mode is enabled, the keyboard sends scan
-    codes rather than characters (analogous to X keyboard events).   The
-    first  parameter of this private control enables or disables PC TERM
+    In  that  model  of  the  VT420, CSI ? Pm ; Pc r selects the PC TERM
+    emulation mode.  When this mode is enabled, the keyboard sends  scan
+    codes  rather than characters (analogous to X keyboard events).  The
+    first parameter of this private control enables or disables PC  TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
+    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
     into account when designing the feature.
 
-    If  there  were  potential  users, xterm could accommodate this by a
-    resource setting.  In retrospect (thirty years  later),  there  have
-    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
+    If there were potential users, xterm could  accommodate  this  by  a
+    resource  setting.   In  retrospect (thirty years later), there have
+    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground  and  background  colors  8-15, but does not specify what
-    those colors are.  That is implied by the description's  mention  of
+    foreground and background colors 8-15, but  does  not  specify  what
+    those  colors  are.  That is implied by the description's mention of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3667,7 +3676,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the reader to assume that the mapping is  hard-coded.   The  control
-    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
-    (as done in other instances by xterm) chosen to  not  conflict  with
+    the  reader  to  assume that the mapping is hard-coded.  The control
+    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
+    (as  done  in  other instances by xterm) chosen to not conflict with
     current or future standards.

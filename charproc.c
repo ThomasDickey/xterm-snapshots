@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2065 2025/02/06 12:42:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2068 2025/03/08 13:03:00 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -2354,7 +2354,9 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
     xw->keyboard.modify_now.field = ((what == DEFAULT) && enabled) \
 				     ? xw->keyboard.modify_1st.field \
 				     : what; \
-    TRACE(("set modify_now.%s to %d\n", #field, \
+    TRACE(("%s modify_now.%s to %d\n", \
+	   ((what == DEFAULT) && enabled) ? "reset" : "set", \
+	   #field, \
 	   xw->keyboard.modify_now.field));
 
     switch (which) {
@@ -2372,11 +2374,15 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 	break;
     case 4:
 	SET_MOD_FKEYS(other_keys);
+	SET_MIN_MOD(xw, what);
+	TRACE(("set min_mod to %d\n", xw->work.min_mod));
+	xw->keyboard.modify_mods = 0;
 	break;
     case 5:
 	SET_MOD_FKEYS(string_keys);
 	break;
     }
+#undef SET_MOD_FKEYS
 }
 
 static void
@@ -3365,6 +3371,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		/* these states are required to parse parameter lists */
 		break;
 
+#if OPT_MOD_FKEYS
+	    case CASE_SET_MOD_FKEYS:
+#endif
 	    case CASE_SGR:
 		TRACE(("...possible subparam usage\n"));
 		break;
@@ -3471,7 +3480,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * ECMA-48 5th edition (June 1991) documents CAN thusly:
 	     *
 	     *> CAN is used to indicate that the data preceding it in the data
-	     *> stream is in error.  As a result, this data shall be ignored. 
+	     *> stream is in error.  As a result, this data shall be ignored.
 	     *> The specific meaning of this control function shall be defined
 	     *> for each application and/or between sender and recipient.
 	     *
@@ -3921,7 +3930,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if_OPT_VT52_MODE(screen, {
 		/*
 		 * If xterm's started in VT52 mode, it's not emulating VT52
-		 * within VT100, etc., so the terminal identifies differently. 
+		 * within VT100, etc., so the terminal identifies differently.
 		 */
 		switch (screen->terminal_id) {
 		case 50:
@@ -6137,12 +6146,25 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SET_MOD_FKEYS:
 	    TRACE(("CASE_SET_MOD_FKEYS\n"));
 	    if (nparam >= 1) {
-		set_mod_fkeys(xw,
-			      GetParam(0),
-			      ((nparam > 1)
-			       ? GetParam(1)
-			       : DEFAULT),
-			      True);
+		int first = GetParam(0);
+		int second = ((nparam > 1)
+			      ? GetParam(1)
+			      : DEFAULT);
+		if (first == 4) {
+		    if (parms.has_subparams) {
+			if (subparam_index(0, 0) == 0 &&
+			    subparam_index(1, 0) == 1 &&
+			    subparam_index(1, 1) == 2) {
+			    set_mod_fkeys(xw, first, second, True);
+			    xw->keyboard.modify_mods = parms.params[2];
+			    TRACE(("set modify_mods %d\n", xw->keyboard.modify_mods));
+			}
+		    } else {
+			set_mod_fkeys(xw, first, second, True);
+		    }
+		} else if (!parms.has_subparams) {
+		    set_mod_fkeys(xw, first, second, True);
+		}
 	    } else {
 		for (value = 1; value <= 5; ++value)
 		    set_mod_fkeys(xw, value, DEFAULT, True);
@@ -11686,6 +11708,7 @@ VTInitialize(Widget wrequest,
     init_Ires(keyboard.modify_1st.string_keys);
     init_Ires(keyboard.format_keys);
     wnew->keyboard.modify_now = wnew->keyboard.modify_1st;
+    wnew->keyboard.modify_mods = 0;
 #endif
 
     init_Ires(misc.appcursorDefault);
@@ -14037,6 +14060,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #if OPT_MOD_FKEYS
     /* Reset modifier-resources to initial state */
     xw->keyboard.modify_now = xw->keyboard.modify_1st;
+    xw->keyboard.modify_mods = 0;
 #endif
 #if OPT_DEC_RECTOPS
     screen->checksum_ext = screen->checksum_ext0;

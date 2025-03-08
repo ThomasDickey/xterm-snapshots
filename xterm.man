@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.913 2025/02/06 13:44:53 tom Exp $
+.\" $XTermId: xterm.man,v 1.914 2025/03/08 00:34:29 tom Exp $
 .\"
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
@@ -4536,6 +4536,9 @@ enables this feature for keys including the exceptions listed.
 \fI\*N\fP ignores the special cases built into the X11 library.
 Any shifted (modified) ordinary key sends an escape sequence.
 The Alt- and Meta- modifiers cause \fI\*n\fP to send escape sequences.
+.TP 5
+3
+extends the feature to send unmodified keys as escape sequences.
 .RE
 .IP
 The \fI\*N\fP FAQ has an extended discussion of this feature, with examples:

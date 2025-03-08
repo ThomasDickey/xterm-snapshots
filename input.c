@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.376 2025/02/06 00:48:13 tom Exp $ */
+/* $XTermId: input.c,v 1.379 2025/03/08 12:22:58 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -89,6 +89,12 @@
 #include <xstrings.h>
 #include <xtermcap.h>
 
+#if OPT_NUM_LOCK
+#define AltOrMeta(xw) ((xw)->work.meta_mods | (xw)->work.alt_mods)
+#else
+#define AltOrMeta(xw) 0
+#endif
+
 /*
  * Xutil.h has no macro to check for the complete set of function- and
  * modifier-keys that might be returned.  Fake it.
@@ -109,13 +115,22 @@
 #define IsPrivateKeypadKey(k) (0)
 #endif
 
+#define IsOrdinaryKey(xwidget, key_data) \
+	(!((key_data)->is_fkey \
+	 || IsEditFunctionKey(xwidget, (key_data)->keysym) \
+	 || IsKeypadKey((key_data)->keysym) \
+	 || IsCursorKey((key_data)->keysym) \
+	 || IsPFKey((key_data)->keysym) \
+	 || IsMiscFunctionKey((key_data)->keysym) \
+	 || IsPrivateKeypadKey((key_data)->keysym)))
+
 #define IsBackarrowToggle(keyboard, keysym, state) \
 	((((keyboard->flags & MODE_DECBKM) == 0) \
 	    ^ ((state & ControlMask) != 0)) \
 	&& (keysym == XK_BackSpace))
 
 #define MAP(from, to) case from: result = to; break
-#define Masked(value,mask) ((value) & (unsigned) (~(mask)))
+#define Masked(value,mask) ((unsigned) (value) & (unsigned) (~(mask)))
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
@@ -239,7 +254,7 @@ IsEditFunctionKey(XtermWidget xw, KeySym keysym)
     return result;
 }
 
-#if OPT_MOD_FKEYS
+#if OPT_MOD_FKEYS || OPT_TCAP_FKEYS
 #define IS_CTRL(n) ((n) < ANSI_SPA || ((n) >= 0x7f && (n) <= 0x9f))
 
 /*
@@ -421,7 +436,7 @@ xtermStateToParam(XtermWidget xw, unsigned state)
 	/* UIntClr(state, xw->work.meta_mods); */
     }
     if (modify_parm == MOD_NONE)
-	modify_parm = 0;
+	modify_parm = !xw->work.min_mod;
 #else
     (void) xw;
     (void) state;
@@ -478,20 +493,17 @@ filterAltMeta(unsigned result, unsigned mask, Bool enable, KEY_DATA * kd)
  * interpreting modifyOtherKeys due to pre-existing associations with some
  * modifiers.
  */
-static unsigned
-allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
+static int
+allowedCharModifiers(XtermWidget xw, int state, KEY_DATA * kd)
 {
-#if OPT_NUM_LOCK
-    unsigned a_or_m = (state & (xw->work.meta_mods | xw->work.alt_mods));
-#else
-    unsigned a_or_m = 0;
-#endif
     /*
      * Start by limiting the result to the modifiers we might want to use.
      */
-    unsigned result = (state & (ControlMask
-				| ShiftMask
-				| a_or_m));
+    int result = (state >= 0
+		  ? (int) ((unsigned) state & (ControlMask |
+					       ShiftMask |
+					       AltOrMeta(xw)))
+		  : -1);
 
     /*
      * If modifyOtherKeys is off or medium (0 or 1), moderate its effects by
@@ -502,7 +514,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 	    && Masked(result, ControlMask) == 0) {
 	    /* These keys are already associated with the control-key */
 	    if (xw->keyboard.modify_now.other_keys == 0) {
-		UIntClr(result, ControlMask);
+		SIntClr(result, ControlMask);
 	    }
 	} else if (kd->keysym == XK_Tab || kd->keysym == XK_Return) {
 	    /* EMPTY */ ;
@@ -513,20 +525,39 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 	    }
 	} else if (!IsControlOutput(kd) && !IsPredefinedKey(kd->keysym)) {
 	    /* Printable keys are already associated with the shift-key */
-	    if (!(result & ControlMask)) {
-		UIntClr(result, ShiftMask);
+	    if (!((unsigned) result & ControlMask)) {
+		SIntClr(result, ShiftMask);
 	    }
 	}
 #if OPT_NUM_LOCK
-	result = filterAltMeta(result,
-			       xw->work.meta_mods,
-			       TScreenOf(xw)->meta_sends_esc, kd);
+	result = (int) filterAltMeta((unsigned) result,
+				     xw->work.meta_mods,
+				     TScreenOf(xw)->meta_sends_esc, kd);
 	if (TScreenOf(xw)->alt_is_not_meta) {
-	    result = filterAltMeta(result,
-				   xw->work.alt_mods,
-				   TScreenOf(xw)->alt_sends_esc, kd);
+	    result = (int) filterAltMeta((unsigned) result,
+					 xw->work.alt_mods,
+					 TScreenOf(xw)->alt_sends_esc, kd);
 	}
 #endif
+    }
+    /*
+     * For an ordinary key, if the state has only one modified bit set and if
+     * that is in the modify-modifiers mask, then disable the use of modifiers
+     * for sending the key as an escape sequence.
+     */
+    if (result != 0 &&
+	xw->keyboard.modify_now.other_keys > 0 &&
+	(state & xw->keyboard.modify_mods) != 0 &&
+	IsOrdinaryKey(xw, kd)) {
+	unsigned check = (unsigned) state;
+	while (check != 0) {
+	    if ((check & 1) != 0) {
+		if (check == 1)
+		    result = 0;
+		break;
+	    }
+	    check >>= 1;
+	}
     }
     TRACE(("...allowedCharModifiers(state=%u" FMT_MODIFIER_NAMES
 	   ", ch=" KEYSYM_FMT ") ->"
@@ -542,7 +573,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
  */
 static Bool
 ModifyOtherKeys(XtermWidget xw,
-		unsigned state,
+		int state,
 		KEY_DATA * kd,
 		unsigned modify_parm)
 {
@@ -552,23 +583,17 @@ ModifyOtherKeys(XtermWidget xw,
     /*
      * Exclude the keys already covered by a modifier.
      */
-    if (kd->is_fkey
-	|| IsEditFunctionKey(xw, kd->keysym)
-	|| IsKeypadKey(kd->keysym)
-	|| IsCursorKey(kd->keysym)
-	|| IsPFKey(kd->keysym)
-	|| IsMiscFunctionKey(kd->keysym)
-	|| IsPrivateKeypadKey(kd->keysym)) {
+    if (!IsOrdinaryKey(xw, kd)) {
 	result = False;
-    } else if (modify_parm != 0) {
+    } else if (modify_parm >= (unsigned) xw->work.min_mod) {
 	if (IsBackarrowToggle(keyboard, kd->keysym, state)) {
 	    kd->keysym = XK_Delete;
-	    UIntClr(state, ControlMask);
+	    SIntClr(state, ControlMask);
 	}
 	if (!IsPredefinedKey(kd->keysym)) {
 	    state = allowedCharModifiers(xw, state, kd);
 	}
-	if (state != 0) {
+	if (state >= xw->work.min_mod) {
 	    switch (keyboard->modify_now.other_keys) {
 	    default:
 		break;
@@ -615,7 +640,7 @@ ModifyOtherKeys(XtermWidget xw,
 			result = True;
 		    break;
 		case XK_Delete:
-		    result = (xtermStateToParam(xw, state) != 0);
+		    result = (xtermStateToParam(xw, (unsigned) state) != 0);
 		    break;
 #ifdef XK_ISO_Left_Tab
 		case XK_ISO_Left_Tab:
@@ -638,6 +663,9 @@ ModifyOtherKeys(XtermWidget xw,
 		    }
 		    break;
 		}
+		break;
+	    case 3:
+		result = True;
 		break;
 	    }
 	}
@@ -897,14 +925,35 @@ Input(XtermWidget xw,
     unsigned modify_parm = 0;
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     unsigned evt_state = event->state;
-    unsigned mod_state;
     KEY_DATA kd;
+#if OPT_MOD_FKEYS
+    int mod_state;
+    KEY_DATA kd_unmodified;
+    Boolean use_unmodified = False;
+#endif
 
     /* Ignore characters typed at the keyboard */
     if (keyboard->flags & MODE_KAM)
 	return;
 
     lookupKeyData(&kd, xw, event);
+
+#if OPT_MOD_FKEYS
+    SET_MIN_MOD(xw, keyboard->modify_now.other_keys);
+    kd_unmodified = kd;
+    if (keyboard->modify_now.other_keys >= 1 &&
+	keyboard->modify_mods != 0) {
+	XKeyEvent event2 = *event;
+	event2.state &= (unsigned) ~(keyboard->modify_mods);
+	if (lookupKeyData(&kd_unmodified, xw, &event2)
+	    && kd_unmodified.keysym < 256) {
+	    TRACE(("may use unmodified 0x%04lX vs 0x%04lX\n",
+		   kd_unmodified.keysym,
+		   kd.keysym));
+	    use_unmodified = True;
+	}
+    }
+#endif
 
     memset(&reply, 0, sizeof(reply));
 
@@ -1154,7 +1203,7 @@ Input(XtermWidget xw,
 		 || IsMiscFunctionKey(kd.keysym)
 		 || IsEditFunctionKey(xw, kd.keysym))
 #if OPT_MOD_FKEYS
-		&& !ModifyOtherKeys(xw, evt_state, &kd, modify_parm)
+		&& !ModifyOtherKeys(xw, (int) evt_state, &kd, modify_parm)
 #endif
 	       ) || (kd.keysym == XK_Delete
 		     && ((modify_parm != 0)
@@ -1257,12 +1306,15 @@ Input(XtermWidget xw,
 	}
 #endif
 #if OPT_MOD_FKEYS
+	mod_state = (int) evt_state;
 	if ((keyboard->modify_now.other_keys > 0)
-	    && ModifyOtherKeys(xw, evt_state, &kd, modify_parm)
-	    && (mod_state = allowedCharModifiers(xw, evt_state, &kd)) != 0) {
+	    && ModifyOtherKeys(xw, mod_state, &kd, modify_parm)
+	    && (mod_state = allowedCharModifiers(xw, mod_state, &kd)) >= xw->work.min_mod) {
 	    int input_char;
 
-	    evt_state = mod_state;
+	    if (use_unmodified)
+		kd.keysym = kd_unmodified.keysym;
+	    evt_state = (unsigned) mod_state;
 
 	    modify_parm = xtermStateToParam(xw, evt_state);
 

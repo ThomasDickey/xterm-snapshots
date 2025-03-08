@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1109 2025/02/02 23:30:04 tom Exp $ */
+/* $XTermId: misc.c,v 1.1110 2025/03/08 13:10:17 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1136,7 +1136,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	} else {
 	    xtermWarning("Cannot exec-xterm given \"%s\"\n", ProgramName);
 	}
-	if (child_exe == 0)
+	if (child_exe == NULL)
 	    return;
     }
 
@@ -1159,7 +1159,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
 
-	    if (myargv != 0) {
+	    if (myargv != NULL) {
 		unsigned n = 0;
 
 		myargv[n++] = child_exe;
@@ -1168,7 +1168,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 		    myargv[n++] = (char *) *params++;
 		}
 
-		myargv[n] = 0;
+		myargv[n] = NULL;
 		execv(child_exe, myargv);
 	    }
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1138 2025/02/06 12:37:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1140 2025/03/07 01:03:43 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3297,6 +3297,7 @@ typedef struct
     TModify modify_now;		/* current modifier value */
     TModify modify_1st;		/* original modifier value, for resets */
     int format_keys;		/* format of modifyOtherKeys */
+    int modify_mods;		/* limit modifiers used in modifyOtherKeys */
 #endif
 } TKeyboard;
 
@@ -3398,6 +3399,8 @@ typedef struct _Work {
 	char *str;
 	int len;
     } user_keys[MAX_UDK];
+#define SET_MIN_MOD(xw, value) xw->work.min_mod = (value >= 3) ? 0 : 1
+    int min_mod;		/* zero for modifying control-keys */
 #define MAX_POINTER (XC_num_glyphs/2)
     Cursor pointer_cursors[MAX_POINTER]; /* saved cursors	*/
 #ifndef NO_ACTIVE_ICON

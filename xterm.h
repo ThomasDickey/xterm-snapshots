@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.960 2025/02/03 00:33:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.961 2025/03/08 12:09:05 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1915,6 +1915,7 @@ unsigned visual_width(const IChar * /* str */, Cardinal /* len */);
 
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)
 #define UIntClr(dst,bits) dst = dst & (unsigned) ~(bits)
+#define SIntClr(dst,bits) dst = (int) ((unsigned) dst & (unsigned) ~(bits))
 
 #ifdef __cplusplus
 	}

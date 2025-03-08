@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.932 2025/02/05 23:28:40 tom Exp $ */
+/* $XTermId: main.c,v 1.933 2025/03/08 13:03:19 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
@@ -3141,7 +3141,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #elif defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
-	if (name != 0) {
+	if (name != NULL) {
 	    strcpy(ttydev, name);
 	    result = 0;
 	}
@@ -4376,7 +4376,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 #endif
 	    unlockpt(screen->respond);
 	    TRACE_GET_TTYSIZE(screen->respond, "after unlockpt");
-	    if ((pty_name = ptsname(screen->respond)) == 0) {
+	    if ((pty_name = ptsname(screen->respond)) == NULL) {
 		SysError(ERROR_PTSNAME);
 	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
 		SysError(ERROR_OPPTSNAME);

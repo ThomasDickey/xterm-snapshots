@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.153 2024/12/01 20:21:19 tom Exp $ */
+/* $XTermId: resize.c,v 1.154 2025/03/08 13:21:57 tom Exp $ */
 
 /*
- * Copyright 2003-2023,2024 by Thomas E. Dickey
+ * Copyright 2003-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -445,7 +445,7 @@ main(int argc, char **argv ENVP_ARG)
     }
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
-    if ((env = x_getenv("TERM")) == 0) {
+    if ((env = x_getenv("TERM")) == NULL) {
 	env = x_strdup(DFT_TERMTYPE);
 	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
@@ -587,7 +587,7 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - termcap) + 3;
 	strncpy(newtc, termcap, (size_t) i);
 	sprintf(newtc + i, "%d", cols);
-	if ((ptr = strchr(ptr, ':')) != 0)
+	if ((ptr = strchr(ptr, ':')) != NULL)
 	    strcat(newtc, ptr);
 
 	/* now do lines */
@@ -599,7 +599,7 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - newtc) + 3;
 	strncpy(termcap, newtc, (size_t) i);
 	sprintf(termcap + i, "%d", rows);
-	if ((ptr = strchr(ptr, ':')) != 0)
+	if ((ptr = strchr(ptr, ':')) != NULL)
 	    strcat(termcap, ptr);
     }
 #endif /* USE_TERMCAP */

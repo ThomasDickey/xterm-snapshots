@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.733 2024/12/08 23:28:02 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.735 2025/03/08 00:50:44 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2023,2024 by Thomas E. Dickey
+.\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #397
-.ds RF 2024/12/08
+.ds LF Patch #398
+.ds RF 2025/03/07
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -371,7 +371,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2024)
+invisible-island.net (2006-2025)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1896,6 +1896,8 @@ Values \*3 and \*5 are reserved for keypad-keys and string-keys.
 .iP
 .IP
 If no parameters are given, all resources are reset to their initial values.
+See \fIAlt and Meta Keys\fP for more details on the \fBmodifyOtherKeys\fP
+feature.
 .
 .iP
 .IP \\*(Cs\\*?\\*(Pp\\*s\\*m
@@ -3047,6 +3049,11 @@ For example, \fIshift-Tab\fP sends
 rather than
 \*(Cs\*Z
 (the second parameter is \*(``2\*('' for \fIshift\fP).
+.bP
+If \fB\%modifyOtherKeys\fP is set to 3,
+unmodified keys also are sent as escape sequences.
+For example, \fIspace\fP sends
+\*(Cs\*2\*7\*;\*1\*;\*3\*2\*~
 .LP
 The \fB\%formatOtherKeys\fP resource tells \fI\*n\fP to change the
 format of the escape sequences sent when \fB\%modifyOtherKeys\fP applies.
@@ -3056,6 +3063,12 @@ for example \fIalt-Tab\fP sends
 (changing the order of parameters).
 One drawback to this format is that applications may confuse it with
 \*(Cs\*u (restore-cursor).
+.LP
+The \fB\%modifyOtherKeys\fP control accepts a single subparameter,
+which is interpreted as a mask of modifier bits to factor out of
+the parameter encoding of the escape sequence.
+For example \*(Cs\*>\*4\*:\*1\*s\*m
+factors out the shift modifier.
 .LP
 The \fI\*(xt\fP FAQ sections
 .br
