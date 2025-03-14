@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.379 2025/03/08 12:22:58 tom Exp $ */
+/* $XTermId: input.c,v 1.381 2025/03/14 08:00:10 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -88,6 +88,7 @@
 #include <fontutils.h>
 #include <xstrings.h>
 #include <xtermcap.h>
+#include <keysym2ucs.h>
 
 #if OPT_NUM_LOCK
 #define AltOrMeta(xw) ((xw)->work.meta_mods | (xw)->work.alt_mods)
@@ -1330,6 +1331,18 @@ Input(XtermWidget xw,
 			  : ((kd.nbytes == 1)
 			     ? CharOf(kd.strbuf[0])
 			     : -1));
+	    /*
+	     * If we failed to find an 8-bit (Latin1 or ASCII) value, use the
+	     * UCS value corresponding to the keysym.
+	     */
+	    if ((input_char == -1)) {
+		long codepoint = keysym2ucs(kd.keysym);
+		if (codepoint > 0x7E) {
+		    TRACE(("...using keysym2ucs(%#lx) = U+%04lX\n",
+			   kd.keysym, codepoint));
+		    input_char = (int) codepoint;
+		}
+	    }
 
 	    TRACE(("...modifyOtherKeys %d;%d\n", modify_parm, input_char));
 	    if (modifyOtherKey(&reply, input_char, modify_parm, keyboard->format_keys)) {

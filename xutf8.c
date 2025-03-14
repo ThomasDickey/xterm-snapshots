@@ -1,7 +1,7 @@
-/* $XTermId: xutf8.c,v 1.18 2020/06/23 22:45:51 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.19 2025/03/14 00:34:34 tom Exp $ */
 
 /*
- * Copyright 2002-2019,2020 by Thomas E. Dickey
+ * Copyright 2002-2020,2025 by Thomas E. Dickey
  * Copyright (c) 2001 by Juliusz Chroboczek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,13 +32,11 @@
 #include <X11/Xmu/Xmu.h>
 
 #include <xutf8.h>
+#include <keysym2ucs.h>
 
 #ifndef X_HAVE_UTF8_STRING
 
 #undef XA_UTF8_STRING
-#define KEYSYM2UCS_INCLUDED
-
-#include "keysym2ucs.c"
 
 Atom
 _xa_utf8_string(Display *dpy)

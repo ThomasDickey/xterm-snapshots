@@ -1,4 +1,43 @@
-/* $XTermId: keysym2ucs.c,v 1.19 2018/09/09 17:35:05 tom Exp $
+/* $XTermId: keysym2ucs.c,v 1.21 2025/03/14 08:11:38 tom Exp $
+ * ----------------------------------------------------------------------------
+ * this file is part of xterm
+ *
+ * Copyright 2007-2018,2025 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ * ----------------------------------------------------------------------------
+ * Note:
+ * ----
+ * This file has been updated and revised to provide for mapping all keysyms
+ * to UCS.  The BMP private use area is used for keysyms which do not map to
+ * characters.
+ *
+ * Original header:
+ * ---------------
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
@@ -33,21 +72,13 @@
  * AUTOMATICALLY GENERATED FILE, DO NOT EDIT !!! (unicode/convmap.pl)
  */
 
-#ifndef KEYSYM2UCS_INCLUDED
-
-#include "keysym2ucs.h"
-#define VISIBLE /* */
-
-#else
-
-#define VISIBLE static
-
-#endif
+#include <keysym2ucs.h>
 
 static struct codepair {
-  unsigned short keysym;
-  unsigned short ucs;
+    unsigned short keysym;
+    unsigned short ucs;
 } keysymtab[] = {
+/* *INDENT-OFF* */
   { 0x01a1, 0x0104 }, /*                     Aogonek Ą LATIN CAPITAL LETTER A WITH OGONEK */
   { 0x01a2, 0x02d8 }, /*                       breve ˘ BREVE */
   { 0x01a3, 0x0141 }, /*                     Lstroke Ł LATIN CAPITAL LETTER L WITH STROKE */
@@ -456,13 +487,13 @@ static struct codepair {
   { 0x08ae, 0x23a0 }, /*              botrightparens ⎠ RIGHT PARENTHESIS LOWER HOOK */
   { 0x08af, 0x23a8 }, /*        leftmiddlecurlybrace ⎨ LEFT CURLY BRACKET MIDDLE PIECE */
   { 0x08b0, 0x23ac }, /*       rightmiddlecurlybrace ⎬ RIGHT CURLY BRACKET MIDDLE PIECE */
-/*  0x08b1                          topleftsummation ? ??? */
-/*  0x08b2                          botleftsummation ? ??? */
-/*  0x08b3                 topvertsummationconnector ? ??? */
-/*  0x08b4                 botvertsummationconnector ? ??? */
-/*  0x08b5                         toprightsummation ? ??? */
-/*  0x08b6                         botrightsummation ? ??? */
-/*  0x08b7                      rightmiddlesummation ? ??? */
+/*{ 0x08b1, 0xeeee }, **            topleftsummation ? PUA */
+/*{ 0x08b2, 0xeeef }, **            botleftsummation ? PUA */
+/*{ 0x08b3, 0xeef0 }, **   topvertsummationconnector ? PUA */
+/*{ 0x08b4, 0xeef1 }, **   botvertsummationconnector ? PUA */
+/*{ 0x08b5, 0xeef2 }, **           toprightsummation ? PUA */
+/*{ 0x08b6, 0xeef3 }, **           botrightsummation ? PUA */
+/*{ 0x08b7, 0xeef4 }, **        rightmiddlesummation ? PUA */
   { 0x08bc, 0x2264 }, /*               lessthanequal ≤ LESS-THAN OR EQUAL TO */
   { 0x08bd, 0x2260 }, /*                    notequal ≠ NOT EQUAL TO */
   { 0x08be, 0x2265 }, /*            greaterthanequal ≥ GREATER-THAN OR EQUAL TO */
@@ -836,36 +867,373 @@ static struct codepair {
   { 0x20aa, 0x20aa }, /*               NewSheqelSign ₪ NEW SHEQEL SIGN */
   { 0x20ab, 0x20ab }, /*                    DongSign ₫ DONG SIGN */
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
+/*{ 0xfd01, 0xe301 }, **              3270_Duplicate ? PUA */
+/*{ 0xfd02, 0xe302 }, **              3270_FieldMark ? PUA */
+/*{ 0xfd03, 0xe303 }, **                 3270_Right2 ? PUA */
+/*{ 0xfd04, 0xe304 }, **                  3270_Left2 ? PUA */
+/*{ 0xfd05, 0xe305 }, **                3270_BackTab ? PUA */
+/*{ 0xfd06, 0xe306 }, **               3270_EraseEOF ? PUA */
+/*{ 0xfd07, 0xe307 }, **             3270_EraseInput ? PUA */
+/*{ 0xfd08, 0xe308 }, **                  3270_Reset ? PUA */
+/*{ 0xfd09, 0xe309 }, **                   3270_Quit ? PUA */
+/*{ 0xfd0a, 0xe30a }, **                    3270_PA1 ? PUA */
+/*{ 0xfd0b, 0xe30b }, **                    3270_PA2 ? PUA */
+/*{ 0xfd0c, 0xe30c }, **                    3270_PA3 ? PUA */
+/*{ 0xfd0d, 0xe30d }, **                   3270_Test ? PUA */
+/*{ 0xfd0e, 0xe30e }, **                   3270_Attn ? PUA */
+/*{ 0xfd0f, 0xe30f }, **            3270_CursorBlink ? PUA */
+/*{ 0xfd10, 0xe310 }, **              3270_AltCursor ? PUA */
+/*{ 0xfd11, 0xe311 }, **               3270_KeyClick ? PUA */
+/*{ 0xfd12, 0xe312 }, **                   3270_Jump ? PUA */
+/*{ 0xfd13, 0xe313 }, **                  3270_Ident ? PUA */
+/*{ 0xfd14, 0xe314 }, **                   3270_Rule ? PUA */
+/*{ 0xfd15, 0xe315 }, **                   3270_Copy ? PUA */
+/*{ 0xfd16, 0xe316 }, **                   3270_Play ? PUA */
+/*{ 0xfd17, 0xe317 }, **                  3270_Setup ? PUA */
+/*{ 0xfd18, 0xe318 }, **                 3270_Record ? PUA */
+/*{ 0xfd19, 0xe319 }, **           3270_ChangeScreen ? PUA */
+/*{ 0xfd1a, 0xe31a }, **             3270_DeleteWord ? PUA */
+/*{ 0xfd1b, 0xe31b }, **               3270_ExSelect ? PUA */
+/*{ 0xfd1c, 0xe31c }, **           3270_CursorSelect ? PUA */
+/*{ 0xfd1d, 0xe31d }, **            3270_PrintScreen ? PUA */
+/*{ 0xfd1e, 0xe31e }, **                  3270_Enter ? PUA */
+/*{ 0xfe01, 0xe401 }, **                    ISO_Lock ? PUA */
+/*{ 0xfe02, 0xe402 }, **            ISO_Level2_Latch ? PUA */
+/*{ 0xfe03, 0xe403 }, **            ISO_Level3_Shift ? PUA */
+/*{ 0xfe04, 0xe404 }, **            ISO_Level3_Latch ? PUA */
+/*{ 0xfe05, 0xe405 }, **             ISO_Level3_Lock ? PUA */
+/*{ 0xfe06, 0xe406 }, **             ISO_Group_Latch ? PUA */
+/*{ 0xfe07, 0xe407 }, **              ISO_Group_Lock ? PUA */
+/*{ 0xfe08, 0xe408 }, **              ISO_Next_Group ? PUA */
+/*{ 0xfe09, 0xe409 }, **         ISO_Next_Group_Lock ? PUA */
+/*{ 0xfe0a, 0xe40a }, **              ISO_Prev_Group ? PUA */
+/*{ 0xfe0b, 0xe40b }, **         ISO_Prev_Group_Lock ? PUA */
+/*{ 0xfe0c, 0xe40c }, **             ISO_First_Group ? PUA */
+/*{ 0xfe0d, 0xe40d }, **        ISO_First_Group_Lock ? PUA */
+/*{ 0xfe0e, 0xe40e }, **              ISO_Last_Group ? PUA */
+/*{ 0xfe0f, 0xe40f }, **         ISO_Last_Group_Lock ? PUA */
+/*{ 0xfe11, 0xe411 }, **            ISO_Level5_Shift ? PUA */
+/*{ 0xfe12, 0xe412 }, **            ISO_Level5_Latch ? PUA */
+/*{ 0xfe13, 0xe413 }, **             ISO_Level5_Lock ? PUA */
+/*{ 0xfe20, 0xe420 }, **                ISO_Left_Tab ? PUA */
+/*{ 0xfe21, 0xe421 }, **            ISO_Move_Line_Up ? PUA */
+/*{ 0xfe22, 0xe422 }, **          ISO_Move_Line_Down ? PUA */
+/*{ 0xfe23, 0xe423 }, **         ISO_Partial_Line_Up ? PUA */
+/*{ 0xfe24, 0xe424 }, **       ISO_Partial_Line_Down ? PUA */
+/*{ 0xfe25, 0xe425 }, **      ISO_Partial_Space_Left ? PUA */
+/*{ 0xfe26, 0xe426 }, **     ISO_Partial_Space_Right ? PUA */
+/*{ 0xfe27, 0xe427 }, **         ISO_Set_Margin_Left ? PUA */
+/*{ 0xfe28, 0xe428 }, **        ISO_Set_Margin_Right ? PUA */
+/*{ 0xfe29, 0xe429 }, **     ISO_Release_Margin_Left ? PUA */
+/*{ 0xfe2a, 0xe42a }, **    ISO_Release_Margin_Right ? PUA */
+/*{ 0xfe2b, 0xe42b }, **    ISO_Release_Both_Margins ? PUA */
+/*{ 0xfe2c, 0xe42c }, **        ISO_Fast_Cursor_Left ? PUA */
+/*{ 0xfe2d, 0xe42d }, **       ISO_Fast_Cursor_Right ? PUA */
+/*{ 0xfe2e, 0xe42e }, **          ISO_Fast_Cursor_Up ? PUA */
+/*{ 0xfe2f, 0xe42f }, **        ISO_Fast_Cursor_Down ? PUA */
+/*{ 0xfe30, 0xe430 }, **    ISO_Continuous_Underline ? PUA */
+/*{ 0xfe31, 0xe431 }, ** ISO_Discontinuous_Underline ? PUA */
+/*{ 0xfe32, 0xe432 }, **               ISO_Emphasize ? PUA */
+/*{ 0xfe33, 0xe433 }, **           ISO_Center_Object ? PUA */
+/*{ 0xfe34, 0xe434 }, **                   ISO_Enter ? PUA */
+  { 0xfe50, 0x0300 }, /*                  dead_grave ̀ COMBINING GRAVE ACCENT */
+  { 0xfe51, 0x0301 }, /*                  dead_acute ́ COMBINING ACUTE ACCENT */
+  { 0xfe52, 0x0302 }, /*             dead_circumflex ̂ COMBINING CIRCUMFLEX ACCENT */
+  { 0xfe53, 0x0303 }, /*            dead_perispomeni ̃ COMBINING TILDE */
+  { 0xfe54, 0x0304 }, /*                 dead_macron ̄ COMBINING MACRON */
+  { 0xfe55, 0x0306 }, /*                  dead_breve ̆ COMBINING BREVE */
+  { 0xfe56, 0x0307 }, /*               dead_abovedot ̇ COMBINING DOT ABOVE */
+  { 0xfe57, 0x0308 }, /*              dead_diaeresis ̈ COMBINING DIAERESIS */
+  { 0xfe58, 0x030a }, /*              dead_abovering ̊ COMBINING RING ABOVE */
+  { 0xfe59, 0x030b }, /*            dead_doubleacute ̋ COMBINING DOUBLE ACUTE ACCENT */
+  { 0xfe5a, 0x030c }, /*                  dead_caron ̌ COMBINING CARON */
+  { 0xfe5b, 0x0327 }, /*                dead_cedilla ̧ COMBINING CEDILLA */
+  { 0xfe5c, 0x0328 }, /*                 dead_ogonek ̨ COMBINING OGONEK */
+  { 0xfe5d, 0x0345 }, /*                   dead_iota ͅ COMBINING GREEK YPOGEGRAMMENI */
+  { 0xfe5e, 0x3099 }, /*           dead_voiced_sound ゙ COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK */
+  { 0xfe5f, 0x309a }, /*       dead_semivoiced_sound ゚ COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK */
+/*{ 0xfe60, 0xe460 }, **               dead_belowdot ? PUA */
+/*{ 0xfe61, 0xe461 }, **                   dead_hook ? PUA */
+/*{ 0xfe62, 0xe462 }, **                   dead_horn ? PUA */
+/*{ 0xfe63, 0xe463 }, **                 dead_stroke ? PUA */
+/*{ 0xfe64, 0xe464 }, **                  dead_psili ? PUA */
+/*{ 0xfe65, 0xe465 }, **                  dead_dasia ? PUA */
+/*{ 0xfe66, 0xe466 }, **            dead_doublegrave ? PUA */
+/*{ 0xfe67, 0xe467 }, **              dead_belowring ? PUA */
+/*{ 0xfe68, 0xe468 }, **            dead_belowmacron ? PUA */
+/*{ 0xfe69, 0xe469 }, **        dead_belowcircumflex ? PUA */
+/*{ 0xfe6a, 0xe46a }, **             dead_belowtilde ? PUA */
+/*{ 0xfe6b, 0xe46b }, **             dead_belowbreve ? PUA */
+/*{ 0xfe6c, 0xe46c }, **         dead_belowdiaeresis ? PUA */
+/*{ 0xfe6d, 0xe46d }, **          dead_invertedbreve ? PUA */
+/*{ 0xfe6e, 0xe46e }, **             dead_belowcomma ? PUA */
+/*{ 0xfe6f, 0xe46f }, **               dead_currency ? PUA */
+/*{ 0xfe70, 0xe470 }, **              AccessX_Enable ? PUA */
+/*{ 0xfe71, 0xe471 }, **     AccessX_Feedback_Enable ? PUA */
+/*{ 0xfe72, 0xe472 }, **           RepeatKeys_Enable ? PUA */
+/*{ 0xfe73, 0xe473 }, **             SlowKeys_Enable ? PUA */
+/*{ 0xfe74, 0xe474 }, **           BounceKeys_Enable ? PUA */
+/*{ 0xfe75, 0xe475 }, **           StickyKeys_Enable ? PUA */
+/*{ 0xfe76, 0xe476 }, **            MouseKeys_Enable ? PUA */
+/*{ 0xfe77, 0xe477 }, **      MouseKeys_Accel_Enable ? PUA */
+/*{ 0xfe78, 0xe478 }, **             Overlay1_Enable ? PUA */
+/*{ 0xfe79, 0xe479 }, **             Overlay2_Enable ? PUA */
+/*{ 0xfe7a, 0xe47a }, **          AudibleBell_Enable ? PUA */
+/*{ 0xfe80, 0xe480 }, **                      dead_a ? PUA */
+/*{ 0xfe81, 0xe481 }, **                      dead_A ? PUA */
+/*{ 0xfe82, 0xe482 }, **                      dead_e ? PUA */
+/*{ 0xfe83, 0xe483 }, **                      dead_E ? PUA */
+/*{ 0xfe84, 0xe484 }, **                      dead_i ? PUA */
+/*{ 0xfe85, 0xe485 }, **                      dead_I ? PUA */
+/*{ 0xfe86, 0xe486 }, **                      dead_o ? PUA */
+/*{ 0xfe87, 0xe487 }, **                      dead_O ? PUA */
+/*{ 0xfe88, 0xe488 }, **                      dead_u ? PUA */
+/*{ 0xfe89, 0xe489 }, **                      dead_U ? PUA */
+/*{ 0xfe8a, 0xe48a }, **            dead_small_schwa ? PUA */
+/*{ 0xfe8b, 0xe48b }, **          dead_capital_schwa ? PUA */
+/*{ 0xfe8c, 0xe48c }, **                  dead_greek ? PUA */
+/*{ 0xfe90, 0xe490 }, **                dead_lowline ? PUA */
+/*{ 0xfe91, 0xe491 }, **      dead_aboveverticalline ? PUA */
+/*{ 0xfe92, 0xe492 }, **      dead_belowverticalline ? PUA */
+/*{ 0xfe93, 0xe493 }, **     dead_longsolidusoverlay ? PUA */
+/*{ 0xfea0, 0xe4a0 }, **                          ch ? PUA */
+/*{ 0xfea1, 0xe4a1 }, **                          Ch ? PUA */
+/*{ 0xfea2, 0xe4a2 }, **                          CH ? PUA */
+/*{ 0xfea3, 0xe4a3 }, **                         c_h ? PUA */
+/*{ 0xfea4, 0xe4a4 }, **                         C_h ? PUA */
+/*{ 0xfea5, 0xe4a5 }, **                         C_H ? PUA */
+/*{ 0xfed0, 0xe4d0 }, **        First_Virtual_Screen ? PUA */
+/*{ 0xfed1, 0xe4d1 }, **         Prev_Virtual_Screen ? PUA */
+/*{ 0xfed2, 0xe4d2 }, **         Next_Virtual_Screen ? PUA */
+/*{ 0xfed4, 0xe4d4 }, **         Last_Virtual_Screen ? PUA */
+/*{ 0xfed5, 0xe4d5 }, **            Terminate_Server ? PUA */
+/*{ 0xfee0, 0xe4e0 }, **                Pointer_Left ? PUA */
+/*{ 0xfee1, 0xe4e1 }, **               Pointer_Right ? PUA */
+/*{ 0xfee2, 0xe4e2 }, **                  Pointer_Up ? PUA */
+/*{ 0xfee3, 0xe4e3 }, **                Pointer_Down ? PUA */
+/*{ 0xfee4, 0xe4e4 }, **              Pointer_UpLeft ? PUA */
+/*{ 0xfee5, 0xe4e5 }, **             Pointer_UpRight ? PUA */
+/*{ 0xfee6, 0xe4e6 }, **            Pointer_DownLeft ? PUA */
+/*{ 0xfee7, 0xe4e7 }, **           Pointer_DownRight ? PUA */
+/*{ 0xfee8, 0xe4e8 }, **         Pointer_Button_Dflt ? PUA */
+/*{ 0xfee9, 0xe4e9 }, **             Pointer_Button1 ? PUA */
+/*{ 0xfeea, 0xe4ea }, **             Pointer_Button2 ? PUA */
+/*{ 0xfeeb, 0xe4eb }, **             Pointer_Button3 ? PUA */
+/*{ 0xfeec, 0xe4ec }, **             Pointer_Button4 ? PUA */
+/*{ 0xfeed, 0xe4ed }, **             Pointer_Button5 ? PUA */
+/*{ 0xfeee, 0xe4ee }, **       Pointer_DblClick_Dflt ? PUA */
+/*{ 0xfeef, 0xe4ef }, **           Pointer_DblClick1 ? PUA */
+/*{ 0xfef0, 0xe4f0 }, **           Pointer_DblClick2 ? PUA */
+/*{ 0xfef1, 0xe4f1 }, **           Pointer_DblClick3 ? PUA */
+/*{ 0xfef2, 0xe4f2 }, **           Pointer_DblClick4 ? PUA */
+/*{ 0xfef3, 0xe4f3 }, **           Pointer_DblClick5 ? PUA */
+/*{ 0xfef4, 0xe4f4 }, **           Pointer_Drag_Dflt ? PUA */
+/*{ 0xfef5, 0xe4f5 }, **               Pointer_Drag1 ? PUA */
+/*{ 0xfef6, 0xe4f6 }, **               Pointer_Drag2 ? PUA */
+/*{ 0xfef7, 0xe4f7 }, **               Pointer_Drag3 ? PUA */
+/*{ 0xfef8, 0xe4f8 }, **               Pointer_Drag4 ? PUA */
+/*{ 0xfef9, 0xe4f9 }, **          Pointer_EnableKeys ? PUA */
+/*{ 0xfefa, 0xe4fa }, **          Pointer_Accelerate ? PUA */
+/*{ 0xfefb, 0xe4fb }, **         Pointer_DfltBtnNext ? PUA */
+/*{ 0xfefc, 0xe4fc }, **         Pointer_DfltBtnPrev ? PUA */
+/*{ 0xfefd, 0xe4fd }, **               Pointer_Drag5 ? PUA */
+  { 0xff08, 0x0008 }, /*                   BackSpace ^H <control> */
+  { 0xff09, 0x0009 }, /*                         Tab ^I <control> */
+  { 0xff0a, 0x000a }, /*                    Linefeed ^J <control> */
+  { 0xff0b, 0x000b }, /*                       Clear ^K <control> */
+  { 0xff0d, 0x000d }, /*                      Return ^M <control> */
+  { 0xff13, 0x0013 }, /*                       Pause ^S <control> */
+  { 0xff14, 0x0014 }, /*                 Scroll_Lock ^T <control> */
+  { 0xff15, 0x0015 }, /*                     Sys_Req ^U <control> */
+  { 0xff1b, 0x001b }, /*                      Escape ^[ <control> */
+/*{ 0xff20, 0xe520 }, **                   Multi_key ? PUA Multi-key character compose  */
+/*{ 0xff21, 0xe521 }, **                       Kanji ? PUA Kanji, Kanji convert  */
+/*{ 0xff22, 0xe522 }, **                    Muhenkan ? PUA Cancel Conversion  */
+/*{ 0xff23, 0xe523 }, **                      Henkan ? PUA Start/Stop Conversion  */
+/*{ 0xff24, 0xe524 }, **                      Romaji ? PUA to Romaji  */
+/*{ 0xff25, 0xe525 }, **                    Hiragana ? PUA to Hiragana  */
+/*{ 0xff26, 0xe526 }, **                    Katakana ? PUA to Katakana  */
+/*{ 0xff27, 0xe527 }, **           Hiragana_Katakana ? PUA Hiragana/Katakana toggle  */
+/*{ 0xff28, 0xe528 }, **                     Zenkaku ? PUA to Zenkaku  */
+/*{ 0xff29, 0xe529 }, **                     Hankaku ? PUA to Hankaku  */
+/*{ 0xff2a, 0xe52a }, **             Zenkaku_Hankaku ? PUA Zenkaku/Hankaku toggle  */
+/*{ 0xff2b, 0xe52b }, **                     Touroku ? PUA Add to Dictionary  */
+/*{ 0xff2c, 0xe52c }, **                      Massyo ? PUA Delete from Dictionary  */
+/*{ 0xff2d, 0xe52d }, **                   Kana_Lock ? PUA Kana Lock  */
+/*{ 0xff2e, 0xe52e }, **                  Kana_Shift ? PUA Kana Shift  */
+/*{ 0xff2f, 0xe52f }, **                  Eisu_Shift ? PUA Alphanumeric Shift  */
+/*{ 0xff30, 0xe530 }, **                 Eisu_toggle ? PUA Alphanumeric toggle  */
+/*{ 0xff31, 0xe531 }, **                      Hangul ? PUA Hangul start/stoptoggle  */
+/*{ 0xff32, 0xe532 }, **                Hangul_Start ? PUA Hangul start  */
+/*{ 0xff33, 0xe533 }, **                  Hangul_End ? PUA Hangul end, English start  */
+/*{ 0xff34, 0xe534 }, **                Hangul_Hanja ? PUA Start Hangul->Hanja Conversion  */
+/*{ 0xff35, 0xe535 }, **                 Hangul_Jamo ? PUA Hangul Jamo mode  */
+/*{ 0xff36, 0xe536 }, **               Hangul_Romaja ? PUA Hangul Romaja mode  */
+/*{ 0xff37, 0xe537 }, **            Hangul_Codeinput ? PUA */
+/*{ 0xff38, 0xe538 }, **               Hangul_Jeonja ? PUA Jeonja mode  */
+/*{ 0xff39, 0xe539 }, **                Hangul_Banja ? PUA Banja mode  */
+/*{ 0xff3a, 0xe53a }, **             Hangul_PreHanja ? PUA Pre Hanja conversion  */
+/*{ 0xff3b, 0xe53b }, **            Hangul_PostHanja ? PUA Post Hanja conversion  */
+/*{ 0xff3c, 0xe53c }, **      Hangul_SingleCandidate ? PUA */
+/*{ 0xff3d, 0xe53d }, **    Hangul_MultipleCandidate ? PUA */
+/*{ 0xff3e, 0xe53e }, **    Hangul_PreviousCandidate ? PUA */
+/*{ 0xff3f, 0xe53f }, **              Hangul_Special ? PUA Special symbols  */
+/*{ 0xff50, 0xe550 }, **                        Home ? PUA */
+/*{ 0xff51, 0xe551 }, **                        Left ? PUA Move left, left arrow  */
+/*{ 0xff52, 0xe552 }, **                          Up ? PUA Move up, up arrow  */
+/*{ 0xff53, 0xe553 }, **                       Right ? PUA Move right, right arrow  */
+/*{ 0xff54, 0xe554 }, **                        Down ? PUA Move down, down arrow  */
+/*{ 0xff55, 0xe555 }, **                     Page_Up ? PUA Prior, previous  */
+/*{ 0xff56, 0xe556 }, **                   Page_Down ? PUA Next  */
+/*{ 0xff57, 0xe557 }, **                         End ? PUA EOL  */
+/*{ 0xff58, 0xe558 }, **                       Begin ? PUA BOL  */
+/*{ 0xff60, 0xe560 }, **                      Select ? PUA Select, mark  */
+/*{ 0xff61, 0xe561 }, **                       Print ? PUA */
+/*{ 0xff62, 0xe562 }, **                     Execute ? PUA Execute, run, do  */
+/*{ 0xff63, 0xe563 }, **                      Insert ? PUA Insert, insert here  */
+/*{ 0xff65, 0xe565 }, **                        Undo ? PUA */
+/*{ 0xff66, 0xe566 }, **                        Redo ? PUA Redo, again  */
+/*{ 0xff67, 0xe567 }, **                        Menu ? PUA */
+/*{ 0xff68, 0xe568 }, **                        Find ? PUA Find, search  */
+/*{ 0xff69, 0xe569 }, **                      Cancel ? PUA Cancel, stop, abort, exit  */
+/*{ 0xff6a, 0xe56a }, **                        Help ? PUA Help  */
+/*{ 0xff6b, 0xe56b }, **                       Break ? PUA */
+/*{ 0xff7e, 0xe57e }, **               Hangul_switch ? PUA Character set switch  */
+/*{ 0xff7f, 0xe57f }, **                    Num_Lock ? PUA */
+  { 0xff80, 0x0032 }, /*                    KP_Space 2 DIGIT TWO */
+  { 0xff89, 0x0009 }, /*                      KP_Tab ^I <control> */
+  { 0xff8d, 0x000d }, /*                    KP_Enter ^M <control> */
+/*{ 0xff91, 0xe591 }, **                       KP_F1 ? PUA PF1, KP_A, ...  */
+/*{ 0xff92, 0xe592 }, **                       KP_F2 ? PUA */
+/*{ 0xff93, 0xe593 }, **                       KP_F3 ? PUA */
+/*{ 0xff94, 0xe594 }, **                       KP_F4 ? PUA */
+/*{ 0xff95, 0xe595 }, **                     KP_Home ? PUA */
+/*{ 0xff96, 0xe596 }, **                     KP_Left ? PUA */
+/*{ 0xff97, 0xe597 }, **                       KP_Up ? PUA */
+/*{ 0xff98, 0xe598 }, **                    KP_Right ? PUA */
+/*{ 0xff99, 0xe599 }, **                     KP_Down ? PUA */
+/*{ 0xff9a, 0xe59a }, **                  KP_Page_Up ? PUA */
+/*{ 0xff9b, 0xe59b }, **                KP_Page_Down ? PUA */
+/*{ 0xff9c, 0xe59c }, **                      KP_End ? PUA */
+/*{ 0xff9d, 0xe59d }, **                    KP_Begin ? PUA */
+/*{ 0xff9e, 0xe59e }, **                   KP_Insert ? PUA */
+/*{ 0xff9f, 0xe59f }, **                   KP_Delete ? PUA */
+  { 0xffaa, 0x002a }, /*                 KP_Multiply * ASTERISK */
+  { 0xffab, 0x002b }, /*                      KP_Add + PLUS SIGN */
+  { 0xffac, 0x002c }, /*                KP_Separator , COMMA */
+  { 0xffad, 0x002d }, /*                 KP_Subtract - HYPHEN-MINUS */
+  { 0xffae, 0x002e }, /*                  KP_Decimal . FULL STOP */
+  { 0xffaf, 0x002f }, /*                   KP_Divide / SOLIDUS */
+  { 0xffb0, 0x0030 }, /*                        KP_0 0 DIGIT ZERO */
+  { 0xffb1, 0x0031 }, /*                        KP_1 1 DIGIT ONE */
+  { 0xffb2, 0x0032 }, /*                        KP_2 2 DIGIT TWO */
+  { 0xffb3, 0x0033 }, /*                        KP_3 3 DIGIT THREE */
+  { 0xffb4, 0x0034 }, /*                        KP_4 4 DIGIT FOUR */
+  { 0xffb5, 0x0035 }, /*                        KP_5 5 DIGIT FIVE */
+  { 0xffb6, 0x0036 }, /*                        KP_6 6 DIGIT SIX */
+  { 0xffb7, 0x0037 }, /*                        KP_7 7 DIGIT SEVEN */
+  { 0xffb8, 0x0038 }, /*                        KP_8 8 DIGIT EIGHT */
+  { 0xffb9, 0x0039 }, /*                        KP_9 9 DIGIT NINE */
+  { 0xffbd, 0x003d }, /*                    KP_Equal = EQUALS SIGN */
+/*{ 0xffbe, 0xe5be }, **                          F1 ? PUA */
+/*{ 0xffbf, 0xe5bf }, **                          F2 ? PUA */
+/*{ 0xffc0, 0xe5c0 }, **                          F3 ? PUA */
+/*{ 0xffc1, 0xe5c1 }, **                          F4 ? PUA */
+/*{ 0xffc2, 0xe5c2 }, **                          F5 ? PUA */
+/*{ 0xffc3, 0xe5c3 }, **                          F6 ? PUA */
+/*{ 0xffc4, 0xe5c4 }, **                          F7 ? PUA */
+/*{ 0xffc5, 0xe5c5 }, **                          F8 ? PUA */
+/*{ 0xffc6, 0xe5c6 }, **                          F9 ? PUA */
+/*{ 0xffc7, 0xe5c7 }, **                         F10 ? PUA */
+/*{ 0xffc8, 0xe5c8 }, **                          L1 ? PUA */
+/*{ 0xffc9, 0xe5c9 }, **                          L2 ? PUA */
+/*{ 0xffca, 0xe5ca }, **                          L3 ? PUA */
+/*{ 0xffcb, 0xe5cb }, **                          L4 ? PUA */
+/*{ 0xffcc, 0xe5cc }, **                          L5 ? PUA */
+/*{ 0xffcd, 0xe5cd }, **                          L6 ? PUA */
+/*{ 0xffce, 0xe5ce }, **                          L7 ? PUA */
+/*{ 0xffcf, 0xe5cf }, **                          L8 ? PUA */
+/*{ 0xffd0, 0xe5d0 }, **                          L9 ? PUA */
+/*{ 0xffd1, 0xe5d1 }, **                         L10 ? PUA */
+/*{ 0xffd2, 0xe5d2 }, **                          R1 ? PUA */
+/*{ 0xffd3, 0xe5d3 }, **                          R2 ? PUA */
+/*{ 0xffd4, 0xe5d4 }, **                          R3 ? PUA */
+/*{ 0xffd5, 0xe5d5 }, **                          R4 ? PUA */
+/*{ 0xffd6, 0xe5d6 }, **                          R5 ? PUA */
+/*{ 0xffd7, 0xe5d7 }, **                          R6 ? PUA */
+/*{ 0xffd8, 0xe5d8 }, **                          R7 ? PUA */
+/*{ 0xffd9, 0xe5d9 }, **                          R8 ? PUA */
+/*{ 0xffda, 0xe5da }, **                          R9 ? PUA */
+/*{ 0xffdb, 0xe5db }, **                         R10 ? PUA */
+/*{ 0xffdc, 0xe5dc }, **                         R11 ? PUA */
+/*{ 0xffdd, 0xe5dd }, **                         R12 ? PUA */
+/*{ 0xffde, 0xe5de }, **                         R13 ? PUA */
+/*{ 0xffdf, 0xe5df }, **                         R14 ? PUA */
+/*{ 0xffe0, 0xe5e0 }, **                         R15 ? PUA */
+/*{ 0xffe1, 0xe5e1 }, **                     Shift_L ? PUA Left shift  */
+/*{ 0xffe2, 0xe5e2 }, **                     Shift_R ? PUA Right shift  */
+/*{ 0xffe3, 0xe5e3 }, **                   Control_L ? PUA Left control  */
+/*{ 0xffe4, 0xe5e4 }, **                   Control_R ? PUA Right control  */
+/*{ 0xffe5, 0xe5e5 }, **                   Caps_Lock ? PUA Caps lock  */
+/*{ 0xffe6, 0xe5e6 }, **                  Shift_Lock ? PUA Shift lock  */
+/*{ 0xffe7, 0xe5e7 }, **                      Meta_L ? PUA Left meta  */
+/*{ 0xffe8, 0xe5e8 }, **                      Meta_R ? PUA Right meta  */
+/*{ 0xffe9, 0xe5e9 }, **                       Alt_L ? PUA Left alt  */
+/*{ 0xffea, 0xe5ea }, **                       Alt_R ? PUA Right alt  */
+/*{ 0xffeb, 0xe5eb }, **                     Super_L ? PUA Left super  */
+/*{ 0xffec, 0xe5ec }, **                     Super_R ? PUA Right super  */
+/*{ 0xffed, 0xe5ed }, **                     Hyper_L ? PUA Left hyper  */
+/*{ 0xffee, 0xe5ee }, **                     Hyper_R ? PUA Right hyper  */
+/*{ 0xfff1, 0xe5f1 }, **               braille_dot_1 ? PUA */
+/*{ 0xfff2, 0xe5f2 }, **               braille_dot_2 ? PUA */
+/*{ 0xfff3, 0xe5f3 }, **               braille_dot_3 ? PUA */
+/*{ 0xfff4, 0xe5f4 }, **               braille_dot_4 ? PUA */
+/*{ 0xfff5, 0xe5f5 }, **               braille_dot_5 ? PUA */
+/*{ 0xfff6, 0xe5f6 }, **               braille_dot_6 ? PUA */
+/*{ 0xfff7, 0xe5f7 }, **               braille_dot_7 ? PUA */
+/*{ 0xfff8, 0xe5f8 }, **               braille_dot_8 ? PUA */
+/*{ 0xfff9, 0xe5f9 }, **               braille_dot_9 ? PUA */
+/*{ 0xfffa, 0xe5fa }, **              braille_dot_10 ? PUA */
+/*{ 0xffff, 0xffff }, **                      Delete ? PUA Delete, rubout  */
+/* *INDENT-ON* */
 };
 
-VISIBLE
-long keysym2ucs(KeySym keysym)
+long
+keysym2ucs(KeySym keysym)
 {
+    long result = -1;		/* no matching Unicode value found */
     int min = 0;
     int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
 
-    /* first check for Latin-1 characters (1:1 mapping) */
     if ((keysym >= 0x0020 && keysym <= 0x007e) ||
-        (keysym >= 0x00a0 && keysym <= 0x00ff))
-        return (long) keysym;
-
-    /* also check for directly encoded 24-bit UCS characters */
-    if ((keysym & 0xff000000) == 0x01000000)
-        return (long) (keysym & 0x00ffffff);
-
-    /* binary search in table */
-    while (max >= min) {
-        int mid = (min + max) / 2;
-        if (keysymtab[mid].keysym < keysym)
-            min = mid + 1;
-        else if (keysymtab[mid].keysym > keysym)
-            max = mid - 1;
-        else {
-            /* found it */
-            return keysymtab[mid].ucs;
-        }
+	(keysym >= 0x00a0 && keysym <= 0x00ff)) {
+	/* found Latin-1 characters (1:1 mapping) */
+	result = (long) keysym;
+    } else if ((keysym & 0xff000000) == 0x01000000) {
+	/* found directly encoded 24-bit UCS characters */
+	result = (long) (keysym & 0x00ffffff);
+    } else if (keysym >= 0x08b0 && keysym <= 0x08b7) {
+	result = (long) keysym - 0x8b1 + 0xeeee;
+    } else {
+	/* binary search in table */
+	while (max >= min) {
+	    int mid = (min + max) / 2;
+	    if (keysymtab[mid].keysym < keysym) {
+		min = mid + 1;
+	    } else if (keysymtab[mid].keysym > keysym) {
+		max = mid - 1;
+	    } else {
+		/* found it in table */
+		result = keysymtab[mid].ucs;
+		break;
+	    }
+	}
+	if (result == -1) {
+	    if (keysym >= 0xfd01 && keysym <= 0xffff) {
+		result = (long) keysym - 0xfa00 + 0xe000;
+	    }
+	}
     }
 
-    /* no matching Unicode value found */
-    return -1;
+    return result;
 }
