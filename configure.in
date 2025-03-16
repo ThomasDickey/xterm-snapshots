@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.403 2025/01/03 01:02:13 tom Exp $
+dnl $XTermId: configure.in,v 1.404 2025/03/16 09:59:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -551,11 +551,10 @@ AC_MSG_RESULT($enable_blink_curs)
 test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0,[Define to 0 to disable support for blinking cursor])
 
 AC_MSG_CHECKING(if you want support for block-selection)
-CF_ARG_OPTION(block-select,
+CF_ARG_ENABLE(block-select,
 	[  --enable-block-select   meta-button1 begins block-selection],
-	[enable_block_select=$enableval],
-	[enable_block_select=$enableval],
-	[$assume_broken_osc])
+	[enable_block_select=yes],
+	[enable_block_select=no])
 AC_MSG_RESULT($enable_block_select)
 if test "$enable_block_select" = yes ; then
 	AC_DEFINE(OPT_BLOCK_SELECT,1,[Define to 1 to allow block-selections])
