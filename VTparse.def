@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.75 2025/01/12 21:16:38 tom Exp $
+# $XTermId: VTparse.def,v 1.76 2025/03/16 22:59:10 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -232,3 +232,5 @@ CASE_DECST8C
 CASE_XTERM_TITLE_STACK		# XTTITLEPOS
 CASE_SUB
 CASE_CAN
+CASE_SET_FMT_KEYS		# XTFMTKEYS
+CASE_XTERM_REPORT_FMT_KEYS	# XTQFMTKEYS

@@ -1,4 +1,4 @@
-# $XTermId: keysym.map,v 1.11 2025/03/12 08:08:57 tom Exp $
+# $XTermId: keysym.map,v 1.12 2025/03/26 08:00:13 tom Exp $
 #
 # This list can be used to convert X11 Keysyms to Unicode 2.1 character.
 # The list is not checked for correctness by Unicode officials.  Use it
@@ -65,23 +65,3 @@
 0xff14     U0014  # Scroll_Lock
 0xff15     U0015  # Sys_Req
 0xff1b     U001b  # Escape
-0xff80     U0032  # KP_Space	/* space */
-0xff89     U0009  # KP_Tab
-0xff8d     U000d  # KP_Enter	/* enter */
-0xffaa     U002a  # KP_Multiply
-0xffab     U002b  # KP_Add
-0xffac     U002c  # KP_Separator	/* separator, often comma */
-0xffad     U002d  # KP_Subtract
-0xffae     U002e  # KP_Decimal
-0xffaf     U002f  # KP_Divide
-0xffb0     U0030  # KP_0
-0xffb1     U0031  # KP_1
-0xffb2     U0032  # KP_2
-0xffb3     U0033  # KP_3
-0xffb4     U0034  # KP_4
-0xffb5     U0035  # KP_5
-0xffb6     U0036  # KP_6
-0xffb7     U0037  # KP_7
-0xffb8     U0038  # KP_8
-0xffb9     U0039  # KP_9
-0xffbd     U003d  # KP_Equal	/* equals */

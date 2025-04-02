@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.735 2025/03/08 00:50:44 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.736 2025/03/30 21:12:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #398
-.ds RF 2025/03/07
+.ds RF 2025/03/30
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -987,6 +987,7 @@ The string following the \*(``q\*('' is one of the following:
   \**\*|	\(-> DECSNLS
   \*,\*|	\(-> DECAC (VT525 only)
   \*,\*}	\(-> DECATC (VT525 only)
+  \*>\*(Pm\*s\*f \(-> XTQFMTKEYS (xterm)
   \*>\*(Pm\*s\*m \(-> XTQMODKEYS (xterm)
   \*>\*(Pm\*s\*t \(-> XTSMTITLE (xterm)
 .br
@@ -1036,6 +1037,8 @@ Because the resource variable may not reflect the current state,
 .iP
 .bP
 XTQALLOWED
+.bP
+XTQFMTKEYS
 .bP
 XTQMODKEYS
 .RE
@@ -1433,6 +1436,35 @@ Line Position Relative  [rows] (default = [row+1,column]) (VPR).
 Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP).
 .
 .iP
+.IP \\*(Cs\\*>\\*(Pp\\*s\\*;\*(Pv\\*s\\*f
+.IP \\*(Cs\\*>\\*(Pp\\*s\\*f
+Set/reset key format options (XTFMTKEYS), \*(xt.
+Set or reset resource-values used by \fI\*(xt\fP to decide how to
+format escape sequences holding information about the modifiers
+pressed with a given key.
+.iP
+.IP
+The first parameter \*(Pp identifies the resource to set/reset.
+The second parameter \*(Pv is the value to assign to the resource.
+.iP
+.IP
+If the second parameter is omitted, the resource is reset to its initial value.
+Value \*5 is reserved for input via the \fBstring\fP action.
+.iP
+  \*(Pp = \*0 \(-> \fBformatKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBformatCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBformatFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBformatKeypadKeys\fP.
+  \*(Pp = \*4 \(-> \fBformatOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBformatModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBformatSpecialKeys\fP.
+.iP
+.IP
+If no parameters are given, all resources are reset to their initial values.
+See \fIAlt and Meta Keys\fP for more details on the \fBformatOtherKeys\fP
+feature.
+.
+.iP
 .IP \\*(Cs\\*(Ps\\*s\\*g
 Tab Clear (TBC).
 ECMA-48 defines additional codes,
@@ -1441,6 +1473,37 @@ ignores other codes.
 DEC's later terminals (and \fI\*(xt\fP) do the same, for compatibility.
   \*(Ps = \*0 \(-> Clear Current Column (default).
   \*(Ps = \*3 \(-> Clear All.
+.
+.iP
+.IP \\*(Cs\\*?\\*(Pp\\*s\\*g
+Query key modifier options (XTQFMTKEYS), \fI\*(xt\fP.
+.iP
+.IP
+The parameter \*(Pp identifies the resource to query.
+.iP
+  \*(Pp = \*0 \(-> \fBformatKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBformatCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBformatFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBformatKeypadKeys\fP.
+  \*(Pp = \*4 \(-> \fBformatOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBformatModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBformatSpecialKeys\fP.
+.iP
+.IP
+\*(XT's response can be used to restore this state,
+because it is formatted as an XTFMTKEYS control, i.e.,
+.iP
+  \*(Cs\*>\*(Pp\*s\*f
+.iP
+where
+.iP
+  \*(Pp = \*0 \(-> \fBformatKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBformatCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBformatFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBformatKeypadKeys\fP.
+  \*(Pp = \*4 \(-> \fBformatOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBformatModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBformatSpecialKeys\fP.
 .
 .iP
 .IP \\*(Cs\\*(Pm\\*s\\*h
@@ -1887,12 +1950,15 @@ The second parameter \*(Pv is the value to assign to the resource.
 .iP
 .IP
 If the second parameter is omitted, the resource is reset to its initial value.
-Values \*3 and \*5 are reserved for keypad-keys and string-keys.
+Value \*5 is reserved for input via the \fBstring\fP action.
 .iP
   \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
   \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
   \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBmodifyKeypadKeys\fP.
   \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBmodifyModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBmodifySpecialKeys\fP.
 .iP
 .IP
 If no parameters are given, all resources are reset to their initial values.
@@ -1909,7 +1975,10 @@ The parameter \*(Pp identifies the resource to query.
   \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
   \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
   \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBmodifyKeypadKeys\fP.
   \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBmodifyModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBmodifySpecialKeys\fP.
 .iP
 .IP
 \*(XT's response can be used to restore this state,
@@ -1922,7 +1991,10 @@ where
   \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
   \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
   \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*3 \(-> \fBmodifyKeypadKeys\fP.
   \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
+  \*(Pp = \*6 \(-> \fBmodifyModifierKeys\fP.
+  \*(Pp = \*7 \(-> \fBmodifySpecialKeys\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*n
@@ -1967,7 +2039,10 @@ The parameter identifies the resource to be disabled:
   \*(Ps = \*0 \(-> \fBmodifyKeyboard\fP.
   \*(Ps = \*1 \(-> \fBmodifyCursorKeys\fP.
   \*(Ps = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Ps = \*3 \(-> \fBmodifyKeypadKeys\fP.
   \*(Ps = \*4 \(-> \fBmodifyOtherKeys\fP.
+  \*(Ps = \*6 \(-> \fBmodifyModifierKeys\fP.
+  \*(Ps = \*7 \(-> \fBmodifySpecialKeys\fP.
 .iP
 If the parameter is omitted, \fB\%modifyFunctionKeys\fP is disabled.
 When \fB\%modifyFunctionKeys\fP is disabled, \fI\*(xt\fP uses the
@@ -2825,7 +2900,7 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*2\*2 \(-> Change pointer cursor shape to \*(Pt.
 The parameter \*(Pt sets the \fB\%pointerShape\fP resource.
 If \*(Pt is empty, or does not match any of the standard names,
-\fI\*n\fP uses the resource's default \*(``xterm\*('' shape.
+\fI\*(xt\fP uses the resource's default \*(``xterm\*('' shape.
 .sP
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt.
 The parameter \*(Pt sets the \fB\%logFile\fP resource.
@@ -3032,56 +3107,6 @@ prefix a key with the \*(Es character.
 .bP
 shift the key from codes 0-127 to 128-255 by adding 128.
 .LP
-When \fB\%modifyOtherKeys\fP is set,
-ordinary keys may be sent as escape sequences:
-.bP
-When \fB\%modifyOtherKeys\fP is set to 1,
-only the alt- and meta-modifiers apply.
-For example, \fIalt-Tab\fP sends
-\*(Cs\*2\*7\*;\*3\*;\*9\*~
-(the second parameter is \*(``3\*('' for \fIalt\fP,
-and the third parameter is the ASCII value of tab, \*(``9\*('').
-.bP
-When \fB\%modifyOtherKeys\fP is set to 2,
-all of the modifiers apply.
-For example, \fIshift-Tab\fP sends
-\*(Cs\*2\*7\*;\*2\*;\*9\*~
-rather than
-\*(Cs\*Z
-(the second parameter is \*(``2\*('' for \fIshift\fP).
-.bP
-If \fB\%modifyOtherKeys\fP is set to 3,
-unmodified keys also are sent as escape sequences.
-For example, \fIspace\fP sends
-\*(Cs\*2\*7\*;\*1\*;\*3\*2\*~
-.LP
-The \fB\%formatOtherKeys\fP resource tells \fI\*n\fP to change the
-format of the escape sequences sent when \fB\%modifyOtherKeys\fP applies.
-When \fB\%modifyOtherKeys\fP is set to 1,
-for example \fIalt-Tab\fP sends
-\*(Cs\*9\*;\*3\*u
-(changing the order of parameters).
-One drawback to this format is that applications may confuse it with
-\*(Cs\*u (restore-cursor).
-.LP
-The \fB\%modifyOtherKeys\fP control accepts a single subparameter,
-which is interpreted as a mask of modifier bits to factor out of
-the parameter encoding of the escape sequence.
-For example \*(Cs\*>\*4\*:\*1\*s\*m
-factors out the shift modifier.
-.LP
-The \fI\*(xt\fP FAQ sections
-.br
-.ID 3
-.\" https://invisible-island.net/xterm/xterm.faq.html#xterm_modother
-\fIHow can my program distinguish control-I from tab?\fP
-.ID 3
-.\" https://invisible-island.net/xterm/modified-keys.html
-\fIXTerm - \*(``Other\*('' Modified Keys\fP
-.DE
-.br
-go into greater detail on this topic.
-.LP
 The table shows the result for a given character \*(``x\*('' with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fB\%altIsNotMeta\fP is set:
@@ -3113,6 +3138,116 @@ Alt-x	ON	ON	\*(Es x
 Alt+Meta-x	ON	ON	\*(Es x
 _
 .TE
+.LP
+When \fB\%modifyOtherKeys\fP is set,
+ordinary keys may be sent as escape sequences:
+.bP
+When \fB\%modifyOtherKeys\fP is set to 1,
+the usual shift- and control-modifiers work as expected,
+but other modifiers (such as alt- and meta-modifiers)
+cause ordinary keys to be encoded as if they were function-keys.
+For example, \fIalt-Tab\fP sends
+\*(Cs\*2\*7\*;\*3\*;\*9\*~
+(the second parameter is \*(``3\*('' for \fIalt\fP,
+and the third parameter is the ASCII value of tab, \*(``9\*('').
+.IP
+Ordinary characters can have non-ASCII values.
+\fI\*(XT\fP uses the X11 libraries to obtain the character encoding
+used for a given \fIkeysym\fP (key symbol).
+The X11 \fIkeysymdef.h\fP header lists 2104 predefined key symbols,
+as well as documenting how arbitrary Unicode values are represented.
+The other \fI*keysym.h\fP headers add 480 symbols.
+.bP
+When \fB\%modifyOtherKeys\fP is set to 2,
+all of the modifiers apply.
+For example, \fIshift-Tab\fP sends
+\*(Cs\*2\*7\*;\*2\*;\*9\*~
+rather than
+\*(Cs\*Z
+(the second parameter is \*(``2\*('' for \fIshift\fP).
+.bP
+If \fB\%modifyOtherKeys\fP is set to 3,
+unmodified keys also are sent as escape sequences.
+For example, \fIspace\fP sends
+\*(Cs\*2\*7\*;\*1\*;\*3\*2\*~
+.LP
+There are a few variations available;
+they can be set statically with resource values
+or dynamically using control sequences:
+.bP
+The \fB\%formatOtherKeys\fP resource tells \fI\*(xt\fP to change the
+format of the escape sequences sent when \fB\%modifyOtherKeys\fP applies.
+When \fB\%modifyOtherKeys\fP is set to 1,
+for example \fIalt-Tab\fP sends
+\*(Cs\*9\*;\*3\*u
+(changing the order of parameters).
+One drawback to this format is that applications may confuse it with
+\*(Cs\*u (restore-cursor).
+.IP
+The resource value can be updated with a corresponding control sequence.
+.bP
+The \fB\%modifyOtherKeys\fP resource can be updated
+via a corresponding control sequence.
+The control sequence accepts a single subparameter,
+which is interpreted as a mask of modifier bits to factor out of
+the parameter encoding of the escape sequence.
+For example \*(Cs\*>\*4\*:\*1\*s\*m
+factors out the shift modifier.
+.LP
+Some of the predefined key symbols can be automatically derived,
+or are duplicates.
+That leaves about half of the key symbols which \fI\*(xt\fP may encounter.
+Most of these are non-character key symbols
+which may be assigned to positions on a keyboard.
+.bP
+The most common non-character key symbols are in the range 0xfd00 to 0xffff.
+\fI\*(XT\fP maps them to the Unicode BMP private use area beginning at U+E001.
+These account for about a quarter (329) of the non-character symbols.
+.bP
+The other non-character key symbols are vendor/platform specific.
+Those use codes above 0x10000000.
+\fI\*(XT\fP maps them to the Unicode BMP private use area beginning at U+F0000.
+.bP
+The remaining non-Unicode values are
+characters used in the DEC Technical character set.
+\fI\*(XT\fP maps them to the Unicode BMP private use area beginning at U+EEEE.
+.LP
+\fI\*(XT\fP has additional resource settings (and control sequences)
+to send these non-character symbols as escape sequences.
+The \fIXutil.h\fP header defines some of the macros which \fI\*(xt\fP uses for
+categorizing these non-character symbols:
+.IP IsKeypadKey(\fIkeysym\fP)
+is used for the numeric keypad
+(see \fBmodifyKeypadKeys\fP and \fBformatKeypadKeys\fP).
+.IP IsPrivateKeypadKey(\fIkeysym\fP)
+is unused.
+.IP IsCursorKey(\fIkeysym\fP)
+is used for the cursor keys, including \fIHome\fP and \fIEnd\fP
+(see \fBmodifyCursorKeys\fP and \fBformatCursorKeys\fP).
+\fI\*(XT\fP makes a special check for the PC keyboard's editing keypad,
+which is not handled by the \fIXutil.h\fP macros.
+.IP IsPFKey(\fIkeysym\fP)
+.IP IsFunctionKey(\fIkeysym\fP)
+.IP IsMiscFunctionKey(\fIkeysym\fP)
+are used for function keys
+(see \fBmodifyFunctionKeys\fP and \fBformatFunctionKeys\fP).
+.IP IsModifierKey(\fIkeysym\fP)
+is used for modifier keys
+(see \fBmodifyModifierKeys\fP and \fBformatModifierKeys\fP).
+.LP
+These macros account for 162 of the 329 non-Unicode values in the BMP.
+.LP
+The \fI\*(xt\fP FAQ sections
+.br
+.ID 3
+.\" https://invisible-island.net/xterm/xterm.faq.html#xterm_modother
+\fIHow can my program distinguish control-I from tab?\fP
+.ID 3
+.\" https://invisible-island.net/xterm/modified-keys.html
+\fIXTerm - \*(``Other\*('' Modified Keys\fP
+.DE
+.br
+go into greater detail on this topic.
 .Ss "PC-Style Function Keys"
 .LP
 If \fI\*(xt\fP does minimal translation of the function keys,

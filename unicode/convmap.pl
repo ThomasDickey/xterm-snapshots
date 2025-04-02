@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: convmap.pl,v 1.18 2025/03/14 08:13:58 tom Exp $
+# $XTermId: convmap.pl,v 1.21 2025/03/30 15:50:57 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -109,7 +109,7 @@ sub non_unicode ($) {
         {
             $rc = 1;
         }
-        elsif ( defined( $keysym_to_ucs{$keysym} ) ) {
+        elsif ( defined( $keysym_to_ucs{$keysym} ) or $keysym >= 0x10000000 ) {
             $rc = private_use($keysym);
         }
         elsif ( is_technical($keysym)
@@ -127,8 +127,26 @@ sub private_use($) {
     if ( is_technical($keysym) ) {
         $result = $result - 0x8b1 + 0xeeee;
     }
-    elsif ( $keysym > 0xfd00 and $keysym < 0xffff ) {
-        $result = $result - 0xfa00 + 0xe000;
+    elsif ( $keysym > 0xfd00 and $keysym <= 0xffff ) {
+        $result = $result - 0x1d00;
+    }
+    elsif ( $keysym > 0x10000000 and $keysym <= 0x100000ff ) {
+        $result = $result - 0x10000000;
+    }
+    elsif ( $keysym > 0x1000f000 and $keysym <= 0x1000ffff ) {
+        $result = $result - 0x1000f000 + 0xf0000;
+    }
+    elsif ( $keysym > 0x1004f000 and $keysym <= 0x1004ffff ) {
+        $result = $result - 0x1004f000 + 0xf1000;
+    }
+    elsif ( $keysym > 0x1005f000 and $keysym <= 0x1005ffff ) {
+        $result = $result - 0x1005f000 + 0xf2000;
+    }
+    elsif ( $keysym > 0x10081000 and $keysym <= 0x10081fff ) {
+        $result = $result - 0x10081000 + 0xf4000;
+    }
+    elsif ( $keysym > 0x1008fe00 and $keysym <= 0x1008ffff ) {
+        $result = $result - 0x1008fe00 + 0xf6000;
     }
     return $result;
 }
@@ -143,7 +161,14 @@ if ( !open( UDATA, $unicodedata ) && !open( UDATA, "$unicodedata" ) ) {
 }
 while (<UDATA>) {
     if (
-/^([0-9,A-F]{4,6});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/
+        /^([0-9,A-F]{4,6});
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*);
+        ([^;]*);([^;]*)$/x
       )
     {
         $name{ hex($1) } = $2;
@@ -179,78 +204,116 @@ while (<LIST>) {
 close(LIST);
 
 # read entries in keysymdef.h
-open( LIST, "</usr/include/X11/keysymdef.h" )
-  || die("Can't open keysymdef.h:\n$!\n");
-while (<LIST>) {
-    if (/^\#define\s+XK_([A-Za-z_0-9]+)\s+0x([0-9a-fA-F]+)\s*(\/.*)?$/) {
-        next if /\/\* deprecated \*\//;
-        printf STDERR "LIST %s", $_ if ($opt_v);
-        my $keysymname = $1;
-        my $keysym     = hex($2);
-        $keysym_to_keysymname{$keysym} = $keysymname;
+sub open_keysyms($) {
+    return open( LIST, "</usr/include/X11/" . shift );
+}
 
-        my $comment = $_;
-        chomp $comment;
-        my $check = $comment;
-        $comment =~ s%^.*/\*\s*(.*)\s*\*/.*$%$1%;
-        $comment =~ s%\(([^)]*)\)%$1%g;
-        $comment = "" if ( $comment eq $check );
+die("Can't open keysymdef.h:\n$!\n") unless open_keysyms("keysymdef.h");
 
-        if ( $comment ne "" ) {
-            printf STDERR "->%s\n", $comment if ($opt_v);
-            my $expect = "";
-            $expect = $keysym_to_ucs{$keysym}
-              if defined $keysym_to_ucs{$keysym};
-            my $actual = "";
+sub add_keysyms($) {
+    my $extra = shift;
+    while (<LIST>) {
+        next if (/^.*\b(Alias\s+for|Same\s+as)\b.*$/i);
 
-            my $explain = $comment;
-            if ( $comment =~ /^U\+[[:xdigit:]]{4,}.*/ ) {
-                $explain =~ s/^[^\s]+\s+//;
-                $explain =~ s/\s+$//;
-                $comment =~ s/\s.*//;
-                $actual = hex( substr( $comment, 2 ) );
-                $expect = $keysym - 0x1000000 if ( $keysym >= 0x1000000 );
-                if ( defined( $keysym_custom{$keysym} )
-                    and $actual eq $keysym_to_ucs{$keysym} )
-                {
-                    printf STDERR "%s: duplicates $_", $keysym_custom{$keysym};
-                }
-
-            }
-            if ( $actual eq "" and $expect eq "" ) {
-                my $ucs = private_use($keysym);
-                $name{$ucs}             = "PUA $comment";
-                $keysym_to_ucs{$keysym} = $ucs;
-            }
-            elsif ( $actual eq $expect ) {
-                printf STDERR "OK %#06x -> U+%04X\n", $keysym, $actual
-                  if ( $opt_v and $actual ne "" );
-            }
-            elsif ( $actual eq "" ) {
-                printf STDERR "ERR $comment -> expect:U+%04X\n", $expect
-                  unless non_unicode($keysym);
-            }
-            elsif ( $expect eq "" ) {
-                $name{$actual}          = "$explain";
-                $keysym_to_ucs{$keysym} = $actual;
-            }
-            else {
-                printf STDERR "ERR $comment -> actual:%#x, expect:U+%04X\n",
-                  $actual, $expect;
-            }
+        # translate Linux evdev's
+        if (/^\#define.*\b_EVDEVK\(0x[0-9a-fA-Z]+\)/) {
+            my $param = substr( $_, index( $_, "_EVDEVK" ) );
+            chomp $param;
+            $param =~ s/\).*$/)/;
+            my $value = $param;
+            $value =~ s/^.*\((\w+)\)/$1/;
+            my $l = substr( $_, 0, index( $_, $param ) );
+            my $r = substr( $_, index( $_, $param ) + length($param) );
+            my $m = sprintf( "%#x", hex($value) + 268963840 );
+            $_ = sprintf( "%s%s%s", $l, $m, $r );
         }
-        elsif (
-            non_unicode($keysym)
-            and ( not defined $keysym_to_ucs{$keysym} or is_technical($keysym) )
+        if (
+            /^\#define\s+
+            ${extra}XK_([A-Za-z_0-9]+)\s+
+            0x([0-9a-fA-F]+)\s*(\/.*)?$/x
           )
         {
-            my $ucs = private_use($keysym);
-            $name{$ucs}             = "PUA";
-            $keysym_to_ucs{$keysym} = $ucs;
+            next if /\/\* deprecated \*\//;
+            printf STDERR "LIST %s", $_ if ($opt_v);
+            my $keysymname = $1;
+            my $keysym     = hex($2);
+            $keysym_to_keysymname{$keysym} = $keysymname;
+
+            my $comment = $_;
+            chomp $comment;
+            my $check = $comment;
+            $comment =~ s%^.*/\*\s*(.*)\s*\*/.*$%$1%;
+            $comment =~ s%\(([^)]*)\)%$1%g;
+            $comment = "" if ( $comment eq $check );
+
+            next if $keysym_to_ucs{$keysym};
+            if ( $comment ne "" ) {
+                printf STDERR "->%s\n", $comment if ($opt_v);
+                my $expect = "";
+                $expect = $keysym_to_ucs{$keysym}
+                  if defined $keysym_to_ucs{$keysym};
+                my $actual = "";
+
+                my $explain = $comment;
+                if ( $comment =~ /^U\+[[:xdigit:]]{4,}.*/ ) {
+                    $explain =~ s/^[^\s]+\s+//;
+                    $explain =~ s/\s+$//;
+                    $comment =~ s/\s.*//;
+                    $actual = hex( substr( $comment, 2 ) );
+                    $expect = $keysym - 0x1000000 if ( $keysym >= 0x1000000 );
+                    if ( defined( $keysym_custom{$keysym} )
+                        and $actual eq $keysym_to_ucs{$keysym} )
+                    {
+                        printf STDERR "%s: duplicates $_",
+                          $keysym_custom{$keysym};
+                    }
+
+                }
+                if ( $actual eq "" and $expect eq "" ) {
+                    my $ucs = private_use($keysym);
+                    $name{$ucs}             = "PUA $comment";
+                    $keysym_to_ucs{$keysym} = $ucs;
+                }
+                elsif ( $actual eq $expect ) {
+                    printf STDERR "OK %#06x -> U+%04X\n", $keysym, $actual
+                      if ( $opt_v and $actual ne "" );
+                }
+                elsif ( $actual eq "" ) {
+                    printf STDERR "ERR $comment -> expect:U+%04X\n", $expect
+                      unless non_unicode($keysym);
+                }
+                elsif ( $expect eq "" ) {
+                    $name{$actual}          = "$explain";
+                    $keysym_to_ucs{$keysym} = $actual;
+                }
+                else {
+                    printf STDERR "ERR $comment -> actual:%#x, expect:U+%04X\n",
+                      $actual, $expect;
+                }
+            }
+            elsif (
+                non_unicode($keysym)
+                and
+                ( not defined $keysym_to_ucs{$keysym} or is_technical($keysym) )
+              )
+            {
+                my $ucs = private_use($keysym);
+                $name{$ucs}             = "PUA" unless defined $name{$ucs};
+                $keysym_to_ucs{$keysym} = $ucs;
+            }
         }
     }
+    close(LIST);
 }
-close(LIST);
+
+add_keysyms("");
+add_keysyms("D")    if open_keysyms("DECkeysym.h");
+add_keysyms("")     if open_keysyms("HPkeysym.h");
+add_keysyms("ap")   if open_keysyms("ap_keysym.h");
+add_keysyms("hp")   if open_keysyms("HPkeysym.h");
+add_keysyms("osf")  if open_keysyms("HPkeysym.h");
+add_keysyms("Sun")  if open_keysyms("Sunkeysym.h");
+add_keysyms("XF86") if open_keysyms("XF86keysym.h");
 
 print <<EOT;
 /* \$XTermId\$
@@ -330,25 +393,36 @@ print <<EOT;
 #include <keysym2ucs.h>
 
 static struct codepair {
-    unsigned short keysym;
-    unsigned short ucs;
+    unsigned keysym;
+    unsigned ucs;
 } keysymtab[] = {
 /* *INDENT-OFF* */
 EOT
 
+my %pua2;
 for $keysym ( sort { $a <=> $b } keys(%keysym_to_keysymname) ) {
+    next
+      if ( $keysym > 0xffff and $keysym < 0x10000000 )
+      or ( $keysym < 0x100 );
     my $ucs = $keysym_to_ucs{$keysym};
-    next if $keysym > 0xffff or $keysym < 0x100;
     if ($ucs) {
+        if ( $keysym >= 0x10000000 ) {
+            if ( defined $pua2{$ucs} ) {
+                printf "/* duplicate %#x vs %#x */\n", $keysym, $pua2{$ucs};
+            }
+            else {
+                $pua2{$ucs} = $keysym;
+            }
+        }
         my $pua = 0;
         $pua = 1 if index( $name{$ucs}, "PUA" ) == 0;
-        $pua = 1 if $keysym == 0xffff;
         printf(
-            "%s{ 0x%04x, 0x%04x }, %s*%28s %s %s */\n",
+            "%s{ 0x%04x, 0x%04x }, %s*%*s %s %s */\n",
             $pua ? "/*" : "  ",
             $keysym,
             $ucs,
-            $pua ? "*" : "/",
+            $pua             ? "*" : "/",
+            $keysym > 0xffff ? 24  : 29,
             $keysym_to_keysymname{$keysym},
             $pua        ? "?"
             : $ucs < 32 ? ( "^" . chr( 64 + $ucs ) )
@@ -357,8 +431,12 @@ for $keysym ( sort { $a <=> $b } keys(%keysym_to_keysymname) ) {
         );
     }
     else {
-        printf( "/*  0x%04x   %39s ? ??? */\n",
-            $keysym, $keysym_to_keysymname{$keysym} );
+        printf(
+            "/*  0x%04x   %*s ? ??? */\n",
+            $keysym,
+            $keysym > 0xffff ? 35 : 39,
+            $keysym_to_keysymname{$keysym}
+        );
     }
 }
 
@@ -397,8 +475,21 @@ keysym2ucs(KeySym keysym)
 	    }
 	}
 	if (result == -1) {
-	    if (keysym >= 0xfd01 && keysym <= 0xffff) {
-		result = (long) keysym - 0xfa00 + 0xe000;
+	    long value = (long) keysym;
+	    if (keysym >= 0xfd00 && keysym <= 0xffff) {
+		result = value - 0x1d00;
+	    } else if (keysym >= 0x10000000 && keysym <= 0x100000ff) {
+		result = value - 0x10000000;
+	    } else if (keysym >= 0x1000f000 && keysym <= 0x1000ffff) {
+		result = value - 0x1000f000 + 0xf0000;
+	    } else if (keysym >= 0x1004f000 && keysym <= 0x1004ffff) {
+		result = value - 0x1004f000 + 0xf1000;
+	    } else if (keysym >= 0x1005f000 && keysym <= 0x1005ffff) {
+		result = value - 0x1005f000 + 0xf2000;
+	    } else if (keysym >= 0x10081000 && keysym <= 0x10081fff) {
+		result = value - 0x10081000 + 0xf4000;
+	    } else if (keysym >= 0x1008fe00 && keysym <= 0x1008ffff) {
+		result = value - 0x1008fe00 + 0xf6000;
 	    }
 	}
     }

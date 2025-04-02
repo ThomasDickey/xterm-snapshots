@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1110 2025/03/08 13:10:17 tom Exp $ */
+/* $XTermId: misc.c,v 1.1111 2025/03/30 19:44:14 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -4974,24 +4974,78 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    } else
 #endif
 #if OPT_MOD_FKEYS
-	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
+	    if (*cp == '>' && !strcmp(skip_params(1 + cp), "f")) {	/* XTQFMTKEYS */
 		++cp;
 		okay = True;
 		ival = parse_int_param(&cp);
-#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
-#define FMT_MOD_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_MOD_FKEYS(field))
+
+#define GET_FMT_FKEYS(field) xw->keyboard.format_now.field
+#define FMT_FMT_FKEYS(field) sprintf(reply, ">%d;%dm", ival, GET_FMT_FKEYS(field))
+
 		switch (ival) {
-		case 0:
+		case modifyKeyboard:
+		    FMT_FMT_FKEYS(allow_keys);
+		    break;
+		case modifyCursorKeys:
+		    FMT_FMT_FKEYS(cursor_keys);
+		    break;
+		case modifyFunctionKeys:
+		    FMT_FMT_FKEYS(function_keys);
+		    break;
+		case modifyKeypadKeys:
+		    FMT_FMT_FKEYS(keypad_keys);
+		    break;
+		case modifyModifierKeys:
+		    FMT_FMT_FKEYS(modify_keys);
+		    break;
+		case modifyOtherKeys:
+		    FMT_FMT_FKEYS(other_keys);
+		    break;
+		case modifySpecialKeys:
+		    FMT_FMT_FKEYS(special_keys);
+		    break;
+		default:
+		    okay = False;
+		    break;
+		}
+	    } else if (*cp == '>' && !strcmp(skip_params(1 + cp), "m")) {	/* XTQMODKEYS */
+		++cp;
+		okay = True;
+		ival = parse_int_param(&cp);
+
+#define GET_IGN_FKEYS(field) xw->keyboard.ignore_now.field
+#define GET_MOD_FKEYS(field) xw->keyboard.modify_now.field
+#define FMT_MOD_FKEYS(field) { \
+		if (GET_IGN_FKEYS(field)) \
+		    sprintf(reply, ">%d;%d:%dm", ival, \
+			    GET_MOD_FKEYS(field), \
+			    GET_IGN_FKEYS(field)); \
+		else \
+		    sprintf(reply, ">%d;%dm", ival, \
+			    GET_MOD_FKEYS(field)); \
+		} while (0);
+
+		switch (ival) {
+		case modifyKeyboard:
 		    FMT_MOD_FKEYS(allow_keys);
 		    break;
-		case 1:
+		case modifyCursorKeys:
 		    FMT_MOD_FKEYS(cursor_keys);
 		    break;
-		case 2:
+		case modifyFunctionKeys:
 		    FMT_MOD_FKEYS(function_keys);
 		    break;
-		case 4:
+		case modifyKeypadKeys:
+		    FMT_MOD_FKEYS(keypad_keys);
+		    break;
+		case modifyModifierKeys:
+		    FMT_MOD_FKEYS(modify_keys);
+		    break;
+		case modifyOtherKeys:
 		    FMT_MOD_FKEYS(other_keys);
+		    break;
+		case modifySpecialKeys:
+		    FMT_MOD_FKEYS(special_keys);
 		    break;
 		default:
 		    okay = False;
@@ -5119,6 +5173,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 			} else {
 			    XKeyEvent event;
 			    memset(&event, 0, sizeof(event));
+			    event.type = KeyPress;
 			    event.state = state;
 			    Input(xw, &event, False);
 			}

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1140 2025/03/07 01:03:43 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1141 2025/04/01 22:27:18 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3277,7 +3277,36 @@ typedef struct
     int keypad_keys;		/* how to handle keypad key-modifiers */
     int other_keys;		/* how to handle other key-modifiers */
     int string_keys;		/* how to handle string() modifiers */
+    int modify_keys;		/* how to handle modifier key-modifiers */
+    int special_keys;		/* how to handle special key-modifiers */
 } TModify;
+
+typedef enum {
+    mfkNone = -1		/* disable the feature */
+    , mfkOriginal = 0		/* original/obsolete format */
+    , mfkControl  = 1		/* prefix modified controls with CSI */
+    , mfkParam    = 2		/* modifier parameter is second */
+    , mfkPrivate  = 3		/* mark this as a private control */
+    , mfkExtended = 4		/* modify all special keys */
+} MfkModes;			/* also modifyCursorKeys, modifyKeypadKeys */
+
+typedef enum {
+    mokNone = 0			/* disable the feature */
+    , mokUser     = 1		/* user-friendly modified-keys */
+    , mokProgram  = 2		/* program-friendly modified-keys */
+    , mokExtended = 3		/* modify all ordinary keys */
+} MokModes;			/* modifyOtherKeys */
+
+typedef enum {
+    modifyKeyboard = 0		/* mode */
+    , modifyCursorKeys   = 1	/* keysym parameterized mode */
+    , modifyFunctionKeys = 2	/* keysym parameterized mode */
+    , modifyKeypadKeys   = 3	/* keysym non-parameterized mode */
+    , modifyOtherKeys    = 4	/* keysym semi-parameterized mode */
+    , modifyStringKeys   = 5	/* reserved */
+    , modifyModifierKeys = 6	/* used by Xutf8LookupString, etc */
+    , modifySpecialKeys  = 7	/* other special/non-parameterized keysyms */
+} ModkeyModes;
 
 typedef struct
 {
@@ -3296,8 +3325,10 @@ typedef struct
 #if OPT_MOD_FKEYS
     TModify modify_now;		/* current modifier value */
     TModify modify_1st;		/* original modifier value, for resets */
-    int format_keys;		/* format of modifyOtherKeys */
-    int modify_mods;		/* limit modifiers used in modifyOtherKeys */
+    TModify format_now;		/* current formatter value */
+    TModify format_1st;		/* original formatter value, for resets */
+    TModify ignore_now;		/* limit modifiers used in modifyXxxKeys */
+    TModify ignore_1st;		/* original limit on modifiers */
 #endif
 } TKeyboard;
 

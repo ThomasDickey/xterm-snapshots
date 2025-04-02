@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2068 2025/03/08 13:03:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2069 2025/03/30 19:37:42 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -706,18 +706,36 @@ static XtResource xterm_resources[] =
 #if OPT_MOD_FKEYS
     Ires(XtNmodifyKeyboard, XtCModifyKeyboard,
 	 keyboard.modify_1st.allow_keys, 0),
+
     Ires(XtNmodifyCursorKeys, XtCModifyCursorKeys,
-	 keyboard.modify_1st.cursor_keys, 2),
+	 keyboard.modify_1st.cursor_keys, mfkParam),
     Ires(XtNmodifyFunctionKeys, XtCModifyFunctionKeys,
-	 keyboard.modify_1st.function_keys, 2),
+	 keyboard.modify_1st.function_keys, mfkParam),
     Ires(XtNmodifyKeypadKeys, XtCModifyKeypadKeys,
-	 keyboard.modify_1st.keypad_keys, 0),
+	 keyboard.modify_1st.keypad_keys, mfkOriginal),
+    Ires(XtNmodifyModifierKeys, XtCModifyModifierKeys,
+	 keyboard.modify_1st.modify_keys, mfkOriginal),
     Ires(XtNmodifyOtherKeys, XtCModifyOtherKeys,
-	 keyboard.modify_1st.other_keys, 0),
+	 keyboard.modify_1st.other_keys, mfkOriginal),
+    Ires(XtNmodifySpecialKeys, XtCModifySpecialKeys,
+	 keyboard.modify_1st.special_keys, mfkOriginal),
     Ires(XtNmodifyStringKeys, XtCModifyStringKeys,
-	 keyboard.modify_1st.string_keys, 0),
+	 keyboard.modify_1st.string_keys, mfkOriginal),
+
+    Ires(XtNformatCursorKeys, XtCFormatCursorKeys,
+	 keyboard.format_1st.cursor_keys, 0),
+    Ires(XtNformatFunctionKeys, XtCFormatFunctionKeys,
+	 keyboard.format_1st.function_keys, 0),
+    Ires(XtNformatKeypadKeys, XtCFormatKeypadKeys,
+	 keyboard.format_1st.keypad_keys, 0),
+    Ires(XtNformatModifierKeys, XtCFormatModifierKeys,
+	 keyboard.format_1st.modify_keys, 0),
     Ires(XtNformatOtherKeys, XtCFormatOtherKeys,
-	 keyboard.format_keys, 0),
+	 keyboard.format_1st.other_keys, 0),
+    Ires(XtNformatSpecialKeys, XtCFormatSpecialKeys,
+	 keyboard.format_1st.special_keys, 0),
+    Ires(XtNformatStringKeys, XtCFormatStringKeys,
+	 keyboard.format_1st.string_keys, 0),
 #endif
 
 #if OPT_NUM_LOCK
@@ -2348,41 +2366,93 @@ deferparsing(unsigned c, struct ParseState *sp)
 
 #if OPT_MOD_FKEYS
 static void
-set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
+set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled, int ignore)
 {
 #define SET_MOD_FKEYS(field) \
+    do { \
     xw->keyboard.modify_now.field = ((what == DEFAULT) && enabled) \
 				     ? xw->keyboard.modify_1st.field \
 				     : what; \
+    xw->keyboard.ignore_now.field = ignore; \
     TRACE(("%s modify_now.%s to %d\n", \
 	   ((what == DEFAULT) && enabled) ? "reset" : "set", \
 	   #field, \
-	   xw->keyboard.modify_now.field));
+	   xw->keyboard.modify_now.field)); \
+    TRACE(("%s ignore_now.%s %d\n", \
+	   ((what == DEFAULT) && enabled) ? "reset" : "set", \
+	   #field, xw->keyboard.ignore_now.field)); \
+    } while (0)
 
     switch (which) {
-    case 0:
+    case modifyKeyboard:
 	SET_MOD_FKEYS(allow_keys);
 	break;
-    case 1:
+    case modifyCursorKeys:
 	SET_MOD_FKEYS(cursor_keys);
 	break;
-    case 2:
+    case modifyFunctionKeys:
 	SET_MOD_FKEYS(function_keys);
 	break;
-    case 3:
+    case modifyKeypadKeys:
 	SET_MOD_FKEYS(keypad_keys);
 	break;
-    case 4:
+    case modifyModifierKeys:
+	SET_MOD_FKEYS(modify_keys);
+	break;
+    case modifyOtherKeys:
 	SET_MOD_FKEYS(other_keys);
 	SET_MIN_MOD(xw, what);
 	TRACE(("set min_mod to %d\n", xw->work.min_mod));
-	xw->keyboard.modify_mods = 0;
 	break;
-    case 5:
+    case modifySpecialKeys:
+	SET_MOD_FKEYS(special_keys);
+	break;
+    case modifyStringKeys:
 	SET_MOD_FKEYS(string_keys);
 	break;
     }
 #undef SET_MOD_FKEYS
+}
+
+static void
+set_fmt_fkeys(XtermWidget xw, int which, int what, Bool enabled)
+{
+#define SET_FMT_FKEYS(field) \
+    xw->keyboard.format_now.field = ((what == DEFAULT) && enabled) \
+				     ? xw->keyboard.format_1st.field \
+				     : what; \
+    TRACE(("%s format_now.%s to %d\n", \
+	   ((what == DEFAULT) && enabled) ? "reset" : "set", \
+	   #field, \
+	   xw->keyboard.format_now.field));
+
+    switch (which) {
+    case modifyKeyboard:
+	SET_FMT_FKEYS(allow_keys);
+	break;
+    case modifyCursorKeys:
+	SET_FMT_FKEYS(cursor_keys);
+	break;
+    case modifyFunctionKeys:
+	SET_FMT_FKEYS(function_keys);
+	break;
+    case modifyKeypadKeys:
+	SET_FMT_FKEYS(keypad_keys);
+	break;
+    case modifyModifierKeys:
+	SET_FMT_FKEYS(modify_keys);
+	break;
+    case modifyOtherKeys:
+	SET_FMT_FKEYS(other_keys);
+	break;
+    case modifySpecialKeys:
+	SET_FMT_FKEYS(special_keys);
+	break;
+    case modifyStringKeys:
+	SET_FMT_FKEYS(string_keys);
+	break;
+    }
+#undef SET_FMT_FKEYS
 }
 
 static void
@@ -2398,26 +2468,75 @@ report_mod_fkeys(XtermWidget xw, int which)	/* XTQMODKEYS */
 
     reply.a_param[1] = DEFAULT;
     switch (reply.a_param[0] = (ParmType) which) {
-    case 0:
+    case modifyKeyboard:
 	GET_MOD_FKEYS(allow_keys);
 	break;
-    case 1:
+    case modifyCursorKeys:
 	GET_MOD_FKEYS(cursor_keys);
 	break;
-    case 2:
+    case modifyFunctionKeys:
 	GET_MOD_FKEYS(function_keys);
 	break;
-    case 3:
+    case modifyKeypadKeys:
 	GET_MOD_FKEYS(keypad_keys);
 	break;
-    case 4:
+    case modifyModifierKeys:
+	GET_MOD_FKEYS(modify_keys);
+	break;
+    case modifyOtherKeys:
 	GET_MOD_FKEYS(other_keys);
 	break;
-    case 5:
+    case modifySpecialKeys:
+	GET_MOD_FKEYS(special_keys);
+	break;
+    case modifyStringKeys:
 	GET_MOD_FKEYS(string_keys);
 	break;
     }
     unparseseq(xw, &reply);
+#undef GET_MOD_FKEYS
+}
+
+static void
+report_fmt_fkeys(XtermWidget xw, int which)	/* XTQFMTKEYS */
+{
+#define GET_FMT_FKEYS(field) \
+    reply.a_param[1] = (ParmType) xw->keyboard.format_now.field
+
+    init_reply(ANSI_CSI);
+    reply.a_pintro = '>';	/* replies look like a set-mode */
+    reply.a_nparam = 2;
+    reply.a_final = 'f';
+
+    reply.a_param[1] = DEFAULT;
+    switch (reply.a_param[0] = (ParmType) which) {
+    case modifyKeyboard:
+	GET_FMT_FKEYS(allow_keys);
+	break;
+    case modifyCursorKeys:
+	GET_FMT_FKEYS(cursor_keys);
+	break;
+    case modifyFunctionKeys:
+	GET_FMT_FKEYS(function_keys);
+	break;
+    case modifyKeypadKeys:
+	GET_FMT_FKEYS(keypad_keys);
+	break;
+    case modifyModifierKeys:
+	GET_FMT_FKEYS(modify_keys);
+	break;
+    case modifyOtherKeys:
+	GET_FMT_FKEYS(other_keys);
+	break;
+    case modifySpecialKeys:
+	GET_FMT_FKEYS(special_keys);
+	break;
+    case modifyStringKeys:
+	GET_FMT_FKEYS(string_keys);
+	break;
+    }
+    unparseseq(xw, &reply);
+#undef GET_FMT_FKEYS
 }
 #endif /* OPT_MOD_FKEYS */
 
@@ -6143,6 +6262,29 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 #if OPT_MOD_FKEYS
+	case CASE_SET_FMT_KEYS:
+	    TRACE(("CASE_SET_FMT_KEYS\n"));
+	    if (nparam >= 1) {
+		int first = GetParam(0);
+		int second = ((nparam > 1)
+			      ? GetParam(1)
+			      : DEFAULT);
+		set_fmt_fkeys(xw, first, second, True);
+	    } else {
+		for (value = 1; value <= 5; ++value)
+		    set_fmt_fkeys(xw, value, DEFAULT, True);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_XTERM_REPORT_FMT_KEYS:
+	    TRACE(("CASE_XTERM_REPORT_FMT_KEYS\n"));
+	    for (value = 0; value < nparam; ++value) {
+		report_fmt_fkeys(xw, GetParam(value));
+	    }
+	    ResetState(sp);
+	    break;
+
 	case CASE_SET_MOD_FKEYS:
 	    TRACE(("CASE_SET_MOD_FKEYS\n"));
 	    if (nparam >= 1) {
@@ -6150,24 +6292,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		int second = ((nparam > 1)
 			      ? GetParam(1)
 			      : DEFAULT);
-		if (first == 4) {
-		    if (parms.has_subparams) {
-			if (subparam_index(0, 0) == 0 &&
-			    subparam_index(1, 0) == 1 &&
-			    subparam_index(1, 1) == 2) {
-			    set_mod_fkeys(xw, first, second, True);
-			    xw->keyboard.modify_mods = parms.params[2];
-			    TRACE(("set modify_mods %d\n", xw->keyboard.modify_mods));
-			}
-		    } else {
-			set_mod_fkeys(xw, first, second, True);
+		if (parms.has_subparams) {
+		    if (subparam_index(0, 0) == 0 &&
+			subparam_index(1, 0) == 1 &&
+			subparam_index(1, 1) == 2) {
+			set_mod_fkeys(xw, first, second, True, parms.params[2]);
 		    }
-		} else if (!parms.has_subparams) {
-		    set_mod_fkeys(xw, first, second, True);
+		} else {
+		    set_mod_fkeys(xw, first, second, True, 0);
 		}
 	    } else {
 		for (value = 1; value <= 5; ++value)
-		    set_mod_fkeys(xw, value, DEFAULT, True);
+		    set_mod_fkeys(xw, value, DEFAULT, True, 0);
 	    }
 	    ResetState(sp);
 	    break;
@@ -6175,9 +6311,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SET_MOD_FKEYS0:
 	    TRACE(("CASE_SET_MOD_FKEYS0\n"));
 	    if (nparam >= 1 && GetParam(0) != DEFAULT) {
-		set_mod_fkeys(xw, GetParam(0), -1, False);
+		set_mod_fkeys(xw, GetParam(0), DEFAULT, False, 0);
 	    } else {
-		xw->keyboard.modify_now.function_keys = -1;
+		xw->keyboard.modify_now.function_keys = DEFAULT;
 	    }
 	    ResetState(sp);
 	    break;
@@ -11705,10 +11841,20 @@ VTInitialize(Widget wrequest,
     init_Ires(keyboard.modify_1st.function_keys);
     init_Ires(keyboard.modify_1st.keypad_keys);
     init_Ires(keyboard.modify_1st.other_keys);
+    init_Ires(keyboard.modify_1st.special_keys);
     init_Ires(keyboard.modify_1st.string_keys);
-    init_Ires(keyboard.format_keys);
+
+    init_Ires(keyboard.format_1st.allow_keys);
+    init_Ires(keyboard.format_1st.cursor_keys);
+    init_Ires(keyboard.format_1st.function_keys);
+    init_Ires(keyboard.format_1st.keypad_keys);
+    init_Ires(keyboard.format_1st.other_keys);
+    init_Ires(keyboard.format_1st.special_keys);
+    init_Ires(keyboard.format_1st.string_keys);
+
     wnew->keyboard.modify_now = wnew->keyboard.modify_1st;
-    wnew->keyboard.modify_mods = 0;
+    wnew->keyboard.format_now = wnew->keyboard.format_1st;
+    wnew->keyboard.ignore_now = wnew->keyboard.ignore_1st;
 #endif
 
     init_Ires(misc.appcursorDefault);
@@ -14060,7 +14206,8 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #if OPT_MOD_FKEYS
     /* Reset modifier-resources to initial state */
     xw->keyboard.modify_now = xw->keyboard.modify_1st;
-    xw->keyboard.modify_mods = 0;
+    xw->keyboard.format_now = xw->keyboard.format_1st;
+    xw->keyboard.ignore_now = xw->keyboard.ignore_1st;
 #endif
 #if OPT_DEC_RECTOPS
     screen->checksum_ext = screen->checksum_ext0;

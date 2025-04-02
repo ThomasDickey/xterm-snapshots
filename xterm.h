@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.961 2025/03/08 12:09:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.963 2025/03/30 19:40:16 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -538,7 +538,13 @@ extern char **environ;
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNforcePackedFont	"forcePackedFont"
 #define XtNforceXftHeight	"forceXftHeight"
+#define XtNformatCursorKeys	"formatCursorKeys"
+#define XtNformatFunctionKeys	"formatFunctionKeys"
+#define XtNformatKeypadKeys	"formatKeypadKeys"
+#define XtNformatModifierKeys	"formatModifierKeys"
 #define XtNformatOtherKeys	"formatOtherKeys"
+#define XtNformatSpecialKeys	"formatSpecialKeys"
+#define XtNformatStringKeys	"formatStringKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNfullscreen		"fullscreen"
 #define XtNhighlightColor	"highlightColor"
@@ -594,7 +600,9 @@ extern char **environ;
 #define XtNmodifyFunctionKeys	"modifyFunctionKeys"
 #define XtNmodifyKeyboard	"modifyKeyboard"
 #define XtNmodifyKeypadKeys	"modifyKeypadKeys"
+#define XtNmodifyModifierKeys	"modifyModifierKeys"
 #define XtNmodifyOtherKeys	"modifyOtherKeys"
+#define XtNmodifySpecialKeys	"modifySpecialKeys"
 #define XtNmodifyStringKeys	"modifyStringKeys"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
@@ -805,7 +813,13 @@ extern char **environ;
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCForcePackedFont	"ForcePackedFont"
 #define XtCForceXftHeight	"ForceXftHeight"
+#define XtCFormatCursorKeys	"FormatCursorKeys"
+#define XtCFormatFunctionKeys	"FormatFunctionKeys"
+#define XtCFormatKeypadKeys	"FormatKeypadKeys"
+#define XtCFormatModifierKeys	"FormatModifierKeys"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
+#define XtCFormatSpecialKeys	"FormatSpecialKeys"
+#define XtCFormatStringKeys	"FormatStringKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCFullscreen		"Fullscreen"
 #define XtCHighlightColorMode	"HighlightColorMode"
@@ -856,7 +870,9 @@ extern char **environ;
 #define XtCModifyFunctionKeys	"ModifyFunctionKeys"
 #define XtCModifyKeyboard	"ModifyKeyboard"
 #define XtCModifyKeypadKeys	"ModifyKeypadKeys"
+#define XtCModifyModifierKeys	"ModifyModifierKeys"
 #define XtCModifyOtherKeys	"ModifyOtherKeys"
+#define XtCModifySpecialKeys	"ModifySpecialKeys"
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
