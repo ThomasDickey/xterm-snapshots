@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.787 2024/12/01 20:29:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.789 2025/04/05 00:05:01 tom Exp $ */
 
 /*
- * Copyright 1998-2023,2024 by Thomas E. Dickey
+ * Copyright 1998-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1060,6 +1060,7 @@ xtermLoadQueryFont(XtermWidget xw, const char *name)
 	TScreen *screen = TScreenOf(xw);
 	result = XLoadQueryFont(screen->display, name);
     }
+    TRACE(("xtermLoadQueryFont ->%s\n", visibleFont(result)));
     return result;
 }
 
@@ -1373,6 +1374,9 @@ xtermUpdateFontGCs(XtermWidget xw, MyGetFont myfunc)
     setCgsFore(xw, win, gcNorm, new_normal);
     setCgsBack(xw, win, gcNorm, new_revers);
     setCgsFont(xw, win, gcNorm, myfunc(screen, fNorm));
+
+    setCgsFont(xw, win, gcVTcursNormal, NULL);
+    setCgsFont(xw, win, gcVTcursReverse, NULL);
 
     copyCgs(xw, win, gcBold, gcNorm);
     setCgsFont2(xw, win, gcBold, myfunc(screen, fBold), fBold);

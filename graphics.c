@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.137 2024/12/01 20:21:19 tom Exp $ */
+/* $XTermId: graphics.c,v 1.138 2025/04/03 10:23:04 tom Exp $ */
 
 /*
- * Copyright 2013-2023,2024 by Thomas E. Dickey
+ * Copyright 2013-2024,2025 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -1801,7 +1801,7 @@ scroll_displayed_graphics(XtermWidget xw, int rows)
     }
 }
 
-void
+static void
 pixelarea_clear_displayed_graphics(TScreen const *screen,
 				   int winx,
 				   int winy,

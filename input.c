@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.385 2025/04/02 00:30:06 tom Exp $ */
+/* $XTermId: input.c,v 1.387 2025/04/02 00:30:06 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -430,7 +430,7 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 }
 #endif /* OPT_MOD_FKEYS */
 
-#if OPT_TCAP_FKEYS
+#if OPT_MOD_FKEYS || OPT_TCAP_FKEYS
 /*
 * Modifier codes:
 *       None                  1
@@ -2299,7 +2299,7 @@ VTInitModifiers(XtermWidget xw)
 		|| IsModifierKey(keysym)
 		|| IsMiscFunctionKey(keysym)
 		|| IsPFKey(keysym)) {
-		unsigned long result = (long) keysym - 0x1d00;
+		unsigned long result = (unsigned long) keysym - 0x1d00;
 		/* this is the same as keysym2ucs(keysym) */
 		++covered;
 		TRACE(("%#lx -> U+%04lx %-8s%-8s%-8s%-8s%-8s%-8s%-8s\n",

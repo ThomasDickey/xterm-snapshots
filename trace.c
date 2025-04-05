@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.245 2025/02/02 19:09:46 tom Exp $ */
+/* $XTermId: trace.c,v 1.247 2025/04/03 23:47:19 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -357,6 +357,24 @@ visibleEventMode(EventMode value)
     default:
 	result = "?";
 	break;
+    }
+    return result;
+}
+
+const char *
+visibleFont(XFontStruct *fs)
+{
+    static char result[80];
+
+    if (fs != NULL) {
+	sprintf(result, "%p(%dx%d %d %#lx)",
+		(void *) fs,
+		fs->max_bounds.width,
+		fs->max_bounds.ascent + fs->max_bounds.descent,
+		fs->max_bounds.descent,
+		(unsigned long) (fs->fid));
+    } else {
+	strcpy(result, "null");
     }
     return result;
 }

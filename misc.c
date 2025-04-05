@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1111 2025/03/30 19:44:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.1112 2025/04/02 23:09:26 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -6610,7 +6610,7 @@ validProgram(const char *pathname)
 	&& strstr(pathname, "/..") == NULL
 	&& stat(pathname, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
-	&& (sb.st_mode & S_IXOTH) != 0) {
+	&& access(pathname, F_OK | X_OK) == 0) {
 	result = True;
     }
     return result;

@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.84 2024/12/01 19:24:57 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.86 2025/04/03 23:51:05 tom Exp $ */
 
 /*
- * Copyright 2007-2021,2024 by Thomas E. Dickey
+ * Copyright 2007-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -165,18 +165,7 @@ traceFont(XTermFonts * font)
 {
     static char result[80];
 
-    if (HaveFont(font)) {
-	XFontStruct *fs = font->fs;
-	sprintf(result, "%p(%dx%d %d %#lx)",
-		fs,
-		fs->max_bounds.width,
-		fs->max_bounds.ascent + fs->max_bounds.descent,
-		fs->max_bounds.descent,
-		(unsigned long) (fs->fid));
-    } else {
-	strcpy(result, "null");
-    }
-    return result;
+    return strcpy(result, font != NULL ? visibleFont(font->fs) : "null");
 }
 
 static String
