@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.789 2025/04/05 00:05:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.790 2025/04/06 23:33:58 tom Exp $ */
 
 /*
  * Copyright 1998-2024,2025 by Thomas E. Dickey
@@ -2060,9 +2060,9 @@ xtermLoadItalics(XtermWidget xw)
 	if (dst.fonts.x11.name == NULL) \
 	    dst.fonts.x11.name = TypeCalloc(char *); \
 	if (merge_sublist(&(dst.fonts.x11.name), src.fonts.x11.name)) { \
-	    TRACE(("MERGE_SUBLIST " #dst "." #name " merge \"%s\"\n", src.fonts.x11.name[0])); \
+	    TRACE(("MERGE_SUBLIST " #dst "." #name " merge \"%s\"\n", NonNull(src.fonts.x11.name[0]))); \
 	} else { \
-	    TRACE(("MERGE_SUBLIST " #dst "." #name " found \"%s\"\n", dst.fonts.x11.name[0])); \
+	    TRACE(("MERGE_SUBLIST " #dst "." #name " found \"%s\"\n", NonNull(dst.fonts.x11.name[0]))); \
 	}
 
 #define INFER_SUBFONT(dst,src,name) \

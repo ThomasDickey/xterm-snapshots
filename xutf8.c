@@ -1,4 +1,4 @@
-/* $XTermId: xutf8.c,v 1.19 2025/03/14 00:34:34 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.20 2025/04/06 23:29:27 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2025 by Thomas E. Dickey
@@ -339,8 +339,10 @@ Xutf8LookupString(XIC ic GCC_UNUSED,
 
     if (rc > 0) {
 	codepoint = buffer[0] & 0xFF;
-    } else {
+    } else if (keysym < 0xfd00 || (keysym >= 0x1000000 && keysym < 0x10000000)) {
 	codepoint = keysym2ucs(keysym);
+    } else {
+	codepoint = -1;
     }
 
     if (codepoint < 0) {
