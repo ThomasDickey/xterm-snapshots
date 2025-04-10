@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.657 2025/01/03 01:31:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.660 2025/04/10 23:48:40 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -2549,14 +2549,17 @@ void
 ScrnFillRectangle(XtermWidget xw,
 		  XTermRect *target,
 		  int value,
+		  DECNRCM_codes charset,
 		  unsigned flags,
 		  Bool keepColors)
 {
     IChar actual = (IChar) value;
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("filling rectangle with '%s' flags %#x\n",
-	   visibleIChars(&actual, 1), flags));
+    TRACE(("filling rectangle with '%s' %s flags %#x\n",
+	   visibleIChars(&actual, 1),
+	   visibleScsCode(charset),
+	   flags));
     if (validRect(xw, target)) {
 	LineData *ld;
 	int top = (target->top - 1);
@@ -2571,6 +2574,12 @@ ScrnFillRectangle(XtermWidget xw,
 	int b_right = 0;
 
 	(void) numcols;
+
+	if (charset != nrc_ASCII) {
+	    xw->work.write_text = &actual;
+	    if (xtermCharSetOut(xw, 1, charset) == 0)
+		actual = ' ';
+	}
 
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
@@ -2614,8 +2623,13 @@ ScrnFillRectangle(XtermWidget xw,
 		});
 	    }
 
-	    for (col = left; col <= right; ++col)
+	    for (col = left; col <= right; ++col) {
 		ld->charData[col] = actual;
+#if OPT_DEC_RECTOPS
+		ld->charSeen[col] = (Char) value;
+		ld->charSets[col] = charset;
+#endif
+	    }
 
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
@@ -3068,6 +3082,9 @@ xtermCheckRect(XtermWidget xw,
 		} else {
 		    ch = (int) ld->charData[col];
 		    if_OPT_WIDE_CHARS(screen, {
+			if (ld->charSets[col] == nrc_DEC_Spec_Graphic) {
+			    ch = (int) dec2ucs(screen, (unsigned) ch);
+			}
 			if (is_UCS_SPECIAL(ch))
 			    continue;
 		    });

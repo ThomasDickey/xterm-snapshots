@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.963 2025/03/30 19:40:16 tom Exp $ */
+/* $XTermId: xterm.h,v 1.964 2025/04/08 07:36:09 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1594,7 +1594,7 @@ extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnDeleteCol (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf /* sb */, int /* n */, int /* last */, unsigned /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
-extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Bool /* keepColors */);
+extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int /* value */,  DECNRCM_codes /* charset */, unsigned /* flags */, Bool /* keepColors */);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnInsertCol (XtermWidget /* xw */, unsigned /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int /* last */, int /* where */, unsigned /* n */);

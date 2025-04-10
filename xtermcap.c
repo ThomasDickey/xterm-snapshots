@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.63 2024/12/01 20:17:29 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.65 2025/04/08 19:04:44 tom Exp $ */
 
 /*
- * Copyright 2007-2023,2024 by Thomas E. Dickey
+ * Copyright 2007-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -59,8 +59,8 @@
 #define SHIFT (MOD_NONE + MOD_SHIFT)
 
 typedef struct {
-    const char *tc;
-    const char *ti;
+    const char tc[3];
+    const char ti[6];
     int code;
     unsigned param;		/* see xtermStateToParam() */
 } TCAPINFO;

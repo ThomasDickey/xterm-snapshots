@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2069 2025/03/30 19:37:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2070 2025/04/09 00:27:52 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1787,6 +1787,22 @@ init_groundtable(TScreen *screen, struct ParseState *sp)
     {
 	sp->groundtable = ansi_table;
     }
+}
+
+static DECNRCM_codes
+current_charset(TScreen *screen, int value)
+{
+    DECNRCM_codes result = nrc_ASCII;
+    if (IsLatin1(value)) {
+	if (screen->curss != 0) {
+	    result = screen->gsets[screen->curss];
+	} else if (value >= 0x80) {
+	    result = screen->gsets[screen->curgr];
+	} else {
+	    result = screen->gsets[screen->curgl];
+	}
+    }
+    return result;
 }
 
 static void
@@ -4798,7 +4814,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    xterm_ResetDouble(xw);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, NULL, &myRect);
-	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
+	    ScrnFillRectangle(xw, &myRect, 'E', nrc_ASCII, 0, False);
 	    ResetState(sp);
 	    break;
 
@@ -5603,7 +5619,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECERA - Erase rectangular area\n"));
 		xtermParseRect(xw, ParamPair(0), &myRect);
-		ScrnFillRectangle(xw, &myRect, ' ', xw->flags, True);
+		ScrnFillRectangle(xw, &myRect, ' ', nrc_ASCII, xw->flags, True);
 	    }
 	    ResetState(sp);
 	    break;
@@ -5620,7 +5636,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    && ((value >= 256 && CharWidth(screen, value) > 0)
 			|| IsLatin1(value))) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
-		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
+		    ScrnFillRectangle(xw, &myRect,
+				      value, current_charset(screen, value),
+				      xw->flags, True);
 		}
 	    }
 	    ResetState(sp);
