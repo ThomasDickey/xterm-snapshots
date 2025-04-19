@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.533 2024/12/21 13:44:12 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.538 2025/04/19 00:18:58 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2023,2024 by Thomas E. Dickey
+dnl Copyright 1997-2024,2025 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -2657,6 +2657,30 @@ CFLAGS="$cf_save_CFLAGS_$1"
 CPPFLAGS="$cf_save_CPPFLAGS_$1"
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_REQUIRE_PKG version: 1 updated: 2025/01/10 19:55:54
+dnl --------------
+dnl Update $REQUIRE_PKG, which lists the known required packages for this
+dnl program.
+dnl
+dnl $1 = package(s) to require, e.g., in the generated ".pc" file
+define([CF_REQUIRE_PKG],
+[
+for cf_required in $1
+do
+	# check for duplicates
+	for cf_require_pkg in $REQUIRE_PKG
+	do
+		if test "$cf_required" = "$cf_require_pkg"
+		then
+			cf_required=
+			break
+		fi
+	done
+	test -n "$cf_required" && REQUIRE_PKG="$REQUIRE_PKG $cf_required"
+done
+AC_SUBST(REQUIRE_PKG)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_RPATH_HACK version: 13 updated: 2021/01/03 18:30:50
 dnl -------------
 AC_DEFUN([CF_RPATH_HACK],
@@ -3142,7 +3166,7 @@ AC_DEFUN([CF_TRIM_X_LIBS],[
 	done
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_PKG_CONFIG version: 6 updated: 2020/12/31 10:54:15
+dnl CF_TRY_PKG_CONFIG version: 7 updated: 2025/01/10 19:55:54
 dnl -----------------
 dnl This is a simple wrapper to use for pkg-config, for libraries which may be
 dnl available in that form.
@@ -3159,6 +3183,7 @@ if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists "$1"; then
 	cf_pkgconfig_libs="`$PKG_CONFIG --libs   "$1" 2>/dev/null`"
 	CF_VERBOSE(package $1 CFLAGS: $cf_pkgconfig_incs)
 	CF_VERBOSE(package $1 LIBS: $cf_pkgconfig_libs)
+	CF_REQUIRE_PKG($1)
 	CF_ADD_CFLAGS($cf_pkgconfig_incs)
 	CF_ADD_LIBS($cf_pkgconfig_libs)
 	ifelse([$2],,:,[$2])
@@ -5339,12 +5364,12 @@ AC_CHECK_HEADER(X11/extensions/Xdbe.h,
 				   cf_x_ext_double_buffer=yes]))
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTCONFIG version: 8 updated: 2024/11/25 04:10:12
+dnl CF_X_FONTCONFIG version: 9 updated: 2025/04/18 20:15:05
 dnl ---------------
 dnl Check for fontconfig library, a dependency of the X FreeType library.
 AC_DEFUN([CF_X_FONTCONFIG],
 [
-AC_REQUIRE([CF_X_FREETYPE])
+AC_REQUIRE([CF_X_XFT])
 
 if test "$cf_cv_found_freetype" = yes ; then
 AC_CACHE_CHECK(for usable Xft/fontconfig package,cf_cv_xft_compat,[
@@ -5381,7 +5406,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 28 updated: 2020/03/10 18:53:47
+dnl CF_X_FREETYPE version: 29 updated: 2025/04/18 20:15:05
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -5430,14 +5455,13 @@ case $cf_cv_x_freetype_cfgs in
 	AC_MSG_RESULT($cf_cv_x_freetype_libs)
 	;;
 (auto)
-	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
+	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists freetype2; then
 		FREETYPE_CONFIG=$PKG_CONFIG
-		FREETYPE_PARAMS=xft
+		FREETYPE_PARAMS=freetype2
 	else
 		AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, none)
 		if test "$FREETYPE_CONFIG" != none; then
-			FREETYPE_CONFIG=$FREETYPE_CONFIG
-			cf_extra_freetype_libs="-lXft"
+			cf_extra_freetype_libs="-lfreetype2"
 		else
 			AC_PATH_PROG(FREETYPE_OLD_CONFIG, xft-config, none)
 			if test "$FREETYPE_OLD_CONFIG" != none; then
@@ -5447,11 +5471,11 @@ case $cf_cv_x_freetype_cfgs in
 	fi
 	;;
 (pkg*)
-	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
+	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists freetype2; then
 		FREETYPE_CONFIG=$cf_cv_x_freetype_cfgs
-		FREETYPE_PARAMS=xft
+		FREETYPE_PARAMS=freetype2
 	else
-		AC_MSG_WARN(cannot find pkg-config for Xft)
+		AC_MSG_WARN(cannot find pkg-config for freetype2)
 	fi
 	;;
 (*)
@@ -5459,7 +5483,7 @@ case $cf_cv_x_freetype_cfgs in
 	if test "$FREETYPE_XFT_CONFIG" != none; then
 		FREETYPE_CONFIG=$FREETYPE_XFT_CONFIG
 	else
-		AC_MSG_WARN(cannot find config script for Xft)
+		AC_MSG_WARN(cannot find config script for freetype2)
 	fi
 	;;
 esac
@@ -5486,48 +5510,30 @@ if test "$cf_cv_x_freetype_incs" = no ; then
 fi
 
 if test "$cf_cv_x_freetype_libs" = no ; then
-	cf_cv_x_freetype_libs=-lXft
+	cf_cv_x_freetype_libs=-lfreetype2
 fi
 
-AC_MSG_CHECKING(if we can link with FreeType libraries)
+AC_MSG_CHECKING(if we can link with FreeType library)
 
-cf_save_LIBS="$LIBS"
-cf_save_INCS="$CPPFLAGS"
+cf_save_ft_LIBS="$LIBS"
+cf_save_ft_INCS="$CPPFLAGS"
 
 CF_ADD_LIBS($cf_cv_x_freetype_libs)
-CPPFLAGS="$CPPFLAGS $cf_cv_x_freetype_incs"
+CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 
 AC_TRY_LINK([
-#include <X11/Xlib.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/Xft/Xft.h>],[
-	XftPattern  *pat = XftNameParse ("name"); (void)pat],
+#include <freetype/freetype.h>],[
+	FT_Library alibrary;
+	FT_Init_FreeType( &alibrary );],
 	[cf_cv_found_freetype=yes],
 	[cf_cv_found_freetype=no])
 AC_MSG_RESULT($cf_cv_found_freetype)
 
-LIBS="$cf_save_LIBS"
-CPPFLAGS="$cf_save_INCS"
-
-if test "$cf_cv_found_freetype" = yes ; then
-	CF_ADD_LIBS($cf_cv_x_freetype_libs)
-	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
-	AC_DEFINE(XRENDERFONT,1,[Define to 1 if we can/should link with FreeType libraries])
-
-AC_CHECK_FUNCS( \
-	XftDrawCharSpec \
-	XftDrawSetClip \
-	XftDrawSetClipRectangles \
-)
-
-else
+if test "$cf_cv_found_freetype" = no ; then
 	AC_MSG_WARN(No libraries found for FreeType)
-	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
+	LIBS="$cf_save_ft_LIBS"
+	CPPFLAGS="$cf_save_ft_INCS"
 fi
-
-# FIXME: revisit this if needed
-AC_SUBST(HAVE_TYPE_FCCHAR32)
-AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
 dnl CF_X_TOOLKIT version: 27 updated: 2023/01/11 04:05:23
@@ -5632,6 +5638,50 @@ test program.  You will have to check and add the proper libraries by hand
 to makefile.])
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_X_XFT version: 1 updated: 2025/04/18 20:15:05
+dnl --------
+AC_DEFUN([CF_X_XFT],
+[
+AC_REQUIRE([CF_PKG_CONFIG])
+AC_REQUIRE([CF_X_FREETYPE])
+
+if test "$cf_cv_found_freetype" = yes
+then
+
+	cf_save_xft_LIBS="$LIBS"
+	cf_save_xft_INCS="$CPPFLAGS"
+	CF_TRY_PKG_CONFIG(xft,,[AC_MSG_WARN(unable to find Xft library)])
+
+	AC_MSG_CHECKING(if we can link with Xft and FreeType libraries)
+	AC_TRY_LINK([
+#include <X11/Xlib.h>
+#include <X11/extensions/Xrender.h>
+#include <X11/Xft/Xft.h>],[
+		XftPattern  *pat = XftNameParse ("name"); (void)pat],
+		[cf_cv_found_xft_libraries=yes],
+		[cf_cv_found_xft_libraries=no])
+	AC_MSG_RESULT($cf_cv_found_xft_libraries)
+
+	if test "$cf_cv_found_xft_libraries" = yes ; then
+		AC_DEFINE(XRENDERFONT,1,[Define to 1 if we can/should link with FreeType libraries])
+
+		AC_CHECK_FUNCS( \
+			XftDrawCharSpec \
+			XftDrawSetClip \
+			XftDrawSetClipRectangles )
+
+	else
+		LIBS="$cf_save_xft_LIBS"
+		CPPFLAGS="$cf_save_xft_INCS"
+	fi
+
+# FIXME: revisit this if needed
+AC_SUBST(HAVE_TYPE_FCCHAR32)
+AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
+
+fi
+])
 dnl ---------------------------------------------------------------------------
 dnl CF__GRANTPT_BODY version: 6 updated: 2021/06/07 17:39:17
 dnl ----------------

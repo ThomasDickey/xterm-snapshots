@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.65 2025/04/08 19:04:44 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.66 2025/04/18 20:27:53 tom Exp $ */
 
 /*
  * Copyright 2007-2024,2025 by Thomas E. Dickey
@@ -60,7 +60,7 @@
 
 typedef struct {
     const char tc[3];
-    const char ti[6];
+    const char ti[8];
     int code;
     unsigned param;		/* see xtermStateToParam() */
 } TCAPINFO;
