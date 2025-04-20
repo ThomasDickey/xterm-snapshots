@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2070 2025/04/09 00:27:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2071 2025/04/20 22:08:07 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1789,6 +1789,7 @@ init_groundtable(TScreen *screen, struct ParseState *sp)
     }
 }
 
+#if OPT_DEC_RECTOPS
 static DECNRCM_codes
 current_charset(TScreen *screen, int value)
 {
@@ -1804,6 +1805,7 @@ current_charset(TScreen *screen, int value)
     }
     return result;
 }
+#endif
 
 static void
 select_charset(struct ParseState *sp, int type, int size)

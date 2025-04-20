@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.538 2025/04/19 00:18:58 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.540 2025/04/20 21:59:55 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -5406,7 +5406,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 29 updated: 2025/04/18 20:15:05
+dnl CF_X_FREETYPE version: 30 updated: 2025/04/20 17:58:12
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -5522,7 +5522,9 @@ CF_ADD_LIBS($cf_cv_x_freetype_libs)
 CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 
 AC_TRY_LINK([
-#include <freetype/freetype.h>],[
+#include <ft2build.h>
+#include FT_FREETYPE_H
+],[
 	FT_Library alibrary;
 	FT_Init_FreeType( &alibrary );],
 	[cf_cv_found_freetype=yes],
@@ -5639,7 +5641,7 @@ to makefile.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_XFT version: 1 updated: 2025/04/18 20:15:05
+dnl CF_X_XFT version: 2 updated: 2025/04/20 17:58:12
 dnl --------
 AC_DEFUN([CF_X_XFT],
 [
@@ -5651,7 +5653,12 @@ then
 
 	cf_save_xft_LIBS="$LIBS"
 	cf_save_xft_INCS="$CPPFLAGS"
-	CF_TRY_PKG_CONFIG(xft,,[AC_MSG_WARN(unable to find Xft library)])
+	CF_TRY_PKG_CONFIG(xft,,[AC_MSG_WARN(unable to find Xft library with $PKG_CONFIG)])
+
+	if test -z "$cf_pkgconfig_libs"
+	then
+		AC_CHECK_LIB(Xft, XftNameParse, LIBS="-lXft $LIBS")
+	fi
 
 	AC_MSG_CHECKING(if we can link with Xft and FreeType libraries)
 	AC_TRY_LINK([
