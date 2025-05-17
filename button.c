@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.671 2025/02/05 23:33:18 tom Exp $ */
+/* $XTermId: button.c,v 1.672 2025/05/15 23:19:08 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -5197,9 +5197,7 @@ Length(TScreen *screen,
 
     if (ecol > lastcol)
 	ecol = lastcol;
-    if (ecol < scol)
-	ecol = scol;
-    return (ecol - scol + 1);
+    return Max(0, (ecol - scol + 1));
 }
 
 /* copies text into line, preallocated */

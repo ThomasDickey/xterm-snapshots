@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.957 2025/02/06 00:54:28 tom Exp $ */
+/* $XTermId: util.c,v 1.958 2025/05/17 00:41:45 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -4258,7 +4258,9 @@ drawXtermText(const XTermDraw * params,
 			unsigned part = ucs2dec(screen, ch);
 			if (xtermIsInternalCs(part)) {
 			    if (screen->force_box_chars
-				|| screen->broken_box_chars) {
+				|| xtermXftMissing(recur.xw,
+						   currData, 0,
+						   XftFp(currData), ch)) {
 				SetMissing("case 2");
 				ch = part;
 			    }
