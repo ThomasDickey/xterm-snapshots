@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.234 2025/01/03 01:01:56 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.235 2025/05/18 22:28:12 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -231,6 +231,7 @@
 #undef XRENDERFONT		/* CF_X_FREETYPE */
 #undef cc_t			/* CF_TYPE_CC_T */
 #undef gid_t			/* AC_TYPE_UID_T */
+#undef inline			/* AC_C_INLINE */
 #undef mode_t			/* AC_TYPE_MODE_T */
 #undef nfds_t			/* CF_TYPE_NFDS_T */
 #undef off_t			/* AC_TYPE_OFF_T */

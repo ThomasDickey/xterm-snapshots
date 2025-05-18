@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.404 2025/03/16 09:59:24 tom Exp $
+dnl $XTermId: configure.in,v 1.405 2025/05/18 22:27:35 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -53,6 +53,7 @@ case "$host_os" in
 esac
 
 CF_PROG_CC
+AC_C_INLINE
 AC_PROG_CPP
 AC_PROG_AWK
 AC_PROG_INSTALL
