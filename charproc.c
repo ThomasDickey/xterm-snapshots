@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2071 2025/04/20 22:08:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2073 2025/05/18 20:50:21 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3323,14 +3323,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * ignore it when it was translated from UTF-8, unless the parse-state
 	 * tells us that a C1 would be legal.
 	 */
+	if (screen->wide_chars
+	    && (c >= 128 && c < 160)) {
 #if OPT_C1_PRINT
-	if (!screen->c1_printable)
+	    if (screen->c1_printable) {
+		sp->nextstate = CASE_PRINT;
+		TRACE(("allowC1Printable %04X %s ->%s\n",
+		       c, which_table(sp->parsestate),
+		       visibleVTparse(sp->nextstate)));
+	    } else
 #endif
-	    if (screen->wide_chars
-		&& (c >= 128 && c < 160)) {
-		if (sp->parsestate != ansi_table)
-		    sp->nextstate = CASE_IGNORE;
-	    }
+	    if (sp->parsestate != ansi_table)
+		sp->nextstate = CASE_IGNORE;
+	}
 
 	/*
 	 * If this character is a different width than the last one, put the
@@ -12714,7 +12719,7 @@ VTRealize(Widget w,
 		      xw->core.x, xw->core.y,
 		      xw->core.width, xw->core.height, BorderWidth(xw),
 		      (int) xw->core.depth,
-		      InputOutput, CopyFromParent,
+		      InputOutput, (void *) CopyFromParent,
 		      *valuemask | CWBitGravity, values);
 #if USE_DOUBLE_BUFFER
     if (allocateDbe(xw, &(screen->fullVwin))) {
@@ -12797,7 +12802,7 @@ VTRealize(Widget w,
 			  screen->iconVwin.fullheight,
 			  xw->misc.icon_border_width,
 			  (int) xw->core.depth,
-			  InputOutput, CopyFromParent,
+			  InputOutput, (void *) CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
 #if USE_DOUBLE_BUFFER

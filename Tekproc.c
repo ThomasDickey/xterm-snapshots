@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.254 2024/12/01 20:21:19 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.255 2025/05/18 20:50:21 tom Exp $ */
 
 /*
- * Copyright 2001-2022,2024 by Thomas E. Dickey
+ * Copyright 2001-2024,2025 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1628,7 +1628,7 @@ TekRealize(Widget gw,
 		      tw->core.width, tw->core.height,
 		      BorderWidth(tw),
 		      (int) tw->core.depth,
-		      InputOutput, CopyFromParent,
+		      InputOutput, (void *) CopyFromParent,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
 		      values);
 
