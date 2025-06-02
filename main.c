@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.933 2025/03/08 13:03:19 tom Exp $ */
+/* $XTermId: main.c,v 1.938 2025/06/02 07:55:55 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
@@ -3848,6 +3848,49 @@ resetShell(char *oldPath)
 }
 
 /*
+ * Malware tampers with the terminal database.  Let's discourage that.
+ */
+static void
+xtermTrimEnvPath(const char *name)
+{
+    if (getuid() == 0) {
+	xtermUnsetenv(name);
+    } else {
+	char *value = getenv(name);
+	if (value != NULL) {
+	    char *copyPath = x_strdup(value);
+	    char *editPath = x_strdup(value);
+	    if (copyPath != NULL && editPath != NULL) {
+		char *source = copyPath;
+		char *item;
+		Bool concat = False;
+		*editPath = '\0';
+		while ((item = strtok(source, ":")) != NULL) {
+		    if (access(item, W_OK) == 0) {
+			TRACE(("found writable item in %s: %s\n", name, item));
+		    } else {
+			if (concat)
+			    strcat(editPath, ":");
+			strcat(editPath, item);
+			concat = True;
+		    }
+		    source = NULL;
+		}
+		if (strcmp(editPath, copyPath)) {
+		    if (*editPath)
+			xtermSetenv(name, editPath);
+		    else
+			xtermUnsetenv(name);
+		} else {
+		    free(editPath);
+		}
+		free(copyPath);
+	    }
+	}
+    }
+}
+
+/*
  * Trim unwanted environment variables:
  *
  * DESKTOP_STARTUP_ID
@@ -3889,22 +3932,35 @@ xtermTrimEnv(void)
 	TRIM(0, XCURSOR_PATH),
 	KEEP(0, MC_XDG_OPEN),
 	KEEP(0, TERM_INGRES),
+	TRIM(1, ALACRITTY_),
 	TRIM(1, COLORFGBG),
 	TRIM(1, COLORTERM),
 	TRIM(1, GIO_LAUNCHED_),
+	TRIM(1, GHOSTTY_),
+	TRIM(1, GTK_),
+	TRIM(1, ITERM_),
 	TRIM(1, ITERM2_),
+	TRIM(1, KITTY_),
+	TRIM(1, KONSOLE_),
+	TRIM(1, LC_TERMINAL),
 	TRIM(1, MC_),
 	TRIM(1, MINTTY_),
+	TRIM(1, MOSH_),
 	TRIM(1, PUTTY),
 	TRIM(1, RXVT_),
-	TRIM(1, TERM_),
+	TRIM(1, TERM_),		/* e.g., TERM_PROGRAM */
+	TRIM(1, TERMINAL_),	/* e.g., TERMINAL_NAME */
 	TRIM(1, URXVT_),
 	TRIM(1, VTE_),
+	TRIM(1, WT_SESSION),
+	TRIM(1, WT_PROFILE),
 	TRIM(1, XTERM_),
+	TRIM(1, ZUTTY_),
     };
 #undef TRIM
     /* *INDENT-ON* */
     Cardinal j, k;
+    int trimmed = 0;
 
     for (j = 0; environ[j] != NULL; ++j) {
 	char *equals = strchr(environ[j], '=');
@@ -3922,6 +3978,7 @@ xtermTrimEnv(void)
 		    if (table[k].trim &&
 			(my_var = x_strdup(environ[j])) != NULL) {
 			my_var[dstlen] = '\0';
+			trimmed++;
 			xtermUnsetenv(my_var);
 			free(my_var);
 			/* When removing an entry, check the same slot again. */
@@ -3933,6 +3990,7 @@ xtermTrimEnv(void)
 	    } else if (dstlen == srclen &&
 		       !strncmp(environ[j], table[k].name, srclen)) {
 		if (table[k].trim) {
+		    trimmed++;
 		    xtermUnsetenv(table[k].name);
 		    /* When removing an entry, check the same slot again. */
 		    if (j != 0)
@@ -3941,6 +3999,12 @@ xtermTrimEnv(void)
 		break;
 	    }
 	}
+    }
+    if (trimmed) {
+	TRACE(("%d environment variables trimmed\n", trimmed));
+	xtermTrimEnvPath("TERMINFO");
+	xtermTrimEnvPath("TERMINFO_DIRS");
+	xtermTrimEnvPath("TERMPATH");
     }
 }
 

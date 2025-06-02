@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.736 2025/03/30 21:12:29 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.737 2025/06/01 18:45:59 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #398
-.ds RF 2025/03/30
+.ds LF Patch #400
+.ds RF 2025/06/01
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1061,9 +1061,14 @@ Request Termcap/Terminfo String (XTGETTCAP), \fI\*(xt\fP.
 The string following the \*(``q\*('' is a list of names
 encoded in hexadecimal (2 digits per character)
 separated by \*;
-which correspond to termcap or terminfo key names.
+which correspond to termcap or terminfo
+capability names for special keyboard keys.
+A terminal description will include other capabilities,
+e.g., for cursor movement,
+which are intentionally not part of this interface.
 .br
-A few special features are also recognized, which are not key names:
+A few more terminal capabilities are recognized,
+which are not names of special keys:
 .RS
 .bP
 \fICo\fP for termcap colors (or \fIcolors\fP for terminfo colors),
@@ -1075,6 +1080,16 @@ and
 .br
 Only a terminfo name is provided,
 since termcap applications cannot use this information.
+.RE
+.sP
+These capabilities fall into two categories:
+.RS
+.bP
+Terminal capabilities which may be dynamically adjusted in \fI\*(xt\fP
+so they do not necessarily match a terminal description.
+.bP
+The name of the terminal description,
+which an application can use to obtain the static set of capabilities.
 .RE
 .sP
 \fI\*(xt\fP responds with

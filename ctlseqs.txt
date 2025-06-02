@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2025)
-               updated for XTerm Patch #398 (2025/03/30)
+               updated for XTerm Patch #400 (2025/06/01)
 
 
 
@@ -546,9 +546,12 @@ DCS + q Pt ST
           Request Termcap/Terminfo String (XTGETTCAP), xterm.  The
           string following the "q" is a list of names encoded in
           hexadecimal (2 digits per character) separated by ; which
-          correspond to termcap or terminfo key names.
-          A few special features are also recognized, which are not key
-          names:
+          correspond to termcap or terminfo capability names for special
+          keyboard keys.  A terminal description will include other
+          capabilities, e.g., for cursor movement, which are
+          intentionally not part of this interface.
+          A few more terminal capabilities are recognized, which are not
+          names of special keys:
 
           o   Co for termcap colors (or colors for terminfo colors), and
 
@@ -557,6 +560,15 @@ DCS + q Pt ST
           o   RGB for the ncurses direct-color extension.
               Only a terminfo name is provided, since termcap
               applications cannot use this information.
+
+          These capabilities fall into two categories:
+
+          o   Terminal capabilities which may be dynamically adjusted in
+              xterm so they do not necessarily match a terminal
+              description.
+
+          o   The name of the terminal description, which an application
+              can use to obtain the static set of capabilities.
 
           xterm responds with
           DCS 1 + r Pt ST for valid requests, adding to Pt an = , and
