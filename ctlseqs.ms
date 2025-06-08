@@ -1,11 +1,8 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" "XTerm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.737 2025/06/01 18:45:59 tom Exp $
-.\"
-.\"
+.\" $XTermId: ctlseqs.ms,v 1.738 2025/06/08 23:01:30 tom Exp $
+.\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
-.\"
-.\"                         All Rights Reserved
+.\" Copyright 1991, 1994 X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the
@@ -30,47 +27,21 @@
 .\" holders shall not be used in advertising or otherwise to promote the
 .\" sale, use or other dealings in this Software without prior written
 .\" authorization.
-.\"
-.\"
-.\" Copyright 1991, 1994 X Consortium
-.\"
-.\" Permission is hereby granted, free of charge, to any person obtaining
-.\" a copy of this software and associated documentation files (the
-.\" "Software"), to deal in the Software without restriction, including
-.\" without limitation the rights to use, copy, modify, merge, publish,
-.\" distribute, sublicense, and/or sell copies of the Software, and to
-.\" permit persons to whom the Software is furnished to do so, subject to
-.\" the following conditions:
-.\"
-.\" The above copyright notice and this permission notice shall be
-.\" included in all copies or substantial portions of the Software.
-.\"
-.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-.\" IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
-.\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-.\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-.\" OTHER DEALINGS IN THE SOFTWARE.
-.\"
-.\" Except as contained in this notice, the name of the X Consortium shall
-.\" not be used in advertising or otherwise to promote the sale, use or
-.\" other dealings in this Software without prior written authorization
-.\" from the X Consortium.
-.\"
+.\" ---------------------------------------------------------------------------
 .\" X Window System is a trademark of X Consortium, Inc.
 .\"
 .\" Originally written by Edward Moy, University of California,
 .\" Berkeley, edmoy@violet.berkeley.edu, for the X.V10R4 xterm.
 .\" The X Consortium staff has since updated it for X11.
 .\" Updated by Thomas E. Dickey for XFree86 3.2 - XFree86 4.3, and afterward.
-.\"
+.\" ---------------------------------------------------------------------------
+.\" "XTerm Control Sequences" document
 .\" Run this file through troff and use the -ms macro package.
 .\"
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #400
-.ds RF 2025/06/01
+.ds RF 2025/06/08
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
