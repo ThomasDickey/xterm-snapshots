@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1112 2025/04/02 23:09:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.1113 2025/06/15 18:27:59 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -5023,7 +5023,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		else \
 		    sprintf(reply, ">%d;%dm", ival, \
 			    GET_MOD_FKEYS(field)); \
-		} while (0);
+		} while (0)
 
 		switch (ival) {
 		case modifyKeyboard:

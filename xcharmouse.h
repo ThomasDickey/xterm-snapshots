@@ -1,9 +1,9 @@
-/* $XTermId: xcharmouse.h,v 1.21 2025/06/10 17:32:09 tom Exp $ */
+/* $XTermId: xcharmouse.h,v 1.22 2025/06/15 16:22:31 tom Exp $ */
 
 /************************************************************
 
 Copyright 1997-2020,2025 by Thomas E. Dickey
-Copyright 1998 by Jason Bacon <acadix@execpc.com>
+Copyright 1998 by Jason Bacon
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the

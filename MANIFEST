@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-399e
+MANIFEST for xterm, version xterm-399f
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -154,6 +154,7 @@ package/debian/postinst         post-install script for update-alternatives
 package/debian/prerm            pre-remove script for update-alternatives
 package/debian/rules            build-script
 package/debian/watch            build-script
+package/debian/xterm-dev.doc-base.ctlseqs  register ctlseqs with doc-base
 package/debian/xterm-dev.docs   build-script
 package/debian/xterm-dev.lintian-overrides  ignore useless warnings from lintian
 package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
