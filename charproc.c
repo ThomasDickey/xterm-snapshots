@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2074 2025/06/08 23:03:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2075 2025/06/16 22:22:05 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -10545,16 +10545,19 @@ unparse_disallowed_ops(XtermWidget xw, char *value)
 	DATA(allowPasteControls, disallow_paste_ops, tblPasteOps),
 	DATA(allowTcapOps,	 disallow_tcap_ops,  tblTcapOps),
 	DATA(allowWinOps,	 disallow_win_ops,   tblWindowOps),
+	DATA(allowWindowOps,	 disallow_win_ops,   tblWindowOps),
     };
     /* *INDENT-ON* */
 #undef DATA
     Cardinal j, k, jk;
     char delim = ';';
 
+    TRACE(("unparse_disallowed_ops(%s)\n", value));
     for (j = 0; j < XtNumber(table); ++j) {
 	if (!x_strcasecmp(value, table[j].name)) {
 	    const char *flags = (char *) screen + table[j].offset;
 
+	    TRACE(("...found table\n"));
 	    for (k = 0; k < table[j].length; ++k) {
 		if (flags[k]) {
 		    const FlagList *codes = table[j].codes;
