@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1141 2025/04/01 22:27:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1143 2025/06/22 20:25:29 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -705,6 +705,10 @@ typedef enum {
 
 #ifndef OPT_PRINT_COLORS
 #define OPT_PRINT_COLORS 1 /* true if we print color information */
+#endif
+
+#ifndef OPT_QUERY_ALLOW
+#define OPT_QUERY_ALLOW	1 /* report allowed/disallowed features */
 #endif
 
 #ifndef OPT_READLINE

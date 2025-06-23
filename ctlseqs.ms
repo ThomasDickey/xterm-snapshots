@@ -1,5 +1,5 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.738 2025/06/08 23:01:30 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.741 2025/06/22 20:29:42 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
@@ -40,8 +40,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #400
-.ds RF 2025/06/08
+.ds LF Patch #401
+.ds RF 2025/06/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2951,7 +2951,7 @@ then the selection is cleared.
   \*(Os\*6\*0\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
-of the \fIallowed\fP optional runtime features,
+of the \fIallowed\fP optional runtime feature categories,
 i.e., zero or more of these resource names:
 .iP
   \fBallowColorOps\fR
@@ -2962,16 +2962,31 @@ i.e., zero or more of these resource names:
   \fBallowTitleOps\fR
   \fBallowWindowOps\fR
 .sP
+Except for \fBallowPasteControls\fP,
+those resources can be enabled or disabled at runtime using menus.
+They cannot be changed using control sequences.
+.sP
   \*(Ps = \*6\*1 \(-> Query disallowed features (XTQDISALLOWED).
-The second parameter (i.e., the main feature)
+The second parameter (i.e., the main feature category)
 must be one of the resource names returned by \*(Os\*6\*0.
 \fI\*(XT\fP replies with
 .sP
   \*(Os\*6\*1\*s\*;\*(Pt\*s\*(ST
 .sP
 where \*(Pt is a comma-separated list
-of the optional runtime features which would be disallowed
+of the optional runtime feature subcategories which would be disallowed
 if the main feature is disabled.
+.sP
+  \*(Ps = \*6\*2 \(-> Query allowable features (XTQALLOWABLE).
+The second parameter (i.e., the main feature category)
+must be one of the resource names that might be returned by \*(Os\*6\*0.
+\fI\*(XT\fP replies with
+.sP
+  \*(Os\*6\*2\*s\*;\*(Pt\*s\*(ST
+.sP
+where \*(Pt is a comma-separated list
+of the optional runtime feature subcategories which correspond to
+the main feature category.
 .sP
   \*(Ps = \*1\*0\*4\*;\fIc\fP \(-> Reset Color Number \fIc\fP.  It is reset to
 the color specified by the corresponding X resource.

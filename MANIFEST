@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-400a
+MANIFEST for xterm, version xterm-400b
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -224,7 +224,8 @@ vttests/other-sgr.sh            demonstrate non-VTxx SGRs
 vttests/palettes.pl             Demonstrate how to set palette colors using xterm's control sequences.
 vttests/paste64.pl              script to test base64-selection option
 vttests/pointer-shapes.sh       exercise xterm's pointer-shape control
-vttests/print-vt-chars.pl       demo-script
+vttests/print-vt-chars.pl       print GL and GR with the same charset
+vttests/query-allowed.pl        demonstrate OSC 60, 61, and 62
 vttests/query-color.pl          demonstrate OSC 4
 vttests/query-dynamic.pl        demonstrate OSC 10 to OSC 19
 vttests/query-fonts.pl          script to demo/test font-querying

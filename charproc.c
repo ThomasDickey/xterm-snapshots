@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2075 2025/06/16 22:22:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2078 2025/06/22 20:51:32 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -10527,40 +10527,47 @@ static const FlagList tblColorEvents[] =
 };
 #undef DATA
 
+#if OPT_QUERY_ALLOW
+
+#define DATA(mixed, plain, flags) \
+	{ mixed, \
+	  offsetof(TScreen, plain), \
+	  sizeof(((TScreen*)0)->plain), \
+	  flags }
+/* *INDENT-OFF* */
+static const struct {
+    const char *     name;
+    size_t           offset;
+    size_t           length;
+    const FlagList * codes;
+} allow_categories[] = {
+    DATA(XtNallowColorOps,      disallow_color_ops, tblColorOps),
+    DATA(XtNallowFontOps,       disallow_font_ops,  tblFontOps),
+    DATA(XtNallowMouseOps,      disallow_mouse_ops, tblMouseOps),
+    DATA(XtNallowPasteControls, disallow_paste_ops, tblPasteOps),
+    DATA(XtNallowTcapOps,       disallow_tcap_ops,  tblTcapOps),
+    DATA("allowWinOps",         disallow_win_ops,   tblWindowOps),
+    DATA(XtNallowWindowOps,     disallow_win_ops,   tblWindowOps),
+};
+/* *INDENT-ON* */
+#undef DATA
+
 void
 unparse_disallowed_ops(XtermWidget xw, char *value)
 {
     TScreen *screen = TScreenOf(xw);
-#define DATA(mixed, plain, flags) { #mixed, offsetof(TScreen, plain), sizeof(screen->plain), flags }
-    /* *INDENT-OFF* */
-    static const struct {
-	const char *	name;
-	size_t		offset;
-	size_t		length;
-	const FlagList *codes;
-    } table[] = {
-	DATA(allowColorOps,	 disallow_color_ops, tblColorOps),
-	DATA(allowFontOps,	 disallow_font_ops,  tblFontOps),
-	DATA(allowMouseOps,	 disallow_mouse_ops, tblMouseOps),
-	DATA(allowPasteControls, disallow_paste_ops, tblPasteOps),
-	DATA(allowTcapOps,	 disallow_tcap_ops,  tblTcapOps),
-	DATA(allowWinOps,	 disallow_win_ops,   tblWindowOps),
-	DATA(allowWindowOps,	 disallow_win_ops,   tblWindowOps),
-    };
-    /* *INDENT-ON* */
-#undef DATA
     Cardinal j, k, jk;
     char delim = ';';
 
     TRACE(("unparse_disallowed_ops(%s)\n", value));
-    for (j = 0; j < XtNumber(table); ++j) {
-	if (!x_strcasecmp(value, table[j].name)) {
-	    const char *flags = (char *) screen + table[j].offset;
+    for (j = 0; j < XtNumber(allow_categories); ++j) {
+	if (!x_strcasecmp(value, allow_categories[j].name)) {
+	    const char *flags = (char *) screen + allow_categories[j].offset;
 
 	    TRACE(("...found table\n"));
-	    for (k = 0; k < table[j].length; ++k) {
+	    for (k = 0; k < allow_categories[j].length; ++k) {
 		if (flags[k]) {
-		    const FlagList *codes = table[j].codes;
+		    const FlagList *codes = allow_categories[j].codes;
 		    Boolean found = False;
 
 		    unparseputc(xw, delim);
@@ -10580,6 +10587,28 @@ unparse_disallowed_ops(XtermWidget xw, char *value)
 	}
     }
 }
+
+void
+unparse_allowable_ops(XtermWidget xw, char *value)
+{
+    Cardinal j, k;
+    char delim = ';';
+
+    TRACE(("unparse_allowable_ops(%s)\n", value));
+    for (j = 0; j < XtNumber(allow_categories); ++j) {
+	if (!x_strcasecmp(value, allow_categories[j].name)) {
+	    const FlagList *codes = allow_categories[j].codes;
+
+	    for (k = 0; codes[k].name; ++k) {
+		unparseputc(xw, delim);
+		unparseputs(xw, codes[k].name);
+		delim = ',';
+	    }
+	    break;
+	}
+    }
+}
+#endif /* OPT_QUERY_ALLOW */
 
 /* ARGSUSED */
 static void

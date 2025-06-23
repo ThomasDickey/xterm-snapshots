@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.964 2025/04/08 07:36:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.966 2025/06/22 20:25:29 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1157,7 +1157,6 @@ extern void restoreCharsets (TScreen * /* screen */, const DECNRCM_codes * /* so
 extern void saveCharsets (TScreen * /* screen */, DECNRCM_codes * /* target */);
 extern void set_max_col(TScreen * /* screen */, int /* cols */);
 extern void set_max_row(TScreen * /* screen */, int /* rows */);
-extern void unparse_disallowed_ops (XtermWidget /* xw */, char * /* value */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int /* c */);
@@ -1184,6 +1183,11 @@ extern TInput *lookupTInput (XtermWidget /* xw */, Widget /* w */);
 extern void SGR_Background (XtermWidget /* xw */, int /* color */);
 extern void SGR_Foreground (XtermWidget /* xw */, int /* color */);
 extern void setExtendedColors (XtermWidget /* xw */);
+#endif
+
+#if OPT_QUERY_ALLOW
+extern void unparse_disallowed_ops (XtermWidget /* xw */, char * /* value */);
+extern void unparse_allowable_ops (XtermWidget /* xw */, char * /* value */);
 #endif
 
 #ifdef NO_LEAKS

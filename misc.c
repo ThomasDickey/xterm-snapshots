@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1113 2025/06/15 18:27:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.1115 2025/06/22 20:59:48 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3482,11 +3482,18 @@ typedef enum {
     ,OSC_Unused_30 = 30		/* Konsole (unused) */
     ,OSC_Unused_31 = 31		/* Konsole (unused) */
     ,OSC_NewLogFile = 46
+#if OPT_SHIFT_FONTS
     ,OSC_FontOps = 50
+#endif
     ,OSC_Unused_51		/* Emacs (unused) */
+#if OPT_PASTE64
     ,OSC_SelectionData = 52
+#endif
+#if OPT_QUERY_ALLOW
     ,OSC_AllowedOps = 60
     ,OSC_DisallowedOps = 61
+    ,OSC_AllowableOps = 62
+#endif
 } OscMiscOps;
 
 static Bool
@@ -3920,6 +3927,7 @@ ChangeFontRequest(XtermWidget xw, String buf)
 
 /***====================================================================***/
 
+#if OPT_QUERY_ALLOW
 static void
 report_allowed_ops(XtermWidget xw, int final)
 {
@@ -3932,7 +3940,7 @@ report_allowed_ops(XtermWidget xw, int final)
 #define CASE(name) \
     if (screen->name) { \
 	unparseputc(xw, delimiter); \
-	unparseputs(xw, #name); \
+	unparseputs(xw, XtN##name); \
 	delimiter = ','; \
     }
     CASE(allowColorOps);
@@ -3956,6 +3964,16 @@ report_disallowed_ops(XtermWidget xw, char *value, int final)
     unparse_disallowed_ops(xw, value);
     unparseputc1(xw, final);
 }
+
+static void
+report_allowable_ops(XtermWidget xw, char *value, int final)
+{
+    unparseputc1(xw, ANSI_OSC);
+    unparseputn(xw, OSC_AllowableOps);
+    unparse_allowable_ops(xw, value);
+    unparseputc1(xw, final);
+}
+#endif /* OPT_QUERY_ALLOW */
 
 /***====================================================================***/
 
@@ -4045,11 +4063,17 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (xw->work.palette_changed) {
 	switch (mode) {
+#if OPT_QUERY_ALLOW
 	case OSC_AllowedOps:
 	case OSC_DisallowedOps:
+#endif
+#if OPT_SHIFT_FONTS
 	case OSC_FontOps:
+#endif
 	case OSC_NewLogFile:
+#if OPT_PASTE64
 	case OSC_SelectionData:
+#endif
 	case OSC_Unused_30:
 	case OSC_Unused_31:
 	case OSC_Unused_51:
@@ -4069,7 +4093,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * a special case.
      */
     switch (mode) {
+#if OPT_SHIFT_FONTS
     case OSC_FontOps:
+#endif
 #if OPT_ISO_COLORS
     case OSC_Reset(OSC_SetAnsiColor):
     case OSC_Reset(OSC_GetAnsiColors):
@@ -4081,6 +4107,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_Reset(OSC_TEXT_CURSOR):
     case OSC_Reset(OSC_MOUSE_FG):
     case OSC_Reset(OSC_MOUSE_BG):
+#endif
 #if OPT_HIGHLIGHT_COLOR
     case OSC_Reset(OSC_HIGHLIGHT_BG):
     case OSC_Reset(OSC_HIGHLIGHT_FG):
@@ -4090,10 +4117,11 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_Reset(OSC_TEK_BG):
     case OSC_Reset(OSC_TEK_CURSOR):
 #endif
+#if OPT_QUERY_ALLOW
     case OSC_AllowedOps:
+#endif
 	need_data = False;
 	break;
-#endif
     default:
 	break;
     }
@@ -4272,15 +4300,15 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif /* ALLOWLOGGING */
 
-    case OSC_FontOps:
 #if OPT_SHIFT_FONTS
+    case OSC_FontOps:
 	if (*buf == '?') {
 	    QueryFontRequest(xw, buf, final);
 	} else if (xw->misc.shift_fonts) {
 	    ChangeFontRequest(xw, buf);
 	}
-#endif /* OPT_SHIFT_FONTS */
 	break;
+#endif /* OPT_SHIFT_FONTS */
 
 #if OPT_PASTE64
     case OSC_SelectionData:
@@ -4288,6 +4316,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif
 
+#if OPT_QUERY_ALLOW
     case OSC_AllowedOps:	/* XTQALLOWED */
 	report_allowed_ops(xw, final);
 	break;
@@ -4295,6 +4324,11 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_DisallowedOps:	/* XTQDISALLOWED */
 	report_disallowed_ops(xw, buf, final);
 	break;
+
+    case OSC_AllowableOps:	/* XTQALLOWABLE */
+	report_allowable_ops(xw, buf, final);
+	break;
+#endif
 
     case OSC_Unused_30:
     case OSC_Unused_31:
