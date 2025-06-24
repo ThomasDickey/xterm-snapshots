@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2078 2025/06/22 20:51:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2087 2025/06/24 07:37:44 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -279,7 +279,6 @@ static XtActionsRec actionsList[] = {
     { "set-scroll-on-tty-output", HandleScrollTtyOutput },
     { "set-scrollbar",		HandleScrollbar },
     { "set-select",		HandleSetSelect },
-    { "set-sun-keyboard",	HandleSunKeyboard },
     { "set-titeInhibit",	HandleTiteInhibit },
     { "set-visual-bell",	HandleSetVisualBell },
     { "set-vt-font",		HandleSetFont },
@@ -374,6 +373,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_SIXEL_GRAPHICS
     { "set-sixel-scrolling",	HandleSixelScrolling },
+#endif
+#if OPT_SUNPC_KBD
+    { "set-sun-keyboard",	HandleSunKeyboard },
 #endif
 #if OPT_SUN_FUNC_KEYS
     { "set-sun-function-keys",	HandleSunFunctionKeys },
@@ -5961,23 +5963,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #endif
 
-	case CASE_DECSASD:
 #if OPT_STATUS_LINE
+	case CASE_DECSASD:
 	    if (screen->vtXX_level >= 2) {
 		handle_DECSASD(xw, zero_if_default(0));
 	    }
-#endif
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSSDT:
-#if OPT_STATUS_LINE
 	    if (screen->vtXX_level >= 2) {
 		handle_DECSSDT(xw, zero_if_default(0));
 	    }
-#endif
 	    ResetState(sp);
 	    break;
+#endif
 
 #if OPT_XTERM_SGR		/* most are related, all use csi_hash_table[] */
 	case CASE_CSI_HASH_STATE:
@@ -5986,15 +5986,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = csi_hash_table;
 	    break;
 
-	case CASE_XTERM_CHECKSUM:
 #if OPT_DEC_RECTOPS
+	case CASE_XTERM_CHECKSUM:
 	    if (screen->vtXX_level >= 4 && AllowWindowOps(xw, ewSetChecksum)) {
 		TRACE(("CASE_XTERM_CHECKSUM\n"));
 		screen->checksum_ext = zero_if_default(0);
 	    }
-#endif
 	    ResetState(sp);
 	    break;
+#endif
 
 	case CASE_XTERM_PUSH_SGR:
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
@@ -7971,6 +7971,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    TRACE(("DATA_ERROR: unknown private code %d\n", code));
 	    break;
@@ -8312,6 +8315,9 @@ savemodes(XtermWidget xw)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    break;
 	}
@@ -8748,6 +8754,9 @@ restoremodes(XtermWidget xw)
 	case srm_DECRPL:	/* ignore */
 	case srm_DECVCCM:	/* ignore */
 	case srm_DECXRLM:	/* ignore */
+#if !OPT_SHIFT_FONTS
+	case srm_DECHEBM:	/* ignore */
+#endif
 	default:
 	    break;
 	}
@@ -9159,6 +9168,7 @@ window_ops(XtermWidget xw)
 	       ? "window title" \
 	       : "no titles")))
 
+#if OPT_TITLE_MODES
     case ewPushTitle:		/* save the window's title(s) on stack */
 	if (AllowWindowOps(xw, ewPushTitle)) {
 	    SaveTitle item;
@@ -9209,6 +9219,7 @@ window_ops(XtermWidget xw)
 	    }
 	}
 	break;
+#endif /* OPT_TITLE_MODES */
 
     default:			/* DECSLPP (24, 25, 36, 48, 72, 144) */
 	if (AllowWindowOps(xw, ewSetWinLines)) {
@@ -10487,18 +10498,28 @@ static const FlagList tblWindowOps[] =
 #endif
     ,DATA(GetIconTitle)
     ,DATA(GetWinTitle)
+#if OPT_TITLE_MODES
     ,DATA(PushTitle)
     ,DATA(PopTitle)
+#endif
 /* this item uses all remaining numbers in the sequence */
     ,DATA(SetWinLines)
 /* starting at this point, numbers do not apply */
-    ,DATA(SetXprop)
-    ,DATA(GetSelection)
-    ,DATA(SetSelection)
+    ,DATA(ColumnMode)
+#if OPT_DEC_RECTOPS
     ,DATA(GetChecksum)
     ,DATA(SetChecksum)
+#endif
+#if OPT_PASTE64
+    ,DATA(GetSelection)
+    ,DATA(SetSelection)
+#endif
+#if OPT_SET_XPROP
+    ,DATA(SetXprop)
+#endif
+#if OPT_STATUS_LINE
     ,DATA(StatusLine)
-    ,DATA(ColumnMode)
+#endif
     ,DATA_END
 };
 #undef DATA
@@ -12001,8 +12022,10 @@ VTDestroy(Widget w GCC_UNUSED)
 	deleteScrollback(screen);
     }
 
+#if OPT_TITLE_MODES
     for (n = 0; n < MAX_SAVED_TITLES; ++n)
 	xtermFreeTitle(&screen->saved_titles.data[n]);
+#endif
 
 #if OPT_STATUS_LINE
     free(screen->status_fmt);
@@ -14257,7 +14280,9 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
+#if OPT_FOCUS_EVENT
 	screen->send_focus_pos = OFF;
+#endif
 	screen->extend_coords = 0;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;

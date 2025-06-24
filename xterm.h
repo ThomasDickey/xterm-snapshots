@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.966 2025/06/22 20:25:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.968 2025/06/23 23:31:45 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1075,7 +1075,7 @@ extern void InitLocatorFilter (XtermWidget /* w */);
 #if OPT_FOCUS_EVENT
 extern void SendFocusButton(XtermWidget /* xw */, XFocusChangeEvent * /* event */);
 #else
-#define SendFocusBotton(xw, event) /* nothing */
+#define SendFocusButton(xw, event) /* nothing */
 #endif
 
 #if OPT_PASTE64
@@ -1348,7 +1348,6 @@ extern void Bell (XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char * /* value */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
-extern void ChangeXprop (char * /* name */);
 extern GCC_NORETURN void Cleanup (int /* code */);
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;

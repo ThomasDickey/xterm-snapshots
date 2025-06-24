@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1115 2025/06/22 20:59:48 tom Exp $ */
+/* $XTermId: misc.c,v 1.1123 2025/06/23 23:59:35 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -130,6 +130,10 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
+
+#if OPT_SET_XPROP
+static void ChangeXprop(char *);
+#endif
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -2608,9 +2612,9 @@ rgb masks (%04lx/%04lx/%04lx)\n"
 			   (vi->class == TrueColor
 			    || vi->class == DirectColor));
 
-	    if (resource.reportColors) {
+	    if_OPT_REPORT_COLORS({
 		printf(MYFMT, MYARG);
-	    }
+	    });
 	    TRACE((MYFMT, MYARG));
 	    TRACE(("...shifts %u/%u/%u\n",
 		   xw->rgb_shifts[0],
@@ -3101,18 +3105,20 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
     size_t have = strlen(spec);
 
     if (have == 0 || have > MAX_U_STRING) {
-	if (resource.reportColors) {
+	if_OPT_REPORT_COLORS({
 	    printf("color  (ignored, length %lu)\n", (unsigned long) have);
-	}
+	});
     } else if (XParseColor(screen->display, cmap, spec, def)) {
+#if OPT_REPORT_COLORS
 	XColor save_def = *def;
-	if (resource.reportColors) {
+#endif
+	if_OPT_REPORT_COLORS({
 	    printf("color  %04x/%04x/%04x = \"%s\"\n",
 		   def->red, def->green, def->blue,
 		   spec);
-	}
+	});
 	if (allocateBestRGB(xw, def)) {
-	    if (resource.reportColors) {
+	    if_OPT_REPORT_COLORS({
 		if (def->red != save_def.red ||
 		    def->green != save_def.green ||
 		    def->blue != save_def.blue) {
@@ -3120,7 +3126,7 @@ xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 			   def->red, def->green, def->blue,
 			   spec);
 		}
-	    }
+	    });
 	    TRACE(("xtermAllocColor -> %x/%x/%x\n",
 		   def->red, def->green, def->blue));
 	    result = True;
@@ -4120,6 +4126,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 #if OPT_QUERY_ALLOW
     case OSC_AllowedOps:
 #endif
+    case OSC_Unused_30:
 	need_data = False;
 	break;
     default:
@@ -4165,10 +4172,13 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	ChangeTitle(xw, buf);
 	break;
 
+#if OPT_SET_XPROP
     case OSC_X_Property:	/* change X property */
 	if (AllowWindowOps(xw, ewSetXprop))
 	    ChangeXprop(buf);
 	break;
+#endif
+
 #if OPT_ISO_COLORS
     case OSC_GetAnsiColors:
 	ansi_colors = NUM_ANSI_COLORS;
@@ -4583,7 +4593,7 @@ skip_params(const char *cp)
     return cp;
 }
 
-#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS)
+#if OPT_MOD_FKEYS || OPT_DEC_RECTOPS || (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_TITLE_MODES
 static int
 parse_int_param(const char **cp)
 {
@@ -4865,7 +4875,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 #if OPT_VT525_COLORS && OPT_ISO_COLORS
     const char *cp2;
 #endif
-#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS
+#if (OPT_VT525_COLORS && OPT_ISO_COLORS) || OPT_MOD_FKEYS || OPT_TITLE_MODES
     int ival;
 #endif
 
@@ -5087,6 +5097,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 	    } else
 #endif
+#if OPT_TITLE_MODES
 		/*
 		 * This query returns the settings assuming the default value
 		 * of DEF_TITLE_MODES, which is zero.  Someone could in
@@ -5124,7 +5135,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		}
 		if (okay)
 		    sprintf(reply, ">%st", buffer);
-	    } else {
+	    } else
+#endif /* OPT_TITLE_MODES */
+	    {
 		okay = False;
 	    }
 
@@ -6341,7 +6354,8 @@ ChangeTitle(XtermWidget xw, char *name)
 
 #define Strlen(s) strlen((const char *)(s))
 
-void
+#if OPT_SET_XPROP
+static void
 ChangeXprop(char *buf)
 {
     Display *dpy = XtDisplay(toplevel);
@@ -6364,6 +6378,7 @@ ChangeXprop(char *buf)
 	XSetTextProperty(dpy, w, &text_prop, aprop);
     }
 }
+#endif /* OPT_SET_XPROP */
 
 /***====================================================================***/
 
@@ -7923,6 +7938,7 @@ xtermSetWinSize(XtermWidget xw)
 	}
 }
 
+#if OPT_TITLE_MODES
 static void
 xtermInitTitle(TScreen *screen, int which)
 {
@@ -8006,6 +8022,7 @@ xtermFreeTitle(SaveTitle * item)
     FreeAndNull(item->iconName);
     FreeAndNull(item->windowName);
 }
+#endif /* OPT_TITLE_MODES */
 
 #if OPT_XTERM_SGR
 void

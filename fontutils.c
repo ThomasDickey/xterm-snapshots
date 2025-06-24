@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.790 2025/04/06 23:33:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.791 2025/06/23 21:52:22 tom Exp $ */
 
 /*
  * Copyright 1998-2024,2025 by Thomas E. Dickey
@@ -3867,8 +3867,6 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     xtermSetCursorBox(screen);
 }
 
-#if OPT_BOX_CHARS || OPT_REPORT_FONTS
-
 /*
  * Returns true if the given character is missing from the specified font.
  */
@@ -3906,7 +3904,6 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     }
     return result;
 }
-#endif
 
 #if OPT_BOX_CHARS || OPT_WIDE_CHARS
 /*

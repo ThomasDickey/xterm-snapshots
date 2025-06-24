@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1143 2025/06/22 20:25:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1152 2025/06/23 23:54:48 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -571,6 +571,10 @@ typedef enum {
 #define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
 #endif
 
+#ifndef OPT_SET_XPROP
+#define OPT_SET_XPROP 1 /* true if xterm can set X properties */
+#endif
+
 #ifndef OPT_SGR2_HASH
 #define OPT_SGR2_HASH 1 /* true if xterm hashes color-lookups for faint color */
 #endif
@@ -801,6 +805,10 @@ typedef enum {
 
 #ifndef OPT_TEK4014
 #define OPT_TEK4014     1 /* true if we're using tek4014 emulation */
+#endif
+
+#ifndef OPT_TITLE_MODES
+#define OPT_TITLE_MODES 1 /* true if we provide title-stack */
 #endif
 
 #ifndef OPT_TOOLBAR
@@ -1465,17 +1473,27 @@ typedef enum {
 #endif
     , ewGetIconTitle = 20
     , ewGetWinTitle = 21
+#if OPT_TITLE_MODES
     , ewPushTitle = 22
     , ewPopTitle = 23
+#endif
     /* these do not fit into that scheme, which is why we use an array */
     , ewSetWinLines
+    , ewColumnMode
+#if OPT_SET_XPROP
     , ewSetXprop
+#endif
+#if OPT_PASTE64
     , ewGetSelection
     , ewSetSelection
+#endif
+#if OPT_DEC_RECTOPS
     , ewGetChecksum
     , ewSetChecksum
+#endif
+#if OPT_STATUS_LINE
     , ewStatusLine
-    , ewColumnMode
+#endif
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
@@ -1602,6 +1620,12 @@ typedef enum {
 
 #define if_OPT_DIRECT_COLOR2_else(cond, test, stmt) \
 	if_OPT_DIRECT_COLOR2(cond, test, stmt else)
+
+#if OPT_REPORT_COLORS
+#define if_OPT_REPORT_COLORS(stmt) if (resource.reportColors) stmt
+#else
+#define if_OPT_REPORT_COLORS(stmt) /* nothing */
+#endif
 
 #define COLOR_RES_NAME(root) "color" root
 
@@ -2832,7 +2856,9 @@ typedef struct {
 
 	int		title_modes;	/* control set/get of titles	*/
 	int		title_modes0;	/* ...initial value         	*/
+#if OPT_TITLE_MODES
 	SavedTitles	saved_titles;
+#endif
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/

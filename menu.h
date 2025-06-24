@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.148 2025/06/08 23:07:32 tom Exp $ */
+/* $XTermId: menu.h,v 1.149 2025/06/23 20:23:21 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -399,6 +399,8 @@ extern void update_delete_del(void);
 
 #if OPT_SUNPC_KBD
 extern void update_sun_kbd(void);
+#else
+#define update_sun_kbd() /* nothing */
 #endif
 
 #if OPT_HP_FUNC_KEYS
