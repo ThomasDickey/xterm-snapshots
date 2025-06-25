@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2087 2025/06/24 07:37:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2088 2025/06/25 08:21:04 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -9039,8 +9039,8 @@ window_ops(XtermWidget xw)
 		       win_attrs.y, win_attrs.x));
 		if (!discount_frame_extents(xw, &result_y, &result_x)) {
 		    TRACE(("...cancelled translation\n"));
-		    result_y = win_attrs.y;
-		    result_x = win_attrs.x;
+		    result_y = win_attrs.y + win_attrs.border_width;
+		    result_x = win_attrs.x + win_attrs.border_width;
 		}
 		break;
 	    }
