@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2088 2025/06/25 08:21:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2090 2025/08/14 23:47:54 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -3310,7 +3310,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       visibleVTparse(sp->nextstate)));
 	    } else
 #endif
-	    if (sp->parsestate != ansi_table)
 		sp->nextstate = CASE_IGNORE;
 	}
 

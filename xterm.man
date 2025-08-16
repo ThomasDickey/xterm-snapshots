@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.918 2025/06/08 23:06:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.922 2025/08/16 00:54:46 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -2272,11 +2272,39 @@ This overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
 .TP 8
 .B "allowC1Printable\fP (class\fB AllowC1Printable\fP)"
 If true, overrides the mapping of C1 controls
-(codes 128\(en159) to make them be treated
+(codes 128\(en159), telling \fI\*n\fP to treat
 as if they were printable characters.
 Although this corresponds to no particular standard,
 some users insist it is a VT100.
 The default is \*(``false\*(''.
+.IP
+Simply marking the C1 controls as printable does not ensure that \fI\*n\fP
+will display a character.
+That depends upon the font used.
+When the font does not provide glyphs for those codes,
+\fI\*n\fP may instead show a dashed box or a blank,
+depending on the setting of the \fBforceBoxChars\fP resource.
+.IP
+When \fI\*n\fP uses UTF-8 encoding,
+it does not interpret the C1 bytes as control characters:
+.RS
+.bP
+\fI\*N\fP stores characters in each cell on the screen
+(rather than the sequence of bytes which comprise a character).
+When \fBallowC1Printable\fP is \fIon\fP,
+the stored character codes match the byte values.
+.bP
+When \fBallowC1Printable\fP is \fIoff\fR,
+\fI\*n\fP stores the same bytes
+as Unicode replacement characters (U+FFFD),
+because a UTF-8 sequence cannot begin with those bytes.
+.IP
+UTF-8 encoding can produce character codes in the range 128\(en159,
+using two bytes (beginning with 0xC2).
+\fI\*N\fP does not interpret those two-byte characters as C1 controls.
+when \fBallowC1Printable\fP is off.
+It simply ignores them.
+.RE
 .TP
 .B "allowColorOps\fP (class\fB AllowColorOps\fP)"
 Specifies whether control sequences that
@@ -3789,11 +3817,21 @@ When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
 \fI\*n\fP uses the Unicode glyphs which match the VT100 line-drawing glyphs.
 .RE
 .IP
+The default is \*(``false\*('':
+.RS
+.bP
 If \*(``false\*('', \fI\*n\fP checks for missing glyphs in the font
 and makes line-drawing characters directly as needed.
+.IP
+When \*(``false\*('', \fI\*n\fP also shows a blank where
+otherwise printable glyphs are missing from the current font.
+.bP
 If \*(``true\*('', \fI\*n\fP assumes the font does not contain the
 line-drawing characters, and draws them directly.
-The default is \*(``false\*(''.
+.IP
+When \*(``true\*('', \fI\*n\fP also shows a dashed box outline where
+otherwise printable glyphs are missing from the current font.
+.RE
 .IP
 The VT100 line-drawing character set
 (also known as the \fIDEC Special Character and Line Drawing Set\fP)
@@ -6337,6 +6375,54 @@ An X application may \fIown\fP a selection,
 which allows it to be the source of data copied using a given selection atom
 \fI\*N\fP may continue owning a selection after it stops highlighting
 (see \fBkeepSelection\fP).
+.PP
+\fI\*N\fP provides selection data using the cells of characters
+which it displays.
+It fills those cells using sequences of bytes and control sequences:
+.bP
+By default, \fI\*n\fP uses UTF-8 encoding if your locale uses that encoding.
+The \fButf8\fP and \fBlocale\fP resources control that behavior.
+.IP
+When decoding UTF-8, \fI\*n\fP may compose
+certain base- and combining-characters.
+Use the \fBprecompose\fP resource to enable or disable this feature.
+.IP
+\fI\*N\fP has other resources for specialized encoding needs, including
+\fBallowC1Printable\fP and
+\fBshowMissingGlyphs\fP.
+.bP
+\fI\*N\fP stores base- and combining characters for each cell in its window.
+It does not store the sequence of bytes which composed those characters.
+Selection uses the characters which \fI\*n\fP stores in each cell.
+.IP
+If the selection target accepts UTF-8,
+\fI\*n\fP copies all of the base- and combining characters to the target.
+If the selection target does not accept UTF-8,
+e.g., to a cut buffer,
+\fI\*n\fP copies only what the target accepts,
+using the \fBdefaultString\fP resource to
+fill cells which cannot be represented in the target.
+.bP
+All of the cells in \fI\*n\fP's window are uninitialized at first.
+Erasing the screen makes the cells uninitialized.
+Uninitialized cells are displayed as spaces.
+.IP
+By default, selecting rows on \fI\*n\fP's window will highlight all
+of the cells that the pointer traverses while you select.
+If the \fBhighlightSelection\fP resource is set, 
+\fI\*n\fP will not highlight trailing uninitialized cells
+on the selected rows.
+.IP
+The \fBtrimSelection\fP resource allows you to discard trailing blanks
+from each selected row,
+both from uninitialized cells
+as well as those written by an application.
+.bP
+As \fI\*n\fP writes characters in its window,
+and wraps text at the right margin,
+it remembers that the text was wrapped.
+Use the \fBshowWrapMarks\fP resource to show this in the window.
+.
 .SS PRIMARY
 When configured to use the primary selection (the default),
 \fI\*n\fP can provide the selection data in ways
@@ -7203,18 +7289,18 @@ The second section allows you to modify the way it is displayed:
 .B Bold Fonts\fP (resource \fBallow\-bold\-fonts\fP)
 This is normally checked (enabled).
 When unchecked, \fI\*n\fP will not use bold fonts.
-The setting corresponds to the \fBallowBoldFonts\fP resource.
+The menu selection modifies the \fBallowBoldFonts\fP resource.
 .TP
 .B Line-Drawing Characters\fP (resource \fBfont\-linedrawing\fP)
 When set, tells \fI\*n\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
-Compare to the \fBforceBoxChars\fP resource.
+The menu selection modifies the \fBforceBoxChars\fP resource.
 .TP
 .B Packed Font\fP (resource \fBfont\-packed\fP)
 When set, tells \fI\*n\fP to use the minimum glyph-width from a font
 when displaying characters.
 Use the maximum width (unchecked) to help display proportional fonts.
-Compare to the \fBforcePackedFont\fP resource.
+The menu selection modifies the \fBforcePackedFont\fP resource.
 .TP
 .B Doublesized Characters\fP (resource \fBfont\-doublesize\fP)
 When set, \fI\*n\fP may ask the font server to produce scaled versions
