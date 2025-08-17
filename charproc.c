@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2090 2025/08/14 23:47:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2093 2025/08/17 10:23:21 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -813,7 +813,7 @@ static XtResource xterm_resources[] =
 #endif
 
     /* these are used only for testing ncurses, not in the manual page */
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
     Bres(XtNxmcInline, XtCXmcInline, screen.xmc_inline, False),
     Bres(XtNxmcMoveSGR, XtCXmcMoveSGR, screen.move_sgr_ok, True),
     Ires(XtNxmcAttributes, XtCXmcAttributes, screen.xmc_attributes, 1),
@@ -974,7 +974,7 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
 static Bool
 CheckBogusForeground(TScreen *screen, const char *tag)
 {
@@ -1044,7 +1044,7 @@ SGR_Foreground(XtermWidget xw, int color)
     setCgsFore(xw, WhichVWin(screen), gcBold, fg);
     setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
 
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If we've just turned off the foreground color, check for blank cells
      * which have no background color, but do have foreground color.  This
@@ -3310,6 +3310,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       visibleVTparse(sp->nextstate)));
 	    } else
 #endif
+#if EXP_C2_CONTROLS
+	    if (sp->parsestate != ansi_table)
+#endif
 		sp->nextstate = CASE_IGNORE;
 	}
 
@@ -3920,7 +3923,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CUP:
 	    TRACE(("CASE_CUP - cursor position\n"));
-	    if_OPT_XMC_GLITCH(screen, {
+	    if_EXP_XMC_GLITCH(screen, {
 		Jump_XMC(xw);
 	    });
 	    CursorSet(screen, one_if_default(0) - 1, one_if_default(1) - 1, xw->flags);
@@ -4269,7 +4272,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		int op = GetParam(item);
 		int skip;
 
-		if_OPT_XMC_GLITCH(screen, {
+		if_EXP_XMC_GLITCH(screen, {
 		    Mark_XMC(xw, op);
 		});
 		TRACE(("CASE_SGR %d\n", op));
@@ -6969,7 +6972,7 @@ dotext(XtermWidget xw,
 	}
     }
 
-    if_OPT_XMC_GLITCH(screen, {
+    if_EXP_XMC_GLITCH(screen, {
 	Cardinal n;
 	if (charset != '?') {
 	    for (n = 0; n < len; n++) {
@@ -10835,7 +10838,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.c132);
     init_Bres(screen.curses);
     init_Bres(screen.hp_ll_bc);
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
     init_Ires(screen.xmc_glitch);
     init_Ires(screen.xmc_attributes);
     init_Bres(screen.xmc_inline);
@@ -13517,7 +13520,7 @@ ShowCursor(XtermWidget xw)
 	base = ' ';
     }
 #if OPT_ISO_COLORS
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
@@ -13899,7 +13902,7 @@ HideCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
-#ifdef EXP_BOGUS_FG
+#if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.

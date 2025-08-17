@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.405 2025/05/18 22:27:35 tom Exp $
+dnl $XTermId: configure.in,v 1.406 2025/08/17 09:50:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1169,7 +1169,7 @@ CF_ARG_ENABLE(xmc-glitch,
 	[enable_xmc=no])
 AC_MSG_RESULT($enable_xmc)
 if test "$enable_xmc" = yes ; then
-	AC_DEFINE(OPT_XMC_GLITCH,1,[Define to 1 to enable xmc magic-cookie emulation])
+	AC_DEFINE(EXP_XMC_GLITCH,1,[Define to 1 to enable xmc magic-cookie emulation])
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi

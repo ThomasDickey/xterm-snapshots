@@ -25323,7 +25323,7 @@ echo "${ECHO_T}$enable_xmc" >&6
 if test "$enable_xmc" = yes ; then
 
 cat >>confdefs.h <<\EOF
-#define OPT_XMC_GLITCH 1
+#define EXP_XMC_GLITCH 1
 EOF
 
 	EXTRASRCS="$EXTRASRCS testxmc.c"

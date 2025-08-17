@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1152 2025/06/23 23:54:48 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1155 2025/08/17 09:56:39 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -847,10 +847,6 @@ typedef enum {
 #define OPT_WIDER_ICHAR 1 /* true if xterm uses 32-bits for wide-chars */
 #endif
 
-#ifndef OPT_XMC_GLITCH
-#define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
-#endif
-
 #ifndef OPT_XRES_QUERY
 #define OPT_XRES_QUERY	1 /* true for resource query */
 #endif
@@ -861,6 +857,20 @@ typedef enum {
 
 #ifndef OPT_ZICONBEEP
 #define OPT_ZICONBEEP   1 /* true if xterm supports "-ziconbeep" option */
+#endif
+
+/***====================================================================***/
+
+#ifndef EXP_BOGUS_FG
+#define EXP_BOGUS_FG	0 /* an alternative color model for cursor-color */
+#endif
+
+#ifndef EXP_C2_CONTROLS
+#define EXP_C2_CONTROLS 0 /* demonstrate an encoding blunder by Unicode.org */
+#endif
+
+#ifndef EXP_XMC_GLITCH
+#define EXP_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
 #endif
 
 /***====================================================================***/
@@ -1745,12 +1755,12 @@ typedef enum {
 
 /***====================================================================***/
 
-#if OPT_XMC_GLITCH
-#define if_OPT_XMC_GLITCH(screen, code) if(screen->xmc_glitch) code
+#if EXP_XMC_GLITCH
+#define if_EXP_XMC_GLITCH(screen, code) if(screen->xmc_glitch) code
 #define XMC_GLITCH 1	/* the character we'll show */
 #define XMC_FLAGS (INVERSE|UNDERLINE|BOLD|BLINK)
 #else
-#define if_OPT_XMC_GLITCH(screen, code) /* nothing */
+#define if_EXP_XMC_GLITCH(screen, code) /* nothing */
 #endif
 
 /***====================================================================***/
@@ -2984,7 +2994,7 @@ typedef struct {
 	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
 	unsigned	xmc_glitch;	/* # of spaces to pad on SGR's	*/
 	IAttr		xmc_attributes;	/* attrs that make a glitch	*/
 	Boolean		xmc_inline;	/* SGR's propagate only to eol	*/

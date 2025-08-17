@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.922 2025/08/16 00:54:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.923 2025/08/17 09:47:45 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -6388,8 +6388,10 @@ certain base- and combining-characters.
 Use the \fBprecompose\fP resource to enable or disable this feature.
 .IP
 \fI\*N\fP has other resources for specialized encoding needs, including
-\fBallowC1Printable\fP and
-\fBshowMissingGlyphs\fP.
+\fBallowC1Printable\fP,
+\fBshowMissingGlyphs\fP,
+and
+\fButf8Weblike\fP.
 .bP
 \fI\*N\fP stores base- and combining characters for each cell in its window.
 It does not store the sequence of bytes which composed those characters.

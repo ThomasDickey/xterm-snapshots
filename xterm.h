@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.968 2025/06/23 23:31:45 tom Exp $ */
+/* $XTermId: xterm.h,v 1.969 2025/08/17 09:50:31 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1916,7 +1916,7 @@ extern void addXtermCombining (TScreen * /* screen */, int /* row */, int /* col
 extern void allocXtermChars(ScrnPtr * /* buffer */, Cardinal /* length */);
 #endif
 
-#if OPT_XMC_GLITCH
+#if EXP_XMC_GLITCH
 extern void Mark_XMC (XtermWidget /* xw */, int /* param */);
 extern void Jump_XMC (XtermWidget /* xw */);
 extern void Resolve_XMC (XtermWidget /* xw */);

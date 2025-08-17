@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.661 2025/08/11 07:45:33 tom Exp $ */
+/* $XTermId: screen.c,v 1.662 2025/08/17 09:51:15 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1030,7 +1030,7 @@ ScrnWriteText(XtermWidget xw,
 				      screen->cur_row,
 				      (int) real_width, 1);
 
-    if_OPT_XMC_GLITCH(screen, {
+    if_EXP_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
     });
 
