@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: run-tic.in,v 1.1 2022/10/02 21:42:36 tom Exp $
+# $XTermId: run-tic.in,v 1.2 2025/08/27 00:49:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2021,2022 by Thomas E. Dickey
+# Copyright 2006-2022,2025 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -124,12 +124,38 @@ EOF
 	fi
 	;;
 esac
+PASS3=$MYTEMP/terminfo.src
+awk 'BEGIN{
+	state = 0;
+	if ( "@XTERM_KBS@" == "BS" ) {
+		want = "^H";
+	} else {
+		want = "^?";
+	}
+}
+/^xterm[+]kbs/{
+	state = 1;
+	print;
+	next;
+}
+(state == 1){
+	if ( index($0,"	") <= 0 ) {
+		state = 0;
+		print;
+		next;
+	}
+	sub("^#","");
+	if (index($0,want) <= 0) {
+		sub("^","#");
+	}
+}
+{ print; }' < "$PASS2" > $PASS3
 
 echo "** $TIC_PROG $OPT $PASS1"
-$TIC_PROG $OPT "$PASS2" 2>"$STDERR"
+$TIC_PROG $OPT "$PASS3" 2>"$STDERR"
 RET=$?
 
-sed -e "s%$PASS2%$PASS1%" "$STDERR" | \
+sed -e "s%$PASS3%$PASS1%" "$STDERR" | \
 @FGREP@ -v 'Unknown Capability' | \
 @FGREP@ -v 'Capability is not recognized:' | \
 @FGREP@ -v 'tic: Warning near line ' >&2

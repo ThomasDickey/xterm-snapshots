@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1155 2025/08/17 09:56:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1156 2025/08/31 21:55:50 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1720,7 +1720,10 @@ typedef enum {
 
 #define CONTROL(a) ((a) & 037)
 
-#define XTERM_ERASE CONTROL('H')
+#ifndef XTERM_ERASE
+#define XTERM_ERASE ANSI_BS
+#endif
+
 #define XTERM_LNEXT CONTROL('V')
 
 /***====================================================================***/

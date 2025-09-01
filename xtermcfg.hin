@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.236 2025/08/17 09:50:38 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.237 2025/08/31 21:55:14 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2025 by Thomas E. Dickey
@@ -229,6 +229,7 @@
 #undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
+#undef XTERM_ERASE		/* CF_WITH_XTERM_KBS */
 #undef cc_t			/* CF_TYPE_CC_T */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef inline			/* AC_C_INLINE */

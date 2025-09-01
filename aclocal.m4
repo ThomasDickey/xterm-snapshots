@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.542 2025/06/14 10:47:49 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.548 2025/08/28 00:37:13 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -298,7 +298,7 @@ dnl Allow user to enable a normally-off option.
 AC_DEFUN([CF_ARG_ENABLE],
 [CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ARG_OPTION version: 5 updated: 2015/05/10 19:52:14
+dnl CF_ARG_OPTION version: 6 updated: 2025/08/05 04:09:09
 dnl -------------
 dnl Restricted form of AC_ARG_ENABLE that ensures user doesn't give bogus
 dnl values.
@@ -307,7 +307,7 @@ dnl Parameters:
 dnl $1 = option name
 dnl $2 = help-string
 dnl $3 = action to perform if option is not default
-dnl $4 = action if perform if option is default
+dnl $4 = action to perform if option is default
 dnl $5 = default option value (either 'yes' or 'no')
 AC_DEFUN([CF_ARG_OPTION],
 [AC_ARG_ENABLE([$1],[$2],[test "$enableval" != ifelse([$5],no,yes,no) && enableval=ifelse([$5],no,no,yes)
@@ -4871,6 +4871,58 @@ fi
 AC_SUBST(ICON_SUFFIX)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_XTERM_KBS version: 2 updated: 2025/08/27 20:35:59
+dnl -----------------
+dnl Configure-option with platform-defaults for the "xterm+kbs" building block
+dnl in the terminfo file.
+dnl
+dnl The terminfo "kbs" value corresponds to "stty erase", and is conventionally
+dnl assigned to the key which has
+dnl
+dnl		a "Backspace" label and/or
+dnl		a backarrow symbol.
+dnl
+dnl See XTerm FAQ "Why doesn't my delete key work?"
+dnl		https://invisible-island.net/xterm/xterm.faq.html#xterm_erase
+AC_DEFUN([CF_WITH_XTERM_KBS],[
+case $host_os in
+(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnuabielfv*|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc|linux*musl|openbsd*|darwin*)
+	want_xterm_kbs=DEL
+	;;
+(*)
+	want_xterm_kbs=BS
+	;;
+esac
+
+AC_MSG_CHECKING(if xterm backspace-key sends BS or DEL)
+AC_ARG_WITH(xterm-kbs,
+	[[  --with-xterm-kbs[=XXX]  specify if xterm backspace-key sends BS or DEL]],
+	[with_xterm_kbs=$withval],
+	[with_xterm_kbs=auto])
+case x$with_xterm_kbs in
+(xyes|xno|xBS|xbs|x8)
+	with_xterm_kbs=BS
+	;;
+(xDEL|xdel|x127)
+	with_xterm_kbs=DEL
+	;;
+(xauto)
+	with_xterm_kbs=$want_xterm_kbs
+	;;
+(*)
+	with_xterm_kbs=$withval
+	;;
+esac
+AC_MSG_RESULT($with_xterm_kbs)
+XTERM_KBS=$with_xterm_kbs
+AC_SUBST(XTERM_KBS)
+
+if test "x$with_xterm_kbs" != "x$want_xterm_kbs"
+then
+	AC_MSG_WARN([expected --with-xterm-kbs=$want_xterm_kbs for $host_os, have $with_xterm_kbs])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_XBOOL_RESULT version: 3 updated: 2015/04/12 15:39:00
 dnl ---------------
 dnl Translate an autoconf boolean yes/no into X11's booleans, e.g., True/False.
@@ -4997,7 +5049,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 68 updated: 2024/11/09 18:07:29
+dnl CF_XOPEN_SOURCE version: 69 updated: 2025/07/26 14:09:49
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -5057,7 +5109,7 @@ case "$host_os" in
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
+(linux*gnu|linux*gnuabi64|linux*gnuabin32|linux*gnuabielfv*|linux*gnueabi|linux*gnueabihf|linux*gnux32|uclinux*|gnu*|mint*|k*bsd*-gnu|cygwin|msys|mingw*|linux*uclibc)
 	CF_GNU_SOURCE($cf_XOPEN_SOURCE)
 	;;
 linux*musl)

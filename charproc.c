@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2094 2025/08/21 20:26:30 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2095 2025/08/25 08:22:22 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -4126,11 +4126,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    }
 		} else {
+		    /*
+		     * xterm reports all supported extensions.  Others differ.
+		     *
+		     * These codes are listed in DEC 070 as constants used for
+		     * VT420 terminal identification.  However the actual
+		     * terminal (and VT510/VT520) differ in both documentation
+		     * and hardware.
+		     */
 		    reply.a_param[count++] = (ParmType) (60
 							 + screen->display_da1
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
+		    /*
+		     * VT420/VT510/VT520 manuals do not list ReGIS or SIXEL.
+		     * As an extension, xterm provides them with decGraphicsID.
+		     */
 #if OPT_REGIS_GRAPHICS
 		    if (optRegisGraphics(screen)) {
 			reply.a_param[count++] = 3;	/* ReGIS graphics */
@@ -4141,6 +4153,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 4;	/* sixel graphics */
 		    }
 #endif
+		    /*
+		     * VT420 manual's example shows 6.
+		     * VT510 manual example of Level 4 omits 6.
+		     * VT520 manual's example omits 6, 8 and 15 with a comment
+		     * stating those are not reported explicitly at Level 5.
+		     */
 		    reply.a_param[count++] = 6;		/* selective-erase */
 #if OPT_SUNPC_KBD
 		    if (xw->keyboard.type == keyboardIsVT220)
@@ -4148,15 +4166,30 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 8;	/* user-defined-keys */
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
+#if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 16;	/* locator port */
-		    if (screen->display_da1 >= 400) {
+#endif
+		    /*
+		     * DEC 070 says 17 is supported in Level 3; VT320 manual
+		     * does not document it, but shows it in an example.
+		     */
+		    if (screen->display_da1 >= 300) {
 			reply.a_param[count++] = 17;	/* terminal state interrogation */
+		    }
+		    if (screen->display_da1 >= 400) {
 			reply.a_param[count++] = 18;	/* windowing extension */
 			reply.a_param[count++] = 21;	/* horizontal scrolling */
 		    }
+		    /*
+		     * DEC 070 lists 22 as a Level 4 extension.
+		     */
 		    if_OPT_ISO_COLORS(screen, {
 			reply.a_param[count++] = 22;	/* ANSI color, VT525 */
 		    });
+		    /*
+		     * DEC 070 lists 28 and 29 as VT420 extensions.
+		     * They do not appear in the VT420 manual.
+		     */
 		    reply.a_param[count++] = 28;	/* rectangular editing */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 29;	/* ANSI text locator */
