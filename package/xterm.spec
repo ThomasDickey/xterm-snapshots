@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.194 2025/09/03 20:54:24 tom Exp $
+# $XTermId: xterm.spec,v 1.195 2025/09/07 23:28:33 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -6,7 +6,7 @@ Summary: X terminal emulator (development version)
 %global my_class XTermDev
 Name: %{fullname}
 Version: 402
-Release: 6
+Release: 8
 License: X11
 Group: User Interface/X
 Source: https://invisible-island.net/archives/xterm/xterm-%{version}.tgz
@@ -269,8 +269,8 @@ fi
 
 %changelog
 
-* Wed Sep 03 2025 Thomas E. Dickey
-- testing xterm-dev 402-6
+* Sun Sep 07 2025 Thomas E. Dickey
+- testing xterm-dev 402-8
 
 * Fri Nov 25 2022 Thomas E. Dickey
 - Fedora 37 has no xorg-x11-docs
