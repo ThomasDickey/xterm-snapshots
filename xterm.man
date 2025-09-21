@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.923 2025/08/17 09:47:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.930 2025/09/21 23:19:17 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -265,8 +265,8 @@ See \fIXterm Control Sequences\fP for details.
 .
 .\" ***************************************************************************
 .SH OPTIONS
-Because \fI\*n\fP uses the \fIX Toolkit\fP library,
-it accepts the standard \fIX Toolkit\fP command line options.
+Because \fI\*n\fP uses the \fIX\ Toolkit\fP library,
+it accepts the standard \fIX\ Toolkit\fP command line options.
 \fI\*N\fP also accepts many application-specific options.
 .PP
 By convention, if an option begins with a \*(``\fB+\fP\*(''
@@ -274,17 +274,17 @@ instead of a \*(``\fB\-\fP\*('',
 the option is restored to its default value.
 .\" ***************************************************************************
 .PP
-Most of the \fI\*n\fP options are actually parsed by the \fIX Toolkit\fP,
+Most of the \fI\*n\fP options are actually parsed by the \fIX\ Toolkit\fP,
 which sets resource values, and
 overrides corresponding resource-settings in your X resource files.
-\fI\*N\fP provides the \fIX Toolkit\fP with a table of options.
-A few of these are marked, telling the \fIX Toolkit\fP to ignore them
+\fI\*N\fP provides the \fIX\ Toolkit\fP with a table of options.
+A few of these are marked, telling the \fIX\ Toolkit\fP to ignore them
 (\fB\-help\fP,
 \fB\-version\fP,
 \fB\-class\fP,
 \fB\-e\fP, and
 \fB\-into\fP).
-After the \fIX Toolkit\fP has parsed the command-line parameters,
+After the \fIX\ Toolkit\fP has parsed the command-line parameters,
 it removes those which it handles,
 leaving the specially-marked parameters for \fI\*n\fP to handle.
 .\" ***************************************************************************
@@ -319,9 +319,9 @@ The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fI\*n\fP
 cannot open the display, and are useful for testing and configuration scripts.
 Along with \fB\-class\fP, they are checked before other options.
 To do this, \fI\*n\fP has its own (much simpler) argument parser,
-along with a table of the \fIX Toolkit\fP's built-in list of options.
+along with a table of the \fIX\ Toolkit\fP's built-in list of options.
 .PP
-Relying upon the \fIX Toolkit\fP to parse the options and associated values
+Relying upon the \fIX\ Toolkit\fP to parse the options and associated values
 has the advantages of simplicity and good integration with the X resource
 mechanism.
 There are a few drawbacks
@@ -341,7 +341,7 @@ In the design of these options,
 some are deemed more important,
 and can override other options.
 .IP
-The \fIX Toolkit\fP uses patterns (constants and wildcards) to match resources.
+The \fIX\ Toolkit\fP uses patterns (constants and wildcards) to match resources.
 Once a particular pattern has been used,
 it will not modify it.
 To override a given setting,
@@ -351,7 +351,7 @@ Some poorly-designed resource files are too specific
 to allow the command-line options to affect the relevant widget values.
 .bP
 In a few cases,
-the \fIX Toolkit\fP combines its standard options in ways which do not work
+the \fIX\ Toolkit\fP combines its standard options in ways which do not work
 well with \fI\*n\fP.
 This happens with the color (\fB\-fg\fP, \fB\-bg\fP) and reverse (\fB\-rv\fP)
 options.
@@ -518,7 +518,7 @@ Normally it is \*(``__default_class__\*('', but
 can be set to another class such as
 \*(``U__default_class__\*('' to override selected resources.
 .IP
-\fIX Toolkit\fP sets the \fBWM_CLASS\fP property using the instance name
+\fIX\ Toolkit\fP sets the \fBWM_CLASS\fP property using the instance name
 and this class value.
 .TP 8
 .B "\-cm"
@@ -599,7 +599,7 @@ When a CJK
 double-width font is specified, you also need to turn
 on the \fBcjkWidth\fP resource.
 .IP
-If you specify both \fB\-fa\fP and the \fIX Toolkit\fP option \fB\-fn\fP,
+If you specify both \fB\-fa\fP and the \fIX\ Toolkit\fP option \fB\-fn\fP,
 the \fB\-fa\fP setting overrides the latter.
 .IP
 See also the \fBrenderFont\fP resource,
@@ -1389,7 +1389,7 @@ initialization or the \fB\-S\fP option to a process running in the \fI\*n\fP.
 The following command line arguments are provided for compatibility with
 older versions.
 They may not be supported in the next release as the
-\fIX Toolkit\fP provides standard options that accomplish the same task.
+\fIX\ Toolkit\fP provides standard options that accomplish the same task.
 .TP 8
 .B "%\fIgeom\fP"
 This option specifies the preferred size and position of the Tektronix window.
@@ -1406,12 +1406,12 @@ It is equivalent to \fB\-title\fP.
 .BI \-n " string"
 This option specifies the icon name for \fI\*n\fP's windows.
 It is shorthand for specifying the \*(``\fBiconName\fP\*('' resource.
-Note that this is not the same as the \fIX Toolkit\fP option \fB\-name\fP.
+Note that this is not the same as the \fIX\ Toolkit\fP option \fB\-name\fP.
 The default icon name is the application name.
 .IP
 If no suitable icon is found, \fI\*n\fP provides a compiled-in pixmap.
 .IP
-\fIX Toolkit\fP sets the \fBWM_ICON_NAME\fP property using this value.
+\fIX\ Toolkit\fP sets the \fBWM_ICON_NAME\fP property using this value.
 .TP 8
 .B \-r
 This option indicates that reverse video should be simulated by swapping
@@ -1423,19 +1423,19 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
-.SS "X Toolkit Options"
-The following standard \fIX Toolkit\fP command line arguments are commonly used
+.SS "X\ Toolkit Options"
+The following standard \fIX\ Toolkit\fP command line arguments are commonly used
 with \fI\*n\fP:
 .TP 8
 .B \-bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
 The corresponding resource name is \fBborderColor\fP.
-\fI\*N\fP uses the \fIX Toolkit\fP default,
+\fI\*N\fP uses the \fIX\ Toolkit\fP default,
 which is \*(``XtDefaultForeground\*(''.
 .IP
 \fI\*N\fP's VT100 window has two borders:
 the \fIinner\fP border \fBinternalBorder\fP
-and the \fIouter\fP border \fBborderWidth\fP, managed by the \fIX Toolkit\fP.
+and the \fIouter\fP border \fBborderWidth\fP, managed by the \fIX\ Toolkit\fP.
 .IP
 Normally \fI\*n\fP fills the inner border using the VT100 window's
 background color.
@@ -1517,14 +1517,14 @@ The default title is the command
 line specified after the \fB\-e\fP option, if any, otherwise the application
 name.
 .IP
-\fIX Toolkit\fP sets the \fBWM_NAME\fP property using this value.
+\fIX\ Toolkit\fP sets the \fBWM_NAME\fP property using this value.
 .TP 8
 .B \-xrm \fIresourcestring\fP
 This option specifies a resource string to be used.
 This is especially
 useful for setting resources that do not have separate command line options.
 .PP
-\fIX Toolkit\fP accepts alternate names for a few of these options, e.g.,
+\fIX\ Toolkit\fP accepts alternate names for a few of these options, e.g.,
 .bP
 \*(``\fB\-background\fP\*('' for \*(``\fB\-bg\fP\*(''
 .bP
@@ -1536,10 +1536,10 @@ Abbreviated options also are supported, e.g.,
 \*(``\fB\-v\fP\*('' for \*(``\fB\-version\fP.\*(''
 .
 .
-.SH RESOURCES
+.SH "RESOURCE CONVERTERS"
 \fI\*N\fP understands all of the core
-\fIX Toolkit\fP resource names and classes.
-It also uses the \fIX Toolkit\fP resource types (such as
+\fIX\ Toolkit\fP resource names and classes.
+It also uses the \fIX\ Toolkit\fP resource types (such as
 booleans,
 colors,
 fonts,
@@ -1547,21 +1547,63 @@ integers, and
 strings)
 along with their respective converters.
 Those resource types are not always sufficient:
-.bP
-\fI\*N\fP's resource values may be lists of names.
-\fIX Toolkit\fP resource types do not include lists.
+.SS "Extended Booleans"
+\fIX\ Toolkit\fP boolean resources are useful,
+but having more than two values helps with configurability.
+\fI\*N\fP extends a (normally) boolean resource value
+by checking for additional values in several cases:
+.sp
+.na
+.RS 4
+\fBactiveIcon\fP,
+\fBcdXtraScroll\fP,
+\fBcursorBlink\fP,
+\fBeightBitMeta\fP,
+\fBrenderFont\fP,
+\fBshiftEscape\fP,
+\fBtiXtraScroll\fP,
+\fButf8\fP,
+\fButf8Fonts\fP, and
+\fButf8Title\fP
+.RE
+.ad
+.SS "Comma-separated Lists"
+\fI\*N\fP uses comma-separated lists for certain resources:
+.sp
+.na
+.RS 4
+\fBdisallowedColorOps\fP,
+\fBdisallowedFontOps\fP,
+\fBdisallowedMouseOps\fP,
+\fBdisallowedPasteControls\fP,
+\fBdisallowedTcapOps\fP, and
+\fBdisallowedWindowOps\fP
+.RE
+.ad
+.PP
+\fIX\ Toolkit\fP resource types do not include lists.
 \fI\*N\fP uses a string for the resource, and parses it.
-.IP
-Comma-separated lists of names ignore case.
 .bP
+The items in these lists denote features to enable or disable.
+.bP
+List items are names (or decimal integers for \fBdisallowedWindowOps\fP).
+.bP
+List items are matched ignoring case.
+\fI\*N\fP also allows wildcards in names,
+i.e., \*(``*\*('' and
+i.e., \*(``?\*('' as in shell scripts.
+.bP
+Each item can be prefixed with \*(``\fB~\fP\*('' (tilde) to indicate that
+the feature should be disabled rather than enabled.
+.SS "Deferred resources"
 \fI\*N\fP may defer processing a resource until it is needed.
 For example, \fBfont2\fP through \fBfont7\fP are loaded as needed,
 to start faster.
 Again, the actual resource type is a string,
 parsed and used when needed.
-.PP
+.SH RESOURCES
 Application specific resources
-(e.g., \*(``\fB__default_class__.\fINAME\fR\*('') follow:
+(e.g., \*(``\fB__default_class__.\fINAME\fR\*('') follow.
 .SS "Application Resources"
 .TP 8
 .B "backarrowKeyIsErase\fP (class\fB BackarrowKeyIsErase\fP)"
@@ -1597,6 +1639,7 @@ if \fBptyInitialErase\fP is false, \fI\*n\fP will look in the terminal database
 .RE
 .IP
 Summarizing that as a table:
+.sp
 .TS
 l l l l
 _ _ _ _
@@ -1629,6 +1672,7 @@ the \*(``Backarrow Key (BS/DEL)\*('' menu entry toggles \fBDECBKM\fP
 .RE
 .IP
 Summarizing the initialization details:
+.sp
 .TS
 l l l l l
 _ _ _ _ _
@@ -1843,7 +1887,7 @@ The default is
 .TP 8
 .B "menuHeight\fP (class\fB MenuHeight\fP)"
 Specifies the height of the toolbar,
-which may be increased by the \fIX Toolkit\fP Layout widget depending upon
+which may be increased by the \fIX\ Toolkit\fP Layout widget depending upon
 the fontsize used.
 The default is
 \*(``25\*(''.
@@ -2098,6 +2142,7 @@ Except where noted, they may be bound to \fIcharacters\fP.
 Other keywords set \fImodes\fP.
 Not all keywords are supported on a given system.
 Allowable keywords include:
+.sp
 .TS
 l l l
 _ _ _
@@ -2452,6 +2497,7 @@ If this resource is true,
 distinct fonts when deciding how to handle the \fBboldMode\fP resource.
 The default is \*(``false\*(''.
 .ne 9
+.sp
 .TS
 l l l l
 _ _ _ _
@@ -3235,9 +3281,9 @@ The default is \*(``true\*(''.
 Specify which features will be disabled if \fBallowColorOps\fP is false.
 This is a comma-separated list of names.
 The default value is
-.RS
+.NS
 SetColor,GetColor,GetAnsiColor
-.RE
+.NE
 .IP
 The names are listed below.
 \fI\*N\fP ignores capitalization, but
@@ -3383,7 +3429,7 @@ This is a comma-separated list of names, or (for the controls adapted
 from \fIdtterm\fP the operation number).
 The default value is
 .NS
-20,21,SetXprop,SetSelection
+GetChecksum,GetIconTitle,GetSelection,GetWinTitle,SetSelection,SetXprop
 (i.e., all except a few \*(``dangerous\*('' operations are allowed).
 .NE
 .IP
@@ -3838,6 +3884,7 @@ The VT100 line-drawing character set
 is shown in this table.
 It includes a few \fIspecial\fP characters which are not used for
 drawing lines:
+.sp
 .TS
 l l l
 _ _ _
@@ -3985,6 +4032,7 @@ highlightTextColor
 .RE
 .IP
 .ne 34
+.sp
 .TS
 l l l l l
 _ _ _ _ _
@@ -4339,6 +4387,7 @@ The default is \*(``1000x1000\*('' (given as \fIwidth\fP by \fIheight\fP).
 .IP
 If the resource is \*(``auto\*('' then \fI\*n\fR will use the
 \fBdecGraphicsID\fP resource (or \fBdecTerminalID\fP if that is not set):
+.sp
 .TS
 l l
 _ _
@@ -4423,6 +4472,7 @@ The default is \*(``false\*(''.
 Here is a summary of the resources which control the choice of
 wide character width calculation:
 .ne 8
+.sp
 .TS
 l l l
 _ _ _
@@ -4644,6 +4694,7 @@ this specifies the number of color-registers which are available.
 .IP
 If this resource is not specified, \fI\*n\fR uses a value determined
 by the \fBdecTerminalID\fP resource:
+.sp
 .TS
 l l
 _ _
@@ -5208,7 +5259,7 @@ There are several aspects to reverse video in \fI\*n\fP:
 The command-line \fB\-rv\fP option tells the X libraries to reverse
 the foreground and background colors.
 \fI\*N\fP's command-line options set resource values.
-In particular, the \fIX Toolkit\fP sets the \fBreverseVideo\fP resource
+In particular, the \fIX\ Toolkit\fP sets the \fBreverseVideo\fP resource
 when the \fB\-rv\fP option is used.
 .bP
 If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP
@@ -5531,7 +5582,7 @@ Specifies the key and button bindings for menus, selections, \*(``programmed
 strings\*('', etc.
 The \fBtranslations\fP resource,
 which provides much of \fI\*n\fP's configurability,
-is a feature of the \fIX Toolkit Intrinsics\fP library (Xt).
+is a feature of the \fIX\ Toolkit Intrinsics\fP library (Xt).
 See the \fBActions\fP section.
 .TP 8
 .B "trimSelection\fP (class\fB TrimSelection\fP)"
@@ -6411,7 +6462,7 @@ Uninitialized cells are displayed as spaces.
 .IP
 By default, selecting rows on \fI\*n\fP's window will highlight all
 of the cells that the pointer traverses while you select.
-If the \fBhighlightSelection\fP resource is set, 
+If the \fBhighlightSelection\fP resource is set,
 \fI\*n\fP will not highlight trailing uninitialized cells
 on the selected rows.
 .IP
@@ -8610,7 +8661,7 @@ keys for entering commonly-typed words:
 Key bindings are normally associated with the \fIvt100\fP or \fItek4014\fP
 widgets which act as terminal emulators.
 \fI\*N\fP's scrollbar (and toolbar if it is configured) are separate widgets.
-Because all of these use the \fIX Toolkit\fP,
+Because all of these use the \fIX\ Toolkit\fP,
 they have corresponding \fBtranslations\fP resources.
 Those resources are distinct,
 and match different patterns, e.g., the differences in widget-name and
@@ -8963,11 +9014,11 @@ may be defined to a nonstandard location using the configure script.
 .SH "WINDOW PROPERTIES"
 .
 In the output from \fBxprop\fP(1), there are several properties.
-.SS "Properties set by X Toolkit"
+.SS "Properties set by X\ Toolkit"
 .TP 5
 .B WM_CLASS
 This shows the \fIinstance name\fP and the X resource \fIclass\fP,
-passed to \fIX Toolkit\fP during initialization of \fI\*n\fP,
+passed to \fIX\ Toolkit\fP during initialization of \fI\*n\fP,
 e.g.,
 .NS
 WM_CLASS(STRING) = "xterm", "UXTerm"
@@ -8983,7 +9034,7 @@ WM_CLIENT_LEADER(WINDOW): window id # 0x800023
 .TP 5
 .B WM_COMMAND
 This shows the command-line arguments for \fI\*n\fP
-which are passed to \fIX Toolkit\fP during initialization, e.g.,
+which are passed to \fIX\ Toolkit\fP during initialization, e.g.,
 .NS
 WM_COMMAND(STRING) = { "xterm", "\-class", "UXTerm", "\-title", "uxterm", "\-u8" }
 .NE
@@ -9007,7 +9058,7 @@ This holds the window title, normally at the top of \fI\*n\fP's window.
 It is set via the \fBtitle\fP resource.
 Applications can change this using control sequences.
 .SS "Properties set by Xterm"
-\fIX Toolkit\fP does not manage EWMH properties.
+\fIX\ Toolkit\fP does not manage EWMH properties.
 \*N does this directly.
 .TP 5
 .B _NET_WM_ICON_NAME
@@ -9370,7 +9421,7 @@ https://invisible\-island.net/xterm/xterm.faq.html
 https://invisible\-island.net/xterm/xterm.log.html
 .RE
 .PP
-\fIX Toolkit Intrinsics \(en C Language Interface\fR (Xt),
+\fIX\ Toolkit Intrinsics \(en C Language Interface\fR (Xt),
 .br
 Joel McCormack, Paul Asente, Ralph R. Swick (1994),
 .br

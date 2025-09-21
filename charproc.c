@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2095 2025/08/25 08:22:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2097 2025/09/21 00:35:58 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -10212,22 +10212,24 @@ ParseList(const char **source)
 static void
 set_flags_from_list(char *target,
 		    const char *source,
-		    const FlagList * list)
+		    const FlagList * list,
+		    Boolean allowNumber)
 {
     Cardinal n;
 
     while (!IsEmpty(source)) {
-	char *next = ParseList(&source);
+	char *next_start = ParseList(&source);
+	char *next = next_start;
 	Boolean found = False;
-	char flag = 1;
+	Boolean flag = True;
 
 	if (next == NULL)
 	    break;
 	if (*next == '~') {
-	    flag = 0;
+	    flag = False;
 	    next++;
 	}
-	if (isdigit(CharOf(*next))) {
+	if (allowNumber && isdigit(CharOf(*next))) {
 	    char *temp;
 	    int value = (int) strtol(next, &temp, 0);
 	    if (!FullS2L(next, temp)) {
@@ -10237,7 +10239,8 @@ set_flags_from_list(char *target,
 		    if (list[n].code == value) {
 			target[value] = flag;
 			found = True;
-			TRACE(("...found %s (%d)\n", list[n].name, value));
+			TRACE(("...set %s (%d) %s\n",
+			       list[n].name, value, BtoS(flag)));
 			break;
 		    }
 		}
@@ -10248,14 +10251,15 @@ set_flags_from_list(char *target,
 		    int value = list[n].code;
 		    target[value] = flag;
 		    found = True;
-		    TRACE(("...found %s (%d)\n", list[n].name, value));
+		    TRACE(("...set %s (%d) %s\n",
+			   list[n].name, value, BtoS(flag)));
 		}
 	    }
 	}
 	if (!found) {
 	    xtermWarning("Unrecognized keyword: %s\n", next);
 	}
-	free(next);
+	free(next_start);
     }
 }
 
@@ -11098,37 +11102,43 @@ VTInitialize(Widget wrequest,
 
     set_flags_from_list(screen->disallow_color_ops,
 			screen->disallowedColorOps,
-			tblColorOps);
+			tblColorOps,
+			False);
 
     init_Sres(screen.disallowedFontOps);
 
     set_flags_from_list(screen->disallow_font_ops,
 			screen->disallowedFontOps,
-			tblFontOps);
+			tblFontOps,
+			False);
 
     init_Sres(screen.disallowedMouseOps);
 
     set_flags_from_list(screen->disallow_mouse_ops,
 			screen->disallowedMouseOps,
-			tblMouseOps);
+			tblMouseOps,
+			False);
 
     init_Sres(screen.disallowedPasteOps);
 
     set_flags_from_list(screen->disallow_paste_ops,
 			screen->disallowedPasteOps,
-			tblPasteOps);
+			tblPasteOps,
+			False);
 
     init_Sres(screen.disallowedTcapOps);
 
     set_flags_from_list(screen->disallow_tcap_ops,
 			screen->disallowedTcapOps,
-			tblTcapOps);
+			tblTcapOps,
+			False);
 
     init_Sres(screen.disallowedWinOps);
 
     set_flags_from_list(screen->disallow_win_ops,
 			screen->disallowedWinOps,
-			tblWindowOps);
+			tblWindowOps,
+			True);
 
     init_Sres(screen.default_string);
     init_Sres(screen.eightbit_select_types);
@@ -11149,7 +11159,8 @@ VTInitialize(Widget wrequest,
     if (!IsEmpty(screen->colorEvents)) {
 	set_flags_from_list(screen->color_events,
 			    screen->colorEvents,
-			    tblColorEvents);
+			    tblColorEvents,
+			    False);
     }
 #if OPT_SCROLL_LOCK
     screen->allowScrollLock = screen->allowScrollLock0;
