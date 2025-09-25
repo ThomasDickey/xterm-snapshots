@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.930 2025/09/21 23:19:17 tom Exp $
+.\" $XTermId: xterm.man,v 1.941 2025/09/25 00:22:37 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2024,2025 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -202,7 +202,7 @@ Four different font sizes and five different lines types are supported.
 There is no write-through or defocused mode support.
 The Tektronix text and graphics commands are recorded internally by \fI\*n\fP
 and may be written to a file by sending the COPY escape sequence
-(or through the \fBTektronix\fP menu; see below).
+(or through the \fBTek Options\fP menu; see below).
 The name of the file will be
 .NS
 \*(``COPY\fIyyyy\fR\-\fIMM\fR\-\fIdd\fR.\fIhh\fR:\fImm\fR:\fIss\fR\*(''
@@ -388,7 +388,7 @@ The \fB\-e\fP option cannot be used with this parameter since
 it uses all parameters following the option.
 .PP
 \fI\*N\fP validates shell programs by finding their pathname in
-the text file \fB/etc/shells\fP.
+the text file \fI/etc/shells\fP.
 It treats the environment variable \*(``SHELL\*('' specially because
 (like \*(``TERM\*(''), \fI\*n\fP both reads and updates the variable,
 and because the program started by \fI\*n\fP is not necessarily a shell.
@@ -462,19 +462,19 @@ The
 default is \*(``38400\*(''.
 .TP 8
 .B \-bc
-turn on text cursor blinking.
+Turn on text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
 .B +bc
-turn off text cursor blinking.
+Turn off text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
 .BI \-bcf " milliseconds"
-set the amount of time text cursor is off when blinking via the
+Set the amount of time text cursor is off when blinking via the
 \fBcursorOffTime\fP resource.
 .TP 8
 .BI \-bcn " milliseconds"
-set the amount of time text cursor is on when blinking via the
+Set the amount of time text cursor is on when blinking via the
 \fBcursorOnTime\fP resource.
 .TP 8
 .B "\-bdc"
@@ -737,7 +737,7 @@ use the pseudo-terminal's sense of the \fBstty\fP(1) erase value.
 .TP 8
 .B +ie
 Turn off the \fBptyInitialErase\fP resource, i.e.,
-set the \fIstty\fP erase value using the \fBkb\fP string
+set the \fIstty\fP erase value using the \fIkb\fP string
 from the termcap entry as a reference, if available.
 .TP 8
 .B \-im
@@ -843,7 +843,7 @@ Turn logging on, unless disabled by the \fBlogInhibit\fP resource.
 Some versions of \fI\*n\fP may have logging enabled.
 However, normally logging is not supported,
 due to security concerns in the early 1990s.
-That was a problem in X11R4 \fBxterm\fP (1989) which was addressed by
+That was a problem in X11R4 \fI\*n\fP (1989) which was addressed by
 a patch to X11R5 late in 1993.
 X11R6 included these fixes.
 The older version (when running with \fIroot\fP privilege) would create
@@ -1278,7 +1278,7 @@ makes the cursor underlined instead of a box.
 .TP 8
 .B "+uc"
 This option m, corresponding to the \fBcursorUnderLine\fP resource,
-akes the cursor a box instead of underlined.
+makes the cursor a box instead of underlined.
 .TP 8
 .B "\-ulc"
 This option disables the display of characters with underline attribute as
@@ -1525,12 +1525,25 @@ This is especially
 useful for setting resources that do not have separate command line options.
 .PP
 \fIX\ Toolkit\fP accepts alternate names for a few of these options, e.g.,
-.bP
-\*(``\fB\-background\fP\*('' for \*(``\fB\-bg\fP\*(''
-.bP
-\*(``\fB\-font\fP\*('' for \*(``\fB\-fn\fP\*(''
-.bP
-\*(``\fB\-foreground\fP\*('' for \*(``\fB\-fg\fP\*(''
+.TP
+.B \-background
+for \*(``\fB\-bg\fP\*(''
+.TP
+.B \-bordercolor
+for \*(``\fB\-bc\fP\*(''
+.TP
+.B \-borderwidth
+for \*(``\fB\-bw\fP\*(''
+.TP
+.B \-font
+.br
+for \*(``\fB\-fn\fP\*(''
+.TP
+.B \-foreground
+for \*(``\fB\-fg\fP\*(''
+.TP
+.B \-reverse
+for \*(``\fB\-rv\fP\*(''
 .PP
 Abbreviated options also are supported, e.g.,
 \*(``\fB\-v\fP\*('' for \*(``\fB\-version\fP.\*(''
@@ -1568,10 +1581,12 @@ by checking for additional values in several cases:
 .RE
 .ad
 .SS "Comma-separated Lists"
-\fI\*N\fP uses comma-separated lists for certain resources:
+\fI\*N\fP uses comma-separated lists for certain resources
+which denote features to enable or disable:
 .sp
 .na
 .RS 4
+\fBcolorEvents\fP,
 \fBdisallowedColorOps\fP,
 \fBdisallowedFontOps\fP,
 \fBdisallowedMouseOps\fP,
@@ -1584,7 +1599,7 @@ by checking for additional values in several cases:
 \fIX\ Toolkit\fP resource types do not include lists.
 \fI\*N\fP uses a string for the resource, and parses it.
 .bP
-The items in these lists denote features to enable or disable.
+The items in these lists are the features to enable or disable.
 .bP
 List items are names (or decimal integers for \fBdisallowedWindowOps\fP).
 .bP
@@ -1595,6 +1610,31 @@ i.e., \*(``?\*('' as in shell scripts.
 .bP
 Each item can be prefixed with \*(``\fB~\fP\*('' (tilde) to indicate that
 the feature should be disabled rather than enabled.
+.PP
+\fI\*N\fP also uses comma-separated lists for a few other resources
+to set up tables.
+These match names ignoring case,
+and can be abbreviated
+but do not support wildcards:
+.sp
+.na
+.RS 4
+\fBeightBitSelectTypes\fP,
+\fBomitTranslation\fP, and
+\fButf8SelectTypes\fP
+.RE
+.ad
+.PP
+Finally, these resources are comma-separated lists of data:
+.sp
+.na
+.RS 4
+\fBcharClass\fP,
+\fBfaceNameDoublesize\fP,
+\fBfaceName\fP, and
+\fBfont\fP
+.RE
+.ad
 .SS "Deferred resources"
 \fI\*N\fP may defer processing a resource until it is needed.
 For example, \fBfont2\fP through \fBfont7\fP are loaded as needed,
@@ -1726,11 +1766,10 @@ The default core cursors are 8x8 pixels;
 Some cursor themes include cursors up to the X server limit of 64x64 pixels.
 .RE
 .IP
-At startup, \fI\*n\fP sets the \fBXCURSOR_THEME\fP environment variable
-to enable or disable the cursor theme feature.
 The default value is \*(``none\*(''.
 Other values (including \*(``default\*('') are passed to the Xcursor
-library to select a cursor theme.
+library to select a cursor theme,
+by setting the \fBXCURSOR_THEME\fP environment variable.
 .TP 8
 .B "fullscreen\fP (class\fB Fullscreen\fP)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -2969,7 +3008,7 @@ The default is \*(``false\*(''.
 Specifies OSC control codes that can be processed from client messages with
 the type \fBXTERM_CONTROL\fR.
 These events may be generated using the X protocol SendEvent request.
-The resource value is a comma separated list of codes allowed.
+The resource value is a comma-separated list of codes allowed.
 The default is the empty string, disallowing all processing.
 .IP
 The names are listed below.
@@ -4307,7 +4346,7 @@ Your configuration may not include this font,
 or locale-support by \fI\*n\fP may not be needed.
 .IP
 At startup, \fI\*n\fP uses a mechanism equivalent to
-the \fBload\-vt\-fonts(utf8Fonts,\ Utf8Fonts)\fP action
+the \fBload\-vt\-fonts(utf8Fonts,Utf8Fonts)\fP action
 to load font name subresources of the VT100 widget.
 That is,
 resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*('' will be loaded,
@@ -5226,18 +5265,22 @@ The default is
 .TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
 Affects the behavior when the window is resized to be taller or shorter.
-\fBNorthWest\fP
-specifies that the top line of text on the screen stay fixed.
+.RS
+.TP 3
+NorthWest
+The top line of text on the screen should not move.
 If the window is made shorter,
-lines are dropped from the bottom; if the window is
-made taller, blank lines are added at the bottom.
+lines are dropped from the bottom; if the window is made taller,
+blank lines are added at the bottom.
 This is compatible with the behavior in X11R4.
-\fBSouthWest\fP (the default) specifies that
-the bottom line of text on the screen stay fixed.
-If the window is
-made taller, additional saved lines will be scrolled down onto the
-screen; if the window is made shorter, lines will be scrolled off the
+.TP 3
+SouthWest
+The bottom line of text on the screen should not move (the default).
+If the window is made taller,
+additional saved lines will be scrolled down onto the screen;
+if the window is made shorter, lines will be scrolled off the
 top of the screen, and the top saved lines will be dropped.
+.RE
 .TP 8
 .B "retryInputMethod\fP (class\fB RetryInputMethod\fP)"
 Tells \fI\*n\fP how many times to retry,
@@ -6175,6 +6218,9 @@ This entry invokes the \fBallow\-color\-ops(\fItoggle\fB)\fR action.
 .TP 8
 .B "allow\-font\-ops\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBallow\-font\-ops(\fItoggle\fB)\fR action.
+.TP 8
+.B "allow\-mouse\-ops\fP (class\fB SmeBSB\fP)"
+This entry invokes the \fBallow\-mouse\-ops(\fItoggle\fB)\fR action.
 .TP 8
 .B "allow\-tcap\-ops\fP (class\fB SmeBSB\fP)"
 This entry invokes the \fBallow\-tcap\-ops(\fItoggle\fB)\fR action.
@@ -7431,7 +7477,7 @@ Enable or disable control sequences that modify the window title or icon name.
 This corresponds to the \fBallowTitleOps\fP resource.
 .TP
 .B Allow Window Ops\fP (resource \fBallow\-window\-ops\fP)
-Enable or disable extended window control sequences (as used in dtterm).
+Enable or disable extended window control sequences (as used in \fIdtterm\fP).
 This corresponds to the \fBallowWindowOps\fP resource.
 .RE
 .
@@ -7497,7 +7543,7 @@ run under \fIxdm\fP,
 are capable of using a \*(``magic cookie\*('' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
-the server (see \fBxhost(__mansuffix__)\fP),
+the server (see \fBxhost\fP(__mansuffix__)),
 then if you enable access for a host and
 other users are also permitted to run clients on that same host,
 it is possible that someone can run an application which uses the
@@ -8401,7 +8447,7 @@ indicate the normal and bold fonts that have been set through escape codes
 (or specified as the second and third action arguments, respectively), and
 .HP
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
-\fBxfontsel(__mansuffix__)\fP) indicated by the second action argument.
+\fBxfontsel\fP(__mansuffix__)) indicated by the second action argument.
 .RE
 .IP
 If \fI\*n\fR is configured to support wide characters, an
@@ -8908,6 +8954,13 @@ and cannot be easily moved between different user environments.
 .
 .SH ENVIRONMENT
 \fI\*N\fP sets several environment variables.
+It also removes certain environment variables which are known to interfere
+with other applications.
+For instance, it removes
+\fBCOLUMNS\fP,
+\fBLINES\fP, and
+\fBTERMCAP\fP
+in configurations where those are unnecessary.
 .SS "System Independent"
 Some variables are used on every system:
 .TP 5
@@ -9009,6 +9062,9 @@ screen size.
 .TP 5
 .B TERMINFO
 may be defined to a nonstandard location using the configure script.
+.TP 5
+.B XCURSOR_THEME
+See \fBcursorTheme\fP resource.
 .\"
 .
 .SH "WINDOW PROPERTIES"
