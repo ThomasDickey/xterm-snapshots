@@ -1,4 +1,4 @@
-/* $XTermId: xutf8.c,v 1.21 2025/06/10 17:19:29 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.22 2025/10/08 08:22:18 tom Exp $ */
 
 /*
  * Copyright 2002-2020,2025 by Thomas E. Dickey
@@ -25,7 +25,7 @@
  *
  * Except as contained in this notice, the name(s) of the authors or copyright
  * holders shall not be used in advertising or otherwise to promote the sale,
- * use or other dealings in this Software without prior written authorization. 
+ * use or other dealings in this Software without prior written authorization.
  */
 
 #include <xterm.h>

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1123 2025/06/23 23:59:35 tom Exp $ */
+/* $XTermId: misc.c,v 1.1124 2025/10/08 08:21:41 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -6834,7 +6834,7 @@ xtermSetenv(const char *var, const char *value)
 	    if (need > have) {
 		char **newenv;
 		newenv = TypeMallocN(char *, need);
-		if (newenv == 0) {
+		if (newenv == NULL) {
 		    xtermWarning("Cannot increase environment\n");
 		    return;
 		}
@@ -6848,7 +6848,7 @@ xtermSetenv(const char *var, const char *value)
 	}
 
 	environ[found] = malloc(2 + len + strlen(value));
-	if (environ[found] == 0) {
+	if (environ[found] == NULL) {
 	    xtermWarning("Cannot allocate environment %s\n", var);
 	    return;
 	}
@@ -6868,7 +6868,7 @@ xtermUnsetenv(const char *var)
 	int ignore;
 	int item = findEnv(var, &ignore);
 	if (item >= 0) {
-	    while ((environ[item] = environ[item + 1]) != 0) {
+	    while ((environ[item] = environ[item + 1]) != NULL) {
 		++item;
 	    }
 	}
@@ -7294,9 +7294,9 @@ xtermEnvUTF8(void)
 	    for (n = 0; locale[n] != 0; ++n) {
 		locale[n] = x_toupper(locale[n]);
 	    }
-	    if (strstr(locale, "UTF-8") != 0)
+	    if (strstr(locale, "UTF-8") != NULL)
 		result = True;
-	    else if (strstr(locale, "UTF8") != 0)
+	    else if (strstr(locale, "UTF8") != NULL)
 		result = True;
 	    free(locale);
 	}
