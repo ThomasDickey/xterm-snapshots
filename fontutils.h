@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.151 2025/06/23 21:55:10 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.152 2025/10/19 18:39:15 tom Exp $ */
 
 /*
  * Copyright 1998-2024,2025 by Thomas E. Dickey
@@ -122,7 +122,7 @@ extern char *xtermSpecialFont (XTermDraw * /* params */);
 	 (CheckedKnownMissing(font, ch) \
 	  ? ( (font)->known_missing[(Char)(ch)] > 1) \
 	  : ( ( ( FontIsIncomplete(font) \
-	         || ( (ch) < MaxUChar && !IsLatin1(ch) ) ) \
+	         || ( (ch) < MaxUChar && !IsLatin1(screen, ch) ) ) \
 	       && xtermMissingChar(ch, font) ) \
 	     || ForceBoxChars(screen, ch) ) )
 #else

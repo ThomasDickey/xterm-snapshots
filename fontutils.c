@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.793 2025/09/04 20:26:59 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.795 2025/10/17 21:34:04 tom Exp $ */
 
 /*
  * Copyright 1998-2024,2025 by Thomas E. Dickey
@@ -1277,7 +1277,7 @@ reportXPerChar(XFontStruct *fs)
 			item->ascent,
 			item->descent));
 	    } else {
-		TRACE(("\t\t\t%d: cell missing\n", ch));
+		TRACE2(("\t\t\t%d: cell missing\n", ch));
 	    }
 	}
 	ReportFonts("\t\tPer-character: %d/%d\n", valid, total);
@@ -2759,8 +2759,8 @@ checkXftWidth(XtermWidget xw, XTermXftFonts *data, int fontsLoaded)
     Dimension check = (Dimension) (limit + 1) / 2;
 #endif
 
-    (void)fontsLoaded;
-    (void)screen;
+    (void) fontsLoaded;
+    (void) screen;
 
     data->font_info.min_width = 0;
     data->font_info.max_width = limit;
@@ -3963,8 +3963,8 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
  * ...since we'll scale the values anyway.
  */
 #define Scale_XY(n,d,f) ((int)(n) * ((int)(f))) / (d)
-#define SCALED_X(n) Scale_XY(n, BOX_WIDE, font_width)
-#define SCALED_Y(n) Scale_XY(n, BOX_HIGH, font_height)
+#define SCALED_X(n) (Scale_XY(n, BOX_WIDE, font_width) - 1)
+#define SCALED_Y(n) (Scale_XY(n, BOX_HIGH, font_height) - 1)
 #define SCALE_X(n) n = SCALED_X(n)
 #define SCALE_Y(n) n = SCALED_Y(n)
 

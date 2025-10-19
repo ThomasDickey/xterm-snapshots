@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2097 2025/09/21 00:35:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2100 2025/10/19 23:23:40 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1771,7 +1771,7 @@ static DECNRCM_codes
 current_charset(TScreen *screen, int value)
 {
     DECNRCM_codes result = nrc_ASCII;
-    if (IsLatin1(value)) {
+    if (IsLatin1(screen, value)) {
 	if (screen->curss != 0) {
 	    result = screen->gsets[screen->curss];
 	} else if (value >= 0x80) {
@@ -5653,7 +5653,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		if (nparam > 0
 		    && ((value >= 256 && CharWidth(screen, value) > 0)
-			|| IsLatin1(value))) {
+			|| IsLatin1(screen, value))) {
 		    xtermParseRect(xw, ParamPair(1), &myRect);
 		    ScrnFillRectangle(xw, &myRect,
 				      value, current_charset(screen, value),
@@ -10213,7 +10213,7 @@ static void
 set_flags_from_list(char *target,
 		    const char *source,
 		    const FlagList * list,
-		    Boolean allowNumber)
+		    Bool allowNumber)
 {
     Cardinal n;
 
@@ -14878,14 +14878,10 @@ set_cursor_gcs(XtermWidget xw)
 	setCgsFore(xw, win, gcVTcursFilled, xx);
 	setCgsBack(xw, win, gcVTcursFilled, fg);
 
-	if (screen->always_highlight) {
-	    /* both GC's use the same color */
-	    setCgsFore(xw, win, gcVTcursReverse, bg);
-	    setCgsBack(xw, win, gcVTcursReverse, cc);
-	} else {
-	    setCgsFore(xw, win, gcVTcursReverse, bg);
-	    setCgsBack(xw, win, gcVTcursReverse, cc);
-	}
+	/* both GC's use the same color */
+	setCgsFore(xw, win, gcVTcursReverse, bg);
+	setCgsBack(xw, win, gcVTcursReverse, cc);
+
 	set_cursor_outline_gc(xw, screen->always_highlight, fg, bg, cc);
 	changed = True;
 	FreeMarkGCs(xw);

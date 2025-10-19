@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.969 2025/08/17 09:50:31 tom Exp $ */
+/* $XTermId: xterm.h,v 1.971 2025/10/19 20:01:38 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1093,20 +1093,25 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 extern void report_char_class(XtermWidget);
 #endif
 
-#define IsAscii1(n)  (((n) >= 32 && (n) <= 126))
+#define IsAscii1(n)          (((n) >= 32 && (n) <= 126))
+#if OPT_C1_PRINT
+#define Upper8Bits(screen)   (((screen)->c1_printable) ? 128 : 160)
+#else
+#define Upper8Bits(screen)   (160)
+#endif
 
 #if OPT_WIDE_CHARS
 #define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
 #define isWideFrg(n) (((n) == HIDDEN_CHAR) || (WideCells((n)) == 2))
 #define isWide(n)    (((IChar)(n) >= first_widechar) && isWideFrg(n))
 #define CharWidth(screen, n) (((n) < 256) \
-			      ? (IsLatin1(n) ? 1 : 0) \
+			      ? (IsLatin1(screen, n) ? 1 : 0) \
 			      : my_wcwidth((wchar_t) (n)))
-#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160 && (n) <= 255))
+#define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen) && (n) <= 255))
 #else
 #define WideCells(n) 1
-#define CharWidth(screen, n) (IsLatin1(n) ? 1 : 0)
-#define IsLatin1(n)  (IsAscii1(n) || ((n) >= 160))
+#define CharWidth(screen, n) (IsLatin1(screen, n) ? 1 : 0)
+#define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
 
 /* cachedCgs.c */
