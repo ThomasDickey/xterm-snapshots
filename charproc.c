@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2100 2025/10/19 23:23:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2101 2025/11/16 20:31:20 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -563,7 +563,7 @@ static XtResource xterm_resources[] =
 
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlinkXOR, XtCCursorBlinkXOR, screen.cursor_blink_xor, True),
-    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, "false"),
+    Sres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink_s, DEF_CURSOR_BLINK),
 #endif
     Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
     Bres(XtNcursorBar, XtCCursorBar, screen.cursor_bar, False),

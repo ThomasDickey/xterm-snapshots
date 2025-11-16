@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.256 2025/06/08 23:03:23 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.257 2025/11/16 20:11:01 tom Exp $ */
 
 /*
  * Copyright 2001-2024,2025 by Thomas E. Dickey
@@ -817,6 +817,8 @@ Tinput(TekWidget tw)
 	    } else {
 		XFlush(XtDisplay(tw));
 		XFD_COPYSET(&Select_mask, &Tselect_mask);
+		if (need_cleanup)
+		    Cleanup(0);
 		if (Select(max_plus1, &Tselect_mask, NULL, NULL, NULL) < 0) {
 		    if (errno != EINTR)
 			SysError(ERROR_TSELECT);

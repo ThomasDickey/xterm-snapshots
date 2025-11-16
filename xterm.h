@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.971 2025/10/19 20:01:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.972 2025/11/16 20:34:26 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -158,9 +158,11 @@
 #endif
 
 #if defined(__OpenBSD__)
-#define DEFDELETE_DEL True
+#define DEFDELETE_DEL     True
 #define DEF_BACKARO_ERASE True
 #define DEF_INITIAL_ERASE True
+#define SIG_ATOMIC_T      volatile sig_atomic_t
+#define USE_UTMP_SETGID   True
 #endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)

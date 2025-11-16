@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1125 2025/10/19 18:41:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.1126 2025/11/16 21:19:25 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -739,7 +739,7 @@ void
 init_colored_cursor(Display *dpy)
 {
     static const char theme[] = "index.theme";
-    static const char pattern[] = "xtermXXXXXXXX";
+    static const char pattern[] = "xterm" MKTEMP_PATTERN;
     char *env = getenv("XCURSOR_THEME");
 
     xterm_cursor_theme = NULL;
@@ -2456,7 +2456,7 @@ GenerateLogPath(void)
     }
 #else
     {
-	static const char log_def_name[] = "XtermLog.XXXXXX";
+	static const char log_def_name[] = "XtermLog." MKTEMP_PATTERN;
 	if ((log_default = x_strdup(log_def_name)) != NULL) {
 	    MakeTemp(log_default);
 	}
