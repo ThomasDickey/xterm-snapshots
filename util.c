@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.961 2025/06/22 18:22:34 tom Exp $ */
+/* $XTermId: util.c,v 1.962 2025/11/24 09:23:21 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -5654,7 +5654,7 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 #undef FLAG
 }
 
-#if OPT_WIDE_CHARS
+#if OPT_SYS_WCWIDTH
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
 /*
  * If xterm is running in a UTF-8 locale, it is still possible to encounter

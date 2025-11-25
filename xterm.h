@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.972 2025/11/16 20:34:26 tom Exp $ */
+/* $XTermId: xterm.h,v 1.973 2025/11/24 23:06:21 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1752,7 +1752,6 @@ extern void RevScroll (XtermWidget /* xw */, int /* amount */);
 extern void ReverseVideo (XtermWidget /* xw */);
 extern void WriteText (XtermWidget /* xw */, Cardinal /* offset */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
-extern void decode_wcwidth (XtermWidget /* xw */);
 extern void do_cd_xtra_scroll (XtermWidget /* xw */, int /* param */);
 extern void do_erase_display (XtermWidget /* xw */, int /* param */, int /* mode */);
 extern void do_erase_char (XtermWidget /* xw */, int /* param */, int /* mode */);
@@ -1809,6 +1808,12 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 extern void discardRenderDraw(TScreen * /* screen */);
 #else
 #define discardRenderDraw(screen) /* nothing */
+#endif
+
+#if OPT_SYS_WCWIDTH
+extern void decode_wcwidth (XtermWidget /* xw */);
+#else
+#define decode_wcwidth(xw) my_wcwidth = &mk_wcwidth
 #endif
 
 #if OPT_WIDE_ATTRS

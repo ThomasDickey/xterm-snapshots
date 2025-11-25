@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1156 2025/08/31 21:55:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1158 2025/11/25 00:18:47 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -793,6 +793,10 @@ typedef enum {
 
 #ifndef OPT_SUNPC_KBD
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
+#endif
+
+#ifndef OPT_SYS_WCWIDTH
+#define OPT_SYS_WCWIDTH	1 /* true if system has usable width */
 #endif
 
 #ifndef OPT_TCAP_FKEYS
@@ -3382,11 +3386,14 @@ typedef struct _Misc {
     VTFontNames default_font;
     char *geo_metry;
     char *T_geometry;
-#if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS && OPT_SYS_WCWIDTH
     Boolean cjk_width;		/* true for built-in CJK wcwidth() */
-    Boolean mk_width;		/* true for simpler built-in wcwidth() */
+    Boolean mk_width;		/* true for built-in wcwidth() */
     int mk_samplesize;
     int mk_samplepass;
+#else
+#undef  OPT_SYS_WCWIDTH
+#define OPT_SYS_WCWIDTH 0
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */

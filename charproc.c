@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2102 2025/11/21 09:06:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2103 2025/11/24 23:07:44 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -780,22 +780,24 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_WIDE_CHARS
-    Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
-    Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
     Bres(XtNutf8Weblike, XtCUtf8Weblike, screen.utf8_weblike, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
-    Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 655),
-    Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
     Sres(XtNutf8, XtCUtf8, screen.utf8_mode_s, "default"),
     Sres(XtNutf8Fonts, XtCUtf8Fonts, screen.utf8_fonts_s, "default"),
     Sres(XtNutf8Title, XtCUtf8Title, screen.utf8_title_s, "default"),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
     Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
+#endif
+#if OPT_SYS_WCWIDTH
+    Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
+    Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
+    Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 655),
+    Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
 #endif
 
 #if OPT_LUIT_PROG
@@ -11595,6 +11597,8 @@ VTInitialize(Widget wrequest,
 
     init_Bres(screen.vt100_graphics);
     init_Bres(screen.wide_chars);
+
+#if OPT_SYS_WCWIDTH
     init_Bres(misc.mk_width);
     init_Bres(misc.cjk_width);
 
@@ -11610,6 +11614,7 @@ VTInitialize(Widget wrequest,
 	wnew->misc.mk_samplepass = wnew->misc.mk_samplesize;
     if (wnew->misc.mk_samplepass < 0)
 	wnew->misc.mk_samplepass = 0;
+#endif
 
     if (TScreenOf(request)->utf8_mode) {
 	TRACE(("setting wide_chars on\n"));
