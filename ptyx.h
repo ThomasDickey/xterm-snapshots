@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1158 2025/11/25 00:18:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1160 2025/11/27 21:12:33 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -410,6 +410,8 @@ typedef struct {
 #define MAX_U_STRING	65535u		/* string-length */
 
 /* constants used for utf8 mode */
+#define UCS_VS15	0xfe0e
+#define UCS_VS16	0xfe0f
 #define UCS_REPL	0xfffd
 #define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
 
@@ -454,11 +456,11 @@ typedef struct {
 	Char		a_radix[NPARAM]; /* Parameters			*/
 } ANSI;
 
-#define TEK_FONT_LARGE 0
-#define TEK_FONT_2 1
-#define TEK_FONT_3 2
-#define TEK_FONT_SMALL 3
-#define	TEKNUMFONTS 4
+#define TEK_FONT_LARGE  0
+#define TEK_FONT_2      1
+#define TEK_FONT_3      2
+#define TEK_FONT_SMALL  3
+#define TEKNUMFONTS     4
 
 /* Actually there are 5 types of lines, but four are non-solid lines */
 #define	TEKNUMLINES	4

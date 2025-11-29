@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.973 2025/11/24 23:06:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.974 2025/11/27 23:03:27 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1116,6 +1116,24 @@ extern void report_char_class(XtermWidget);
 #define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
 
+#define SelectSize(ld, col, source, target) \
+    target = source ? CharWidth(screen, source) : 1; \
+    if_OPT_WIDE_CHARS(screen, { \
+	size_t off; \
+	for_each_combData(off, ld) { \
+	    CharData part; \
+	    if (!(part = ld->combData[off][col])) \
+		break; \
+	    if (part == UCS_VS15) { \
+		target = 1; \
+		break; \
+	    } else if (part == UCS_VS16) { \
+		target = 2; \
+		break; \
+	    } \
+	} \
+    })
+
 /* cachedCgs.c */
 extern CgsEnum getCgsId(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern GC freeCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
@@ -1736,7 +1754,7 @@ extern char * xtermSetLocale (int /* category */, String /* after */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, Cardinal /* len */);
+extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, const Char * /* size */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2103 2025/11/24 23:07:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2104 2025/11/28 12:51:20 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -13500,6 +13500,7 @@ ShowCursor(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     XTermDraw params;
     IChar base;
+    Char size;
     unsigned flags;
     CellColor fg_bg = initCColor;
     GC currentGC;
@@ -13568,6 +13569,9 @@ ShowCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
+
+    SelectSize(ld, cursor_col, base, size);
+
 #if OPT_ISO_COLORS
 #if EXP_BOGUS_FG
     /*
@@ -13849,7 +13853,7 @@ ShowCursor(XtermWidget xw)
 
 	    drawXtermText(&params,
 			  currentGC, x, y,
-			  &base, 1);
+			  &base, &size, 1);
 
 #if OPT_WIDE_CHARS
 	    if_OPT_WIDE_CHARS(screen, {
@@ -13857,14 +13861,15 @@ ShowCursor(XtermWidget xw)
 
 		/* *INDENT-EQLS* */
 		params.draw_flags = NOBACKGROUND;
-		params.on_wide    = isWide((int) base);
+		params.on_wide    = size > 1;
 
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
 			break;
+		    size = 0;
 		    drawXtermText(&params,
 				  currentGC, x, y,
-				  ld->combData[off] + my_col, 1);
+				  ld->combData[off] + my_col, &size, 1);
 		}
 	    });
 #endif
@@ -13899,6 +13904,7 @@ HideCursor(XtermWidget xw)
     GC currentGC;
     int x, y;
     IChar base;
+    Char size;
     unsigned flags;
     CellColor fg_bg = initCColor;
     Bool in_selection;
@@ -13951,6 +13957,9 @@ HideCursor(XtermWidget xw)
     if (base == 0) {
 	base = ' ';
     }
+
+    SelectSize(ld, cursor_col, base, size);
+
 #if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
@@ -14027,7 +14036,7 @@ HideCursor(XtermWidget xw)
 
     drawXtermText(&params,
 		  currentGC, x, y,
-		  &base, 1);
+		  &base, &size, 1);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
@@ -14035,14 +14044,15 @@ HideCursor(XtermWidget xw)
 
 	/* *INDENT-EQLS* */
 	params.draw_flags  = NOBACKGROUND;
-	params.on_wide     = isWide((int) base);
+	params.on_wide     = size > 1;
 
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))
 		break;
+	    size = 0;
 	    drawXtermText(&params,
 			  currentGC, x, y,
-			  ld->combData[off] + my_col, 1);
+			  ld->combData[off] + my_col, &size, 1);
 	}
     });
 #endif
