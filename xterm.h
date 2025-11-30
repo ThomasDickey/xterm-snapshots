@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.974 2025/11/27 23:03:27 tom Exp $ */
+/* $XTermId: xterm.h,v 1.975 2025/11/30 10:04:24 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1828,12 +1828,6 @@ extern void discardRenderDraw(TScreen * /* screen */);
 #define discardRenderDraw(screen) /* nothing */
 #endif
 
-#if OPT_SYS_WCWIDTH
-extern void decode_wcwidth (XtermWidget /* xw */);
-#else
-#define decode_wcwidth(xw) my_wcwidth = &mk_wcwidth
-#endif
-
 #if OPT_WIDE_ATTRS
 #define MapToWideColorMode(fg, screen, flags) \
 	(((screen)->colorITMode && ((flags) & ATR_ITALIC)) \
@@ -1900,6 +1894,12 @@ extern void decode_wcwidth (XtermWidget /* xw */);
 
 #define getXtermFG(xw, flags, color) getXtermForeground(xw, flags, color)
 #define getXtermBG(xw, flags, color) getXtermBackground(xw, flags, color)
+
+#if OPT_SYS_WCWIDTH
+extern void decode_wcwidth (XtermWidget /* xw */);
+#else
+#define decode_wcwidth(xw) my_wcwidth = &mk_wcwidth
+#endif
 
 #if OPT_ZICONBEEP
 extern void initZIconBeep(void);
