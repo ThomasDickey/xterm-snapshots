@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2104 2025/11/28 12:51:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2105 2025/12/02 21:57:39 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -6033,7 +6033,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #endif
 
-	case CASE_XTERM_PUSH_SGR:
+	case CASE_XTERM_PUSH_SGR:	/* XTPUSHSGR */
 	    TRACE(("CASE_XTERM_PUSH_SGR\n"));
 	    value = 0;
 	    if (nparam == 0 || (nparam == 1 && GetParam(0) == DEFAULT)) {
@@ -6058,20 +6058,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_REPORT_SGR:
+	case CASE_XTERM_REPORT_SGR:	/* XTREPORTSGR */
 	    TRACE(("CASE_XTERM_REPORT_SGR\n"));
 	    xtermParseRect(xw, ParamPair(0), &myRect);
 	    xtermReportSGR(xw, &myRect);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_POP_SGR:
+	case CASE_XTERM_POP_SGR:	/* XTPOPSGR */
 	    TRACE(("CASE_XTERM_POP_SGR\n"));
 	    xtermPopSGR(xw);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_PUSH_COLORS:
+	case CASE_XTERM_PUSH_COLORS:	/* XTPUSHCOLORS */
 	    TRACE(("CASE_XTERM_PUSH_COLORS\n"));
 	    if (nparam == 0) {
 		xtermPushColors(xw, DEFAULT);
@@ -6083,7 +6083,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_POP_COLORS:
+	case CASE_XTERM_POP_COLORS:	/* XTPOPCOLORS */
 	    TRACE(("CASE_XTERM_POP_COLORS\n"));
 	    if (nparam == 0) {
 		xtermPopColors(xw, DEFAULT);
@@ -6095,13 +6095,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_REPORT_COLORS:
+	case CASE_XTERM_REPORT_COLORS:	/* XTREPORTCOLORS */
 	    TRACE(("CASE_XTERM_REPORT_COLORS\n"));
 	    xtermReportColors(xw);
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_TITLE_STACK:
+	case CASE_XTERM_TITLE_STACK:	/* XTTITLEPOS */
 	    xtermReportTitleStack(xw);
 	    ResetState(sp);
 	    break;

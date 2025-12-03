@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1126 2025/11/16 21:19:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.1127 2025/12/03 00:57:03 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -7956,7 +7956,7 @@ xtermPushTitle(TScreen *screen, int which, SaveTitle * item)
 {
     if (which-- <= 0) {
 	which = screen->saved_titles.used++;
-	screen->saved_titles.used %= MAX_SAVED_TITLES;
+	which %= MAX_SAVED_TITLES;
     }
     which %= MAX_SAVED_TITLES;
     xtermFreeTitle(&screen->saved_titles.data[which]);
