@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2106 2025/12/12 01:20:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2107 2025/12/12 20:52:47 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -13960,12 +13960,12 @@ HideCursor(XtermWidget xw)
 
     SelectSize(ld, cursor_col, base, size);
 
+#if OPT_ISO_COLORS
 #if EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
      */
-#if OPT_ISO_COLORS
     if (base == ' ') {
 	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
 	    TRACE(("HideCursor - do not treat as a colored cell\n"));

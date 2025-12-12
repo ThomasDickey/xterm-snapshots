@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.976 2025/12/12 01:17:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.977 2025/12/12 21:48:55 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1119,7 +1119,7 @@ extern void report_char_class(XtermWidget);
 #define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
 
 #define SelectSize(ld, col, source, target) \
-    target = source ? CharWidth(screen, source) : 1; \
+    target = (Char) (source ? CharWidth(screen, source) : 1); \
     if_OPT_WIDE_CHARS(screen, { \
 	size_t off; \
 	for_each_combData(off, ld) { \
