@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.664 2025/11/29 11:30:11 tom Exp $ */
+/* $XTermId: screen.c,v 1.665 2025/12/12 01:19:35 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1858,7 +1858,7 @@ ScrnRefresh(XtermWidget xw,
 			    if (com_off[i] != 0) {
 				int my_x;
 
-				params.on_wide = sizes[i] > 1;
+				params.on_wide = SelectedSize(sizes[i]) > 1;
 				if (params.on_wide)
 				    my_x = LineCursorX(screen, ld, i - 1);
 				else
@@ -1937,7 +1937,7 @@ ScrnRefresh(XtermWidget xw,
 		for (i = lastind; i < col; i++) {
 		    int my_x;
 
-		    params.on_wide = sizes[i] > 1;
+		    params.on_wide = SelectedSize(sizes[i]) > 1;
 		    if (params.on_wide)
 			my_x = LineCursorX(screen, ld, i - 1);
 		    else

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.679 2025/11/25 21:56:34 tom Exp $ */
+/* $XTermId: button.c,v 1.680 2025/12/04 09:22:53 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -671,6 +671,7 @@ InterpretEvent(XtermWidget xw, XEvent *event)
 static Bool
 ValidMouseEvent(XtermWidget xw, XEvent *event)
 {
+    TScreen *screen = TScreenOf(xw);
     int xpos = -1;
     int ypos = -1;
     Bool result = False;
@@ -683,9 +684,7 @@ ValidMouseEvent(XtermWidget xw, XEvent *event)
 	ypos = ((XMotionEvent *) event)->y;
     }
 
-    if (xpos >= 0 && ypos >= 0) {
-	TScreen *screen = TScreenOf(xw);
-
+    if (xpos >= OriginX(screen) && ypos >= OriginY(screen)) {
 	if ((ypos < LimitsY(screen)) &&
 	    (xpos < LimitsX(screen))) {
 	    result = True;
@@ -5507,25 +5506,14 @@ EditorButton(XtermWidget xw, XButtonEvent *event)
 	/* Compute character position of mouse pointer */
 	row = (event->y - OriginY(screen)) / FontHeight(screen);
 	col = (event->x - OriginX(screen)) / FontWidth(screen);
+    }
 
-	/* Limit to screen dimensions */
-	if (row < 0)
-	    row = 0;
-	else if (row > screen->max_row)
-	    row = screen->max_row;
-
-	if (col < 0)
-	    col = 0;
-	else if (col > screen->max_col)
-	    col = screen->max_col;
-
-	if (mouse_limit > 0) {
-	    /* Limit to representable mouse dimensions */
-	    if (row > mouse_limit)
-		row = mouse_limit;
-	    if (col > mouse_limit)
-		col = mouse_limit;
-	}
+    if (mouse_limit > 0) {
+	/* Limit to representable mouse dimensions */
+	if (row > mouse_limit)
+	    row = mouse_limit;
+	if (col > mouse_limit)
+	    col = mouse_limit;
     }
 
     /* Build key sequence starting with \E[M */

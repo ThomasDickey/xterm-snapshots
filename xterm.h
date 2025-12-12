@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.975 2025/11/30 10:04:24 tom Exp $ */
+/* $XTermId: xterm.h,v 1.976 2025/12/12 01:17:05 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1115,6 +1115,8 @@ extern void report_char_class(XtermWidget);
 #define CharWidth(screen, n) (IsLatin1(screen, n) ? 1 : 0)
 #define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
+
+#define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
 
 #define SelectSize(ld, col, source, target) \
     target = source ? CharWidth(screen, source) : 1; \

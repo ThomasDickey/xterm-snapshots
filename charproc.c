@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2105 2025/12/02 21:57:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2106 2025/12/12 01:20:46 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -13861,7 +13861,7 @@ ShowCursor(XtermWidget xw)
 
 		/* *INDENT-EQLS* */
 		params.draw_flags = NOBACKGROUND;
-		params.on_wide    = size > 1;
+		params.on_wide    = SelectedSize(size) > 1;
 
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
@@ -14044,7 +14044,7 @@ HideCursor(XtermWidget xw)
 
 	/* *INDENT-EQLS* */
 	params.draw_flags  = NOBACKGROUND;
-	params.on_wide     = size > 1;
+	params.on_wide     = SelectedSize(size) > 1;
 
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))

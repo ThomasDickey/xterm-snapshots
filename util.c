@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.964 2025/11/29 11:33:39 tom Exp $ */
+/* $XTermId: util.c,v 1.965 2025/12/12 01:16:39 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -4063,7 +4063,7 @@ drawXtermText(const XTermDraw * params,
 	    recur.draw_flags |= DOUBLEWFONT;
 
 	    for (nlen = 0; nlen < len; ++nlen) {
-		int ch_width = size[nlen];
+		int ch_width = SelectedSize(size[nlen]);
 		if (ch_width > 1)
 		    ncells += (ch_width - 1);
 	    }
@@ -4233,7 +4233,7 @@ drawXtermText(const XTermDraw * params,
 		Boolean replace = False;
 		Boolean missing = False;
 		unsigned ch = (unsigned) text[last];
-		int ch_width = size[last];
+		int ch_width = SelectedSize(size[last]);
 		int filler = 0;
 #if OPT_WIDE_CHARS
 		int needed = forceDbl ? 2 : ch_width;
@@ -4548,7 +4548,7 @@ drawXtermText(const XTermDraw * params,
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = size[last];
+	    ch_width = SelectedSize(size[last]);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4738,7 +4738,7 @@ drawXtermText(const XTermDraw * params,
 	    IChar ch = mapped[src];
 
 	    if (ch != HIDDEN_CHAR) {
-		int ch_width = size[src];
+		int ch_width = SelectedSize(size[src]);
 		if (!needWide
 		    && !IsIcon(screen)
 		    && ((recur.on_wide || ch_width > 1)
