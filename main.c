@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.941 2025/11/24 09:25:14 tom Exp $ */
+/* $XTermId: main.c,v 1.942 2025/12/19 01:09:45 tom Exp $ */
 
 /*
  * Copyright 2002-2024,2025 by Thomas E. Dickey
@@ -1152,6 +1152,10 @@ OPTS("-mk_width",	NO_ARG(XtNmkWidth),			"on"),
 OPTS("+mk_width",	NO_ARG(XtNmkWidth),			"off"),
 OPTS("-cjk_width",	NO_ARG(XtNcjkWidth),			"on"),
 OPTS("+cjk_width",	NO_ARG(XtNcjkWidth),			"off"),
+#if OPT_EMOJI_WIDTH
+OPTS("-emoji_width",	NO_ARG(XtNemojiWidth),			"on"),
+OPTS("+emoji_width",	NO_ARG(XtNemojiWidth),			"off"),
+#endif
 #endif
 OPTS("-wf",		NO_ARG(XtNwaitForMap),			"on"),
 OPTS("+wf",		NO_ARG(XtNwaitForMap),			"off"),
@@ -1352,6 +1356,9 @@ static OptionHelp xtermOptions[] = {
 #if OPT_SYS_WCWIDTH
 { "-/+mk_width",           "turn on/off simple width convention" },
 { "-/+cjk_width",          "turn on/off legacy CJK width convention" },
+#if OPT_EMOJI_WIDTH
+{ "-/+emoji_width",        "turn on/off Emoji VS15/VS16 width convention" },
+#endif
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },

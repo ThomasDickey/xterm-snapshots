@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1127 2025/12/03 00:57:03 tom Exp $ */
+/* $XTermId: misc.c,v 1.1128 2025/12/18 08:53:12 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -8120,8 +8120,6 @@ xtermPushSGR(XtermWidget xw, int value)
     }
     s->used++;
 }
-
-#define IAttrClr(dst,bits) dst = dst & (IAttr) ~(bits)
 
 void
 xtermReportSGR(XtermWidget xw, XTermRect *value)

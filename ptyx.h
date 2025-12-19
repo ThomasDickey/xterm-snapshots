@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1160 2025/11/27 21:12:33 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1162 2025/12/19 01:15:26 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -571,6 +571,10 @@ typedef enum {
 
 #ifndef OPT_DEC_RECTOPS
 #define OPT_DEC_RECTOPS 1 /* true if xterm is configured for VT420 rectangles */
+#endif
+
+#ifndef OPT_EMOJI_WIDTH
+#define OPT_EMOJI_WIDTH 1 /* true if xterm supports VS15/VS16 Emoji width */
 #endif
 
 #ifndef OPT_SET_XPROP
@@ -3393,6 +3397,9 @@ typedef struct _Misc {
     Boolean mk_width;		/* true for built-in wcwidth() */
     int mk_samplesize;
     int mk_samplepass;
+#if OPT_EMOJI_WIDTH
+    Boolean emoji_width;	/* true for Emoji VS15/VS16 wcwidth() */
+#endif
 #else
 #undef  OPT_SYS_WCWIDTH
 #define OPT_SYS_WCWIDTH 0

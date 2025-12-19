@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.965 2025/12/12 01:16:39 tom Exp $ */
+/* $XTermId: util.c,v 1.967 2025/12/19 00:36:59 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -5480,6 +5480,8 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 
 	if (ld != NULL) {
 	    size_t off;
+
+#if OPT_EMOJI_WIDTH
 	    int valid = True;
 	    int base_col = (screen->char_was_written
 			    ? screen->last_written_col
@@ -5503,31 +5505,39 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 	    }
 
 	    if (valid) {
+		valid = False;
+
 		TRACE(("...add combining %d,%d U+%04X width %d\n",
 		       row, col, ch, actual));
 
 		for_each_combData(off, ld) {
 		    if (!ld->combData[off][col]) {
 			ld->combData[off][col] = (CharData) ch;
+			valid = True;
 			break;
 		    }
 		}
 
-		if (screen->char_was_written && (expect != actual)) {
+		if (valid && screen->char_was_written && (expect != actual)) {
 		    ++col;	/* point to the second half */
 		    if (expect > actual) {
 			TRACE(("...shrink base\n"));
 			ld->charData[col] = ' ';
-			ld->attribs[col] &= (IAttr) ~ CHARDRAWN;
+			IAttrClr(ld->attribs[col], CHARDRAWN);
 			/* adjust the next-column value */
 			col = screen->cur_col;
 			set_cur_col(screen, --col);
 		    } else if (expect < actual) {
 			if (screen->cur_col < screen->max_col) {
 			    TRACE(("...increase base\n"));
+			    ld->attribs[col] = ld->attribs[col - 1];
+			    if_OPT_ISO_COLORS(screen, {
+				ld->color[col] = ld->color[col - 1];
+			    });
+			    TRACE(("...put filler in column %d\n", col));
 			    /* extend the current cell per VS16 */
 			    ld->charData[col] = HIDDEN_CHAR;
-			    ld->attribs[col] |= CHARDRAWN;
+			    IAttrSet(ld->attribs[col], CHARDRAWN);
 			    /* adjust the next-column value */
 			    col = screen->cur_col;
 			    set_cur_col(screen, ++col);
@@ -5535,11 +5545,21 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 			    TRACE(("...disallow wrapping of base\n"));
 			    /* disallow wrapping via VS16 */
 			    ld->charData[col] = ' ';
-			    ld->attribs[col] &= (IAttr) ~ CHARDRAWN;
+			    IAttrClr(ld->attribs[col], CHARDRAWN);
 			}
 		    }
 		}
 	    }
+#else
+	    TRACE(("addXtermCombining %d,%d U+%04X (%d)\n",
+		   row, col, ch, CharWidth(screen, ch)));
+	    for_each_combData(off, ld) {
+		if (!ld->combData[off][col]) {
+		    ld->combData[off][col] = (CharData) ch;
+		    break;
+		}
+	    }
+#endif
 	}
     }
 }

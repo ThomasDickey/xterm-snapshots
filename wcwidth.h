@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.h,v 1.18 2025/11/27 15:19:41 tom Exp $ */
+/* $XTermId: wcwidth.h,v 1.19 2025/12/19 01:37:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.h,v 1.5 2005/05/03 00:38:25 dickey Exp $ */
 
@@ -44,11 +44,6 @@ typedef enum {
 } WcModes;
 
 extern int mk_wcwidth_init(int mode);
-
-#define XTermWcInit(utf8) \
-	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
-			 | WcPrivateFullwidth \
-			 | WcEmojiFullwidth)
 
 extern int mk_wcwidth(wchar_t ucs);
 extern int mk_wcwidth_cjk(wchar_t ucs);

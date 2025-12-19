@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.166 2025/11/21 09:07:51 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.167 2025/12/19 01:42:24 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -342,7 +342,7 @@ switchPtyData(TScreen *screen, int flag)
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
 	screen->utf8_inparse = (Boolean) (flag != 0);
-	XTermWcInit(screen->utf8_mode);
+	XTermWcInit(screen->utf8_mode, term->misc.emoji_width);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	update_font_utf8_mode();

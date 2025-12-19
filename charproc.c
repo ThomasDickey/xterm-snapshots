@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2107 2025/12/12 20:52:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2109 2025/12/19 01:43:46 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -798,6 +798,9 @@ static XtResource xterm_resources[] =
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 655),
     Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
+#if OPT_EMOJI_WIDTH
+    Bres(XtNemojiWidth, XtCEmojiWidth, misc.emoji_width, False),
+#endif
 #endif
 
 #if OPT_LUIT_PROG
@@ -6095,7 +6098,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_XTERM_REPORT_COLORS:	/* XTREPORTCOLORS */
+	case CASE_XTERM_REPORT_COLORS:		/* XTREPORTCOLORS */
 	    TRACE(("CASE_XTERM_REPORT_COLORS\n"));
 	    xtermReportColors(xw);
 	    ResetState(sp);
@@ -11614,7 +11617,10 @@ VTInitialize(Widget wrequest,
 	wnew->misc.mk_samplepass = wnew->misc.mk_samplesize;
     if (wnew->misc.mk_samplepass < 0)
 	wnew->misc.mk_samplepass = 0;
+#if OPT_EMOJI_WIDTH
+    init_Bres(misc.emoji_width);
 #endif
+#endif /* OPT_SYS_WCWIDTH */
 
     if (TScreenOf(request)->utf8_mode) {
 	TRACE(("setting wide_chars on\n"));
@@ -11623,7 +11629,7 @@ VTInitialize(Widget wrequest,
 	TRACE(("setting utf8_mode to 0\n"));
 	screen->utf8_mode = uFalse;
     }
-    XTermWcInit(screen->utf8_mode);
+    XTermWcInit(screen->utf8_mode, wnew->misc.emoji_width);
     TRACE(("initialized UTF-8 mode to %d\n", screen->utf8_mode));
 
 #if OPT_MINI_LUIT

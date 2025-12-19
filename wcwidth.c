@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.92 2025/11/29 10:33:25 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.94 2025/12/19 00:17:16 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -871,12 +871,11 @@ mk_wcwidth(wchar_t ucs)
 }
 
 /*
- * The following functions are the same as mk_wcwidth() and
- * mk_wcwidth_cjk(), except that spacing characters in the East Asian
- * Ambiguous (A) category as defined in Unicode Technical Report #11
- * have a column width of 2. This variant might be useful for users of
- * CJK legacy encodings who want to migrate to UCS without changing
- * the traditional terminal character-width behaviour. It is not
+ * The following function is the same as mk_wcwidth() except that spacing
+ * characters in the East Asian Ambiguous (A) category as defined in Unicode
+ * Technical Report #11 have a column width of 2.  This variant might be useful
+ * for users of CJK legacy encodings who want to migrate to UCS without
+ * changing the traditional terminal character-width behaviour.  It is not
  * otherwise recommended for general use.
  */
 int
@@ -906,7 +905,7 @@ mk_is_emoji(wchar_t ucs)
     int result;
     unsigned long cmp = (unsigned long) ucs;
 
-    if (Lookup(cmp, emoji_chars)) {
+    if (use_emoji2 && cmp > 0xff && Lookup(cmp, emoji_chars)) {
 	result = 1;
     } else {
 	result = 0;

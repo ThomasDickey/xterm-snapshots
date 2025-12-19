@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.977 2025/12/12 21:48:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.980 2025/12/19 01:38:59 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -522,6 +522,7 @@ extern char **environ;
 #define XtNeightBitMeta		"eightBitMeta"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNeightBitSelectTypes	"eightBitSelectTypes"
+#define XtNemojiWidth		"emojiWidth"
 #define XtNeraseSavedLines	"eraseSavedLines"
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
@@ -797,6 +798,7 @@ extern char **environ;
 #define XtCEightBitMeta		"EightBitMeta"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCEightBitSelectTypes	"EightBitSelectTypes"
+#define XtCEmojiWidth		"EmojiWidth"
 #define XtCEraseSavedLines	"EraseSavedLines"
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
@@ -1116,6 +1118,13 @@ extern void report_char_class(XtermWidget);
 #define IsLatin1(screen, n)  (IsAscii1(n) || ((n) >= Upper8Bits(screen)))
 #endif
 
+#if OPT_EMOJI_WIDTH
+
+#define XTermWcInit(utf8,emoji) \
+	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
+			| WcPrivateFullwidth \
+			| ((emoji) ? WcEmojiFullwidth : WcUnknown))
+
 #define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
 
 #define SelectSize(ld, col, source, target) \
@@ -1135,6 +1144,19 @@ extern void report_char_class(XtermWidget);
 	    } \
 	} \
     })
+
+#else
+
+#define XTermWcInit(utf8,emoji) \
+	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
+			| WcPrivateFullwidth)
+
+#define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
+
+#define SelectSize(ld, col, source, target) \
+    target = (Char) (source ? CharWidth(screen, source) : 1)
+
+#endif /* OPT_EMOJI_WIDTH */
 
 /* cachedCgs.c */
 extern CgsEnum getCgsId(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
@@ -1967,6 +1989,9 @@ unsigned visual_width(const IChar * /* str */, Cardinal /* len */);
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)
 #define UIntClr(dst,bits) dst = dst & (unsigned) ~(bits)
 #define SIntClr(dst,bits) dst = (int) ((unsigned) dst & (unsigned) ~(bits))
+
+#define IAttrSet(dst,bits) dst = dst | (IAttr) (bits)
+#define IAttrClr(dst,bits) dst = dst & (IAttr) ~(bits)
 
 #ifdef __cplusplus
 	}
