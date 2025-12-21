@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.967 2025/12/19 00:36:59 tom Exp $ */
+/* $XTermId: util.c,v 1.968 2025/12/21 22:07:19 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -5536,7 +5536,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 			    });
 			    TRACE(("...put filler in column %d\n", col));
 			    /* extend the current cell per VS16 */
-			    ld->charData[col] = HIDDEN_CHAR;
+			    ld->charData[col] = VS16_FILLER;
 			    IAttrSet(ld->attribs[col], CHARDRAWN);
 			    /* adjust the next-column value */
 			    col = screen->cur_col;

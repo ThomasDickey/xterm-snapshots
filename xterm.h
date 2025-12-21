@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.980 2025/12/19 01:38:59 tom Exp $ */
+/* $XTermId: xterm.h,v 1.981 2025/12/21 22:08:07 tom Exp $ */
 
 /*
  * Copyright 1999-2024,2025 by Thomas E. Dickey
@@ -1119,6 +1119,8 @@ extern void report_char_class(XtermWidget);
 #endif
 
 #if OPT_EMOJI_WIDTH
+
+#define VS16_FILLER	' '	/* FIXME: should be HIDDEN_CHAR */
 
 #define XTermWcInit(utf8,emoji) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \

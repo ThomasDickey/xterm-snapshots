@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.94 2025/12/19 00:17:16 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.95 2025/12/21 22:45:03 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -898,6 +898,9 @@ mk_wcwidth_cjk(wchar_t ucs)
  * VS15/VS16 allow applications to use different widths for Emoji codes than
  * the expected width per UnicodeData.  This function tells whether this is
  * an Emoji code.
+ *
+ * Note that (unlike mk_wcwidth) this allows for the first character in an
+ * Emoji sequence to be an ASCII or Latin-1 code.
  */
 int
 mk_is_emoji(wchar_t ucs)
@@ -905,7 +908,7 @@ mk_is_emoji(wchar_t ucs)
     int result;
     unsigned long cmp = (unsigned long) ucs;
 
-    if (use_emoji2 && cmp > 0xff && Lookup(cmp, emoji_chars)) {
+    if (use_emoji2 && Lookup(cmp, emoji_chars)) {
 	result = 1;
     } else {
 	result = 0;

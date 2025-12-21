@@ -25935,8 +25935,8 @@ then
 # remark #981: operands are evaluated in unspecified order
 # warning #279: controlling expression is constant
 
-	{ echo "$as_me:25938: checking for $CC warning options..." >&5
-echo "$as_me: checking for $CC warning options..." >&6;}
+	echo "$as_me:25938: checking for $CC warning options" >&5
+echo $ECHO_N "checking for $CC warning options... $ECHO_C" >&6
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall"
 	for cf_opt in \
@@ -25964,8 +25964,8 @@ echo "${ECHO_T}... -$cf_opt" >&6
 	CFLAGS="$cf_save_CFLAGS"
 elif test "$GCC" = yes && test "$GCC_VERSION" != "unknown"
 then
-	{ echo "$as_me:25967: checking for $CC warning options..." >&5
-echo "$as_me: checking for $CC warning options..." >&6;}
+	echo "$as_me:25967: checking for $CC warning options" >&5
+echo $ECHO_N "checking for $CC warning options... $ECHO_C" >&6
 	cf_save_CFLAGS="$CFLAGS"
 	cf_warn_CONST=""
 	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
@@ -26043,8 +26043,8 @@ cat > conftest.i <<EOF
 EOF
 if test "$GCC" = yes
 then
-	{ echo "$as_me:26046: checking for $CC __attribute__ directives..." >&5
-echo "$as_me: checking for $CC __attribute__ directives..." >&6;}
+	echo "$as_me:26046: checking for $CC __attribute__ directives" >&5
+echo $ECHO_N "checking for $CC __attribute__ directives... $ECHO_C" >&6
 cat > "conftest.$ac_ext" <<EOF
 #line 26049 "${as_me:-configure}"
 #include <stdio.h>
