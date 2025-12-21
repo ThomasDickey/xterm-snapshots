@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.207 2025/12/21 22:58:21 tom Exp $
+# $XTermId: xterm.spec,v 1.208 2025/12/21 23:49:25 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -6,7 +6,7 @@ Summary: X terminal emulator (development version)
 %global my_class XTermDev
 Name: %{fullname}
 Version: 406
-Release: 2
+Release: 1
 License: X11
 Group: User Interface/X
 Source: https://invisible-island.net/archives/xterm/xterm-%{version}.tgz
