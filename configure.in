@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.408 2025/10/08 08:17:07 tom Exp $
+dnl $XTermId: configure.in,v 1.409 2025/12/26 21:51:55 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -36,7 +36,7 @@ dnl
 AC_PREREQ(2.52.20210509)
 AC_INIT
 AC_CONFIG_SRCDIR([charproc.c])
-AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
+AC_CONFIG_HEADERS([xtermcfg.h:xtermcfg.hin])
 CF_CHECK_CACHE
 
 ###	checks for alternative programs
