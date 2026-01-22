@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.942 2025/12/19 09:26:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.943 2026/01/22 00:55:26 tom Exp $
 .\" ---------------------------------------------------------------------------
-.\" Copyright 1996-2024,2025 by Thomas E. Dickey
+.\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -1046,6 +1046,19 @@ Control-G is received.
 .B +pob
 This option indicates that the window should not be raised whenever a
 Control-G is received.
+.TP 8
+.B \-rca
+This option enables cursor position adjustment during resize.
+When the terminal width shrinks,
+the cursor is clamped to the new width.
+With this option (the default),
+cursor movements while shrunk are tracked,
+and on grow the cursor is adjusted to stay in sync with the shell.
+.TP 8
+.B +rca
+Disable cursor position adjustment.
+The cursor stays at its visual position when the terminal grows,
+but shell commands may misbehave after resize and cursor movement.
 .TP 8
 .B \-report\-charclass
 Print a report to the standard output showing information about the
@@ -5278,6 +5291,27 @@ Setting this resource disables the hints all the time.
 .IP
 The default is
 \*(``false\*(''.
+.TP 8
+.B "resizeCursorAdjust\fP (class\fB ResizeCursorAdjust\fP)"
+Controls cursor position tracking when the terminal width changes.
+When the terminal shrinks and the cursor would be beyond the new width,
+\fI\*n\fP clamps the cursor to the rightmost column.
+This resource controls what happens when you move the cursor while shrunk,
+then grow the terminal back:
+.RS
+.TP 3
+true
+Adjust the saved cursor position by cursor movement delta.
+This keeps \fI\*n\fP's cursor in sync with the shell's idea of cursor position.
+Shell commands like Ctrl+A (go to beginning of line) will work correctly.
+However, the cursor may visually \*(``jump\*('' when the terminal grows.
+This is the default.
+.TP 3
+false
+Clear the saved cursor position on any cursor movement.
+The cursor stays at its visual position when the terminal grows.
+Shell commands may behave unexpectedly after resize and cursor movement.
+.RE
 .TP 8
 .B "resizeGravity\fP (class\fB ResizeGravity\fP)"
 Affects the behavior when the window is resized to be taller or shorter.

@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.968 2025/12/21 22:07:19 tom Exp $ */
+/* $XTermId: util.c,v 1.969 2026/01/20 21:36:39 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2069,8 +2069,8 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	    for (row = 0; row < screen->max_row; ++row) {
 		Boolean hasData = row_has_data(screen, row);
 		if (hasData || hadData) {
-		    LineData *dst = addScrollback(screen);
 		    LineData *src = getLineData(screen, row);
+		    LineData *dst = addScrollbackForLine(screen, src);
 		    copyLineData(dst, src);
 		    IncrementSavedLines(1);
 		}

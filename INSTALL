@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.197 2025/09/01 00:22:09 tom Exp $
+-- $XTermId: INSTALL,v 1.198 2026/01/22 00:51:20 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2024,2025 by Thomas E. Dickey
+-- Copyright 1997-2025,2026 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -541,6 +541,10 @@ The options (in alphabetic order):
   --enable-regis-graphics enable support for ReGIS graphics
 
   	Compile-in code to support experimental ReGIS graphics
+
+  --enable-resize-adjust  enable support for resize/cursor-adjust feature
+
+  	Compile-in code to support experimental resize/cursor-adjust
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 

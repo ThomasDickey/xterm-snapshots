@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.555 2025/12/26 22:09:17 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.560 2026/01/20 09:12:19 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2024,2025 by Thomas E. Dickey
+dnl Copyright 1997-2025,2026 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -930,7 +930,7 @@ AC_CHECK_LIB(bsd, gettimeofday,
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 16 updated: 2025/12/26 16:52:53
+dnl CF_FUNC_GRANTPT version: 17 updated: 2026/01/20 04:10:03
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -963,15 +963,15 @@ cf_grantpt_opts=
 if test "x$ac_cv_func_grantpt" = "xyes" ; then
 	AC_MSG_CHECKING(if grantpt really works)
 	AC_LINK_IFELSE([AC_LANG_PROGRAM(CF__GRANTPT_HEAD,CF__GRANTPT_BODY)],[
-	AC_TRY_RUN(CF__GRANTPT_HEAD
+	AC_RUN_IFELSE([AC_LANG_SOURCE(CF__GRANTPT_HEAD
 int main(void)
 {
 CF__GRANTPT_BODY
 }
-,
-,ac_cv_func_grantpt=no
-,ac_cv_func_grantpt=maybe)
-	],ac_cv_func_grantpt=no)
+)],
+,[ac_cv_func_grantpt=no]
+,[ac_cv_func_grantpt=maybe])
+	],[ac_cv_func_grantpt=no])
 	AC_MSG_RESULT($ac_cv_func_grantpt)
 
 	if test "x$ac_cv_func_grantpt" != "xno" ; then
@@ -993,14 +993,14 @@ dnl if we have no stropts.h, skip the checks for streams modules
 				cf_pty_feature=
 				cf_pty_next="`expr $cf_pty_this + 1`"
 				CF_MSG_LOG(pty feature test $cf_pty_next:5)
-				AC_TRY_RUN(#define CONFTEST $cf_pty_this
+				AC_RUN_IFELSE([AC_LANG_SOURCE(#define CONFTEST $cf_pty_this
 $cf_pty_defines
 CF__GRANTPT_HEAD
 int main(void)
 {
 CF__GRANTPT_BODY
 }
-,
+)],
 [
 				case $cf_pty_next in
 				(1) # - streams
@@ -1110,7 +1110,7 @@ $ac_includes_default
 test "$cf_cv_func_strftime" = yes && AC_DEFINE(HAVE_STRFTIME,1,[Define to 1 to indicate that strftime function is present])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 28 updated: 2025/12/23 18:53:34
+dnl CF_FUNC_TGETENT version: 29 updated: 2026/01/20 04:10:03
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1185,7 +1185,7 @@ fi
 for cf_termlib in '' $cf_TERMLIB ; do
 	LIBS="$cf_save_LIBS"
 	test -n "$cf_termlib" && { CF_ADD_LIB($cf_termlib) }
-	AC_TRY_RUN([
+	AC_RUN_IFELSE([AC_LANG_SOURCE([
 $cf_termcap_h
 
 /* terminfo implementations ignore the buffer argument, making it useless for
@@ -1194,10 +1194,10 @@ $cf_termcap_h
  */
 int main(void)
 {
-	char buffer[1024];
-	buffer[0] = 0;
+	char buffer[[1024]];
+	buffer[[0]] = 0;
 	tgetent(buffer, "$cf_TERMVAR");
-	${cf_cv_main_return:-return} ($cf_TERMTST); }],
+	${cf_cv_main_return:-return} ($cf_TERMTST); }])],
 	[echo "yes, there is a termcap/tgetent in $cf_termlib" 1>&AS_MESSAGE_LOG_FD
 	 if test -n "$cf_termlib" ; then
 	 	cf_cv_lib_tgetent="-l$cf_termlib"
@@ -2378,7 +2378,7 @@ fi # cf_cv_posix_visible
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_SAVED_IDS version: 13 updated: 2025/12/26 16:52:53
+dnl CF_POSIX_SAVED_IDS version: 14 updated: 2026/01/20 04:10:03
 dnl ------------------
 dnl
 dnl Check first if saved-ids are always supported.  Some systems
@@ -2410,7 +2410,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 #endif
 ])],[cf_cv_posix_saved_ids=yes
 ],[
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([
 $ac_includes_default
 
 int main(void)
@@ -2419,7 +2419,7 @@ int main(void)
 	long code = sysconf(_SC_SAVED_IDS);
 	(void)p;
 	${cf_cv_main_return:-return}  ((code > 0) ? 0 : 1);
-}],
+}])],
 	cf_cv_posix_saved_ids=yes,
 	cf_cv_posix_saved_ids=no,
 	cf_cv_posix_saved_ids=unknown)
@@ -3009,7 +3009,7 @@ AC_MSG_RESULT($cf_cv_sig_atomic_t)
 test "$cf_cv_sig_atomic_t" != no && AC_DEFINE_UNQUOTED(SIG_ATOMIC_T, $cf_cv_sig_atomic_t,[Define to signal global datatype])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_STRUCT_LASTLOG version: 4 updated: 2023/01/05 17:56:31
+dnl CF_STRUCT_LASTLOG version: 5 updated: 2026/01/20 04:10:03
 dnl -----------------
 dnl Check for header defining struct lastlog, ensure that its .ll_time member
 dnl is compatible with time().
@@ -3017,7 +3017,7 @@ AC_DEFUN([CF_STRUCT_LASTLOG],
 [
 AC_CHECK_HEADERS(lastlog.h)
 AC_CACHE_CHECK(for struct lastlog,cf_cv_struct_lastlog,[
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([
 $ac_includes_default
 
 #include <time.h>
@@ -3027,7 +3027,7 @@ int main(void)
 {
 	struct lastlog data;
 	return (sizeof(data.ll_time) != sizeof(time_t));
-}],[
+}])],[
 cf_cv_struct_lastlog=yes],[
 cf_cv_struct_lastlog=no],[
 cf_cv_struct_lastlog=unknown])])
@@ -3168,7 +3168,7 @@ AC_DEFUN([CF_SYS_ERRLIST],
     CF_CHECK_ERRNO(sys_errlist)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TERMIOS_TYPES version: 3 updated: 2025/12/26 16:52:53
+dnl CF_TERMIOS_TYPES version: 4 updated: 2025/12/27 13:03:23
 dnl ----------------
 dnl https://pubs.opengroup.org/onlinepubs/009695399/basedefs/termios.h.html
 dnl says that tcflag_t, speed_t and cc_t are typedef'd.  If they are not,
@@ -3273,7 +3273,7 @@ if test "$cf_cv_xopen_source" != no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 17 updated: 2023/12/01 17:22:50
+dnl CF_TTY_GROUP version: 18 updated: 2026/01/20 04:10:03
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
@@ -3358,14 +3358,14 @@ AC_CACHE_CHECK(if we may use the $cf_tty_group group,cf_cv_tty_group,[
 cf_tty_name="`tty`"
 if test "$cf_tty_name" != "not a tty"
 then
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([
 $ac_includes_default
 
 #include <grp.h>
 
 int main(void)
 {
-	static char default_tty[] = "/dev/tty";
+	static char default_tty[[]] = "/dev/tty";
 	struct stat sb;
 	struct group *ttygrp;
 	int fd;
@@ -3390,7 +3390,7 @@ int main(void)
 	}
 	${cf_cv_main_return:-return} (1);
 }
-	],
+	])],
 	[cf_cv_tty_group=yes],
 	[cf_cv_tty_group=no],
 	[cf_cv_tty_group=unknown])
@@ -3461,7 +3461,7 @@ if test x$cf_cv_type_fd_mask = xCSRG_BASED ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TYPE_FD_SET version: 7 updated: 2025/12/26 16:52:53
+dnl CF_TYPE_FD_SET version: 8 updated: 2025/12/27 13:03:23
 dnl --------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in
 dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>.
@@ -5467,7 +5467,7 @@ AC_CHECK_HEADER(X11/extensions/Xdbe.h,
 				   cf_x_ext_double_buffer=yes]))
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTCONFIG version: 10 updated: 2025/12/26 16:52:53
+dnl CF_X_FONTCONFIG version: 11 updated: 2025/12/27 13:03:23
 dnl ---------------
 dnl Check for fontconfig library, a dependency of the X FreeType library.
 AC_DEFUN([CF_X_FONTCONFIG],
@@ -5509,7 +5509,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 31 updated: 2025/12/26 16:52:53
+dnl CF_X_FREETYPE version: 32 updated: 2025/12/27 13:03:23
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -5744,7 +5744,7 @@ to makefile.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_XFT version: 3 updated: 2025/12/26 16:52:53
+dnl CF_X_XFT version: 4 updated: 2025/12/27 13:03:23
 dnl --------
 AC_DEFUN([CF_X_XFT],
 [

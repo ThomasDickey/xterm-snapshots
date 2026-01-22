@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.981 2025/12/21 22:08:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.982 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -652,6 +652,7 @@ extern char **environ;
 #define XtNreportIcons		"reportIcons"
 #define XtNreportXRes		"reportXRes"
 #define XtNresizeByPixel	"resizeByPixel"
+#define XtNresizeCursorAdjust	"resizeCursorAdjust"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
@@ -919,6 +920,7 @@ extern char **environ;
 #define XtCReportIcons		"ReportIcons"
 #define XtCReportXRes		"ReportXRes"
 #define XtCResizeByPixel	"ResizeByPixel"
+#define XtCResizeCursorAdjust	"ResizeCursorAdjust"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
@@ -1738,6 +1740,12 @@ extern void ChangeToWide(XtermWidget /* xw */);
 extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
 extern LineData *addScrollback (TScreen * /* screen */);
 extern void deleteScrollback (TScreen * /* screen */);
+
+#if OPT_RESIZE_ADJUST
+extern LineData *addScrollbackForLine (TScreen * /* screen */, CLineData * /* src */);
+#else
+#define addScrollbackForLine(screen,src) addScrollback(screen)
+#endif
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);

@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.942 2025/12/19 01:09:45 tom Exp $ */
+/* $XTermId: main.c,v 1.943 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 2002-2024,2025 by Thomas E. Dickey
+ * Copyright 2002-2025,2026 by Thomas E. Dickey
  * Copyright 1987, 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1180,6 +1180,10 @@ OPTS("+maximized",	NO_ARG(XtNmaximized),			"off"),
 OPTS("-fullscreen",	NO_ARG(XtNfullscreen),			"on"),
 OPTS("+fullscreen",	NO_ARG(XtNfullscreen),			"off"),
 #endif
+#if OPT_RESIZE_ADJUST
+OPTS("-rca",		NO_ARG(XtNresizeCursorAdjust),		"on"),
+OPTS("+rca",		NO_ARG(XtNresizeCursorAdjust),		"off"),
+#endif
 /* options that we process ourselves */
 DATA("-help",		NULL,		XrmoptionSkipNArgs,	NULL),
 DATA("-version",	NULL,		XrmoptionSkipNArgs,	NULL),
@@ -1387,6 +1391,9 @@ static OptionHelp xtermOptions[] = {
 #if OPT_MAXIMIZE
 {"-/+maximized",           "turn on/off maximize on startup" },
 {"-/+fullscreen",          "turn on/off fullscreen on startup" },
+#endif
+#if OPT_RESIZE_ADJUST
+{"-/+rca",                 "turn on/off cursor-adjustment on resizing" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */

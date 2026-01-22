@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.2109 2025/12/19 01:43:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2110 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  * Copyright 1988  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -758,6 +758,11 @@ static XtResource xterm_resources[] =
 	 screen.privatecolorregisters, True),
     Bres(XtNincrementalGraphics, XtCIncrementalGraphics,
 	 screen.incremental_graphics, False),
+#endif
+
+#if OPT_RESIZE_ADJUST
+    Bres(XtNresizeCursorAdjust, XtCResizeCursorAdjust,
+	 screen.resize_cursor_adjust, True),
 #endif
 
 #if OPT_STATUS_LINE
@@ -10910,6 +10915,11 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.border);
     init_Bres(screen.jumpscroll);
     init_Bres(screen.fastscroll);
+
+#if OPT_RESIZE_ADJUST
+    screen->saved_cur_col = -1;
+    init_Bres(screen.resize_cursor_adjust);
+#endif
 
     init_Bres(screen.old_fkeys);
     wnew->screen.old_fkeys0 = wnew->screen.old_fkeys;

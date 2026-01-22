@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.409 2025/12/26 21:51:55 tom Exp $
+dnl $XTermId: configure.in,v 1.410 2026/01/22 00:44:17 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2024,2025 by Thomas E. Dickey
+dnl Copyright 1997-2025,2026 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1165,6 +1165,16 @@ fi
 
 CF_DISABLE_LEAKS
 CF_DISABLE_ECHO
+
+AC_MSG_CHECKING(if you want experimental resize/cursor-adjust feature)
+CF_ARG_ENABLE(resize-adjust,
+	[  --enable-resize-adjust  enable resize/cursor-adjust feature],
+	[enable_resize_adjust=yes],
+	[enable_resize_adjust=no])
+AC_MSG_RESULT($enable_resize_adjust)
+if test "$enable_resize_adjust" = yes ; then
+	AC_DEFINE(OPT_RESIZE_ADJUST,1,[Define to 0 to enable resize/cursor-adjust feature])
+fi
 
 AC_MSG_CHECKING(if you want magic cookie emulation)
 CF_ARG_ENABLE(xmc-glitch,

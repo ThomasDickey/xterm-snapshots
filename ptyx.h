@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1162 2025/12/19 01:15:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1163 2026/01/22 00:53:17 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -755,6 +755,10 @@ typedef enum {
 
 #ifndef OPT_REPORT_ICONS
 #define OPT_REPORT_ICONS   1 /* provide "-report-icons" option */
+#endif
+
+#ifndef OPT_RESIZE_ADJUST
+#define OPT_RESIZE_ADJUST 0 /* provide "-rca" option */
 #endif
 
 #ifndef OPT_SAME_NAME
@@ -1728,6 +1732,14 @@ typedef enum {
 
 /***====================================================================***/
 
+#if OPT_RESIZE_ADJUST
+#define if_OPT_RESIZE_ADJUST(stmt) if (resource.reportColors) stmt
+#else
+#define if_OPT_RESIZE_ADJUST(stmt) /* nothing */
+#endif
+
+/***====================================================================***/
+
 #define CONTROL(a) ((a) & 037)
 
 #ifndef XTERM_ERASE
@@ -1961,7 +1973,10 @@ typedef IChar CharData;
  * This is the xterm line-data/scrollback structure.
  */
 typedef struct {
-	Dimension lineSize;	/* number of columns in this row */
+	Dimension lineSize;	/* display width (current terminal width) */
+#if OPT_RESIZE_ADJUST
+	Dimension maxLineSize;	/* storage width (max of all widths seen) */
+#endif
 	RowData	 bufHead;	/* flag for wrapped lines */
 #if OPT_WIDE_CHARS
 	Char	 combSize;	/* number of items in combData[] */
@@ -2958,6 +2973,11 @@ typedef struct {
 	Boolean		graphics_print_color_syntax;
 	Boolean		graphics_print_background_mode;
 	Boolean		graphics_rotated_print_mode;
+#endif
+
+#if OPT_RESIZE_ADJUST
+	int		saved_cur_col;	/* cursor col before resize clamp (-1 if none) */
+	Boolean		resize_cursor_adjust; /* adjust saved cursor on movement */
 #endif
 
 #define StatusLineRows	1		/* number of rows in status-line */
