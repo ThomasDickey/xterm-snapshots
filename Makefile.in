@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.269 2025/11/20 00:25:51 tom Exp $
+## $XTermId: Makefile.in,v 1.270 2026/02/11 00:45:05 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2023,2025 by Thomas E. Dickey
+# Copyright 1997-2025,2026 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -131,6 +131,9 @@ AUTO_SOURCE	= \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
   TEST_PROGRAMS = test_charclass$x test_ptydata$x test_wcwidth$x
+
+@MAKE_PHONY@.PHONY:  all install installdirs check mostlyclean clean sources realclean docs lint tags depend
+.PRECIOUS: *.def
 
 all :	$(PROGRAMS)
 ################################################################################

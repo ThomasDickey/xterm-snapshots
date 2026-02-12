@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.248 2025/12/18 21:55:04 tom Exp $ */
+/* $XTermId: trace.c,v 1.250 2026/02/03 21:59:34 tom Exp $ */
 
 /*
- * Copyright 1997-2024,2025 by Thomas E. Dickey
+ * Copyright 1997-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -71,6 +71,9 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+#endif
+#ifndef HIDDEN_CHAR
+#define HIDDEN_CHAR 0x80
 #endif
 const char *trace_who = "parent";
 
