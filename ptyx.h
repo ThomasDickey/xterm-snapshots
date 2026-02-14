@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1163 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1164 2026/02/14 01:39:04 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3025,6 +3025,9 @@ typedef struct {
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
 	DECNRCM_codes	vt52_save_gsets[NUM_GSETS2];
+#endif
+#if OPT_WIDE_CHARS
+	DECNRCM_codes	ansi_save_gsets[NUM_GSETS2];
 #endif
 	/* Testing */
 #if EXP_XMC_GLITCH

@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.167 2025/12/19 01:42:24 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.169 2026/02/14 01:47:03 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -345,6 +345,12 @@ switchPtyData(TScreen *screen, int flag)
 	XTermWcInit(screen->utf8_mode, term->misc.emoji_width);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
+	if (flag) {
+	    saveCharsets(screen, screen->ansi_save_gsets);
+	    resetCharsets(screen);
+	} else {
+	    restoreCharsets(screen, screen->ansi_save_gsets);
+	}
 	update_font_utf8_mode();
     }
 }
