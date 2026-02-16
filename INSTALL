@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.198 2026/01/22 00:51:20 tom Exp $
+-- $XTermId: INSTALL,v 1.199 2026/02/16 12:28:29 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2025,2026 by Thomas E. Dickey
 --
@@ -281,6 +281,10 @@ The options (in alphabetic order):
 	Do not compile-in code to support the "regex" option for multiple
 	mouse clicks.
 
+  --disable-resize-adjust enable support for resize/cursor-adjust feature
+
+  	Do not compile-in code to support resize/cursor-adjust
+
   --disable-rightbar      disable right-scrollbar support
 
   	Do not compile-in code that supports a scrollbar on the right.
@@ -541,10 +545,6 @@ The options (in alphabetic order):
   --enable-regis-graphics enable support for ReGIS graphics
 
   	Compile-in code to support experimental ReGIS graphics
-
-  --enable-resize-adjust  enable support for resize/cursor-adjust feature
-
-  	Compile-in code to support experimental resize/cursor-adjust
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 

@@ -821,6 +821,7 @@ Optional Features:
   --disable-sixel-graphics disable sixel graphics support
   --disable-print-graphics disable screen dump to sixel support
   --disable-rectangles    disable VT420 rectangle support
+  --disable-resize-adjust disable resize/cursor-adjust feature
   --disable-ziconbeep     disable -ziconbeep option
 Testing/development Options:
   --enable-trace          test: set to enable debugging traces
@@ -829,7 +830,6 @@ Testing/development Options:
   --with-valgrind         test: use valgrind
   --disable-leaks         test: free permanent memory, analyze leaks
   --disable-echo          do not display "compiling" commands
-  --enable-resize-adjust  enable resize/cursor-adjust feature
   --enable-xmc-glitch     test: enable xmc magic-cookie emulation
   --enable-warnings       test: turn on gcc compiler warnings
   --enable-stdnoreturn    enable C11 _Noreturn feature for diagnostics
@@ -24707,7 +24707,34 @@ EOF
 
 fi
 
-echo "$as_me:24710: checking if you want -ziconbeep option" >&5
+echo "$as_me:24710: checking if you want resize/cursor-adjust feature" >&5
+echo $ECHO_N "checking if you want resize/cursor-adjust feature... $ECHO_C" >&6
+
+# Check whether --enable-resize-adjust or --disable-resize-adjust was given.
+if test "${enable_resize_adjust+set}" = set; then
+  enableval="$enable_resize_adjust"
+  test "$enableval" != no && enableval=yes
+	if test "$enableval" != "yes" ; then
+    enable_resize_adjust=no
+	else
+		enable_resize_adjust=yes
+	fi
+else
+  enableval=yes
+	enable_resize_adjust=yes
+
+fi;
+echo "$as_me:24727: result: $enable_resize_adjust" >&5
+echo "${ECHO_T}$enable_resize_adjust" >&6
+if test "$enable_resize_adjust" = yes ; then
+
+cat >>confdefs.h <<\EOF
+#define OPT_RESIZE_ADJUST 1
+EOF
+
+fi
+
+echo "$as_me:24737: checking if you want -ziconbeep option" >&5
 echo $ECHO_N "checking if you want -ziconbeep option... $ECHO_C" >&6
 
 # Check whether --enable-ziconbeep or --disable-ziconbeep was given.
@@ -24724,7 +24751,7 @@ else
 	enable_ziconbeep=yes
 
 fi;
-echo "$as_me:24727: result: $enable_ziconbeep" >&5
+echo "$as_me:24754: result: $enable_ziconbeep" >&5
 echo "${ECHO_T}$enable_ziconbeep" >&6
 test "$enable_ziconbeep" = no &&
 cat >>confdefs.h <<\EOF
@@ -24733,7 +24760,7 @@ EOF
 
 ###############################################################################
 
-echo "$as_me:24736: checking if you want debugging traces" >&5
+echo "$as_me:24763: checking if you want debugging traces" >&5
 echo $ECHO_N "checking if you want debugging traces... $ECHO_C" >&6
 
 # Check whether --enable-trace or --disable-trace was given.
@@ -24750,7 +24777,7 @@ else
 	enable_trace=no
 
 fi;
-echo "$as_me:24753: result: $enable_trace" >&5
+echo "$as_me:24780: result: $enable_trace" >&5
 echo "${ECHO_T}$enable_trace" >&6
 if test "$enable_trace" = yes ; then
 
@@ -24762,7 +24789,7 @@ EOF
 	EXTRAOBJS="$EXTRAOBJS trace.o"
 fi
 
-echo "$as_me:24765: checking if you want to use dmalloc for testing" >&5
+echo "$as_me:24792: checking if you want to use dmalloc for testing" >&5
 echo $ECHO_N "checking if you want to use dmalloc for testing... $ECHO_C" >&6
 
 # Check whether --with-dmalloc or --without-dmalloc was given.
@@ -24784,7 +24811,7 @@ EOF
 else
   with_dmalloc=
 fi;
-echo "$as_me:24787: result: ${with_dmalloc:-no}" >&5
+echo "$as_me:24814: result: ${with_dmalloc:-no}" >&5
 echo "${ECHO_T}${with_dmalloc:-no}" >&6
 
 case ".$with_cflags" in
@@ -24898,23 +24925,23 @@ fi
 esac
 
 if test "$with_dmalloc" = yes ; then
-	echo "$as_me:24901: checking for dmalloc.h" >&5
+	echo "$as_me:24928: checking for dmalloc.h" >&5
 echo $ECHO_N "checking for dmalloc.h... $ECHO_C" >&6
 if test "${ac_cv_header_dmalloc_h+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >"conftest.$ac_ext" <<_ACEOF
-#line 24907 "configure"
+#line 24934 "configure"
 #include "confdefs.h"
 #include <dmalloc.h>
 _ACEOF
-if { (eval echo "$as_me:24911: \"$ac_cpp "conftest.$ac_ext"\"") >&5
+if { (eval echo "$as_me:24938: \"$ac_cpp "conftest.$ac_ext"\"") >&5
   (eval $ac_cpp "conftest.$ac_ext") 2>conftest.er1
   ac_status=$?
   $EGREP -v '^ *\+' conftest.er1 >conftest.err
   rm -f conftest.er1
   cat conftest.err >&5
-  echo "$as_me:24917: \$? = $ac_status" >&5
+  echo "$as_me:24944: \$? = $ac_status" >&5
   (exit "$ac_status"); } >/dev/null; then
   if test -s conftest.err; then
     ac_cpp_err=$ac_c_preproc_warn_flag
@@ -24933,11 +24960,11 @@ else
 fi
 rm -f conftest.err "conftest.$ac_ext"
 fi
-echo "$as_me:24936: result: $ac_cv_header_dmalloc_h" >&5
+echo "$as_me:24963: result: $ac_cv_header_dmalloc_h" >&5
 echo "${ECHO_T}$ac_cv_header_dmalloc_h" >&6
 if test "$ac_cv_header_dmalloc_h" = yes; then
 
-echo "$as_me:24940: checking for dmalloc_debug in -ldmalloc" >&5
+echo "$as_me:24967: checking for dmalloc_debug in -ldmalloc" >&5
 echo $ECHO_N "checking for dmalloc_debug in -ldmalloc... $ECHO_C" >&6
 if test "${ac_cv_lib_dmalloc_dmalloc_debug+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -24945,7 +24972,7 @@ else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-ldmalloc  $LIBS"
 cat >"conftest.$ac_ext" <<_ACEOF
-#line 24948 "configure"
+#line 24975 "configure"
 #include "confdefs.h"
 
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -24964,16 +24991,16 @@ dmalloc_debug ();
 }
 _ACEOF
 rm -f "conftest.$ac_objext" "conftest$ac_exeext"
-if { (eval echo "$as_me:24967: \"$ac_link\"") >&5
+if { (eval echo "$as_me:24994: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:24970: \$? = $ac_status" >&5
+  echo "$as_me:24997: \$? = $ac_status" >&5
   (exit "$ac_status"); } &&
          { ac_try='test -s "conftest$ac_exeext"'
-  { (eval echo "$as_me:24973: \"$ac_try\"") >&5
+  { (eval echo "$as_me:25000: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:24976: \$? = $ac_status" >&5
+  echo "$as_me:25003: \$? = $ac_status" >&5
   (exit "$ac_status"); }; }; then
   ac_cv_lib_dmalloc_dmalloc_debug=yes
 else
@@ -24984,7 +25011,7 @@ fi
 rm -f "conftest.$ac_objext" "conftest$ac_exeext" "conftest.$ac_ext"
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:24987: result: $ac_cv_lib_dmalloc_dmalloc_debug" >&5
+echo "$as_me:25014: result: $ac_cv_lib_dmalloc_dmalloc_debug" >&5
 echo "${ECHO_T}$ac_cv_lib_dmalloc_dmalloc_debug" >&6
 if test "$ac_cv_lib_dmalloc_dmalloc_debug" = yes; then
   cat >>confdefs.h <<EOF
@@ -24999,7 +25026,7 @@ fi
 
 fi
 
-echo "$as_me:25002: checking if you want to use dbmalloc for testing" >&5
+echo "$as_me:25029: checking if you want to use dbmalloc for testing" >&5
 echo $ECHO_N "checking if you want to use dbmalloc for testing... $ECHO_C" >&6
 
 # Check whether --with-dbmalloc or --without-dbmalloc was given.
@@ -25021,7 +25048,7 @@ EOF
 else
   with_dbmalloc=
 fi;
-echo "$as_me:25024: result: ${with_dbmalloc:-no}" >&5
+echo "$as_me:25051: result: ${with_dbmalloc:-no}" >&5
 echo "${ECHO_T}${with_dbmalloc:-no}" >&6
 
 case ".$with_cflags" in
@@ -25135,23 +25162,23 @@ fi
 esac
 
 if test "$with_dbmalloc" = yes ; then
-	echo "$as_me:25138: checking for dbmalloc.h" >&5
+	echo "$as_me:25165: checking for dbmalloc.h" >&5
 echo $ECHO_N "checking for dbmalloc.h... $ECHO_C" >&6
 if test "${ac_cv_header_dbmalloc_h+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >"conftest.$ac_ext" <<_ACEOF
-#line 25144 "configure"
+#line 25171 "configure"
 #include "confdefs.h"
 #include <dbmalloc.h>
 _ACEOF
-if { (eval echo "$as_me:25148: \"$ac_cpp "conftest.$ac_ext"\"") >&5
+if { (eval echo "$as_me:25175: \"$ac_cpp "conftest.$ac_ext"\"") >&5
   (eval $ac_cpp "conftest.$ac_ext") 2>conftest.er1
   ac_status=$?
   $EGREP -v '^ *\+' conftest.er1 >conftest.err
   rm -f conftest.er1
   cat conftest.err >&5
-  echo "$as_me:25154: \$? = $ac_status" >&5
+  echo "$as_me:25181: \$? = $ac_status" >&5
   (exit "$ac_status"); } >/dev/null; then
   if test -s conftest.err; then
     ac_cpp_err=$ac_c_preproc_warn_flag
@@ -25170,11 +25197,11 @@ else
 fi
 rm -f conftest.err "conftest.$ac_ext"
 fi
-echo "$as_me:25173: result: $ac_cv_header_dbmalloc_h" >&5
+echo "$as_me:25200: result: $ac_cv_header_dbmalloc_h" >&5
 echo "${ECHO_T}$ac_cv_header_dbmalloc_h" >&6
 if test "$ac_cv_header_dbmalloc_h" = yes; then
 
-echo "$as_me:25177: checking for debug_malloc in -ldbmalloc" >&5
+echo "$as_me:25204: checking for debug_malloc in -ldbmalloc" >&5
 echo $ECHO_N "checking for debug_malloc in -ldbmalloc... $ECHO_C" >&6
 if test "${ac_cv_lib_dbmalloc_debug_malloc+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -25182,7 +25209,7 @@ else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-ldbmalloc  $LIBS"
 cat >"conftest.$ac_ext" <<_ACEOF
-#line 25185 "configure"
+#line 25212 "configure"
 #include "confdefs.h"
 
 /* Override any gcc2 internal prototype to avoid an error.  */
@@ -25201,16 +25228,16 @@ debug_malloc ();
 }
 _ACEOF
 rm -f "conftest.$ac_objext" "conftest$ac_exeext"
-if { (eval echo "$as_me:25204: \"$ac_link\"") >&5
+if { (eval echo "$as_me:25231: \"$ac_link\"") >&5
   (eval $ac_link) 2>&5
   ac_status=$?
-  echo "$as_me:25207: \$? = $ac_status" >&5
+  echo "$as_me:25234: \$? = $ac_status" >&5
   (exit "$ac_status"); } &&
          { ac_try='test -s "conftest$ac_exeext"'
-  { (eval echo "$as_me:25210: \"$ac_try\"") >&5
+  { (eval echo "$as_me:25237: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
-  echo "$as_me:25213: \$? = $ac_status" >&5
+  echo "$as_me:25240: \$? = $ac_status" >&5
   (exit "$ac_status"); }; }; then
   ac_cv_lib_dbmalloc_debug_malloc=yes
 else
@@ -25221,7 +25248,7 @@ fi
 rm -f "conftest.$ac_objext" "conftest$ac_exeext" "conftest.$ac_ext"
 LIBS=$ac_check_lib_save_LIBS
 fi
-echo "$as_me:25224: result: $ac_cv_lib_dbmalloc_debug_malloc" >&5
+echo "$as_me:25251: result: $ac_cv_lib_dbmalloc_debug_malloc" >&5
 echo "${ECHO_T}$ac_cv_lib_dbmalloc_debug_malloc" >&6
 if test "$ac_cv_lib_dbmalloc_debug_malloc" = yes; then
   cat >>confdefs.h <<EOF
@@ -25236,7 +25263,7 @@ fi
 
 fi
 
-echo "$as_me:25239: checking if you want to use valgrind for testing" >&5
+echo "$as_me:25266: checking if you want to use valgrind for testing" >&5
 echo $ECHO_N "checking if you want to use valgrind for testing... $ECHO_C" >&6
 
 # Check whether --with-valgrind or --without-valgrind was given.
@@ -25258,7 +25285,7 @@ EOF
 else
   with_valgrind=
 fi;
-echo "$as_me:25261: result: ${with_valgrind:-no}" >&5
+echo "$as_me:25288: result: ${with_valgrind:-no}" >&5
 echo "${ECHO_T}${with_valgrind:-no}" >&6
 
 case ".$with_cflags" in
@@ -25371,7 +25398,7 @@ fi
 	;;
 esac
 
-echo "$as_me:25374: checking if you want to perform memory-leak testing" >&5
+echo "$as_me:25401: checking if you want to perform memory-leak testing" >&5
 echo $ECHO_N "checking if you want to perform memory-leak testing... $ECHO_C" >&6
 
 # Check whether --enable-leaks or --disable-leaks was given.
@@ -25382,7 +25409,7 @@ else
   enable_leaks=yes
 fi;
 if test "x$enable_leaks" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi
-echo "$as_me:25385: result: $with_no_leaks" >&5
+echo "$as_me:25412: result: $with_no_leaks" >&5
 echo "${ECHO_T}$with_no_leaks" >&6
 
 if test "$enable_leaks" = no ; then
@@ -25397,7 +25424,7 @@ EOF
 
 fi
 
-echo "$as_me:25400: checking if you want to see long compiling messages" >&5
+echo "$as_me:25427: checking if you want to see long compiling messages" >&5
 echo $ECHO_N "checking if you want to see long compiling messages... $ECHO_C" >&6
 
 # Check whether --enable-echo or --disable-echo was given.
@@ -25431,35 +25458,8 @@ else
 	ECHO_CC=''
 
 fi;
-echo "$as_me:25434: result: $enableval" >&5
+echo "$as_me:25461: result: $enableval" >&5
 echo "${ECHO_T}$enableval" >&6
-
-echo "$as_me:25437: checking if you want experimental resize/cursor-adjust feature" >&5
-echo $ECHO_N "checking if you want experimental resize/cursor-adjust feature... $ECHO_C" >&6
-
-# Check whether --enable-resize-adjust or --disable-resize-adjust was given.
-if test "${enable_resize_adjust+set}" = set; then
-  enableval="$enable_resize_adjust"
-  test "$enableval" != yes && enableval=no
-	if test "$enableval" != "no" ; then
-    enable_resize_adjust=yes
-	else
-		enable_resize_adjust=no
-	fi
-else
-  enableval=no
-	enable_resize_adjust=no
-
-fi;
-echo "$as_me:25454: result: $enable_resize_adjust" >&5
-echo "${ECHO_T}$enable_resize_adjust" >&6
-if test "$enable_resize_adjust" = yes ; then
-
-cat >>confdefs.h <<\EOF
-#define OPT_RESIZE_ADJUST 1
-EOF
-
-fi
 
 echo "$as_me:25464: checking if you want magic cookie emulation" >&5
 echo $ECHO_N "checking if you want magic cookie emulation... $ECHO_C" >&6

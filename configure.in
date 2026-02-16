@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.411 2026/02/11 00:41:46 tom Exp $
+dnl $XTermId: configure.in,v 1.413 2026/02/16 13:15:35 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -1141,6 +1141,16 @@ if test "$enable_rectangles" = no ; then
 	AC_DEFINE(OPT_DEC_RECTOPS,0,[Define to 0 to disable VT420 rectangle support])
 fi
 
+AC_MSG_CHECKING(if you want resize/cursor-adjust feature)
+CF_ARG_DISABLE(resize-adjust,
+	[  --disable-resize-adjust disable resize/cursor-adjust feature],
+	[enable_resize_adjust=no],
+	[enable_resize_adjust=yes])
+AC_MSG_RESULT($enable_resize_adjust)
+if test "$enable_resize_adjust" = yes ; then
+	AC_DEFINE(OPT_RESIZE_ADJUST,1,[Define to 1 to enable resize/cursor-adjust feature])
+fi
+
 AC_MSG_CHECKING(if you want -ziconbeep option)
 CF_ARG_DISABLE(ziconbeep,
 	[  --disable-ziconbeep     disable -ziconbeep option],
@@ -1166,16 +1176,6 @@ fi
 
 CF_DISABLE_LEAKS
 CF_DISABLE_ECHO
-
-AC_MSG_CHECKING(if you want experimental resize/cursor-adjust feature)
-CF_ARG_ENABLE(resize-adjust,
-	[  --enable-resize-adjust  enable resize/cursor-adjust feature],
-	[enable_resize_adjust=yes],
-	[enable_resize_adjust=no])
-AC_MSG_RESULT($enable_resize_adjust)
-if test "$enable_resize_adjust" = yes ; then
-	AC_DEFINE(OPT_RESIZE_ADJUST,1,[Define to 0 to enable resize/cursor-adjust feature])
-fi
 
 AC_MSG_CHECKING(if you want magic cookie emulation)
 CF_ARG_ENABLE(xmc-glitch,
