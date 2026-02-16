@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.969 2026/01/20 21:36:39 tom Exp $ */
+/* $XTermId: util.c,v 1.970 2026/02/16 12:06:42 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -4595,6 +4595,8 @@ drawXtermText(const XTermDraw * params,
 		    ch_width = 1;	/* special case for line-drawing */
 		else if (ch_width < 0)
 		    ch_width = 1;	/* special case for combining char */
+		else if (ch_width == 0 && ch > 255 && !mk_is_combining(ch))
+		    ch_width = 1;
 		if (ch > 255 && (part = ucs2dec(screen, ch)) < 32) {
 		    xtermDrawBoxChar(&recur, part, gc, x, y, 1, False);
 		} else if (!ucs_workaround(&recur, ch, gc, x, y)) {
