@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.943 2026/01/22 00:55:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.944 2026/02/16 18:43:50 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -5194,6 +5194,12 @@ If not true, color registers are allocated only once,
 when the terminal is reset,
 and color changes  in  any  graphic  affect all graphics.
 The default is \*(``true\*(''.
+.TP 8
+.B "privateWidth\fP (class\fB PrivateWidth\fP)"
+Tells \fI\*n\fR whether to assume that codes in the Unicode PUA
+(private use area) are single-width,
+or neutral (matching the \fBcjkWidth\fP setting.
+The default is \*(``true\*('' to assume single-width.
 .TP 8
 .B "quietGrab\fP (class\fB QuietGrab\fP)"
 Controls whether the cursor is repainted

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1164 2026/02/14 01:39:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1165 2026/02/16 18:30:52 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1249,6 +1249,12 @@ typedef enum {
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
     ,srm_FAST_SCROLL = 1014
+#if OPT_WIDE_CHARS
+    ,srm_UTF8_ENCODING = 1020
+    ,srm_WIDTH_EASTASIAN = 1021
+    ,srm_WIDTH_EMOJI = 1022
+    ,srm_WIDTH_PRIVATE = 1023
+#endif
     ,srm_EIGHT_BIT_META = 1034
 #if OPT_NUM_LOCK
     ,srm_REAL_NUMLOCK = 1035
@@ -3422,6 +3428,7 @@ typedef struct _Misc {
     int mk_samplepass;
 #if OPT_EMOJI_WIDTH
     Boolean emoji_width;	/* true for Emoji VS15/VS16 wcwidth() */
+    Boolean pua_width;		/* true if PUA codes are always single-width */
 #endif
 #else
 #undef  OPT_SYS_WCWIDTH

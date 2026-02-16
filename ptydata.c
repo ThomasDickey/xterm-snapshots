@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.169 2026/02/14 01:47:03 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.171 2026/02/16 21:24:49 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -302,7 +302,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
 #endif
 	data->last += size;
 #ifdef ALLOWLOGGING
-	TScreenOf(term)->logstart = VTbuffer->next;
+	TScreenOf(xw)->logstart = VTbuffer->next;
 #endif
     }
 
@@ -337,12 +337,15 @@ nextPtyData(TScreen *screen, PtyData *data)
  * Called when UTF-8 mode has been turned on/off.
  */
 void
-switchPtyData(TScreen *screen, int flag)
+switchPtyData(XtermWidget xw, int flag)
 {
+    TScreen *screen = TScreenOf(xw);
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
 	screen->utf8_inparse = (Boolean) (flag != 0);
-	XTermWcInit(screen->utf8_mode, term->misc.emoji_width);
+	XTermWcInit(screen->utf8_mode,
+		    xw->misc.emoji_width,
+		    xw->misc.pua_width);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	if (flag) {
@@ -660,6 +663,25 @@ Panic(const char *s, int a)
 }
 
 #if OPT_WIDE_CHARS
+void
+saveCharsets(TScreen *screen, DECNRCM_codes * target)
+{
+    (void) screen;
+    (void) target;
+}
+
+void
+restoreCharsets(TScreen *screen, const DECNRCM_codes * target)
+{
+    (void) screen;
+    (void) target;
+}
+
+void
+resetCharsets(TScreen *screen)
+{
+    (void) screen;
+}
 
 #ifdef ALLOWLOGGING
 void

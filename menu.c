@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.379 2025/06/08 23:07:32 tom Exp $ */
+/* $XTermId: menu.c,v 1.380 2026/02/16 18:16:20 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  * Copyright 1989  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -1856,7 +1856,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
     if (!screen->utf8_mode) {
 	setup_wide_fonts(xw);
     }
-    switchPtyData(screen, !screen->utf8_mode);
+    switchPtyData(xw, !screen->utf8_mode);
     /*
      * We don't repaint the screen when switching UTF-8 on/off.  When switching
      * on - the Latin-1 codes should paint as-is.  When switching off, that's

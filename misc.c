@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1128 2025/12/18 08:53:12 tom Exp $ */
+/* $XTermId: misc.c,v 1.1129 2026/02/16 18:28:57 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -5832,6 +5832,21 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    if (screen->vtXX_level >= 5)
 		result = mdAlwaysReset;
 	    break;
+#if OPT_WIDE_CHARS
+	/* xterm, to report how the character encoding is done */
+	case srm_UTF8_ENCODING:
+	    result = MdBool(screen->utf8_mode);
+	    break;
+	case srm_WIDTH_EASTASIAN:
+	    result = MdBool(xw->misc.cjk_width);
+	    break;
+	case srm_WIDTH_EMOJI:
+	    result = MdBool(xw->misc.emoji_width);
+	    break;
+	case srm_WIDTH_PRIVATE:
+	    result = MdBool(xw->misc.pua_width);
+	    break;
+#endif
 	default:
 	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
 		   params[0]));

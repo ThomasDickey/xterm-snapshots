@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.982 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: xterm.h,v 1.983 2026/02/16 18:15:07 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -639,6 +639,7 @@ extern char **environ;
 #define XtNprinterFormFeed	"printerFormFeed"
 #define XtNprinterNewLine	"printerNewLine"
 #define XtNprivateColorRegisters "privateColorRegisters"
+#define XtNprivateWidth		"privateWidth"
 #define XtNptyHandshake		"ptyHandshake"
 #define XtNptyInitialErase	"ptyInitialErase"
 #define XtNptySttySize		"ptySttySize"
@@ -907,6 +908,7 @@ extern char **environ;
 #define XtCPrinterFormFeed	"PrinterFormFeed"
 #define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCPrivateColorRegisters "PrivateColorRegisters"
+#define XtCPrivateWidth		"PrivateWidth"
 #define XtCPtyHandshake		"PtyHandshake"
 #define XtCPtyInitialErase	"PtyInitialErase"
 #define XtCPtySttySize		"PtySttySize"
@@ -1124,9 +1126,9 @@ extern void report_char_class(XtermWidget);
 
 #define VS16_FILLER	' '	/* FIXME: should be HIDDEN_CHAR */
 
-#define XTermWcInit(utf8,emoji) \
+#define XTermWcInit(utf8,emoji,private) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
-			| WcPrivateFullwidth \
+			| (private) ? WcPrivateFullwidth : WcUnknown \
 			| ((emoji) ? WcEmojiFullwidth : WcUnknown))
 
 #define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
@@ -1151,7 +1153,7 @@ extern void report_char_class(XtermWidget);
 
 #else
 
-#define XTermWcInit(utf8,emoji) \
+#define XTermWcInit(utf8,emoji,private) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
 			| WcPrivateFullwidth)
 
@@ -1598,7 +1600,7 @@ extern Char *convertToUTF8 (Char * /* lp */, unsigned /* c */);
 extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
 extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
-extern void switchPtyData (TScreen * /* screen */, int /* f */);
+extern void switchPtyData (XtermWidget /* xw */, int /* f */);
 extern void writePtyData (int /* f */, IChar * /* d */, size_t /* len */);
 
 #define morePtyData(screen, data) \

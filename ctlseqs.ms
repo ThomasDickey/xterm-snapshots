@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.741 2025/06/22 20:29:42 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.744 2026/02/16 18:45:22 tom Exp $
 .\" ---------------------------------------------------------------------------
-.\" Copyright 1996-2024,2025 by Thomas E. Dickey
+.\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -40,8 +40,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #401
-.ds RF 2025/06/22
+.ds LF Patch #407
+.ds RF 2026/02/16
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -342,7 +342,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2025)
+invisible-island.net (2006-2026)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1190,7 +1190,7 @@ may be used to restore the palette from the stack without popping.
 .iP
 .IP \\*(Cs\\*#\\*R
 Report the current entry on the palette stack, and the number of
-palettes stored on the stack, using the same form as XTPOPCOLOR
+palettes stored on the stack, using the same form as XTPOPCOLORS
 (default = 0)
 (XTREPORTCOLORS), \fI\*(xt\fP.
 .
@@ -1566,6 +1566,10 @@ This sets the \fB\%scrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*4 \(-> Enable \fB\%fastScroll\fP resource, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*0 \(-> \fB\%utf8\fP resource setting, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*1 \(-> \fB\%cjkWidth\fP resource setting, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*2 \(-> \fB\%emojiWidth\fP resource setting, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*3 \(-> \fB\%privateWidth\fP resource setting, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
 (and enables the \fB\%eightBitInput\fP resource).
@@ -2157,12 +2161,26 @@ For VT300 and up, reply DECRPM is
 .br
   \*(Cs\*?\*(Ps\*s\*;\*(Pm\*s\*$\*y
 .br
-where \*(Ps is the mode number as in DECSET/DECSET,
+where \*(Ps is the mode number as in DECSET/DECRST,
 \*(Pm is the mode value as in the ANSI DECRQM.
-.br
-Two private modes are read-only (i.e., \*1\*3 and \*1\*4),
+.IP
+A few private modes are read-only,
 provided only for reporting their values using this control sequence.
-They correspond to the resources \fB\%cursorBlink\fP and \fB\%cursorBlinkXOR\fP.
+.RS
+.bP
+\*1\*3 and \*1\*4 correspond
+to the resources
+\fB\%cursorBlink\fP and
+\fB\%cursorBlinkXOR\fP.
+.bP
+\*1\*0\*2\*0 to \*1\*0\*2\*3 correspond
+to the resources
+\fB\%utf8\fP,
+\fB\%cjkWidth\fP,
+\fB\%emojiWidth\fP, and
+\fB\%privateWidth\fP
+respectively.
+.RE
 .
 .IP \\*(Cs\\*#\\*p
 .br

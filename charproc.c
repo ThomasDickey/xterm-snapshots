@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2110 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2112 2026/02/16 18:19:40 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -805,6 +805,7 @@ static XtResource xterm_resources[] =
     Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 65536),
 #if OPT_EMOJI_WIDTH
     Bres(XtNemojiWidth, XtCEmojiWidth, misc.emoji_width, False),
+    Bres(XtNprivateWidth, XtCPrivateWidth, misc.pua_width, True),
 #endif
 #endif
 
@@ -1221,6 +1222,7 @@ saveCharsets(TScreen *screen, DECNRCM_codes * target)
     int g;
     for (g = 0; g < NUM_GSETS2; ++g) {
 	target[g] = screen->gsets[g];
+	TRACE(("saveCharsets G%d %s\n", g, visibleScsCode(target[g])));
     }
 }
 
@@ -1230,6 +1232,7 @@ restoreCharsets(TScreen *screen, const DECNRCM_codes * source)
     int g;
     for (g = 0; g < NUM_GSETS2; ++g) {
 	screen->gsets[g] = source[g];
+	TRACE(("restoreCharsets G%d %s\n", g, visibleScsCode(source[g])));
     }
 }
 
@@ -1289,7 +1292,7 @@ modified_DECNRCM(XtermWidget xw)
 	int enabled = ((xw->flags & NATIONAL) != 0);
 	int modefix;
 	EXCHANGE(screen->utf8_nrc_mode, screen->utf8_mode, modefix);
-	switchPtyData(screen, !enabled);
+	switchPtyData(xw, !enabled);
 	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
     }
 #else
@@ -6232,7 +6235,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	    if (screen->wide_chars
 		&& !screen->utf8_always) {
-		switchPtyData(screen, AsciiOf(c) == 'G');
+		switchPtyData(xw, AsciiOf(c) == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
 	    } else {
@@ -7982,6 +7985,16 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #endif
+	/* xterm */
+#if OPT_WIDE_CHARS
+	case srm_UTF8_ENCODING:
+	case srm_WIDTH_EASTASIAN:
+	case srm_WIDTH_EMOJI:
+	case srm_WIDTH_PRIVATE:
+	    /* these are readonly, not saved or restored */
+	    TRACE(("DATA_ERROR: ignored private code %d\n", code));
+	    break;
+#endif
 	case srm_DEC131TM:	/* ignore */
 	case srm_DECAAM:	/* ignore */
 	case srm_DECARSM:	/* ignore */
@@ -8324,6 +8337,16 @@ savemodes(XtermWidget xw)
 	    TRACE(("save SIXEL_SCROLLS_RIGHT %s\n",
 		   BtoS(screen->sixel_scrolls_right)));
 	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
+	    break;
+#endif
+	/* xterm */
+#if OPT_WIDE_CHARS
+	case srm_UTF8_ENCODING:
+	case srm_WIDTH_EASTASIAN:
+	case srm_WIDTH_EMOJI:
+	case srm_WIDTH_PRIVATE:
+	    /* these are readonly, not saved or restored */
+	    TRACE(("DATA_ERROR: ignored private code %d\n", code));
 	    break;
 #endif
 	case srm_DEC131TM:	/* ignore */
@@ -8763,6 +8786,16 @@ restoremodes(XtermWidget xw)
 	    DoRM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    TRACE(("restore SIXEL_SCROLLS_RIGHT after: %s\n",
 		   BtoS(screen->sixel_scrolls_right)));
+	    break;
+#endif
+	/* xterm */
+#if OPT_WIDE_CHARS
+	case srm_UTF8_ENCODING:
+	case srm_WIDTH_EASTASIAN:
+	case srm_WIDTH_EMOJI:
+	case srm_WIDTH_PRIVATE:
+	    /* these are readonly, not saved or restored */
+	    TRACE(("DATA_ERROR: ignored private code %d\n", code));
 	    break;
 #endif
 	case srm_DEC131TM:	/* ignore */
@@ -11629,6 +11662,7 @@ VTInitialize(Widget wrequest,
 	wnew->misc.mk_samplepass = 0;
 #if OPT_EMOJI_WIDTH
     init_Bres(misc.emoji_width);
+    init_Bres(misc.pua_width);
 #endif
 #endif /* OPT_SYS_WCWIDTH */
 
@@ -11639,7 +11673,9 @@ VTInitialize(Widget wrequest,
 	TRACE(("setting utf8_mode to 0\n"));
 	screen->utf8_mode = uFalse;
     }
-    XTermWcInit(screen->utf8_mode, wnew->misc.emoji_width);
+    XTermWcInit(screen->utf8_mode,
+    		wnew->misc.emoji_width,
+		wnew->misc.pua_width);
     TRACE(("initialized UTF-8 mode to %d\n", screen->utf8_mode));
 
 #if OPT_MINI_LUIT
