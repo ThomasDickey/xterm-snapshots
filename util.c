@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.971 2026/02/16 22:05:47 tom Exp $ */
+/* $XTermId: util.c,v 1.972 2026/03/23 23:30:33 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -79,6 +79,22 @@
 #endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
 
 #include <graphics.h>
+
+#define IsAllowedNonChar(name) ((name) < 0)
+#define AllowNonChar(name) do { \
+		if (IsAllowedNonChar(name)) { \
+			TRACE(("%s@%d: AllowNonChar\n", __FILE__, __LINE__)); \
+			(name) = 1; \
+		} \
+	    } while(0)
+
+#define IsAllowedCtlChar(name) ((name) == 0)
+#define AllowCtlChar(name) do { \
+		if (IsAllowedCtlChar(name)) { \
+			TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__)); \
+			(name) = 1; \
+		} \
+	    } while(0)
 
 #define IncrementSavedLines(amount) \
 	    if (screen->savedlines < screen->savelines) { \
@@ -3924,6 +3940,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
 				 x, y - FontAscent(screen), 1, False);
 		x += FontWidth(screen);
 	    } else {
+		AllowNonChar(ch_width);
 		x = xtermDrawMissing(screen, flags, gc, x, y, ch_width, fullwidth);
 	    }
 	    dst = 0;
@@ -4241,7 +4258,11 @@ drawXtermText(const XTermDraw * params,
 		XftFont *tempFont = NULL;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
-		if (xtermIsInternalCs(ch) || ch == 0) {
+		if (IsAllowedCtlChar(ch_width)) {
+		    TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__));
+		    ch_width = 1;
+		    missing = True;
+		} else if (xtermIsInternalCs(ch) || ch == 0) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
 		     * in cells 0-31.  Assume this (we cannot inspect the
@@ -4549,6 +4570,7 @@ drawXtermText(const XTermDraw * params,
 		continue;
 	    }
 	    ch_width = SelectedSize(size[last]);
+	    AllowCtlChar(ch_width);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((recur.on_wide || ch_width > 1)
@@ -4744,6 +4766,7 @@ drawXtermText(const XTermDraw * params,
 
 	    if (ch != HIDDEN_CHAR) {
 		int ch_width = SelectedSize(size[src]);
+		AllowCtlChar(ch_width);
 		if (!needWide
 		    && !IsIcon(screen)
 		    && ((recur.on_wide || ch_width > 1)
