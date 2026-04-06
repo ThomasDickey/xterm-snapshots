@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.983 2026/02/16 18:15:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.984 2026/03/29 23:34:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1792,6 +1792,8 @@ extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
 extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, const Char * /* size */, Cardinal /* len */);
 extern int extendedBoolean (const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
+extern void adjustHiliteOnBakScroll(XtermWidget /* xw */, int /* amount */);
+extern void adjustHiliteOnFwdScroll(XtermWidget /* xw */, int /* amount */, Bool /* all_lines */);
 extern void ChangeColors (XtermWidget /* xw */, ScrnColors * /* pNew */);
 extern void ClearLine (XtermWidget /* xw */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);

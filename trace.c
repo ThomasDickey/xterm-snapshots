@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.250 2026/02/03 21:59:34 tom Exp $ */
+/* $XTermId: trace.c,v 1.251 2026/03/24 22:25:23 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -706,6 +706,29 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		    TRACE(("%c", ch));
 		}
 		TRACE((":\n"));
+
+#if 0
+		TRACE(("  ==:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    char ch = ' ';
+		    if ((screen->startH.row != screen->endH.row ||
+			 screen->startH.col != screen->endH.col) &&
+			(row >= screen->startH.row &&
+			 row <= screen->endH.row)) {
+			ch = '*';
+			if (row == screen->startH.row &&
+			    col < screen->startH.col) {
+			    ch = '-';
+			}
+			if (row == screen->endH.row &&
+			    col > screen->endH.col) {
+			    ch = '+';
+			}
+		    }
+		    TRACE(("%c", ch));
+		}
+		TRACE((":\n"));
+#endif
 
 #if 0
 		TRACE(("  xx:"));

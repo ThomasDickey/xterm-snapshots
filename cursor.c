@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.98 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: cursor.c,v 1.99 2026/03/30 00:28:20 tom Exp $ */
 
 /*
  * Copyright 2002-2025,2026 by Thomas E. Dickey
@@ -304,6 +304,8 @@ xtermIndex(XtermWidget xw, int amount)
 	CursorDown(screen, amount);
     } else {
 	int j;
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnBakScroll(xw, amount);
 	CursorDown(screen, j = screen->bot_marg - screen->cur_row);
 	xtermScroll(xw, amount - j);
     }
@@ -328,6 +330,8 @@ RevIndex(XtermWidget xw, int amount)
 	    && !ScrnIsColInMargins(screen, screen->cur_col))) {
 	CursorUp(screen, amount);
     } else {
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnFwdScroll(xw, amount, False);
 	RevScroll(xw, amount - (screen->cur_row - screen->top_marg));
 	CursorUp(screen, screen->cur_row - screen->top_marg);
     }

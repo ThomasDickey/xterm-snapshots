@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.972 2026/03/23 23:30:33 tom Exp $ */
+/* $XTermId: util.c,v 1.973 2026/04/06 00:08:28 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -386,16 +386,19 @@ AddToVisible(XtermWidget xw)
  * If the selection is not entirely contained within the margins and not
  * entirely outside the margins, clear it.
  */
-static void
+void
 adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
 {
     TScreen *screen = TScreenOf(xw);
-    int lo_row = (all_lines
+    int hi_row = (all_lines
 		  ? (screen->bot_marg - screen->savelines)
 		  : screen->top_marg);
-    int hi_row = screen->bot_marg;
+    int lo_row = screen->bot_marg;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
+
+    if (hi_row < 0)
+	hi_row = 0;
 
     TRACE2(("adjustSelection FWD %s by %d (%s)\n",
 	    screen->whichBuf ? "alternate" : "normal",
@@ -407,47 +410,59 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
 	    screen->endH.row,
 	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
-    TRACE2(("  limits  %d..%d\n", lo_row, hi_row));
+    TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
     if ((left > 0 || right < screen->max_col) &&
-	((screen->startH.row >= lo_row &&
-	  screen->startH.row - amount <= hi_row) ||
-	 (screen->endH.row >= lo_row &&
-	  screen->endH.row - amount <= hi_row))) {
+	((screen->startH.row >= hi_row &&
+	  screen->startH.row - amount <= lo_row) ||
+	 (screen->endH.row >= hi_row &&
+	  screen->endH.row - amount <= lo_row))) {
 	/*
 	 * This could be improved slightly by excluding the special case where
 	 * the selection is on a single line outside left/right margins.
 	 */
 	TRACE2(("deselect because selection overlaps with scrolled partial-line\n"));
 	ScrnDisownSelection(xw);
-    } else if (screen->startH.row >= lo_row
-	       && screen->startH.row - amount < lo_row) {
-	/* truncate the selection because its start would move out of region */
-	if (lo_row + amount <= screen->endH.row) {
-	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
-		    screen->startH.row,
-		    screen->startH.col,
-		    lo_row + amount,
-		    0));
-	    screen->startH.row = lo_row + amount;
-	    screen->startH.col = 0;
-	} else {
-	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
-		    screen->startH.row,
-		    screen->startH.col,
-		    screen->endH.row,
-		    screen->endH.col,
-		    -amount,
-		    lo_row,
-		    hi_row));
-	    ScrnDisownSelection(xw);
+    } else {
+	if (screen->startH.row >= hi_row
+	    && screen->startH.row - amount < hi_row) {
+	    /* truncate the selection because its start would move out of region */
+	    if (hi_row + amount <= screen->endH.row) {
+		TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+			screen->startH.row,
+			screen->startH.col,
+			hi_row + amount,
+			0));
+		screen->startH.row = hi_row + amount;
+		screen->startH.col = 0;
+	    } else {
+		TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+			screen->startH.row,
+			screen->startH.col,
+			screen->endH.row,
+			screen->endH.col,
+			-amount,
+			hi_row,
+			lo_row));
+		ScrnDisownSelection(xw);
+	    }
 	}
-    } else if (screen->startH.row <= hi_row && screen->endH.row > hi_row) {
-	TRACE2(("deselect because selection straddles top-margin\n"));
-	ScrnDisownSelection(xw);
-    } else if (screen->startH.row < lo_row && screen->endH.row > lo_row) {
-	TRACE2(("deselect because selection straddles bottom-margin\n"));
-	ScrnDisownSelection(xw);
+	if (screen->startH.row <= lo_row && screen->endH.row > lo_row) {
+	    int base = lo_row + 1;
+	    int trim = screen->endH.row + 1 - base;
+	    TRACE2(("truncate because selection straddles bottom-margin\n"));
+	    screen->endH.row = lo_row;
+	    screen->endH.col = MaxCols(screen);
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+	}
+	if (screen->startH.row < hi_row && screen->endH.row > hi_row) {
+	    int base = screen->startH.row;
+	    int trim = hi_row - base;
+	    TRACE2(("truncate because selection straddles top-margin\n"));
+	    screen->startH.row = hi_row;
+	    screen->startH.col = 0;
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+	}
     }
 
     TRACE2(("  after highlite %d.%d .. %d.%d\n",
@@ -461,12 +476,12 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
  * This is the same as adjustHiliteOnFwdScroll(), but reversed.  In this case,
  * only the visible lines are affected.
  */
-static void
+void
 adjustHiliteOnBakScroll(XtermWidget xw, int amount)
 {
     TScreen *screen = TScreenOf(xw);
-    int lo_row = screen->top_marg;
-    int hi_row = screen->bot_marg;
+    int hi_row = screen->top_marg;
+    int lo_row = screen->bot_marg;
 
     TRACE2(("adjustSelection BAK %s by %d (%s)\n",
 	    screen->whichBuf ? "alternate" : "normal",
@@ -478,32 +493,41 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
 	    screen->endH.row,
 	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
+    TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
-    if (screen->endH.row >= hi_row
-	&& screen->endH.row + amount > hi_row) {
-	/* truncate the selection because its start would move out of region */
-	if (hi_row - amount >= screen->startH.row) {
-	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+    if (screen->endH.row >= lo_row
+	&& screen->endH.row + amount > lo_row) {
+	/* truncate the selection because it extends out of scrolled region */
+	if (lo_row - amount >= screen->startH.row) {
+	    int trim = screen->endH.row - lo_row;
+	    TRACE2(("truncate selection by %d rows, result %d.%d .. %d.%d\n",
+		    trim,
 		    screen->startH.row,
 		    screen->startH.col,
-		    hi_row - amount,
+		    lo_row - amount,
 		    0));
-	    screen->endH.row = hi_row - amount;
+	    screen->endH.row = lo_row;
 	    screen->endH.col = 0;
+	    ScrnRefresh(xw, lo_row + 1, 0, trim, MaxCols(screen), True);
 	} else {
-	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+	    TRACE2(("deselect because %d.%d .. %d.%d row %d shifted by %d is outside margins %d..%d\n",
 		    screen->startH.row,
 		    screen->startH.col,
 		    screen->endH.row,
 		    screen->endH.col,
-		    amount,
-		    lo_row,
-		    hi_row));
+		    screen->cur_row, amount,
+		    hi_row,
+		    lo_row));
 	    ScrnDisownSelection(xw);
 	}
-    } else if (screen->endH.row >= lo_row && screen->startH.row < lo_row) {
-	ScrnDisownSelection(xw);
-    } else if (screen->endH.row > hi_row && screen->startH.row > hi_row) {
+    } else if (screen->endH.row >= hi_row && screen->startH.row < hi_row) {
+	int base = screen->startH.row;
+	int trim = hi_row - base;
+	TRACE2(("truncate because selection straddles top-margin\n"));
+	screen->startH.row = hi_row;
+	ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+    } else if (screen->endH.row > lo_row && screen->startH.row > lo_row) {
+	TRACE2(("deselect because selection straddles bottom-margin\n"));
 	ScrnDisownSelection(xw);
     }
 
