@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.944 2026/02/16 18:43:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.945 2026/04/06 22:12:01 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -1707,7 +1707,7 @@ Summarizing that as a table:
 l l l l
 _ _ _ _
 l c c c.
-\fBPIE\fR	\fBstty\fR	\fBtermcap\fR	\fIerase\fP
+\fBPIE\fR	\fBstty\fR	\fBdatabase\fR	\fIerase\fP
 false	^H	^H	^H
 false	^H	^?	^?
 false	^?	^H	^H

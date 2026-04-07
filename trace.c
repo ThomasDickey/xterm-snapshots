@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.251 2026/03/24 22:25:23 tom Exp $ */
+/* $XTermId: trace.c,v 1.252 2026/04/07 10:42:51 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -844,9 +844,11 @@ TraceEvent(const char *tag, XEvent *ev, String *params, const Cardinal *num_para
     case KeyPress:
 	/* FALLTHRU */
     case KeyRelease:
-	TRACE((" keycode 0x%04X %s",
+	TRACE((" keycode 0x%04X %s at %d,%d",
 	       ev->xkey.keycode,
-	       formatEventMask(mask_buffer, ev->xkey.state, False)));
+	       formatEventMask(mask_buffer, ev->xkey.state, False),
+	       ev->xkey.y,
+	       ev->xkey.x));
 	break;
     case ButtonPress:
 	/* FALLTHRU */
