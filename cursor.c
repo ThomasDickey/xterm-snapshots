@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.99 2026/03/30 00:28:20 tom Exp $ */
+/* $XTermId: cursor.c,v 1.101 2026/04/07 23:08:05 tom Exp $ */
 
 /*
  * Copyright 2002-2025,2026 by Thomas E. Dickey
@@ -212,7 +212,7 @@ CursorForward(XtermWidget xw, int n)
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_DEC_CHRSET
-    LineData *ld = getLineData(screen, screen->cur_row);
+    const LineData *ld = getLineData(screen, screen->cur_row);
 #endif
 #if OPT_RESIZE_ADJUST
     int before = screen->cur_col;
@@ -464,7 +464,7 @@ CursorSave(XtermWidget xw)
  * Restore Cursor and Attributes
  */
 static void
-CursorRestoreFlags(XtermWidget xw, SavedCursor * sc, IFlags our_flags)
+CursorRestoreFlags(XtermWidget xw, const SavedCursor * sc, IFlags our_flags)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -505,7 +505,7 @@ CursorRestoreFlags(XtermWidget xw, SavedCursor * sc, IFlags our_flags)
  * Use this entrypoint for the status-line.
  */
 void
-CursorRestore2(XtermWidget xw, SavedCursor * sc)
+CursorRestore2(XtermWidget xw, const SavedCursor * sc)
 {
     CursorRestoreFlags(xw, sc, ALL_FLAGS);
 }
@@ -551,7 +551,7 @@ CursorPrevLine(XtermWidget xw, int count)
 int
 CursorCol(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int result = screen->cur_col;
     if (xw->flags & ORIGIN) {
 	result -= ScrnLeftMargin(xw);
@@ -563,7 +563,7 @@ CursorCol(XtermWidget xw)
 int
 CursorRow(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int result = screen->cur_row;
     if (xw->flags & ORIGIN) {
 	result -= screen->top_marg;

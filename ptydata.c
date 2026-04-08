@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.171 2026/02/16 21:24:49 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.172 2026/04/07 22:11:47 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -66,7 +66,7 @@
  * The number of bytes converted will be nonzero iff there is data.
  */
 Bool
-decodeUtf8(TScreen *screen, PtyData *data)
+decodeUtf8(const TScreen *screen, PtyData *data)
 {
     size_t i;
     size_t length = (size_t) (data->last - data->next);
@@ -316,7 +316,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
  */
 #if OPT_WIDE_CHARS
 IChar
-nextPtyData(TScreen *screen, PtyData *data)
+nextPtyData(const TScreen *screen, PtyData *data)
 {
     IChar result;
     if (screen->utf8_inparse) {
@@ -611,7 +611,7 @@ isValidUTF8(Char *lp)
  * Write data back to the PTY
  */
 void
-writePtyData(int f, IChar *d, size_t len)
+writePtyData(int f, const IChar *d, size_t len)
 {
     size_t n = (len << 1);
 

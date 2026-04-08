@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.252 2026/04/07 10:42:51 tom Exp $ */
+/* $XTermId: trace.c,v 1.254 2026/04/07 23:01:02 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -94,7 +94,7 @@ TraceOpen(void)
     if (!trace_fp) {
 	static char dot[] = ".";
 	mode_t oldmask = umask(077);
-	char *home;
+	const char *home;
 	char *name;
 	/*
 	 * Put the trace-file in user's home-directory if the current
@@ -365,7 +365,7 @@ visibleEventMode(EventMode value)
 }
 
 const char *
-visibleFont(XFontStruct *fs)
+visibleFont(const XFontStruct *fs)
 {
     static char result[80];
 
@@ -1232,7 +1232,6 @@ ModifierName(unsigned modifier)
 void
 TraceTranslations(const char *name, Widget w)
 {
-    String result;
     XErrorHandler save = XSetErrorHandler(ignore_x11_error);
     XtTranslations xlations;
     Widget xcelerat;
@@ -1240,6 +1239,8 @@ TraceTranslations(const char *name, Widget w)
     TRACE(("TraceTranslations for %s (widget %#lx) " TRACE_L "\n",
 	   name, (long) w));
     if (w) {
+	String result;
+
 	XtVaGetValues(w,
 		      XtNtranslations, &xlations,
 		      XtNaccelerators, &xcelerat,
@@ -1407,7 +1408,7 @@ parse_option(char *dst, String src, int first)
 }
 
 static Bool
-same_option(OptionHelp * opt, XrmOptionDescRec * res)
+same_option(OptionHelp * opt, const XrmOptionDescRec * res)
 {
     char temp[BUFSIZ];
     return !strcmp(parse_option(temp, opt->opt, res->option[0]), res->option);

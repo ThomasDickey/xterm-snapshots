@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.973 2026/04/06 00:08:28 tom Exp $ */
+/* $XTermId: util.c,v 1.975 2026/04/07 23:14:07 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -369,7 +369,7 @@ AddToRefresh(XtermWidget xw)
 static Bool
 AddToVisible(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     Bool result = False;
 
     if (INX2ROW(screen, screen->cur_row) <= LastRowNumber(screen)) {
@@ -827,7 +827,7 @@ xtermScrollLR(XtermWidget xw, int amount, Bool toLeft)
 void
 xtermColIndex(XtermWidget xw, Bool toLeft)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (toLeft) {
 	if (ScrnIsColInMargins(screen, screen->cur_col)) {
@@ -1060,7 +1060,7 @@ showZIconBeep(XtermWidget xw, const char *name)
 	if (!newname) {
 	    xtermWarning("malloc failed in showZIconBeep\n");
 	} else {
-	    char *marker = strstr(format, "%s");
+	    const char *marker = strstr(format, "%s");
 	    char *result = newname;
 	    if (marker != NULL) {
 		size_t skip = (size_t) (marker - format);
@@ -1091,7 +1091,7 @@ resetZIconBeep(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (screen->zIconBeep_flagged) {
-	char *icon_name = getIconName();
+	const char *icon_name = getIconName();
 	screen->zIconBeep_flagged = False;
 	if (icon_name != NULL) {
 	    char *buf = malloc(strlen(icon_name) + 1);
@@ -1232,16 +1232,18 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
 	params.on_wide     = 0;
 
 	sizes = calloc(length, 1);
-	for (i = 0; i < length; ++i) {
-	    SelectSize(ld, screen->cur_col + (int) i, str[i], sizes[i]);
-	}
+	if (sizes != NULL) {
+	    for (i = 0; i < length; ++i) {
+		SelectSize(ld, screen->cur_col + (int) i, str[i], sizes[i]);
+	    }
 
-	drawXtermText(&params,
-		      currentGC,
-		      LineCursorX(screen, ld, screen->cur_col),
-		      CursorY(screen, screen->cur_row),
-		      str, sizes, length);
-	free(sizes);
+	    drawXtermText(&params,
+			  currentGC,
+			  LineCursorX(screen, ld, screen->cur_col),
+			  CursorY(screen, screen->cur_row),
+			  str, sizes, length);
+	    free(sizes);
+	}
 
 	resetXtermGC(xw, attr_flags, False);
     }
@@ -1628,7 +1630,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 static void
 ClearAbove(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->protected_mode != OFF_PROTECT) {
 	int row;
@@ -1677,7 +1679,7 @@ ClearAbove(XtermWidget xw)
 static void
 ClearBelow(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     ClearRight(xw, -1);
 
@@ -1805,7 +1807,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 int
 ClearInLine(XtermWidget xw, int row, int col, unsigned len)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int flags = 0;
 
     /*
@@ -1902,7 +1904,7 @@ ClearLeft(XtermWidget xw)
 void
 ClearLine(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     unsigned len = (unsigned) MaxCols(screen);
 
     assert(screen->max_col >= 0);
@@ -2109,7 +2111,7 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	    for (row = 0; row < screen->max_row; ++row) {
 		Boolean hasData = row_has_data(screen, row);
 		if (hasData || hadData) {
-		    LineData *src = getLineData(screen, row);
+		    const LineData *src = getLineData(screen, row);
 		    LineData *dst = addScrollbackForLine(screen, src);
 		    copyLineData(dst, src);
 		    IncrementSavedLines(1);
@@ -2431,7 +2433,7 @@ void
 xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
 {
     TScreen *screen = TScreenOf(xw);
-    VTwin *vwin = WhichVWin(screen);
+    const VTwin *vwin = WhichVWin(screen);
     Drawable draw = VDrawable(screen);
     GC gc;
 
@@ -2739,7 +2741,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 void
 xtermClear(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermClear\n"));
     xtermClear2(xw, 0, 0, FullWidth(screen), FullHeight(screen));
@@ -2748,7 +2750,7 @@ xtermClear(XtermWidget xw)
 void
 xtermRepaint(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermRepaint\n"));
     xtermClear(xw);
@@ -3720,8 +3722,8 @@ fixupItalics(XTermDraw * params,
 {
     TScreen *screen = TScreenOf(params->xw);
     VTwin *cgsWin = WhichVWin(screen);
-    XFontStruct *realFp = curFont->fs;
-    XFontStruct *thisFp = getCgsFont(params->xw, cgsWin, gc)->fs;
+    const XFontStruct *realFp = curFont->fs;
+    const XFontStruct *thisFp = getCgsFont(params->xw, cgsWin, gc)->fs;
     int need_clipping = 0;
     int need_filling = 0;
 
@@ -3865,7 +3867,7 @@ static int
 xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
     if (length > 0) {
-	IChar *mapped = BfBuf(IChar);
+	const IChar *mapped = BfBuf(IChar);
 	XChar2b *buffer2 = BfBuf(XChar2b);
 	Char *buffer1 = BfBuf(Char);
 	int n;
@@ -4006,7 +4008,7 @@ xtermPartString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length
 static void
 xtermDrawString(TScreen *screen, unsigned flags, GC gc, int x, int y, int length)
 {
-    IChar *mapped = BfBuf(IChar);
+    const IChar *mapped = BfBuf(IChar);
     Char *buffer1 = BfBuf(Char);
 
     int dst;
@@ -4094,7 +4096,7 @@ drawXtermText(const XTermDraw * params,
 	    if ((!IsIcon(screen) && screen->font_doublesize)
 		&& (gc2 = xterm_DoubleGC(&recur, gc, &inx)) != NULL) {
 	    /* draw actual double-sized characters */
-	    XFontStruct *fs = getDoubleFont(screen, inx)->fs;
+	    const XFontStruct *fs = getDoubleFont(screen, inx)->fs;
 	    XRectangle rect, *rp = &rect;
 	    Cardinal nr = 1;
 	    Cardinal nlen;
@@ -5382,7 +5384,7 @@ jhash1(const unsigned char *key, size_t len)
 static unsigned
 computeFaint(XtermWidget xw, unsigned value, unsigned compare)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     if (screen->faint_relative) {
 	value = (unsigned) ((value + compare) / 2);
     } else {
@@ -6037,7 +6039,8 @@ parse_xinerama_screen(Display *display, const char *str, struct Xinerama_geometr
 int
 XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geometry *ret)
 {
-    char *at, buf[128];
+    const char *at;
+    char buf[128];
 
     ret->scr_x = 0;
     ret->scr_y = 0;

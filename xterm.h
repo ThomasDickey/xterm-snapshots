@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.984 2026/03/29 23:34:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.987 2026/04/07 23:08:26 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1128,7 +1128,7 @@ extern void report_char_class(XtermWidget);
 
 #define XTermWcInit(utf8,emoji,private) \
 	mk_wcwidth_init(((utf8) ? WcSoftHyphen : WcUnknown) \
-			| (private) ? WcPrivateFullwidth : WcUnknown \
+			| ((private) ? WcPrivateFullwidth : WcUnknown) \
 			| ((emoji) ? WcEmojiFullwidth : WcUnknown))
 
 #define SelectedSize(n) (((n) >= 1 && (n) <= 2) ? (n) : 0)
@@ -1171,7 +1171,7 @@ extern GC getCgsGC(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
 extern Pixel getCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern Pixel getCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern XTermFonts * getCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
-extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, XTermFonts * /*font*/);
+extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, const XTermFonts * /*font*/);
 extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
 extern void setCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
@@ -1217,7 +1217,7 @@ extern void unparseputc (XtermWidget /* xw */, int /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
-extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
+extern void unparseseq (XtermWidget /* xw */, const ANSI * /* ap */);
 extern void v_write (int /* f */, const Char * /* d */, size_t /* len */);
 extern void xtermAddInput (Widget /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
@@ -1227,7 +1227,7 @@ extern void ToggleCursorBlink(XtermWidget /* xw */);
 #endif
 
 #if OPT_BLINK_TEXT
-extern Bool LineHasBlinking(TScreen * /* screen */, CLineData * /* ld */);
+extern Bool LineHasBlinking(const TScreen * /* screen */, CLineData * /* ld */);
 #endif
 
 #if OPT_INPUT_METHOD
@@ -1264,7 +1264,7 @@ extern void CursorDown (TScreen * /* screen */, int /* n */);
 extern void CursorForward (XtermWidget /* xw */, int /* n */);
 extern void CursorNextLine (XtermWidget /* xw */, int /* count */);
 extern void CursorPrevLine (XtermWidget /* xw */, int /* count */);
-extern void CursorRestore2 (XtermWidget /* xw */, SavedCursor * /* sc */);
+extern void CursorRestore2 (XtermWidget /* xw */, const SavedCursor * /* sc */);
 extern void CursorRestore (XtermWidget /* xw */);
 extern void CursorSave2 (XtermWidget /* xw */, SavedCursor * /* sc */);
 extern void CursorSave (XtermWidget /* xw */);
@@ -1324,8 +1324,8 @@ extern void copyLineData(LineData * /* dst */, CLineData * /* src */);
 extern void initLineData(XtermWidget /* xw */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
-extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, XTermRect * /* limits */, int /* column */);
-extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, XTermRect * /* limits */, int /* column */);
+extern void saveCellData(const TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, XTermRect * /* limits */, int /* column */);
+extern void restoreCellData(const TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, XTermRect * /* limits */, int /* column */);
 
 /* main.c */
 #define ENVP_ARG /**/
@@ -1584,7 +1584,7 @@ extern void xtermDumpSvg (XtermWidget /* xw */);
 /* ptydata.c */
 #define PtySelect fd_set
 
-extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
+extern Bool decodeUtf8 (const TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
 extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, size_t /* length */);
 extern void initPtyData (PtyData ** /* data */);
@@ -1598,10 +1598,10 @@ extern void noleaks_ptydata ( void );
 extern Boolean isValidUTF8 (Char * /* lp */);
 extern Char *convertToUTF8 (Char * /* lp */, unsigned /* c */);
 extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
-extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
+extern IChar nextPtyData (const TScreen * /* screen */, PtyData * /* data */);
 extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (XtermWidget /* xw */, int /* f */);
-extern void writePtyData (int /* f */, IChar * /* d */, size_t /* len */);
+extern void writePtyData (int /* f */, const IChar * /* d */, size_t /* len */);
 
 #define morePtyData(screen, data) \
 	(((data)->last > (data)->next) \

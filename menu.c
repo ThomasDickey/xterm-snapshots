@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.380 2026/02/16 18:16:20 tom Exp $ */
+/* $XTermId: menu.c,v 1.381 2026/04/07 22:11:47 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -536,7 +536,7 @@ unusedEntries(XtermWidget xw, MenuIndex num)
 			  + XtNumber(tekMenuEntries)
 #endif
     ];
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     memset(result, 0, sizeof(result));
     switch (num) {
@@ -960,7 +960,7 @@ HandlePopupMenu(Widget w,
 static void
 handle_send_signal(Widget gw GCC_UNUSED, int sig)
 {
-    TScreen *screen = TScreenOf(term);
+    const TScreen *screen = TScreenOf(term);
 
     if (hold_screen > 1)
 	hold_screen = 0;
@@ -1108,7 +1108,7 @@ do_logging(Widget gw GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->logging) {
 	CloseLog(xw);
@@ -1600,7 +1600,7 @@ static void
 handle_tekshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("Show tek-window\n"));
     if (!TEK4014_SHOWN(xw)) {	/* not showing, turn on */
@@ -1802,7 +1802,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = (XtermWidget) term;
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int fontnum = screen->menu_font_number;
     String name = TScreenOf(xw)->MenuFontName(fontnum);
 
@@ -1820,7 +1820,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 static void
 setup_wide_fonts(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->wide_chars) {
 	if (xtermLoadWideFonts(xw, True)) {
@@ -1834,7 +1834,7 @@ setup_wide_fonts(XtermWidget xw)
 static void
 setup_narrow_fonts(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (xtermLoadDefaultFonts(xw)) {
 	SetVTFont(xw, screen->menu_font_number, True, NULL);
@@ -1847,7 +1847,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
 		  XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     /*
      * If xterm was started with -wc option, it might not have the wide fonts.
@@ -1959,7 +1959,7 @@ static void
 handle_vtshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     TRACE(("Show vt-window\n"));
     if (!screen->Vshow) {	/* not showing, turn on */

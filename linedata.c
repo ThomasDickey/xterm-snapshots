@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.109 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: linedata.c,v 1.110 2026/04/07 22:11:47 tom Exp $ */
 
 /*
  * Copyright 2009-2025,2026 by Thomas E. Dickey
@@ -297,7 +297,7 @@ newCellData(XtermWidget xw, Cardinal count)
 }
 
 void
-saveCellData(TScreen *screen,
+saveCellData(const TScreen *screen,
 	     CellData *data,
 	     Cardinal cell,
 	     CLineData *ld,
@@ -342,7 +342,7 @@ saveCellData(TScreen *screen,
 }
 
 void
-restoreCellData(TScreen *screen,
+restoreCellData(const TScreen *screen,
 		const CellData *data,
 		Cardinal cell,
 		LineData *ld,

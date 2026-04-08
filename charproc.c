@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2112 2026/02/16 18:19:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2117 2026/04/07 23:32:28 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1956,11 +1956,11 @@ static int
 subparam_index(int p, int s)
 {
     int result = -1;
-    int j, p2, s2;
+    int j, p2;
 
     for (j = p2 = 0; j < nparam; ++j, ++p2) {
 	if (parms.is_sub[j]) {
-	    s2 = 0;
+	    int s2 = 0;
 
 	    do {
 		if ((p == p2) && (s == s2)) {
@@ -2278,7 +2278,7 @@ begin_sixel(XtermWidget xw, struct ParseState *sp)
  * state which will not lead to another color palette change.
  */
 static void
-repaintWhenPaletteChanged(XtermWidget xw, struct ParseState *sp)
+repaintWhenPaletteChanged(XtermWidget xw, const struct ParseState *sp)
 {
     Boolean ignore = False;
 
@@ -2606,7 +2606,7 @@ trace_status_line(XtermWidget xw, int lineno, const char *tag)
 static SL_MODE
 find_SL_MODE(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     SL_MODE result = SLnone;
     const char *parse;
 
@@ -2704,7 +2704,7 @@ StatusInit(SavedCursor * data)
 static void
 StatusPutChars(XtermWidget xw, const char *value, int length)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (length < 0)
 	length = (int) strlen(value);
@@ -2792,7 +2792,7 @@ show_indicator_status(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 #if defined(HAVE_STRFTIME)
 	    else if (*parse != '\0') {
 		char format[3];
-		struct tm *tm = localtime(&now);
+		const struct tm *tm = localtime(&now);
 
 		format[0] = '%';
 		format[1] = *parse;
@@ -5812,7 +5812,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply_char(count, ';');
 		    for (item = 0; item < NUM_GSETS; ++item) {
 			int ps;
-			char *temp = encode_scs(screen->gsets[item], &ps);
+			const char *temp = encode_scs(screen->gsets[item], &ps);
 			while (*temp != '\0') {
 			    reply_char(count, *temp++);
 			}
@@ -5848,7 +5848,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECRQUPSS\n"));
 	    if (screen->vtXX_level >= 3) {
 		int psize = 0;
-		char *encoded = encode_scs(screen->gsets_upss, &psize);
+		const char *encoded = encode_scs(screen->gsets_upss, &psize);
 		init_reply(ANSI_DCS);
 		count = 0;
 		reply_char(count, psize ? '1' : '0');
@@ -6679,7 +6679,7 @@ v_write(int f, const Char *data, size_t len)
 static void
 updateCursor(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->cursor_set != screen->cursor_state) {
 	if (screen->cursor_set)
@@ -6741,7 +6741,7 @@ init_timeval(struct timeval *target, long usecs)
 }
 
 static Boolean
-better_timeout(struct timeval *check, struct timeval *against)
+better_timeout(const struct timeval *check, const struct timeval *against)
 {
     Boolean result = False;
     if (against->tv_sec == 0 && against->tv_usec == 0) {
@@ -6927,7 +6927,7 @@ in_put(XtermWidget xw)
 static IChar
 doinput(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     while (!morePtyData(screen, VTbuffer))
 	in_put(xw);
@@ -7019,8 +7019,8 @@ dotext(XtermWidget xw,
     }
 
     if_EXP_XMC_GLITCH(screen, {
-	Cardinal n;
 	if (charset != '?') {
+	    Cardinal n;
 	    for (n = 0; n < len; n++) {
 		if (buf[n] == XMC_GLITCH)
 		    buf[n] = XMC_GLITCH + 1;
@@ -7377,7 +7377,7 @@ SetCursorBlink(XtermWidget xw, BlinkOps enable)
 void
 ToggleCursorBlink(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->cursor_blink == cbTrue) {
 	SetCursorBlink(xw, cbFalse);
@@ -7985,7 +7985,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #endif
-	/* xterm */
+	    /* xterm */
 #if OPT_WIDE_CHARS
 	case srm_UTF8_ENCODING:
 	case srm_WIDTH_EASTASIAN:
@@ -8339,7 +8339,7 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    break;
 #endif
-	/* xterm */
+	    /* xterm */
 #if OPT_WIDE_CHARS
 	case srm_UTF8_ENCODING:
 	case srm_WIDTH_EASTASIAN:
@@ -8788,7 +8788,7 @@ restoremodes(XtermWidget xw)
 		   BtoS(screen->sixel_scrolls_right)));
 	    break;
 #endif
-	/* xterm */
+	    /* xterm */
 #if OPT_WIDE_CHARS
 	case srm_UTF8_ENCODING:
 	case srm_WIDTH_EASTASIAN:
@@ -8881,12 +8881,16 @@ property_to_string(XtermWidget xw, XTextProperty * text)
 	    rc = XTextPropertyToStringList(text, &list, &length);
 
     if (rc >= 0) {
-	int n, c, pass;
-	size_t need;
+	int pass;
 
 	for (pass = 0; pass < 2; ++pass) {
+	    int n;
+	    size_t need;
+
 	    for (n = 0, need = 0; n < length; n++) {
-		char *s = list[n];
+		const char *s = list[n];
+		int c;
+
 		while ((c = *s++) != '\0') {
 		    if (pass)
 			result[need] = (char) c;
@@ -9355,7 +9359,7 @@ unparseputc1(XtermWidget xw, int c)
 }
 
 void
-unparseseq(XtermWidget xw, ANSI *ap)
+unparseseq(XtermWidget xw, const ANSI *ap)
 {
     int c;
 
@@ -9607,7 +9611,7 @@ SwitchBufPtrs(XtermWidget xw, int toBuf)
 #if OPT_STATUS_LINE
 	if (IsStatusShown(screen)
 	    && (screen->visbuf != screen->editBuf_index[toBuf])) {
-	    LineData *oldLD;
+	    const LineData *oldLD;
 	    LineData *newLD;
 	    int row = MaxRows(screen);
 
@@ -10022,7 +10026,7 @@ repairColors(XtermWidget target)
 
 #if OPT_WIDE_CHARS
 static void
-set_utf8_feature(TScreen *screen, int *feature)
+set_utf8_feature(const TScreen *screen, int *feature)
 {
     if (*feature == uDefault) {
 	switch (screen->utf8_mode) {
@@ -10314,11 +10318,12 @@ set_flags_from_list(char *target,
 static XtResource *
 findVT100Resource(const char *name)
 {
-    Cardinal n;
     XtResource *result = NULL;
 
     if (!IsEmpty(name)) {
 	XrmQuark quarkName = XrmPermStringToQuark(name);
+	Cardinal n;
+
 	for (n = 0; n < XtNumber(xterm_resources); ++n) {
 	    if ((int) xterm_resources[n].resource_offset >= 0
 		&& !strcmp(xterm_resources[n].resource_name, name)) {
@@ -10396,7 +10401,7 @@ vt100ResourceToString(XtermWidget xw, const char *name)
 	res_addr = (void *) ((char *) xw + real_offset);
 
 	if (!strcmp(res_type, XtRString)) {
-	    char *value = *(char **) res_addr;
+	    const char *value = *(char **) res_addr;
 	    if (value != NULL) {
 		size_t need = strlen(value);
 		if ((result = malloc(1 + need)) != NULL)
@@ -11674,7 +11679,7 @@ VTInitialize(Widget wrequest,
 	screen->utf8_mode = uFalse;
     }
     XTermWcInit(screen->utf8_mode,
-    		wnew->misc.emoji_width,
+		wnew->misc.emoji_width,
 		wnew->misc.pua_width);
     TRACE(("initialized UTF-8 mode to %d\n", screen->utf8_mode));
 
@@ -12643,11 +12648,10 @@ allocateDbe(XtermWidget xw, VTwin *target)
 
     if (resource.buffered) {
 	Window win = target->window;
-	Drawable d;
 	int major, minor;
 	if (XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
-	    d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
-					   (XdbeSwapAction) XdbeCopied);
+	    Drawable d = XdbeAllocateBackBufferName(XtDisplay(xw), win,
+						    (XdbeSwapAction) XdbeCopied);
 	    if (d == None) {
 		fprintf(stderr, "Couldn't allocate a back buffer!\n");
 		exit(3);
@@ -13206,7 +13210,8 @@ xim_create_xic(XtermWidget xw, Widget theInput)
 		    }
 
 		}
-		s = ns + 1;
+		if (ns != NULL)
+		    s = ns + 1;
 	    }
 	    MyStackFree(t, buf);
 	}
@@ -14162,7 +14167,7 @@ StopBlinking(XtermWidget xw)
 
 #if OPT_BLINK_TEXT
 Bool
-LineHasBlinking(TScreen *screen, CLineData *ld)
+LineHasBlinking(const TScreen *screen, CLineData *ld)
 {
     Bool result = False;
     if (ld != NULL) {

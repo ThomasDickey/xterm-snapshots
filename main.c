@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.943 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: main.c,v 1.944 2026/04/07 19:22:45 tom Exp $ */
 
 /*
  * Copyright 2002-2025,2026 by Thomas E. Dickey
@@ -5761,7 +5761,7 @@ Exit(int n)
     }
 #endif
 
-    exit(n);
+    _exit(n);
 }
 
 /* ARGSUSED */
