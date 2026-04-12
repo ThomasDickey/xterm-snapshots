@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.562 2026/02/11 00:40:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.564 2026/04/12 18:39:22 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1110,7 +1110,7 @@ $ac_includes_default
 test "$cf_cv_func_strftime" = yes && AC_DEFINE(HAVE_STRFTIME,1,[Define to 1 to indicate that strftime function is present])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 29 updated: 2026/01/20 04:10:03
+dnl CF_FUNC_TGETENT version: 31 updated: 2026/04/12 14:38:24
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -1235,7 +1235,7 @@ else
 	cf_cv_lib_part_tgetent=no
 	for cf_termlib in $cf_TERMLIB ; do
 		LIBS="$cf_save_LIBS -l$cf_termlib"
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([$cf_termcap_h],[tgetent(0, "$cf_TERMVAR")])],
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([$cf_termcap_h],[tgetent((char*)0, "$cf_TERMVAR")])],
 			[echo "there is a terminfo/tgetent in $cf_termlib" 1>&AS_MESSAGE_LOG_FD
 			 cf_cv_lib_part_tgetent="-l$cf_termlib"
 			 break])
@@ -1383,7 +1383,7 @@ CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
 CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 45 updated: 2025/12/24 09:07:25
+dnl CF_GCC_WARNINGS version: 47 updated: 2026/04/12 14:38:24
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -1409,7 +1409,7 @@ AC_REQUIRE([CF_GCC_VERSION])
 if test "x$have_x" = xyes; then CF_CONST_X_STRING fi
 cat > "conftest.$ac_ext" <<EOF
 #line __oline__ "${as_me:-configure}"
-int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == 0) ; }
+int main(int argc, char *argv[[]]) { return (argv[[argc-1]] == (char*)0) ; }
 EOF
 if test "$INTEL_COMPILER" = yes
 then
@@ -1793,7 +1793,7 @@ AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INPUT_METHOD version: 6 updated: 2025/12/26 16:52:53
+dnl CF_INPUT_METHOD version: 7 updated: 2026/04/08 04:24:27
 dnl ---------------
 dnl Check if the X libraries support input-method
 AC_DEFUN([CF_INPUT_METHOD],
@@ -1809,9 +1809,9 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([
 ],[
 {
 	XIM xim;
-	XIMStyles *xim_styles = 0;
+	XIMStyles *xim_styles = NULL;
 	XIMStyle input_style;
-	Widget w = XtCreateWidget("none", (WidgetClass)0, None, (ArgList)0, 0);
+	Widget w = XtCreateWidget("none", (WidgetClass)0, NULL, (ArgList)0, 0);
 
 	XSetLocaleModifiers("@im=none");
 	xim = XOpenIM(XtDisplay(w), NULL, NULL, NULL);
@@ -1955,12 +1955,12 @@ dnl acts as a placeholder.
 dnl
 dnl The ".PHONY" feature was proposed in 2011 here
 dnl     https://www.austingroupbugs.net/view.php?id=523
-dnl and was finally released in P1003.1 Issue 8 (mid 2024).
+dnl and is scheduled for release in P1003.1 Issue 8 (late 2022).
 dnl
 dnl This is not supported by SVr4 make (or SunOS 4, 4.3SD, etc), but works with
 dnl a few others (i.e., GNU make and the non-POSIX "BSD" make):
 dnl
-dnl + This was a GNU make feature (since April 1988, but in turn from binutils,
+dnl + This is a GNU make feature (since April 1988, but in turn from binutils,
 dnl   date unspecified).
 dnl
 dnl + It was adopted in NetBSD make in June 1995.
@@ -2667,7 +2667,7 @@ AC_SUBST(LINT_OPTS)
 AC_SUBST(LINT_LIBS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 20 updated: 2025/12/24 12:27:29
+dnl CF_REGEX version: 22 updated: 2026/04/08 04:23:56
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -2678,17 +2678,23 @@ cf_regex_func=no
 cf_regex_libs=
 case "$host_os" in
 (mingw*)
-	# -lsystre -ltre -lintl -liconv
-	AC_CHECK_LIB(systre,regcomp,[
-		AC_CHECK_LIB(iconv,libiconv_open,[CF_ADD_LIB(iconv)])
-		AC_CHECK_LIB(intl,libintl_gettext,[CF_ADD_LIB(intl)])
-		AC_CHECK_LIB(tre,tre_regcomp,[CF_ADD_LIB(tre)])
-		CF_ADD_LIB(systre)
-		cf_regex_func=regcomp
-	],[
-		AC_CHECK_LIB(gnurx,regcomp,[
-			CF_ADD_LIB(gnurx)
-			cf_regex_func=regcomp])
+	AC_CHECK_FUNC(regcomp,[cf_regex_func=regcomp],[
+		cf_regex_libs="systre gnurx"
+		for cf_regex_lib in $cf_regex_libs
+		do
+			AC_CHECK_LIB($cf_regex_lib,regcomp,[cf_regex_func=regcomp; break])
+		done
+		if test $cf_regex_func != no; then
+			case "$cf_regex_lib" in
+			(systre)
+				# -lsystre -ltre -lintl -liconv
+				AC_CHECK_LIB(iconv,libiconv_open,[CF_ADD_LIB(iconv)])
+				AC_CHECK_LIB(intl,libintl_gettext,[CF_ADD_LIB(intl)])
+				AC_CHECK_LIB(tre,tre_regcomp,[CF_ADD_LIB(tre)])
+				;;
+			esac
+			CF_ADD_LIB($cf_regex_lib)
+		fi
 	])
 	;;
 (*)
@@ -2742,7 +2748,7 @@ case "$cf_regex_func" in
 #include <$cf_regex_hdr>],[
 			regex_t *p = NULL;
 			int x = regcomp(p, "", 0);
-			int y = regexec(p, "", 0, 0, 0);
+			int y = regexec(p, "", 0, NULL, 0);
 			(void)x;
 			(void)y;
 			regfree(p);
@@ -3356,7 +3362,7 @@ if test "$cf_cv_xopen_source" != no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 18 updated: 2026/01/20 04:10:03
+dnl CF_TTY_GROUP version: 20 updated: 2026/04/12 14:38:24
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
@@ -3455,17 +3461,17 @@ int main(void)
 	char *name;
 
 	for (fd = 0; fd < 3; ++fd) {
-		if ((name = ttyname(fd)) != 0)
+		if ((name = ttyname(fd)) != NULL)
 			break;
 	}
-	if (name == 0)
+	if (name == NULL)
 		name = default_tty;
 
 	ttygrp = getgrnam(TTY_GROUP_NAME);
 	endgrent();
 
-	if (ttygrp != 0
-	 && name != 0
+	if (ttygrp != NULL
+	 && name != NULL
 	 && stat(name, &sb) == 0
 	 && sb.st_gid != getgid()
 	 && sb.st_gid == ttygrp->gr_gid) {
@@ -3620,7 +3626,7 @@ AC_DEFUN([CF_UPPER],
 $1=`echo "$2" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTEMPTER version: 5 updated: 2025/12/26 16:52:53
+dnl CF_UTEMPTER version: 7 updated: 2026/04/12 14:38:24
 dnl -----------
 dnl Try to link with utempter library
 AC_DEFUN([CF_UTEMPTER],
@@ -3631,8 +3637,8 @@ CF_ADD_LIB(utempter)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([
 #include <utempter.h>
 ],[
-	addToUtmp("/dev/tty", 0, 1);
-	removeFromUtmp();
+	utempter_add_record(0, (void*)0);
+	utempter_remove_added_record();
 ])],[
 	cf_cv_have_utempter=yes],[
 	cf_cv_have_utempter=no])
@@ -4748,7 +4754,7 @@ if test "$with_pcre" != no ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PCRE2 version: 6 updated: 2021/08/11 20:35:34
+dnl CF_WITH_PCRE2 version: 7 updated: 2026/02/21 20:35:24
 dnl -------------
 dnl Add PCRE2 (Perl-compatible regular expressions v2) to the build if it is
 dnl available and the user requests it.  Assume the application will otherwise
@@ -4761,13 +4767,15 @@ AC_REQUIRE([CF_PKG_CONFIG])
 
 AC_MSG_CHECKING(if you want to use PCRE2 for regular-expressions)
 AC_ARG_WITH(pcre2,
-	[  --with-pcre2            use PCRE2 for regular-expressions])
+	[  --with-pcre2=[[XXX]]    use PCRE2 package XXX for regular-expressions])
 test -z "$with_pcre2" && with_pcre2=no
 AC_MSG_RESULT($with_pcre2)
 
 if test "x$with_pcre2" != xno ; then
+	cf_list_pcre2="libpcre2 libpcre2-posix libpcre"
+	test "x$with_pcre2" != xyes && cf_list_pcre2="$with_pcre2 $cf_lib_pcre2"
 	cf_with_pcre2_ok=no
-	for cf_with_pcre2 in libpcre2 libpcre2-posix libpcre
+	for cf_with_pcre2 in $cf_list_pcre2
 	do
 		CF_TRY_PKG_CONFIG($cf_with_pcre2,[cf_with_pcre2_ok=yes; break])
 	done
@@ -5550,7 +5558,7 @@ AC_CHECK_HEADER(X11/extensions/Xdbe.h,
 				   cf_x_ext_double_buffer=yes]))
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTCONFIG version: 11 updated: 2025/12/27 13:03:23
+dnl CF_X_FONTCONFIG version: 12 updated: 2026/04/12 14:38:24
 dnl ---------------
 dnl Check for fontconfig library, a dependency of the X FreeType library.
 AC_DEFUN([CF_X_FONTCONFIG],
@@ -5563,7 +5571,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 ],[
-	XftPattern *pat = 0;
+	XftPattern *pat = NULL;
 	XftPatternBuild(pat,
 					XFT_FAMILY, XftTypeString, "mono",
 					(void *) 0);
@@ -5724,7 +5732,7 @@ if test "$cf_cv_found_freetype" = no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 28 updated: 2025/12/15 04:04:20
+dnl CF_X_TOOLKIT version: 29 updated: 2026/04/08 04:26:01
 dnl ------------
 dnl Check for X Toolkit libraries
 AC_DEFUN([CF_X_TOOLKIT],
@@ -5780,7 +5788,7 @@ AC_CACHE_CHECK(for usable X Toolkit package,cf_cv_xt_ice_compat,[
 AC_LINK_IFELSE([AC_LANG_PROGRAM([
 $ac_includes_default
 #include <X11/Shell.h>
-],[int num = IceConnectionNumber(0); (void) num
+],[int num = IceConnectionNumber(NULL); (void) num
 ])],[cf_cv_xt_ice_compat=yes],[cf_cv_xt_ice_compat=no])])
 
 	if test "$cf_cv_xt_ice_compat" = no
@@ -5876,7 +5884,7 @@ AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_BODY version: 6 updated: 2021/06/07 17:39:17
+dnl CF__GRANTPT_BODY version: 7 updated: 2026/04/08 04:22:43
 dnl ----------------
 dnl Body for workability check of grantpt.
 define([CF__GRANTPT_BODY],[
@@ -5897,7 +5905,7 @@ define([CF__GRANTPT_BODY],[
 		failed(2);
 	else if (unlockpt(pty) < 0)
 		failed(3);
-	else if ((slave = ptsname(pty)) == 0)
+	else if ((slave = ptsname(pty)) == NULL)
 		failed(4);
 #if (CONFTEST == 3) || defined(CONFTEST_isatty)
 	else if (!isatty(pty))
@@ -5940,7 +5948,7 @@ define([CF__GRANTPT_BODY],[
 	${cf_cv_main_return:-return}(code);
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_HEAD version: 4 updated: 2020/03/10 18:53:47
+dnl CF__GRANTPT_HEAD version: 5 updated: 2026/04/08 04:16:48
 dnl ----------------
 dnl Headers for workability check of grantpt.
 define([CF__GRANTPT_HEAD],[
@@ -5970,7 +5978,7 @@ static void failed(int code)
 static void my_timeout(int sig)
 {
 	(void)sig;
-	exit(99);
+	_exit(99);
 }
 ])
 dnl ---------------------------------------------------------------------------
