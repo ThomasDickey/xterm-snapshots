@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.975 2026/04/07 23:14:07 tom Exp $ */
+/* $XTermId: util.c,v 1.976 2026/04/13 20:56:03 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -4284,7 +4284,7 @@ drawXtermText(const XTermDraw * params,
 		XftFont *tempFont = NULL;
 #define CURR_TEMP (tempFont ? tempFont : XftFp(currData))
 
-		if (IsAllowedCtlChar(ch_width)) {
+		if ((ch != HIDDEN_CHAR) && IsAllowedCtlChar(ch_width)) {
 		    TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__));
 		    ch_width = 1;
 		    missing = True;
