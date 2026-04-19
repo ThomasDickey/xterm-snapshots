@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2026)
-               updated for XTerm Patch #407 (2026/02/16)
+               updated for XTerm Patch #410 (2026/04/19)
 
 
 
@@ -929,10 +929,10 @@ CSI ? Pm h
           section Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
             Ps = 1 2  -> Start blinking cursor (AT&T 610).
-            Ps = 1 3  -> Start blinking cursor (set only via resource or
-          menu).
+            Ps = 1 3  -> Start blinking cursor (read-only, set only via
+          resource or menu).
             Ps = 1 4  -> Enable XOR of blinking cursor control sequence
-          and menu.
+          and menu (read-only, set via resource).
             Ps = 1 8  -> Print Form Feed (DECPFF), VT220.
             Ps = 1 9  -> Set print extent to full screen (DECPEX),
           VT220.
@@ -988,10 +988,10 @@ CSI ? Pm h
             Ps = 1 0 1 4  -> Enable fastScroll resource, xterm.
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 6  -> Enable SGR Mouse PixelMode, xterm.
-            Ps = 1 0 2 0  -> utf8 resource setting, xterm.
-            Ps = 1 0 2 1  -> cjkWidth resource setting, xterm.
-            Ps = 1 0 2 2  -> emojiWidth resource setting, xterm.
-            Ps = 1 0 2 3  -> privateWidth resource setting, xterm.
+            Ps = 1 0 2 0  -> utf8 resource (read-only), xterm.
+            Ps = 1 0 2 1  -> cjkWidth resource (read-only), xterm.
+            Ps = 1 0 2 2  -> emojiWidth resource (read-only), xterm.
+            Ps = 1 0 2 3  -> privateWidth resource (read-only), xterm.
             Ps = 1 0 3 4  -> Interpret "meta" key, xterm.  This sets the
           eighth bit of keyboard input (and enables the eightBitInput
           resource).

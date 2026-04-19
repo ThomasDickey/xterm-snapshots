@@ -1,5 +1,5 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.744 2026/02/16 18:45:22 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.746 2026/04/19 12:55:13 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
@@ -40,8 +40,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #407
-.ds RF 2026/02/16
+.ds LF Patch #410
+.ds RF 2026/04/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1516,8 +1516,8 @@ See the section \fBMouse Tracking\fP.
 This is the X10 \fI\*(xt\fP mouse protocol.
   \*(Ps = \*1\*0 \(-> Show toolbar (rxvt).
   \*(Ps = \*1\*2 \(-> Start blinking cursor (AT&T 610).
-  \*(Ps = \*1\*3 \(-> Start blinking cursor (set only via resource or menu).
-  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu.
+  \*(Ps = \*1\*3 \(-> Start blinking cursor (read-only, set only via resource or menu).
+  \*(Ps = \*1\*4 \(-> Enable XOR of blinking cursor control sequence and menu (read-only, set via resource).
   \*(Ps = \*1\*8 \(-> Print Form Feed (DECPFF), VT220.
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX), VT220.
   \*(Ps = \*2\*5 \(-> Show cursor (DECTCEM), VT220.
@@ -1566,10 +1566,10 @@ This sets the \fB\%scrollKey\fP resource to \*(``true\*(''.
   \*(Ps = \*1\*0\*1\*4 \(-> Enable \fB\%fastScroll\fP resource, \fI\*(xt\fP.
   \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*6 \(-> Enable SGR Mouse PixelMode, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*2\*0 \(-> \fB\%utf8\fP resource setting, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*2\*1 \(-> \fB\%cjkWidth\fP resource setting, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*2\*2 \(-> \fB\%emojiWidth\fP resource setting, \fI\*(xt\fP.
-  \*(Ps = \*1\*0\*2\*3 \(-> \fB\%privateWidth\fP resource setting, \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*0 \(-> \fB\%utf8\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*1 \(-> \fB\%cjkWidth\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*2 \(-> \fB\%emojiWidth\fP resource (read-only), \fI\*(xt\fP.
+  \*(Ps = \*1\*0\*2\*3 \(-> \fB\%privateWidth\fP resource (read-only), \fI\*(xt\fP.
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret \*(``meta\*('' key, \fI\*(xt\fP.
 This sets the eighth bit of keyboard input
 (and enables the \fB\%eightBitInput\fP resource).
