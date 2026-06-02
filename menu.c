@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.381 2026/04/07 22:11:47 tom Exp $ */
+/* $XTermId: menu.c,v 1.382 2026/06/02 00:27:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -964,8 +964,13 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 
     if (hold_screen > 1)
 	hold_screen = 0;
-    if (screen->pid > 1)
-	kill_process_group(screen->pid, sig);
+    if (screen->pid > 1) {
+	if (sig == SIGHUP) {
+	    Cleanup(0);
+	} else {
+	    kill_process_group(screen->pid, sig);
+	}
+    }
 }
 
 #if OPT_VT52_MODE
