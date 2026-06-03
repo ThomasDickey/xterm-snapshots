@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2117 2026/04/07 23:32:28 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2118 2026/06/03 00:38:33 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3314,6 +3314,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * tells us that a C1 would be legal.
 	 */
 	if (screen->wide_chars
+	    && screen->utf8_mode
 	    && (c >= 128 && c < 160)) {
 #if OPT_C1_PRINT
 	    if (screen->c1_printable) {
