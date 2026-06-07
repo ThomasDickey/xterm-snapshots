@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.987 2026/04/07 23:08:26 tom Exp $ */
+/* $XTermId: xterm.h,v 1.988 2026/06/07 17:33:14 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1644,6 +1644,7 @@ extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len *
 extern void CopyCells (TScreen * /* screen */, LineData * /* src */, LineData * /* dst */, int /* col */, int /* len */, Bool /* down */);
 extern void FullScreen (XtermWidget /* xw */, int /* mode */);
 extern void FreeMarkGCs (XtermWidget /* xw */);
+extern void LineRefresh(XtermWidget /* xw */, LineLimits * /* ll */, int /* row */, Bool /* force */);
 extern void ResetHiddenHint (XtermWidget /* xw */);
 extern void ScreenResize (XtermWidget /* xw */, int /* width */, int /* height */, unsigned * /* flags */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.977 2026/04/29 22:21:00 tom Exp $ */
+/* $XTermId: util.c,v 1.978 2026/06/07 22:04:55 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -4286,7 +4286,7 @@ drawXtermText(const XTermDraw * params,
 
 		if ((ch != HIDDEN_CHAR)
 		    && IsAllowedCtlChar(ch_width)
-		    && !mk_is_combining(ch)) {
+		    && !mk_is_combining((wchar_t) ch)) {
 		    TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__));
 		    ch_width = 1;
 		    missing = True;

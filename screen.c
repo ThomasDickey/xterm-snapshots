@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.667 2026/06/05 00:02:06 tom Exp $ */
+/* $XTermId: screen.c,v 1.668 2026/06/07 21:52:12 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -72,20 +72,6 @@
 #include <signal.h>
 
 #include <graphics.h>
-
-typedef struct {
-    int level;			/* level in recursion */
-    int row_1st;
-    int row_end;
-    int col_1st;
-    int col_end;
-    int y_pos;
-    int x_pos;
-    unsigned chg_gc;
-#if OPT_WIDE_ATTRS
-    unsigned chg_attr;
-#endif
-} CLineLimits;
 
 #define inSaveBuf(screen, buf, inx) \
 	((buf) == (screen)->saveBuf_index && \
@@ -1573,73 +1559,15 @@ intersectsSelection(TScreen *screen,
 	 && (row != screen->endH.row || col < screen->endH.col))
 #endif /* OPT_BLOCK_SELECT */
 
-/*
- * Repaints the area enclosed by the parameters.
- * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
- *	     coordinates of characters in screen;
- *	     nrows and ncols positive.
- *	     all dimensions are based on single-characters.
- */
 void
-ScrnRefresh(XtermWidget xw,
-	    int toprow,
-	    int leftcol,
-	    int nrows,
-	    int ncols,
-	    Bool force)		/* ... leading/trailing spaces */
+LineRefresh(XtermWidget xw,
+	    LineLimits * ll,
+	    int row,
+	    Bool force)
 {
     TScreen *screen = TScreenOf(xw);
-    XTermDraw params;
-    CLineData *ld;
-    CLineLimits ll_data;
-    CLineLimits *ll = &ll_data;
-    Char *sizes;
-    int row;
-    int scrollamt = screen->scroll_amt;
-#ifdef __CYGWIN__
-    static char first_time = 1;
-#endif
-    static int recurse = 0;
 
-    /* *INDENT-EQLS* */
-    memset(ll, 0, sizeof(*ll));
-    ll->level   = recurse;
-    ll->row_1st = toprow;
-    ll->row_end = toprow + nrows - 1;
-    ll->col_1st = leftcol;
-    ll->y_pos   = toprow * FontHeight(screen) + screen->border;
-#if OPT_WIDE_ATTRS
-    ll->chg_attr = xw->flags;
-#endif
-
-    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
-	   screen->topline, ll->row_1st, ll->col_1st,
-	   nrows, ncols,
-	   force ? " force" : ""));
-
-    if (ncols <= 0 || nrows <= 0) {
-	TRACE(("...nothing to refresh\n"));
-	return;
-    }
-#if OPT_STATUS_LINE
-    if (!ll->level && (ll->row_end == screen->max_row) && IsStatusShown(screen)) {
-	TRACE(("...allow a row for status-line\n"));
-	nrows += StatusLineRows;
-	ll->row_end += StatusLineRows;
-    }
-#endif
-    ++ll->level;
-
-    if (screen->cursorp.col >= ll->col_1st
-	&& screen->cursorp.col <= (ll->col_1st + ncols - 1)
-	&& screen->cursorp.row >= ROW2INX(screen, ll->row_1st)
-	&& screen->cursorp.row <= ROW2INX(screen, ll->row_end))
-	screen->cursor_state = OFF;
-
-    sizes = calloc((size_t) (ll->col_1st + ncols + 1), 1);
-    for (row = ll->row_1st;
-	 row <= ll->row_end;
-	 ll->y_pos += FontHeight(screen), row++) {
+    do {
 #if OPT_ISO_COLORS
 	CellColor *fb = NULL;
 #define ColorOf(col) (fb ? fb[col] : initCColor)
@@ -1648,10 +1576,12 @@ ScrnRefresh(XtermWidget xw,
 	int wideness = 0;
 #endif
 #define BLANK_CEL(cell) (chars[cell] == ' ')
+	XTermDraw params;
+	CLineData *ld;
 	IChar *chars;
 	const IAttr *attrs;
 	int col = ll->col_1st;
-	int hi_col;
+	int hi_col = ll->col_end = ll->col_1st + ll->num_col - 1;
 	int lastind;
 	unsigned flags;
 	unsigned test;
@@ -1660,24 +1590,24 @@ ScrnRefresh(XtermWidget xw,
 	GC gc;
 	Bool hilite;
 
-	ll->col_end = ll->col_1st + ncols - 1;
-	hi_col = ll->col_end;
-
 	(void) fg;
 	(void) bg;
 #if !OPT_ISO_COLORS
 	fg_bg = 0;
 #endif
 
+	if (ll->sizes == NULL)
+	    ll->sizes = calloc((size_t) (ll->col_1st + ll->num_col + 1), 1);
+
 	if (row < screen->top_marg || row > screen->bot_marg)
 	    lastind = row;
 	else
-	    lastind = row - scrollamt;
+	    lastind = row - screen->scroll_amt;
 
 	if (lastind < 0 || lastind > LastRowNumber(screen))
 	    continue;
 
-	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
+	TRACE2(("LineRefresh row=%d lastind=%d ->%d\n",
 		row, lastind, ROW2INX(screen, lastind)));
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == NULL
@@ -1697,7 +1627,7 @@ ScrnRefresh(XtermWidget xw,
 	attrs = ld->attribs;
 
 	for (col = ll->col_1st; col <= ll->col_end; ++col) {
-	    SelectSize(ld, col, chars[col], sizes[col]);
+	    SelectSize(ld, col, chars[col], ll->sizes[col]);
 	}
 	col = ll->col_1st;
 
@@ -1712,7 +1642,7 @@ ScrnRefresh(XtermWidget xw,
 		    chars[ll->col_1st] == HIDDEN_CHAR &&
 		    isWide((int) chars[ll->col_1st - 1])) {
 		    ll->col_1st--;
-		    ncols++;
+		    ll->num_col++;
 		    col = ll->col_1st;
 		}
 	    } else {
@@ -1897,7 +1827,7 @@ ScrnRefresh(XtermWidget xw,
 		   )
 		) {
 		assert(col >= lastind);
-		TRACE(("ScrnRefresh looping drawXtermText %d..%d:%s\n",
+		TRACE(("LineRefresh looping drawXtermText %d..%d:%s\n",
 		       lastind, col,
 		       visibleIChars((&chars[lastind]),
 				     (unsigned) (col - lastind))));
@@ -1916,7 +1846,7 @@ ScrnRefresh(XtermWidget xw,
 		ll->x_pos = drawXtermText(&params,
 					  gc, ll->x_pos, ll->y_pos,
 					  &chars[lastind],
-					  &sizes[lastind],
+					  &ll->sizes[lastind],
 					  (unsigned) (col - lastind));
 
 		if_OPT_WIDE_CHARS(screen, {
@@ -1933,7 +1863,8 @@ ScrnRefresh(XtermWidget xw,
 			    if (com_off[i] != 0) {
 				int my_x;
 
-				params.on_wide = SelectedSize(sizes[i]) > 1;
+				params.on_wide =
+				    SelectedSize(ll->sizes[i]) > 1;
 				if (params.on_wide)
 				    my_x = LineCursorX(screen, ld, i - 1);
 				else
@@ -1978,7 +1909,7 @@ ScrnRefresh(XtermWidget xw,
 	}
 
 	assert(col >= lastind);
-	TRACE(("ScrnRefresh calling drawXtermText %d..%d:%s\n",
+	TRACE(("LineRefresh calling drawXtermText %d..%d:%s\n",
 	       lastind, col,
 	       visibleIChars(&chars[lastind], (unsigned) (col - lastind))));
 
@@ -1996,7 +1927,7 @@ ScrnRefresh(XtermWidget xw,
 	drawXtermText(&params,
 		      gc, ll->x_pos, ll->y_pos,
 		      &chars[lastind],
-		      &sizes[lastind],
+		      &ll->sizes[lastind],
 		      (unsigned) (col - lastind));
 
 	if_OPT_WIDE_CHARS(screen, {
@@ -2012,7 +1943,7 @@ ScrnRefresh(XtermWidget xw,
 		for (i = lastind; i < col; i++) {
 		    int my_x;
 
-		    params.on_wide = SelectedSize(sizes[i]) > 1;
+		    params.on_wide = SelectedSize(ll->sizes[i]) > 1;
 		    if (params.on_wide)
 			my_x = LineCursorX(screen, ld, i - 1);
 		    else
@@ -2028,9 +1959,76 @@ ScrnRefresh(XtermWidget xw,
 	});
 
 	resetXtermGC(xw, flags, hilite);
+    } while (0);
+}
+
+/*
+ * Repaints the area enclosed by the parameters.
+ * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
+ *	     coordinates of characters in screen;
+ *	     nrows and ncols positive.
+ *	     all dimensions are based on single-characters.
+ */
+void
+ScrnRefresh(XtermWidget xw,
+	    int toprow,
+	    int leftcol,
+	    int nrows,
+	    int ncols,
+	    Bool force)		/* ... leading/trailing spaces */
+{
+    TScreen *screen = TScreenOf(xw);
+    LineLimits ll_data;
+    LineLimits *ll = &ll_data;
+    int row;
+#ifdef __CYGWIN__
+    static char first_time = 1;
+#endif
+    static int recurse = 0;
+
+    /* *INDENT-EQLS* */
+    memset(ll, 0, sizeof(*ll));
+    ll->level   = recurse;
+    ll->num_col = ncols;
+    ll->row_1st = toprow;
+    ll->row_end = toprow + nrows - 1;
+    ll->col_1st = leftcol;
+    ll->y_pos   = toprow * FontHeight(screen) + screen->border;
+#if OPT_WIDE_ATTRS
+    ll->chg_attr = xw->flags;
+#endif
+
+    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
+	   screen->topline, ll->row_1st, ll->col_1st,
+	   nrows, ncols,
+	   force ? " force" : ""));
+
+    if (ncols <= 0 || nrows <= 0) {
+	TRACE(("...nothing to refresh\n"));
+	return;
+    }
+#if OPT_STATUS_LINE
+    if (!ll->level && (ll->row_end == screen->max_row) && IsStatusShown(screen)) {
+	TRACE(("...allow a row for status-line\n"));
+	nrows += StatusLineRows;
+	ll->row_end += StatusLineRows;
+    }
+#endif
+    ++ll->level;
+
+    if (screen->cursorp.col >= ll->col_1st
+	&& screen->cursorp.col <= (ll->col_1st + ll->num_col - 1)
+	&& screen->cursorp.row >= ROW2INX(screen, ll->row_1st)
+	&& screen->cursorp.row <= ROW2INX(screen, ll->row_end))
+	screen->cursor_state = OFF;
+
+    for (row = ll->row_1st;
+	 row <= ll->row_end;
+	 ll->y_pos += FontHeight(screen), row++) {
+	LineRefresh(xw, ll, row, force);
     }
 
-    refresh_displayed_graphics(xw, ll->col_1st, ll->row_1st, ncols, nrows);
+    refresh_displayed_graphics(xw, ll->col_1st, ll->row_1st, ll->num_col, nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current
@@ -2050,12 +2048,14 @@ ScrnRefresh(XtermWidget xw,
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
 	first_time = 0;
-	update_winsize(screen, nrows, ncols, xw->core.height, xw->core.width);
+	update_winsize(screen,
+		       nrows, ll->num_col,
+		       xw->core.height, xw->core.width);
     }
 #endif
     recurse = --(ll->level);
 
-    free(sizes);
+    free(ll->sizes);
 
     TRACE((TRACE_R " ScrnRefresh\n"));
     return;

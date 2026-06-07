@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1165 2026/02/16 18:30:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1167 2026/06/07 20:40:41 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -2000,6 +2000,24 @@ typedef struct {
 } LineData;
 
 typedef const LineData CLineData;
+
+typedef struct {
+    /* parameters set by caller */
+    int row_1st;
+    int row_end;
+    int col_1st;
+    int col_end;
+    /* in/out working parameters for LineRefresh */
+    int level;			/* level in recursion */
+    int num_col;		/* number of columns, e.g., end - 1st + 1 */
+    int y_pos;
+    int x_pos;
+    Char *sizes;
+    unsigned chg_gc;
+#if OPT_WIDE_ATTRS
+    unsigned chg_attr;
+#endif
+} LineLimits;
 
 /*
  * We use CellData in a few places, when copying a cell's data to a temporary
