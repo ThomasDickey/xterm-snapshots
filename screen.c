@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.668 2026/06/07 21:52:12 tom Exp $ */
+/* $XTermId: screen.c,v 1.669 2026/06/09 23:23:13 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1379,9 +1379,8 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 		MemMove(ld->combData[off]);
 	    }
 	});
+	ClearCells(xw, CHARDRAWN, n, row, col);
     }
-    ClearCells(xw, CHARDRAWN, n, row, col);
-
 #undef MemMove
 }
 
@@ -1440,9 +1439,8 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	});
 	LineClrWrapped(ld);
 	ShowWrapMarks(xw, row, ld);
+	ClearCells(xw, 0, n, row, (last - (int) n));
     }
-    ClearCells(xw, 0, n, row, (last - (int) n));
-
 #undef MemMove
 }
 

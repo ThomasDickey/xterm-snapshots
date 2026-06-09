@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.988 2026/06/07 17:33:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.989 2026/06/08 07:39:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -472,6 +472,7 @@ extern char **environ;
 #define XtNboldColors		"boldColors"
 #define XtNboldFont		"boldFont"
 #define XtNboldMode		"boldMode"
+#define XtNbrokenCopyArea	"brokenCopyArea"
 #define XtNbrokenLinuxOSC	"brokenLinuxOSC"
 #define XtNbrokenSelections	"brokenSelections"
 #define XtNbrokenStringTerm	"brokenStringTerm"
@@ -755,6 +756,7 @@ extern char **environ;
 #define XtCBellSuppressTime	"BellSuppressTime"
 #define XtCBoldFont		"BoldFont"
 #define XtCBoldMode		"BoldMode"
+#define XtCBrokenCopyArea	"BrokenCopyArea"
 #define XtCBrokenLinuxOSC	"BrokenLinuxOSC"
 #define XtCBrokenSelections	"BrokenSelections"
 #define XtCBrokenStringTerm	"BrokenStringTerm"

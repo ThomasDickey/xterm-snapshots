@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.978 2026/06/07 22:04:55 tom Exp $ */
+/* $XTermId: util.c,v 1.979 2026/06/09 23:18:56 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1132,6 +1132,25 @@ resetZIconBeep(XtermWidget xw)
 #define setZIconBeep(xw)	/* nothing */
 #endif /* OPT_ZICONBEEP */
 
+static void
+RepaintRow(XtermWidget xw, int row, int col)
+{
+    TScreen *screen = TScreenOf(xw);
+    LineLimits ll;
+
+    /* *INDENT-EQLS* */
+    memset(&ll, 0, sizeof(ll));
+    ll.row_1st = row;
+    ll.row_end = row;
+    ll.col_1st = col;
+    ll.col_end = screen->max_col;
+    ll.num_col = ll.col_end - ll.col_1st + 1;
+    ll.y_pos   = (screen->topline + row)
+	           * FontHeight(screen)
+	           + screen->border;
+    LineRefresh(xw, &ll, row, True);
+}
+
 /*
  * Write a string onto the screen at the current cursor position.
  * Update cursor position.
@@ -1482,11 +1501,13 @@ InsertChar(XtermWidget xw, unsigned n)
     CLineData *ld;
     unsigned limit;
     int row = INX2ROW(screen, screen->cur_row);
-    int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
 
     if (screen->cursor_state)
 	HideCursor(xw);
+
+    if (!ScrnIsColInMargins(screen, screen->cur_col))
+	return;
 
     TRACE(("InsertChar count=%d\n", n));
 
@@ -1501,10 +1522,8 @@ InsertChar(XtermWidget xw, unsigned n)
     if (n > limit)
 	n = limit;
 
-    if (screen->cur_col < left || screen->cur_col > right) {
-	n = 0;
-    } else if (AddToVisible(xw)
-	       && (ld = getLineData(screen, screen->cur_row)) != NULL) {
+    if (AddToVisible(xw)
+	&& (ld = getLineData(screen, screen->cur_row)) != NULL) {
 	int col = right + 1 - (int) n;
 
 	/*
@@ -1526,32 +1545,30 @@ InsertChar(XtermWidget xw, unsigned n)
 	    }
 	});
 
-#if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(GetLineDblCS(ld))) {
-	    col = MaxCols(screen) / 2 - (int) n;
-	}
-#endif
-	/*
-	 * prevent InsertChar from shifting the end of a line over
-	 * if it is being appended to
-	 */
-	if (non_blank_line(screen, screen->cur_row,
-			   screen->cur_col, MaxCols(screen))) {
-	    horizontal_copy_area(xw, screen->cur_col,
-				 col - screen->cur_col,
-				 (int) n);
-	}
+	ScrnInsertChar(xw, n);	/* adjust screen->buf */
 
-	ClearCurBackground(xw,
-			   INX2ROW(screen, screen->cur_row),
-			   screen->cur_col,
-			   1U,
-			   n,
-			   (unsigned) LineFontWidth(screen, ld));
-    }
-    if (n != 0) {
-	/* adjust screen->buf */
-	ScrnInsertChar(xw, n);
+	if (screen->no_copy_area) {
+	    RepaintRow(xw, screen->cur_row, screen->cur_col);
+	} else {
+#if OPT_DEC_CHRSET
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
+		col = MaxCols(screen) / 2 - (int) n;
+	    }
+#endif
+	    if (non_blank_line(screen, screen->cur_row,
+			       screen->cur_col, MaxCols(screen))) {
+		horizontal_copy_area(xw, screen->cur_col,
+				     col - screen->cur_col,
+				     (int) n);
+	    }
+
+	    ClearCurBackground(xw,
+			       INX2ROW(screen, screen->cur_row),
+			       screen->cur_col,
+			       1U,
+			       n,
+			       (unsigned) LineFontWidth(screen, ld));
+	}
     }
 }
 
@@ -1601,26 +1618,28 @@ DeleteChar(XtermWidget xw, unsigned n)
 		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
 
-#if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(GetLineDblCS(ld))) {
-	    col = MaxCols(screen) / 2 - (int) n;
-	}
-#endif
-	horizontal_copy_area(xw,
-			     (screen->cur_col + (int) n),
-			     col - screen->cur_col,
-			     -((int) n));
-
-	ClearCurBackground(xw,
-			   INX2ROW(screen, screen->cur_row),
-			   col,
-			   1U,
-			   n,
-			   (unsigned) LineFontWidth(screen, ld));
-    }
-    if (n != 0) {
-	/* adjust screen->buf */
 	ScrnDeleteChar(xw, n);
+
+	if (screen->no_copy_area) {
+	    RepaintRow(xw, screen->cur_row, screen->cur_col);
+	} else {
+#if OPT_DEC_CHRSET
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
+		col = MaxCols(screen) / 2 - (int) n;
+	    }
+#endif
+	    horizontal_copy_area(xw,
+				 (screen->cur_col + (int) n),
+				 col - screen->cur_col,
+				 -((int) n));
+
+	    ClearCurBackground(xw,
+			       INX2ROW(screen, screen->cur_row),
+			       col,
+			       1U,
+			       n,
+			       (unsigned) LineFontWidth(screen, ld));
+	}
     }
 }
 

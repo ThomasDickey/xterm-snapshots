@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2118 2026/06/03 00:38:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2120 2026/06/08 07:45:05 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -427,6 +427,7 @@ static XtResource xterm_resources[] =
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
+    Bres(XtNbrokenCopyArea, XtCBrokenCopyArea, screen.no_copy_area, False),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
     Sres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll_s, DEF_CD_XTRA_SCROLL),
@@ -11144,6 +11145,8 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
+
+    init_Bres(screen.no_copy_area);
 
     init_Sres(screen.colorEvents);
 
