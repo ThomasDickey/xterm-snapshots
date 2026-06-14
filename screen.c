@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.669 2026/06/09 23:23:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.670 2026/06/14 15:49:40 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1605,8 +1605,8 @@ LineRefresh(XtermWidget xw,
 	if (lastind < 0 || lastind > LastRowNumber(screen))
 	    continue;
 
-	TRACE2(("LineRefresh row=%d lastind=%d ->%d\n",
-		row, lastind, ROW2INX(screen, lastind)));
+	TRACE2(("LineRefresh top=%d row=%d lastind=%d ->%d\n",
+		screen->topline, row, lastind, ROW2INX(screen, lastind)));
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == NULL
 	    || ld->charData == NULL

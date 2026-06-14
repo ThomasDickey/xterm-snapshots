@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.979 2026/06/09 23:18:56 tom Exp $ */
+/* $XTermId: util.c,v 1.980 2026/06/14 17:18:04 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1140,8 +1140,6 @@ RepaintRow(XtermWidget xw, int row, int col)
 
     /* *INDENT-EQLS* */
     memset(&ll, 0, sizeof(ll));
-    ll.row_1st = row;
-    ll.row_end = row;
     ll.col_1st = col;
     ll.col_end = screen->max_col;
     ll.num_col = ll.col_end - ll.col_1st + 1;

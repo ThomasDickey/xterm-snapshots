@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.217 2026/04/07 22:23:47 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.218 2026/06/14 16:27:33 tom Exp $ */
 
 /*
  * Copyright 2000-2024,2026 by Thomas E. Dickey
@@ -415,17 +415,42 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 		scrolltop = lines;
 		refreshtop = scrollheight;
 	    }
-	    scrolling_copy_area(xw, scrolltop, scrollheight, -i);
-	    screen->topline = top;
 
-	    ScrollSelection(screen, i, True);
+	    if (screen->no_copy_area) {
+		int nnn;
 
-	    xtermClear2(xw,
-			OriginX(screen),
-			OriginY(screen) + refreshtop * FontHeight(screen),
-			(unsigned) Width(screen),
-			(unsigned) (lines * FontHeight(screen)));
-	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
+		screen->topline = top;
+
+		/*
+		 * Scrolling shifts all of the lines on the screen to/from the
+		 * saved-lines area.
+		 */
+		for (nnn = -top; nnn <= screen->max_row - top; nnn++) {
+		    LineLimits ll;
+		    /* *INDENT-EQLS* */
+		    int row    = INX2ROW(screen, top + nnn);
+		    int actual = top + row;
+		    memset(&ll, 0, sizeof(ll));
+		    ll.col_end = screen->max_col;
+		    ll.num_col = ll.col_end - ll.col_1st + 1;
+		    ll.y_pos   = (actual)
+			           * FontHeight(screen)
+			           + screen->border;
+		    LineRefresh(xw, &ll, actual, True);
+		}
+	    } else {
+		scrolling_copy_area(xw, scrolltop, scrollheight, -i);
+		screen->topline = top;
+
+		ScrollSelection(screen, i, True);
+
+		xtermClear2(xw,
+			    OriginX(screen),
+			    OriginY(screen) + refreshtop * FontHeight(screen),
+			    (unsigned) Width(screen),
+			    (unsigned) (lines * FontHeight(screen)));
+		ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
+	    }
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 	    RestartBlinking(xw);
