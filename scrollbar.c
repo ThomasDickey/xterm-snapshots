@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.218 2026/06/14 16:27:33 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.222 2026/06/19 22:35:25 tom Exp $ */
 
 /*
  * Copyright 2000-2024,2026 by Thomas E. Dickey
@@ -373,6 +373,31 @@ ResizeScrollBar(XtermWidget xw)
 }
 
 void
+SetWindowTop(XtermWidget xw, int top)
+{
+    TScreen *screen = TScreenOf(xw);
+    if (screen->no_copy_area && ScrnHaveSelection(screen)) {
+	int diff = screen->topline - top;
+#define AdjustCells(start,finish) do { \
+	    if ((screen->start.row != screen->finish.row \
+	      || screen->start.col != screen->finish.col)) { \
+		screen->start.row += diff; \
+		screen->finish.row += diff; \
+		TRACE(("\t" #start " %d.%d " #finish " %d.%d\n", \
+			screen->start.row, screen->start.col, \
+			screen->finish.row, screen->finish.col)); \
+	    } \
+	} while (0)
+	TRACE(("SetWindowTop %d => %d\n", screen->topline, top));
+	AdjustCells(startH, endH);
+	AdjustCells(startRaw, endRaw);
+	AdjustCells(startSel, endSel);
+	AdjustCells(startExt, endExt);
+    }
+    screen->topline = top;
+}
+
+void
 WindowScroll(XtermWidget xw, int top, Bool always)
 {
     TScreen *screen = TScreenOf(xw);
@@ -419,7 +444,7 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 	    if (screen->no_copy_area) {
 		int nnn;
 
-		screen->topline = top;
+		SetWindowTop(xw, top);
 
 		/*
 		 * Scrolling shifts all of the lines on the screen to/from the
@@ -433,14 +458,11 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 		    memset(&ll, 0, sizeof(ll));
 		    ll.col_end = screen->max_col;
 		    ll.num_col = ll.col_end - ll.col_1st + 1;
-		    ll.y_pos   = (actual)
-			           * FontHeight(screen)
-			           + screen->border;
 		    LineRefresh(xw, &ll, actual, True);
 		}
 	    } else {
 		scrolling_copy_area(xw, scrolltop, scrollheight, -i);
-		screen->topline = top;
+		SetWindowTop(xw, top);
 
 		ScrollSelection(screen, i, True);
 

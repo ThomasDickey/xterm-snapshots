@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.989 2026/06/08 07:39:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.990 2026/06/19 21:02:17 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1762,6 +1762,7 @@ extern void ScrollBarDrawThumb (XtermWidget /* xw */, int /* mode */);
 extern void ScrollBarOff (XtermWidget /* xw */);
 extern void ScrollBarOn (XtermWidget /* xw */, Bool /* init */);
 extern void ScrollBarReverseVideo (Widget /* scrollWidget */);
+extern void SetWindowTop (XtermWidget /* xw */, int /* top */);
 extern void ToggleScrollBar (XtermWidget /* xw */);
 extern void WindowScroll (XtermWidget /* xw */, int /* top */, Bool /* always */);
 

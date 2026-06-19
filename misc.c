@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1131 2026/04/07 23:33:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.1132 2026/06/17 08:05:08 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -419,11 +419,11 @@ mergeExposeEvents(XEvent *target)
 	 */
 	if (p->window == q->window) {
 	    if (ExposeContains(p, q)) {
-		TRACE(("pending Expose...merged forward\n"));
+		TRACE_PENDING("Expose...merged forward");
 		merge_this = True;
 		next_event = *target;
 	    } else if (ExposeContains(q, p)) {
-		TRACE(("pending Expose...merged backward\n"));
+		TRACE_PENDING("Expose...merged backward");
 		merge_this = True;
 	    }
 	}
@@ -466,11 +466,11 @@ mergeConfigureEvents(XEvent *target)
 	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
-	    TRACE(("pending Configure...merged\n"));
+	    TRACE_PENDING("Configure...merged");
 	    merge_this = True;
 	}
 	if (!merge_this) {
-	    TRACE(("pending Configure...skipped\n"));
+	    TRACE_PENDING("Configure...skipped");
 	    XtDispatchEvent(target);
 	}
 	*target = next_event;
@@ -519,11 +519,11 @@ mergeButtonEvents(XEvent *target)
 	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
-	    TRACE(("pending ButtonEvent...merged\n"));
+	    TRACE_PENDING("ButtonEvent...merged");
 	    merge_this = True;
 	}
 	if (!merge_this) {
-	    TRACE(("pending ButtonEvent...skipped\n"));
+	    TRACE_PENDING("ButtonEvent...skipped");
 	    XtDispatchEvent(target);
 	}
 	*target = next_event;

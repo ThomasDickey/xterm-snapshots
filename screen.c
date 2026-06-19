@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.670 2026/06/14 15:49:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.674 2026/06/19 22:09:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1510,6 +1510,11 @@ ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
     }
 }
 
+#define IntersectsSelection(screen, py, px, maxcol) \
+	(((py) >= screen->startH.row && (py) <= screen->endH.row) \
+	 && ((py) != screen->startH.row || maxcol >= screen->startH.col) \
+	 && ((py) != screen->endH.row || (px) < screen->endH.col))
+
 #if OPT_BLOCK_SELECT
 /*
  * Return the start and end cols of a block selection
@@ -1538,23 +1543,22 @@ intersectsSelection(TScreen *screen,
 		    int col,
 		    int maxcol)
 {
+    int result;
     if (screen->blockSelecting) {
 	int start, end;
 	blockSelectBounds(screen, &start, &end);
-	return start != end
+	result = start != end
 	    && (row >= screen->startH.row && row <= screen->endH.row)
 	    && ((start >= col && start <= maxcol)
 		|| (end > col && end < maxcol)) ? 1 : 0;
+    } else {
+	result = IntersectsSelection(screen, row, col, maxcol);
     }
-    return !(row < screen->startH.row || row > screen->endH.row
-	     || (row == screen->startH.row && maxcol < screen->startH.col)
-	     || (row == screen->endH.row && col >= screen->endH.col)) ? 1 : 0;
+    return result;
 }
 #else
 #define intersectsSelection(screen, row, col, maxcol) \
-	((row >= screen->startH.row && row <= screen->endH.row) \
-	 && (row != screen->startH.row || maxcol >= screen->startH.col) \
-	 && (row != screen->endH.row || col < screen->endH.col))
+	IntersectsSelection(screen, row, col, maxcol)
 #endif /* OPT_BLOCK_SELECT */
 
 void
@@ -1587,13 +1591,14 @@ LineRefresh(XtermWidget xw,
 	Pixel fg = 0, bg = 0;
 	GC gc;
 	Bool hilite;
+	int y_pos = (row) * FontHeight(screen) + screen->border;
+	int x_pos;
 
 	(void) fg;
 	(void) bg;
 #if !OPT_ISO_COLORS
 	fg_bg = 0;
 #endif
-
 	if (ll->sizes == NULL)
 	    ll->sizes = calloc((size_t) (ll->col_1st + ll->num_col + 1), 1);
 
@@ -1803,7 +1808,7 @@ LineRefresh(XtermWidget xw,
 	gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 	ll->chg_gc |= (flags & (FG_COLOR | BG_COLOR));
 
-	ll->x_pos = LineCursorX(screen, ld, col);
+	x_pos = LineCursorX(screen, ld, col);
 	lastind = col;
 
 	for (; col <= ll->col_end; col++) {
@@ -1841,11 +1846,11 @@ LineRefresh(XtermWidget xw,
 		params.real_chrset = CSET_SWL;
 		params.on_wide     = 0;
 
-		ll->x_pos = drawXtermText(&params,
-					  gc, ll->x_pos, ll->y_pos,
-					  &chars[lastind],
-					  &ll->sizes[lastind],
-					  (unsigned) (col - lastind));
+		x_pos = drawXtermText(&params,
+				      gc, x_pos, y_pos,
+				      &chars[lastind],
+				      &ll->sizes[lastind],
+				      (unsigned) (col - lastind));
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int i;
@@ -1869,7 +1874,7 @@ LineRefresh(XtermWidget xw,
 				    my_x = LineCursorX(screen, ld, i);
 
 				drawXtermText(&params,
-					      gc, my_x, ll->y_pos,
+					      gc, my_x, y_pos,
 					      com_off + i,
 					      &combining, 1);
 			    }
@@ -1923,7 +1928,7 @@ LineRefresh(XtermWidget xw,
 	params.on_wide     = 0;
 
 	drawXtermText(&params,
-		      gc, ll->x_pos, ll->y_pos,
+		      gc, x_pos, y_pos,
 		      &chars[lastind],
 		      &ll->sizes[lastind],
 		      (unsigned) (col - lastind));
@@ -1949,7 +1954,7 @@ LineRefresh(XtermWidget xw,
 
 		    if (com_off[i] != 0)
 			drawXtermText(&params,
-				      gc, my_x, ll->y_pos,
+				      gc, my_x, y_pos,
 				      com_off + i,
 				      &combining, 1);
 		}
@@ -1979,6 +1984,8 @@ ScrnRefresh(XtermWidget xw,
     LineLimits ll_data;
     LineLimits *ll = &ll_data;
     int row;
+    int row_1st;
+    int row_end;
 #ifdef __CYGWIN__
     static char first_time = 1;
 #endif
@@ -1988,16 +1995,16 @@ ScrnRefresh(XtermWidget xw,
     memset(ll, 0, sizeof(*ll));
     ll->level   = recurse;
     ll->num_col = ncols;
-    ll->row_1st = toprow;
-    ll->row_end = toprow + nrows - 1;
     ll->col_1st = leftcol;
-    ll->y_pos   = toprow * FontHeight(screen) + screen->border;
 #if OPT_WIDE_ATTRS
     ll->chg_attr = xw->flags;
 #endif
 
+    row_1st = toprow;
+    row_end = toprow + nrows - 1;
+
     TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
-	   screen->topline, ll->row_1st, ll->col_1st,
+	   screen->topline, row_1st, ll->col_1st,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
@@ -2006,27 +2013,25 @@ ScrnRefresh(XtermWidget xw,
 	return;
     }
 #if OPT_STATUS_LINE
-    if (!ll->level && (ll->row_end == screen->max_row) && IsStatusShown(screen)) {
+    if (!ll->level && (row_end == screen->max_row) && IsStatusShown(screen)) {
 	TRACE(("...allow a row for status-line\n"));
 	nrows += StatusLineRows;
-	ll->row_end += StatusLineRows;
+	row_end += StatusLineRows;
     }
 #endif
     ++ll->level;
 
     if (screen->cursorp.col >= ll->col_1st
 	&& screen->cursorp.col <= (ll->col_1st + ll->num_col - 1)
-	&& screen->cursorp.row >= ROW2INX(screen, ll->row_1st)
-	&& screen->cursorp.row <= ROW2INX(screen, ll->row_end))
+	&& screen->cursorp.row >= ROW2INX(screen, row_1st)
+	&& screen->cursorp.row <= ROW2INX(screen, row_end))
 	screen->cursor_state = OFF;
 
-    for (row = ll->row_1st;
-	 row <= ll->row_end;
-	 ll->y_pos += FontHeight(screen), row++) {
+    for (row = row_1st; row <= row_end; row++) {
 	LineRefresh(xw, ll, row, force);
     }
 
-    refresh_displayed_graphics(xw, ll->col_1st, ll->row_1st, ll->num_col, nrows);
+    refresh_displayed_graphics(xw, ll->col_1st, row_1st, ll->num_col, nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current
@@ -2437,7 +2442,7 @@ ScreenResize(XtermWidget xw,
 		if (screen->savedlines > screen->savelines)
 		    screen->savedlines = screen->savelines;
 		if (screen->topline < -screen->savedlines)
-		    screen->topline = -screen->savedlines;
+		    SetWindowTop(xw, -screen->savedlines);
 		set_cur_row(screen, screen->cur_row + move_down_by);
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
