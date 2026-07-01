@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2120 2026/06/08 07:45:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2122 2026/06/28 17:12:31 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1084,8 +1084,7 @@ SGR_Background(XtermWidget xw, int color)
      * if we're changing the background color now, then the new value
      * should not apply to the pending blank lines.
      */
-    if (screen->scroll_amt && (color != xw->cur_background))
-	FlushScroll(xw);
+    ScrollJump(xw, screen->scroll_amt && (color != xw->cur_background));
 
     if (color >= 0) {
 	UIntSet(xw->flags, BG_COLOR);
@@ -4758,8 +4757,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("%s\n", ((sp->parsestate[c] == CASE_HP_MEM_LOCK)
 			    ? "CASE_HP_MEM_LOCK"
 			    : "CASE_HP_MEM_UNLOCK")));
-	    if (screen->scroll_amt)
-		FlushScroll(xw);
+	    ScrollJump(xw, screen->scroll_amt);
 	    if (sp->parsestate[c] == CASE_HP_MEM_LOCK)
 		set_tb_margins(screen, screen->cur_row, screen->bot_marg);
 	    else
@@ -4778,8 +4776,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    || bot == 0)
 		    bot = MaxRows(screen);
 		if (bot > top) {
-		    if (screen->scroll_amt)
-			FlushScroll(xw);
+		    ScrollJump(xw, screen->scroll_amt);
 		    set_tb_margins(screen, top - 1, bot - 1);
 		    CursorSet(screen, 0, 0, xw->flags);
 		}
@@ -6712,8 +6709,7 @@ update_the_screen(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     Boolean moved;
 
-    if (screen->scroll_amt)
-	FlushScroll(xw);
+    ScrollJump(xw, screen->scroll_amt);
     moved = CursorMoved(screen);
     if (screen->cursor_set && moved) {
 	if (screen->cursor_state)
@@ -7577,8 +7573,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (IsSM()) {
 		screen->jumpscroll = 0;
-		if (screen->scroll_amt)
-		    FlushScroll(xw);
+		ScrollJump(xw, screen->scroll_amt);
 	    } else
 		screen->jumpscroll = 1;
 	    (*func) (&xw->flags, SMOOTHSCROLL);
@@ -7780,6 +7775,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_DECLRMM:
 	    if (screen->vtXX_level >= 4) {	/* VT420 */
 		(*func) (&xw->flags, LEFT_RIGHT);
+		TRACE(("DECSET DECLRMM %s\n",
+		       BtoS(xw->flags & LEFT_RIGHT)));
 		set_left_right_margin_mode(xw);
 	    }
 	    break;
@@ -8438,8 +8435,7 @@ restoremodes(XtermWidget xw)
 	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (screen->save_modes[DP_DECSCLM] & SMOOTHSCROLL) {
 		screen->jumpscroll = 0;
-		if (screen->scroll_amt)
-		    FlushScroll(xw);
+		ScrollJump(xw, screen->scroll_amt);
 	    } else
 		screen->jumpscroll = 1;
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECSCLM], SMOOTHSCROLL);
@@ -9547,9 +9543,7 @@ FromAlternate(XtermWidget xw, Bool clearFirst)
 
     if (screen->whichBuf != 0) {
 	TRACE(("FromAlternate\n"));
-	if (screen->scroll_amt) {
-	    FlushScroll(xw);
-	}
+	ScrollJump(xw, screen->scroll_amt);
 	if (clearFirst)
 	    ClearScreen(xw);
 	SwitchBufs(xw, 0, False);
@@ -9578,9 +9572,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
     SwitchBufPtrs(xw, toBuf);
 
     if ((top = INX2ROW(screen, 0)) < rows) {
-	if (screen->scroll_amt) {
-	    FlushScroll(xw);
-	}
+	ScrollJump(xw, screen->scroll_amt);
 	xtermClear2(xw,
 		    (int) OriginX(screen),
 		    (int) top * FontHeight(screen) + screen->border,

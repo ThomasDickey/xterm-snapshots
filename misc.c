@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1132 2026/06/17 08:05:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.1133 2026/06/28 13:25:31 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -584,8 +584,8 @@ xevents(XtermWidget xw)
     if (need_cleanup)
 	NormalExit();
 
-    if (screen->scroll_amt)
-	FlushScroll(xw);
+    ScrollJump(xw, screen->scroll_amt);
+
     /*
      * process timeouts, relying on the fact that XtAppProcessEvent
      * will process the timeout and return without blockng on the

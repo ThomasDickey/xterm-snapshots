@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.990 2026/06/19 21:02:17 tom Exp $ */
+/* $XTermId: xterm.h,v 1.993 2026/07/01 07:46:12 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1570,8 +1570,8 @@ extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
 extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
 extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int /* param */, int /* private_seq */);
-extern void xtermPrintScreen (XtermWidget /* xw */, Bool /* use_DECPEX */, PrinterFlags * /* p */);
-extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
+extern void xtermPrintScreen (XtermWidget /* xw */, Bool /* use_DECPEX */, const PrinterFlags * /* p */);
+extern void xtermPrintEverything (XtermWidget /* xw */, const PrinterFlags * /* p */);
 extern void xtermPrintImmediately (XtermWidget /* xw */, String /* filename */, int /* opts */, int /* attributes */);
 extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
 
@@ -1691,9 +1691,6 @@ extern void LineSetFlag(LineData /* ld */, int /* flag */);
 #define ScrnHaveSelection(screen) \
 			((screen)->startH.row != (screen)->endH.row \
 			|| (screen)->startH.col != (screen)->endH.col)
-
-#define ScrnAreRowsInSelection(screen, first, last) \
-	((last) >= (screen)->startH.row && (first) <= (screen)->endH.row)
 
 #define ScrnIsRowInSelection(screen, line) \
 	((line) >= (screen)->startH.row && (line) <= (screen)->endH.row)
@@ -1833,6 +1830,8 @@ extern void xtermResetLocale (int /* category */, char * /* before */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermScrollLR (XtermWidget /* xw */, int /* amount */, Bool /* toLeft */);
 extern void xtermSizeHints (XtermWidget /* xw */, int /* scrollbarWidth */);
+
+#define ScrollJump(xw, reason) if (reason) FlushScroll(xw)
 
 struct Xinerama_geometry {
     int x;

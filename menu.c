@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.382 2026/06/02 00:27:00 tom Exp $ */
+/* $XTermId: menu.c,v 1.383 2026/06/28 13:25:05 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1439,8 +1439,7 @@ do_jumpscroll(Widget gw GCC_UNUSED,
     term->flags ^= SMOOTHSCROLL;
     if (term->flags & SMOOTHSCROLL) {
 	screen->jumpscroll = False;
-	if (screen->scroll_amt)
-	    FlushScroll(term);
+	ScrollJump(term, screen->scroll_amt);
     } else {
 	screen->jumpscroll = True;
     }

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.254 2026/04/07 23:01:02 tom Exp $ */
+/* $XTermId: trace.c,v 1.255 2026/06/28 13:50:41 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -324,8 +324,14 @@ visibleChars(const Char *buf, size_t len)
 	size_t limit = ((len + 1) * 8) + 1;
 
 	if (limit > used) {
-	    used = limit;
-	    result = realloc(result, used);
+	    char *check = realloc(result, limit);
+	    if (check == NULL) {
+		FreeAndNull(result);
+		used = 0;
+	    } else {
+		result = check;
+		used = limit;
+	    }
 	}
 	if (result != NULL) {
 	    char *dst = result;
@@ -392,8 +398,14 @@ visibleIChars(const IChar *buf, size_t len)
 	size_t limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
-	    used = limit;
-	    result = realloc(result, used);
+	    char *check = realloc(result, limit);
+	    if (check == NULL) {
+		FreeAndNull(result);
+		used = 0;
+	    } else {
+		result = check;
+		used = limit;
+	    }
 	}
 	if (result != NULL) {
 	    char *dst = result;
