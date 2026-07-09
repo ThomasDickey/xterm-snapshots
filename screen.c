@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.674 2026/06/19 22:09:00 tom Exp $ */
+/* $XTermId: screen.c,v 1.676 2026/07/09 00:13:29 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1593,6 +1593,7 @@ LineRefresh(XtermWidget xw,
 	Bool hilite;
 	int y_pos = (row) * FontHeight(screen) + screen->border;
 	int x_pos;
+	int x_end;
 
 	(void) fg;
 	(void) bg;
@@ -1610,8 +1611,10 @@ LineRefresh(XtermWidget xw,
 	if (lastind < 0 || lastind > LastRowNumber(screen))
 	    continue;
 
-	TRACE2(("LineRefresh top=%d row=%d lastind=%d ->%d\n",
-		screen->topline, row, lastind, ROW2INX(screen, lastind)));
+	TRACE(("LineRefresh[%d] top=%d row=%d lastind=%d ->%d " TRACE_L "\n",
+	       ll->level,
+	       screen->topline, row,
+	       lastind, ROW2INX(screen, lastind)));
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == NULL
 	    || ld->charData == NULL
@@ -1633,25 +1636,6 @@ LineRefresh(XtermWidget xw,
 	    SelectSize(ld, col, chars[col], ll->sizes[col]);
 	}
 	col = ll->col_1st;
-
-	if_OPT_WIDE_CHARS(screen, {
-	    /* This fixes an infinite recursion bug, that leads
-	       to display anomalies. It seems to be related to
-	       problems with the selection. */
-	    if (ll->level < 3) {
-		/* adjust to redraw all of a widechar if we just wanted
-		   to draw the right hand half */
-		if (ll->col_1st > 0 &&
-		    chars[ll->col_1st] == HIDDEN_CHAR &&
-		    isWide((int) chars[ll->col_1st - 1])) {
-		    ll->col_1st--;
-		    ll->num_col++;
-		    col = ll->col_1st;
-		}
-	    } else {
-		xtermWarning("Unexpected recursion drawing hidden characters.\n");
-	    }
-	});
 
 	if (!intersectsSelection(screen, row, col, ll->col_end)) {
 #if OPT_DEC_CHRSET
@@ -1927,11 +1911,22 @@ LineRefresh(XtermWidget xw,
 	params.real_chrset = CSET_SWL;
 	params.on_wide     = 0;
 
-	drawXtermText(&params,
-		      gc, x_pos, y_pos,
-		      &chars[lastind],
-		      &ll->sizes[lastind],
-		      (unsigned) (col - lastind));
+	x_end = drawXtermText(&params,
+			      gc, x_pos, y_pos,
+			      &chars[lastind],
+			      &ll->sizes[lastind],
+			      (unsigned) (col - lastind));
+	if (x_end < FullWidth(screen)) {
+	    IChar fills[2];
+	    Char sizes[2];
+	    fills[0] = ' ';
+	    sizes[0] = 1;
+	    drawXtermText(&params,
+			  gc, x_end, y_pos,
+			  &fills[0],
+			  &sizes[0],
+			  1U);
+	}
 
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
@@ -1952,17 +1947,21 @@ LineRefresh(XtermWidget xw,
 		    else
 			my_x = LineCursorX(screen, ld, i);
 
-		    if (com_off[i] != 0)
+		    if (com_off[i] != 0) {
 			drawXtermText(&params,
 				      gc, my_x, y_pos,
 				      com_off + i,
 				      &combining, 1);
+		    }
 		}
 	    }
 	});
 
 	resetXtermGC(xw, flags, hilite);
     } while (0);
+
+    TRACE((TRACE_R " LineRefresh[%d]\n", ll->level));
+    return;
 }
 
 /*
@@ -1993,7 +1992,7 @@ ScrnRefresh(XtermWidget xw,
 
     /* *INDENT-EQLS* */
     memset(ll, 0, sizeof(*ll));
-    ll->level   = recurse;
+    ll->level   = ++recurse;
     ll->num_col = ncols;
     ll->col_1st = leftcol;
 #if OPT_WIDE_ATTRS
@@ -2003,13 +2002,15 @@ ScrnRefresh(XtermWidget xw,
     row_1st = toprow;
     row_end = toprow + nrows - 1;
 
-    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
+    TRACE(("ScrnRefresh[%d] top %d (%d,%d) - (%d,%d)%s " TRACE_L "\n",
+	   ll->level,
 	   screen->topline, row_1st, ll->col_1st,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
     if (ncols <= 0 || nrows <= 0) {
-	TRACE(("...nothing to refresh\n"));
+	--recurse;
+	TRACE((TRACE_R " ScrnRefresh[%d] ...nothing to refresh\n", ll->level));
 	return;
     }
 #if OPT_STATUS_LINE
@@ -2056,11 +2057,10 @@ ScrnRefresh(XtermWidget xw,
 		       xw->core.height, xw->core.width);
     }
 #endif
-    recurse = --(ll->level);
-
     free(ll->sizes);
 
-    TRACE((TRACE_R " ScrnRefresh\n"));
+    TRACE((TRACE_R " ScrnRefresh[%d]\n", recurse));
+    --recurse;
     return;
 }
 

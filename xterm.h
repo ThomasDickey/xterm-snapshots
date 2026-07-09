@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.993 2026/07/01 07:46:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.994 2026/07/08 21:20:23 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1788,7 +1788,6 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned /* flags */, CellColor 
 extern Pixel getXtermBackground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern Pixel getXtermForeground (XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern char * xtermSetLocale (int /* category */, String /* after */);
-extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
 extern int drawXtermText (const XTermDraw * /* param */, GC /* gc */, int /* x */, int /* y */, const IChar * /* text */, const Char * /* size */, Cardinal /* len */);
