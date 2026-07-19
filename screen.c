@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.676 2026/07/09 00:13:29 tom Exp $ */
+/* $XTermId: screen.c,v 1.678 2026/07/13 20:54:33 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1916,22 +1916,23 @@ LineRefresh(XtermWidget xw,
 			      &chars[lastind],
 			      &ll->sizes[lastind],
 			      (unsigned) (col - lastind));
-	if (x_end < FullWidth(screen)) {
-	    IChar fills[2];
-	    Char sizes[2];
-	    fills[0] = ' ';
-	    sizes[0] = 1;
-	    drawXtermText(&params,
-			  gc, x_end, y_pos,
-			  &fills[0],
-			  &sizes[0],
-			  1U);
-	}
-
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
 	    size_t off;
 	    Char combining = 0;
+
+	    if (x_end < Width(screen) &&
+		x_end + FontWidth(screen) >= Width(screen)) {
+		IChar fills[2];
+		Char sizes[2];
+		fills[0] = ' ';
+		sizes[0] = 1;
+		drawXtermText(&params,
+			      gc, x_end, y_pos,
+			      &fills[0],
+			      &sizes[0],
+			      1U);
+	    }
 
 	    params.draw_flags = NOBACKGROUND;
 

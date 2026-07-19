@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.944 2026/04/07 19:22:45 tom Exp $ */
+/* $XTermId: main.c,v 1.945 2026/07/15 22:42:50 tom Exp $ */
 
 /*
  * Copyright 2002-2025,2026 by Thomas E. Dickey
@@ -5578,6 +5578,20 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
     return 0;
 }				/* end spawnXTerm */
 
+#if defined(__GNUC__) && defined(HAVE__GCOV_EXIT)
+extern void __gcov_exit(void);
+
+static GCC_NORETURN void
+QuicklyExit(int n)
+{
+    __gcov_exit();
+    _exit(n);
+}
+
+#else
+#define QuicklyExit(n) _exit(n)
+#endif
+
 void
 Exit(int n)
 {
@@ -5760,8 +5774,7 @@ Exit(int n)
 	TRACE_CLOSE();
     }
 #endif
-
-    _exit(n);
+    QuicklyExit(n);
 }
 
 /* ARGSUSED */

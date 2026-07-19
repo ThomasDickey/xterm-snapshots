@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.149 2025/06/23 20:23:21 tom Exp $ */
+/* $XTermId: menu.h,v 1.151 2026/07/19 20:06:25 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  * Copyright 1989  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -514,10 +514,12 @@ extern void update_font_loadable(void);
 #endif
 
 #if OPT_RENDERFONT
-extern void update_font_renderfont(void);
+extern void update_font_renderfont(XtermWidget xw);
 #else
-#define update_font_renderfont() /* nothing */
+#define update_font_renderfont(xw) /* nothing */
 #endif
+
+extern void disableCopyArea(XtermWidget xw);
 
 #if OPT_WIDE_CHARS
 extern void update_font_utf8_mode(void);

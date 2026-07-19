@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2122 2026/06/28 17:12:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2126 2026/07/19 20:06:25 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -427,7 +427,7 @@ static XtResource xterm_resources[] =
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
-    Bres(XtNbrokenCopyArea, XtCBrokenCopyArea, screen.no_copy_area, False),
+    Bres(XtNbrokenCopyArea, XtCBrokenCopyArea, screen.brokenCopyArea, False),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
     Sres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll_s, DEF_CD_XTRA_SCROLL),
@@ -11138,7 +11138,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
 
-    init_Bres(screen.no_copy_area);
+    init_Bres(screen.brokenCopyArea);
 
     init_Sres(screen.colorEvents);
 
@@ -11196,14 +11196,15 @@ VTInitialize(Widget wrequest,
 #endif
 
     /* make a copy so that editres cannot change the resource after startup */
+    /* *INDENT-EQLS* */
     screen->allowPasteControls = screen->allowPasteControl0;
-    screen->allowSendEvents = screen->allowSendEvent0;
-    screen->allowColorOps = screen->allowColorOp0;
-    screen->allowFontOps = screen->allowFontOp0;
-    screen->allowMouseOps = screen->allowMouseOp0;
-    screen->allowTcapOps = screen->allowTcapOp0;
-    screen->allowTitleOps = screen->allowTitleOp0;
-    screen->allowWindowOps = screen->allowWindowOp0;
+    screen->allowSendEvents    = screen->allowSendEvent0;
+    screen->allowColorOps      = screen->allowColorOp0;
+    screen->allowFontOps       = screen->allowFontOp0;
+    screen->allowMouseOps      = screen->allowMouseOp0;
+    screen->allowTcapOps       = screen->allowTcapOp0;
+    screen->allowTitleOps      = screen->allowTitleOp0;
+    screen->allowWindowOps     = screen->allowWindowOp0;
 
     if (!IsEmpty(screen->colorEvents)) {
 	set_flags_from_list(screen->color_events,
@@ -11592,7 +11593,8 @@ VTInitialize(Widget wrequest,
 	    TRACE(("reset render_font since there is no face_name\n"));
 	}
     }
-#endif
+#endif /* OPT_RENDERFONT */
+    disableCopyArea(wnew);
 
 #if OPT_WIDE_CHARS
     /* setup data for next call */
@@ -12690,6 +12692,8 @@ VTRealize(Widget w,
     }
     memset(screen->fnts, 0, sizeof(screen->fnts));
 
+    init_cachedCgs(xw);
+
     if (!xtermLoadFont(xw,
 		       myfont,
 		       False,
@@ -12863,6 +12867,7 @@ VTRealize(Widget w,
 	screen->fullVwin.drawable = screen->fullVwin.window;
     }
 #endif /* USE_DOUBLE_BUFFER */
+
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON

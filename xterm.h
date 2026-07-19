@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.994 2026/07/08 21:20:23 tom Exp $ */
+/* $XTermId: xterm.h,v 1.995 2026/07/15 23:52:10 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1175,6 +1175,7 @@ extern Pixel getCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern XTermFonts * getCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, const XTermFonts * /*font*/);
 extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
+extern void init_cachedCgs (XtermWidget /* xw */);
 extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
 extern void setCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
 extern void setCgsCSet(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, unsigned /*cset*/);

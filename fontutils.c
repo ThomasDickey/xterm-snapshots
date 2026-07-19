@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.798 2026/04/07 23:19:34 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.799 2026/07/19 17:56:04 tom Exp $ */
 
 /*
  * Copyright 1998-2025,2026 by Thomas E. Dickey
@@ -3805,7 +3805,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	if (XftFp(norm) == NULL) {
 	    TRACE(("...no TrueType font found for number %d, disable menu entry\n", fontnum));
 	    xw->work.render_font = False;
-	    update_font_renderfont();
+	    update_font_renderfont(xw);
 	    /* now we will fall through into the bitmap fonts */
 	} else {
 	    setBrokenBoxChars(xw, False);

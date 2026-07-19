@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.383 2026/06/28 13:25:05 tom Exp $ */
+/* $XTermId: menu.c,v 1.385 2026/07/19 20:06:36 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -858,7 +858,7 @@ domenu(Widget w,
 				      False);
 #endif
 #if OPT_RENDERFONT
-	    update_font_renderfont();
+	    update_font_renderfont(xw);
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
@@ -1812,7 +1812,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 
     DefaultRenderFont(xw);
     ToggleFlag(xw->work.render_font);
-    update_font_renderfont();
+    update_font_renderfont(xw);
     xtermLoadFont(xw, xtermFontName(name), True, fontnum);
     ScrnRefresh(term, 0, 0,
 		MaxRows(screen),
@@ -3799,27 +3799,42 @@ update_font_loadable(void)
 
 #if OPT_RENDERFONT
 void
-update_font_renderfont(void)
+update_font_renderfont(XtermWidget xw)
 {
     UpdateCheckbox("update_font_renderfont",
 		   fontMenuEntries,
 		   fontMenu_render_font,
-		   (term->work.render_font == True));
+		   (xw->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
-		       !IsEmpty(CurrentXftFont(term)));
+		       !IsEmpty(CurrentXftFont(xw)));
 
 #if OPT_BOX_CHARS
-    if (term->work.render_font) {
-	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
+    if (xw->work.render_font) {
+	TScreenOf(xw)->broken_box_chars = xw->work.broken_box_chars;
     } else {
-	TScreenOf(term)->broken_box_chars = False;
+	TScreenOf(xw)->broken_box_chars = False;
     }
 #endif
+    disableCopyArea(xw);
     update_font_boxchars();
 
-    update_fontmenu(term);
+    update_fontmenu(xw);
 }
 #endif
+
+void
+disableCopyArea(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    screen->no_copy_area = screen->brokenCopyArea;
+#if OPT_RENDERFONT
+    if (xw->work.render_font == True) {
+	screen->no_copy_area = False;
+	TRACE(("TrueType fonts are enabled (keep XCopyArea)\n"));
+    }
+#endif
+    TRACE(("disable XCopyArea: %s\n", BtoS(screen->no_copy_area)));
+}
 
 #if OPT_WIDE_CHARS
 void

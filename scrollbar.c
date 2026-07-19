@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.222 2026/06/19 22:35:25 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.224 2026/07/14 08:23:58 tom Exp $ */
 
 /*
  * Copyright 2000-2024,2026 by Thomas E. Dickey
@@ -459,6 +459,7 @@ WindowScroll(XtermWidget xw, int top, Bool always)
 		    ll.col_end = screen->max_col;
 		    ll.num_col = ll.col_end - ll.col_1st + 1;
 		    LineRefresh(xw, &ll, actual, True);
+		    free(ll.sizes);
 		}
 	    } else {
 		scrolling_copy_area(xw, scrolltop, scrollheight, -i);

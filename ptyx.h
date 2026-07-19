@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1171 2026/06/19 22:08:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1172 2026/07/19 17:46:21 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -2885,6 +2885,7 @@ typedef struct {
 	Boolean		do_wrap;	/* true if cursor in last column
 					    and character just output    */
 
+	Boolean		brokenCopyArea;	/* resource for no_copy_area */
 	Boolean		no_copy_area;	/* true to suppress XCopyArea calls */
 	int		incopy;		/* 0 idle; 1 XCopyArea issued;
 					    -1 first GraphicsExpose seen,

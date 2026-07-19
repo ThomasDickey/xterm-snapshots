@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1002 2026/07/09 00:18:16 tom Exp $ */
+/* $XTermId: util.c,v 1.1006 2026/07/19 17:34:52 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -672,6 +672,7 @@ RepaintMultiple(XtermWidget xw,
 	ll.col_end = right;
 	ll.num_col = ll.col_end - ll.col_1st + 1;
 	LineRefresh(xw, &ll, source, True);
+	free(ll.sizes);
     }
 }
 
@@ -793,6 +794,7 @@ xtermScroll(XtermWidget xw, int amount)
 	    screen->endH.row - amount >= screen->top_marg) {
 	    ScrollSelection(screen, -amount, True);
 	}
+	xtermClear(xw);
     } else {
 	if (screen->jumpscroll) {
 	    if (screen->scroll_amt > 0) {
@@ -1001,7 +1003,12 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 	    }
 	    ColLeftRight(startH);
 	    ColLeftRight(endH);
-	    xtermRepaint(xw);
+	    RepaintMultiple(xw,
+			    ScrnTopMargin(xw),
+			    ScrnBottomMargin(xw) + 1 - ScrnTopMargin(xw),
+			    0,
+			    at_col,
+			    ScrnRightMargin(xw));
 	}
     }
     TRACE((TRACE_R " xtermColScroll\n"));
@@ -3855,6 +3862,12 @@ drawClippedXftString(XTermDraw * params,
 				GetNormalFont(screen, name)
 #endif
 
+#if OPT_WIDE_ATTRS
+#define ANY_ATR_UNDERLINE (ATR_STRIKEOUT|ATR_DBL_UNDER|UNDERLINE)
+#else
+#define ANY_ATR_UNDERLINE UNDERLINE
+#endif
+
 static void
 drawUnderline(XtermWidget xw,
 	      GC gc,
@@ -4675,14 +4688,15 @@ drawXtermText(const XTermDraw * params,
 	}
 #endif /* OPT_BOX_CHARS */
 
-	drawUnderline(recur.xw,
-		      gc,
-		      recur.attr_flags,
-		      underline_len,
-		      FontWidth(screen),
-		      x,
-		      y + y_shift,
-		      did_ul);
+	if (recur.attr_flags & ANY_ATR_UNDERLINE)
+	    drawUnderline(recur.xw,
+			  gc,
+			  recur.attr_flags,
+			  underline_len,
+			  FontWidth(screen),
+			  x,
+			  y + y_shift,
+			  did_ul);
 
 	x += (int) ncells *FontWidth(screen);
 
@@ -5165,14 +5179,15 @@ drawXtermText(const XTermDraw * params,
 	}
     }
 
-    drawUnderline(recur.xw,
-		  gc,
-		  recur.attr_flags,
-		  underline_len,
-		  font_width,
-		  x,
-		  y + y_shift,
-		  did_ul);
+    if (recur.attr_flags & ANY_ATR_UNDERLINE)
+	drawUnderline(recur.xw,
+		      gc,
+		      recur.attr_flags,
+		      underline_len,
+		      font_width,
+		      x,
+		      y + y_shift,
+		      did_ul);
 
     x += ((int) real_length) * FontWidth(screen);
     TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
