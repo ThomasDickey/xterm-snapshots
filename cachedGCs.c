@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.91 2026/07/17 20:59:52 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.92 2026/07/21 21:08:29 tom Exp $ */
 
 /*
  * Copyright 2007-2025,2026 by Thomas E. Dickey
@@ -247,6 +247,10 @@ allocCache(void **cache_pointer)
 
 #define ALLOC_CACHE(p) ((*(p) == NULL) ? allocCache(p) : *(p))
 #define CHECK_ID(cgsId) assert((int) cgsId >= 0 && cgsId < gcMAX);
+
+#ifdef NO_ACTIVE_ICON
+#define allocCgsCache(x,w) myAllocCgsCache(x)
+#endif
 
 static void
 allocCgsCache(XtermWidget xw, VTwin *cgsWin)
@@ -808,7 +812,9 @@ copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 void
 redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 {
+#ifndef NO_ACTIVE_ICON
     VTwin *cgsWin = WhichVWin(TScreenOf(xw));
+#endif
     CgsCache *me;
 
     CHECK_ID(cgsId);

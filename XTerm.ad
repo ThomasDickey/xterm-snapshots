@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.106 2021/02/03 01:02:03 tom Exp $
+! $XTermId: XTerm.ad,v 1.107 2026/07/26 23:50:14 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -103,6 +103,7 @@
 *vtMenu*tekmode*Label:  Switch to Tek Mode
 *vtMenu*vthide*Label:  Hide VT Window
 *vtMenu*altscreen*Label:  Show Alternate Screen
+*vtMenu*copy_area*Label:  Enable XCopyArea
 *vtMenu*sixelScrolling*Label:  Sixel Scrolling
 *vtMenu*privateColorRegisters*Label:  Private Color Registers
 

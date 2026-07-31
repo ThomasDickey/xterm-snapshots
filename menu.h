@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.151 2026/07/19 20:06:25 tom Exp $ */
+/* $XTermId: menu.h,v 1.152 2026/07/27 00:22:47 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -35,8 +35,12 @@
 
 #include <xterm.h>
 
+#ifndef OPT_MENU_COPY_AREA
+#define OPT_MENU_COPY_AREA	0	/* useful for debugging */
+#endif
+
 #ifndef OPT_MENU_KEEPCLIPBOARD
-#define OPT_MENU_KEEPCLIPBOARD 0	/* useful for debugging */
+#define OPT_MENU_KEEPCLIPBOARD	0	/* useful for debugging */
 #endif
 
 typedef struct _MenuEntry {
@@ -237,6 +241,9 @@ typedef enum {
 #ifndef NO_ACTIVE_ICON
     vtMenu_activeicon,
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+    vtMenu_copy_area,
+#endif
     vtMenu_line1,
     vtMenu_softreset,
     vtMenu_hardreset,
@@ -512,6 +519,12 @@ extern void update_font_loadable(void);
 #else
 #define update_font_loadable() /* nothing */
 #endif
+
+#if OPT_MENU_COPY_AREA
+extern void update_copy_area(void);
+#else
+#define update_copy_area() /* nothing */
+#endif /* OPT_MENU_COPY_AREA */
 
 #if OPT_RENDERFONT
 extern void update_font_renderfont(XtermWidget xw);

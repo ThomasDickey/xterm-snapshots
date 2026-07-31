@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.385 2026/07/19 20:06:36 tom Exp $ */
+/* $XTermId: menu.c,v 1.387 2026/07/28 19:52:46 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -108,9 +108,9 @@
 #include <signal.h>
 
 #if OPT_TRACE
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, val)
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, (val))
 #else
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, val)
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, (val))
 #endif
 
 #define ToggleFlag(flag) flag = (Boolean) !flag
@@ -186,6 +186,10 @@ static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
 static void do_font_boxchars   PROTO_XT_CALLBACK_ARGS;
 static void do_font_packed     PROTO_XT_CALLBACK_ARGS;
 #endif
+
+#if OPT_MENU_COPY_AREA
+static void do_copy_area       PROTO_XT_CALLBACK_ARGS;
+#endif /* OPT_MENU_COPY_AREA */
 
 #if OPT_DEC_CHRSET
 static void do_font_doublesize PROTO_XT_CALLBACK_ARGS;
@@ -361,6 +365,9 @@ MenuEntry vtMenuEntries[] = {
 #ifndef NO_ACTIVE_ICON
     { "activeicon",	do_activeicon,	NULL },
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+    { "copy_area",	do_copy_area,	NULL },
+#endif /* OPT_MENU_COPY_AREA */
     { "line1",		NULL,		NULL },
     { "softreset",	do_softreset,	NULL },
     { "hardreset",	do_hardreset,	NULL },
@@ -1684,6 +1691,32 @@ do_activeicon(Widget gw GCC_UNUSED,
     }
 }
 #endif /* NO_ACTIVE_ICON */
+
+#if OPT_MENU_COPY_AREA
+void
+update_copy_area(void)
+{
+    XtermWidget xw = term;
+
+    disableCopyArea(xw);
+    UpdateCheckbox("update_copy_area",
+		   vtMenuEntries,
+		   vtMenu_copy_area,
+		   !TScreenOf(xw)->brokenCopyArea);
+}
+
+/* ARGSUSED */
+static void
+do_copy_area(Widget gw GCC_UNUSED,
+	     XtPointer closure GCC_UNUSED,
+	     XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    ToggleFlag(TScreenOf(xw)->brokenCopyArea);
+    update_copy_area();
+}
+#endif
 
 static void
 do_softreset(Widget gw GCC_UNUSED,

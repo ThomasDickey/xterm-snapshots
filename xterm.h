@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.995 2026/07/15 23:52:10 tom Exp $ */
+/* $XTermId: xterm.h,v 1.997 2026/07/30 18:17:20 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1167,22 +1167,35 @@ extern void report_char_class(XtermWidget);
 #endif /* OPT_EMOJI_WIDTH */
 
 /* cachedCgs.c */
+extern GC getCgsGC(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
+extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
+extern void init_cachedCgs (XtermWidget /* xw */);
+extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
+extern void setCgsCSet(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, unsigned /*cset*/);
+extern void setCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/);
+extern void setCgsFont2(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/, unsigned /*which*/);
+extern void setCgsLine(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
+
+#ifdef NO_ACTIVE_ICON
+#define clrCgsFonts(x, w, g)   myClrCgsFonts(x, g)
+#define freeCgs(x, w, g)       myFreeCgs(x, g)
+#define getCgsBack(x, w, g)    myGetCgsBack(x, g)
+#define getCgsFont(x, w, g)    myGetCgsFont(x, g)
+#define getCgsFore(x, w, g)    myGetCgsFore(x, g)
+#define getCgsId(x, w, g)      myGetId(x, g)
+#define setCgsBack(x, w, n, p) mySetCgsBack(x, n, p)
+#define setCgsFore(x, w, n, p) mySetCgsFore(x, n, p)
+#define swapCgs(x, w, p, q)    mySwapCgs(x, p, q)
+#endif
+
 extern CgsEnum getCgsId(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern GC freeCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
-extern GC getCgsGC(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
 extern Pixel getCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern Pixel getCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern XTermFonts * getCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
 extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, const XTermFonts * /*font*/);
-extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
-extern void init_cachedCgs (XtermWidget /* xw */);
-extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
 extern void setCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
-extern void setCgsCSet(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, unsigned /*cset*/);
-extern void setCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/);
-extern void setCgsFont2(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XTermFonts * /*font*/, unsigned /*which*/);
 extern void setCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
-extern void setCgsLine(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
 extern void swapCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 
 #ifdef NO_LEAKS
@@ -1208,7 +1221,6 @@ extern void getKeymapResources(Widget /* w */, const char * /*mapName */, const 
 extern void initBorderGC (XtermWidget /* xw */, VTwin * /* win */);
 extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /* value */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);
-extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
 extern void resetMargins (XtermWidget /* xw */);
 extern void restoreCharsets (TScreen * /* screen */, const DECNRCM_codes * /* source */);
@@ -1224,6 +1236,12 @@ extern void unparseseq (XtermWidget /* xw */, const ANSI * /* ap */);
 extern void v_write (int /* f */, const Char * /* d */, size_t /* len */);
 extern void xtermAddInput (Widget /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
+
+#ifdef NO_ACTIVE_ICON
+#define releaseWindowGCs(x,w) myReleaseWindowGCs(x)
+#endif
+
+extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 
 #if OPT_BLINK_CURS
 extern void ToggleCursorBlink(XtermWidget /* xw */);
@@ -1322,7 +1340,7 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 #endif
 
 /* linedata.c */
-extern LineData *getLineData(TScreen * /* screen */, int /* row */);
+extern LineData *getLineData(const TScreen * /* screen */, int /* row */);
 extern void copyLineData(LineData * /* dst */, CLineData * /* src */);
 extern void initLineData(XtermWidget /* xw */);
 
@@ -1640,7 +1658,7 @@ extern void writePtyData (int /* f */, const IChar * /* d */, size_t /* len */);
 extern Bool non_blank_line (TScreen */* screen */, int /* row */, int /* col */, int /* len */);
 extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */, Bool /* bottom */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned /* nrow */, unsigned /* ncol */, ScrnPtr * /* addr */);
-extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
+extern ScrnBuf scrnHeadAddr (const TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int /* first */, int /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
@@ -1740,7 +1758,7 @@ extern void ChangeToWide(XtermWidget /* xw */);
 #endif
 
 /* scrollback.c */
-extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
+extern LineData *getScrollback (const TScreen * /* screen */, int /* row */);
 extern LineData *addScrollback (TScreen * /* screen */);
 extern void deleteScrollback (TScreen * /* screen */);
 

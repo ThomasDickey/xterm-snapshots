@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.255 2026/06/28 13:50:41 tom Exp $ */
+/* $XTermId: trace.c,v 1.256 2026/07/30 23:41:44 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -709,12 +709,15 @@ TraceScreen(XtermWidget xw, int whichBuf)
 
 		for (col = 0; col < ld->lineSize; ++col) {
 		    int ch = (int) ld->charData[col];
+		    unsigned attrs = ld->attribs[col];
 		    if (ch < ' ')
 			ch = ' ';
 		    if (ch == HIDDEN_CHAR)
 			ch = '?';
 		    else if (ch >= 127)
 			ch = '#';
+		    if (!(attrs & CHARDRAWN))
+			ch = '_';
 		    TRACE(("%c", ch));
 		}
 		TRACE((":\n"));

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.678 2026/07/13 20:54:33 tom Exp $ */
+/* $XTermId: screen.c,v 1.680 2026/07/30 18:16:18 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -161,7 +161,7 @@ traceScrnBuf(const char *tag, TScreen *screen, ScrnBuf sb, unsigned len)
 #endif
 
 ScrnBuf
-scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
+scrnHeadAddr(const TScreen *screen, ScrnBuf base, unsigned offset)
 {
     unsigned size = scrnHeadSize(screen, offset);
     ScrnBuf result = ScrnBufAddr(base, size);
@@ -1916,6 +1916,7 @@ LineRefresh(XtermWidget xw,
 			      &chars[lastind],
 			      &ll->sizes[lastind],
 			      (unsigned) (col - lastind));
+	(void) x_end;
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
 	    size_t off;

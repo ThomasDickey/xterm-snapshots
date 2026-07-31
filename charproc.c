@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2126 2026/07/19 20:06:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2129 2026/07/26 23:43:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -427,7 +427,7 @@ static XtResource xterm_resources[] =
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
-    Bres(XtNbrokenCopyArea, XtCBrokenCopyArea, screen.brokenCopyArea, False),
+    Bres(XtNbrokenCopyArea, XtCBrokenCopyArea, screen.brokenCopyArea, DEF_COPY_AREA),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
     Sres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll_s, DEF_CD_XTRA_SCROLL),
@@ -12040,12 +12040,10 @@ VTInitialize(Widget wrequest,
 void
 releaseCursorGCs(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
-    VTwin *win = WhichVWin(screen);
     int n;
 
     for_each_curs_gc(n) {
-	freeCgs(xw, win, (CgsEnum) n);
+	freeCgs(xw, WhichVWin(TScreenOf(xw)), (CgsEnum) n);
     }
 }
 
@@ -12115,7 +12113,7 @@ VTDestroy(Widget w GCC_UNUSED)
     XtermWidget xw = (XtermWidget) w;
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
-    Cardinal n, k;
+    Cardinal n;
 
     StopBlinking(xw);
 
@@ -12302,7 +12300,10 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
 #endif
 
+#ifndef NO_ACTIVE_ICON
     TRACE_FREE_LEAK(xw->work.wm_name);
+#endif
+
     freeFontLists(&(xw->work.fonts.x11));
 #if OPT_RENDERFONT
     freeFontLists(&(xw->work.fonts.xft));
@@ -12318,6 +12319,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
     freeFontLists(&(screen->cacheVTFonts.fonts.x11));
     for (n = 0; n < NMENUFONTS; ++n) {
+	Cardinal k;
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=
 		screen->cacheVTFonts.menu_font_names[n][k]) {
@@ -13394,8 +13396,10 @@ set_cursor_outline_gc(XtermWidget xw,
 		      Pixel bg,
 		      Pixel cc)
 {
+#ifndef NO_ACTIVE_ICON
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
+#endif
     CgsEnum cgsId = gcVTcursOutline;
 
     if (cc == bg)
