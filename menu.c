@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.387 2026/07/28 19:52:46 tom Exp $ */
+/* $XTermId: menu.c,v 1.389 2026/08/10 19:57:54 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -829,6 +829,9 @@ domenu(Widget w,
 #ifndef NO_ACTIVE_ICON
 	    update_activeicon();
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+	    update_copy_area();
+#endif
 	    update_privatecolorregisters();
 	}
 	break;
@@ -3866,7 +3869,7 @@ disableCopyArea(XtermWidget xw)
 	TRACE(("TrueType fonts are enabled (keep XCopyArea)\n"));
     }
 #endif
-    TRACE(("disable XCopyArea: %s\n", BtoS(screen->no_copy_area)));
+    TRACE(("XCopyArea is %sabled\n", screen->no_copy_area ? "dis" : "en"));
 }
 
 #if OPT_WIDE_CHARS

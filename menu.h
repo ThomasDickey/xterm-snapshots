@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.152 2026/07/27 00:22:47 tom Exp $ */
+/* $XTermId: menu.h,v 1.153 2026/08/09 20:14:58 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -36,7 +36,7 @@
 #include <xterm.h>
 
 #ifndef OPT_MENU_COPY_AREA
-#define OPT_MENU_COPY_AREA	0	/* useful for debugging */
+#define OPT_MENU_COPY_AREA	1	/* useful for more than debugging */
 #endif
 
 #ifndef OPT_MENU_KEEPCLIPBOARD

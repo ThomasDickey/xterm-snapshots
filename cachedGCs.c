@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.92 2026/07/21 21:08:29 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.93 2026/08/09 18:05:41 tom Exp $ */
 
 /*
  * Copyright 2007-2025,2026 by Thomas E. Dickey
@@ -168,7 +168,7 @@ traceCSet(unsigned cset)
 }
 
 static String
-traceFont(XTermFonts * font)
+traceFont(const XTermFonts * font)
 {
     static char result[80];
 

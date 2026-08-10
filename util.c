@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1009 2026/07/31 22:13:04 tom Exp $ */
+/* $XTermId: util.c,v 1.1019 2026/08/10 20:03:09 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -102,6 +102,31 @@
 		    screen->savedlines = screen->savelines; \
 		ScrollBarDrawThumb(xw, 1); \
 	    }
+
+#define GetDefaultBackground(screen) xw->core.background_pixel
+
+#if OPT_ISO_COLORS
+
+#define GetAnsiBackground(screen,ld,col) \
+	 (((ld->attribs[col] & BG_COLOR) \
+	  && okIndexedColor(GetCellColorBG(ld->color[col]))) \
+	    ? screen->Acolors[GetCellColorBG(ld->color[col])].value \
+	    : GetDefaultBackground(screen))
+
+#if OPT_DIRECT_COLOR
+#define PixelOfBG(screen,ld,col) \
+	(hasDirectBG(ld->attribs[col]) \
+	 ? (Pixel) GetCellColorBG(ld->color[col]) \
+	 : GetAnsiBackground(screen,ld,col))
+#else
+#define PixelOfBG(screen,ld,col) GetAnsiBackground(screen,ld,col)
+#endif
+
+#else
+#define PixelOfBG(screen,ld,col) GetDefaultBackground(screen)
+#endif
+
+#define NoPixel 0xfffffffff
 
 static int handle_translated_exposure(XtermWidget xw,
 				      int rect_x,
@@ -674,9 +699,59 @@ screen_has_data(XtermWidget xw)
     return result;
 }
 
+static void
+ClearWithPixel(XtermWidget xw,
+	       Pixel bg,
+	       int y, int x,
+	       unsigned height, unsigned width)
+{
+    TScreen *screen = TScreenOf(xw);
+    Drawable draw = VDrawable(screen);
+    VTwin *win = WhichVWin(screen);
+    GC gc;
+
+    setCgsFore(xw, win, gcFiller, bg);
+    gc = getCgsGC(xw, win, gcFiller);
+    XFillRectangle(screen->display, draw, gc, x, y, width, height);
+}
+
+static void
+ClearPartOfUndrawn(XtermWidget xw, int top, int left, int bottom, int right)
+{
+    if (right >= left && bottom >= top) {
+	const TScreen *screen = TScreenOf(xw);
+	int x = CursorX2(screen, left, FontWidth(screen));
+	int y = CursorY2(screen, top);
+	unsigned width = (unsigned) ((right - left + 1) * FontWidth(screen));
+	unsigned height = (unsigned) ((bottom - top + 1) * FontHeight(screen));
+	int row, col;
+	Pixel old = NoPixel;
+	TRACE(("=> %d,%d %dx%d\n", y, x, height, width));
+	for (row = top; row <= bottom; ++row) {
+	    CLineData *ld;
+	    if ((ld = getLineData(screen, row)) != NULL) {
+		for (col = left; col < right; ++col) {
+		    Pixel now = PixelOfBG(screen, ld, col);
+		    if (now != old) {
+			TRACE2(("CELL %d.%d %#lx%s\n", row, col, now,
+				(ld->attribs[col] & CHARDRAWN)
+				? " fill" : ""));
+			old = now;
+		    }
+		}
+	    }
+	}
+	if (old == xw->core.background_pixel) {
+	    xtermClear2(xw, x, y, width, height);
+	} else {
+	    ClearWithPixel(xw, old, y, x, height, width);
+	}
+    }
+}
+
 /*
- * Check for undrawn cells in the area bounded by first/last lines, clearing
- * them on the display.
+ * Check for undrawn cells in the area bounded by [first..last] lines,
+ * inclusive, clearing them on the display.
  */
 static void
 ClearUndrawn(XtermWidget xw, int first, int last)
@@ -735,36 +810,25 @@ ClearUndrawn(XtermWidget xw, int first, int last)
 	    }
 	}
     }
-    /* FIXME: some backgrounds may differ! */
-    /* FIXME: this may not be the current background assumed by xtermClear2 */
     if (prefix >= 0) {
-	int x = CursorX2(screen, left, FontHeight(screen));
-	int y = CursorY2(screen, 0);
-	unsigned width = (right - left + 1) * FontWidth(screen);
-	unsigned height = (prefix + 1) * FontHeight(screen);
-	TRACE(("Nonempty prefix %d\n", prefix + 1));
-	TRACE(("=> %d,%d %dx%d\n", y, x, height, width));
-	xtermClear2(xw, x, y, width, height);
+	TRACE(("Nonempty prefix %d..%d\n", first, prefix));
+	ClearPartOfUndrawn(xw,
+			   first, left,
+			   prefix + 1, right);
     }
     if (row_hi >= row_lo && col_hi >= col_lo) {
-	int x = CursorX2(screen, col_lo, FontHeight(screen));
-	int y = CursorY2(screen, row_lo);
-	unsigned width = (col_hi - col_lo + 1) * FontWidth(screen);
-	unsigned height = (row_hi - row_lo + 1) * FontHeight(screen);
 	TRACE(("Nonempty region %d.%d to %d.%d\n",
 	       row_lo, col_lo,
-	       row_hi + 1, col_hi + 1));
-	TRACE(("=> %d,%d %dx%d\n", y, x, height, width));
-	xtermClear2(xw, x, y, width, height);
+	       row_hi, col_hi));
+	ClearPartOfUndrawn(xw,
+			   row_lo, col_lo,
+			   row_hi, col_hi);
     }
     if (suffix >= 0) {
-	int x = CursorX2(screen, left, FontHeight(screen));
-	int y = CursorY2(screen, suffix);
-	unsigned width = (right - left + 1) * FontWidth(screen);
-	unsigned height = (MaxRows(screen) - suffix) * FontHeight(screen);
-	TRACE(("Nonempty suffix %d\n", suffix + 1));
-	TRACE(("=> %d,%d %dx%d\n", y, x, height, width));
-	xtermClear2(xw, x, y, width, height);
+	TRACE(("Nonempty suffix %d..%d\n", suffix, last));
+	ClearPartOfUndrawn(xw,
+			   suffix, left,
+			   last, right);
     }
 }
 
@@ -802,7 +866,7 @@ RepaintMultiple(XtermWidget xw,
     int last = firstline + nlines;
 
     if (screen->no_copy_area)
-	ClearUndrawn(xw, first, last);
+	ClearUndrawn(xw, first, last - 1);
 
     for (source = first; source < last; ++source) {
 	if (row_has_data(screen, source)) {
@@ -1111,6 +1175,7 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 	    int save_col = screen->cur_col;
 	    int row;
 
+	    HideCursor(xw);
 	    if (!screen->keepSelection && ScrnHaveSelection(screen)) {
 		for (row = min_row; row <= max_row; row++) {
 		    if (ScrnIsRowInSelection(screen, row)) {
@@ -1186,17 +1251,16 @@ RevScroll(XtermWidget xw, int amount)
     if (ScrnHaveSelection(screen))
 	adjustHiliteOnBakScroll(xw, amount);
 
-    if (!scroll_full_line) {
-	scrollInMargins(xw, -amount, screen->top_marg);
-    } else {
-	ScrnInsertLine(xw,
-		       screen->visbuf,
-		       screen->bot_marg,
-		       screen->top_marg,
-		       (unsigned) amount);
-    }
-
     if (!scroll_full_line || screen->no_copy_area) {
+	if (!scroll_full_line) {
+	    scrollInMargins(xw, -amount, screen->top_marg);
+	} else if (screen->no_copy_area) {
+	    ScrnInsertLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->top_marg,
+			   (unsigned) amount);
+	}
 	if (ScrnHaveSelection(screen) &&
 	    screen->startH.row <= screen->bot_marg &&
 	    screen->endH.row >= screen->top_marg) {
@@ -1208,14 +1272,17 @@ RevScroll(XtermWidget xw, int amount)
 			0,
 			left,
 			right);
+	amount = 0;		/* cancel the other updates */
     } else if (screen->jumpscroll) {
 	if (screen->scroll_amt < 0) {
 	    ScrollJump(xw, -screen->refresh_amt + amount > limit);
+	    screen->scroll_amt -= amount;
+	    screen->refresh_amt -= amount;
 	} else {
 	    ScrollJump(xw, screen->scroll_amt > 0);
+	    screen->scroll_amt = -amount;
+	    screen->refresh_amt = -amount;
 	}
-	screen->scroll_amt = -amount;
-	screen->refresh_amt = -amount;
     } else {
 	int shift = INX2ROW(screen, 0);
 	int bot = screen->max_row - shift;
@@ -1257,7 +1324,23 @@ RevScroll(XtermWidget xw, int amount)
 			       (unsigned) FontWidth(screen));
 	}
     }
-
+    if (amount > 0) {
+	if (left > 0 || right < screen->max_col) {
+	    scrollInMargins(xw, -amount, screen->top_marg);
+	    ScrnUpdate2(xw,
+			screen->top_marg,
+			left,
+			screen->bot_marg + 1 - screen->top_marg,
+			right + 1 - left,
+			True);
+	} else {
+	    ScrnInsertLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->top_marg,
+			   (unsigned) amount);
+	}
+    }
     screen->cursor_busy -= 1;
     return;
 }
@@ -1749,26 +1832,24 @@ DeleteLine(XtermWidget xw, int amount, Bool canSave)
 	    vertical_copy_area(xw,
 			       scrolltop + amount,
 			       scrollheight,
-			       screen->no_copy_area ? -amount : amount,
+			       amount,
 			       left, right,
 			       True);
-	    if (!screen->no_copy_area) {
-		if (shift > 0 && refreshheight > 0) {
-		    int rows = refreshheight;
-		    if (rows > shift)
-			rows = shift;
-		    ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
-		    refreshtop += shift;
-		    refreshheight -= shift;
-		}
-		if (refreshheight > 0) {
-		    ClearCurBackground(xw,
-				       refreshtop,
-				       left,
-				       (unsigned) refreshheight,
-				       (unsigned) (right + 1 - left),
-				       (unsigned) FontWidth(screen));
-		}
+	    if (shift > 0 && refreshheight > 0) {
+		int rows = refreshheight;
+		if (rows > shift)
+		    rows = shift;
+		ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
+		refreshtop += shift;
+		refreshheight -= shift;
+	    }
+	    if (refreshheight > 0) {
+		ClearCurBackground(xw,
+				   refreshtop,
+				   left,
+				   (unsigned) refreshheight,
+				   (unsigned) (right + 1 - left),
+				   (unsigned) FontWidth(screen));
 	    }
 	}
     }
@@ -2742,6 +2823,7 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
     Drawable draw = VDrawable(screen);
     GC gc;
 
+    TRACE2(("xtermClear2 %d,%d %dx%d\n", y, x, height, width));
     if ((gc = vwin->border_gc) != NULL) {
 	int vmark1 = screen->border;
 	int vmark2 = vwin->height + vmark1;
