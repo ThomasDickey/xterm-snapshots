@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1019 2026/08/10 20:03:09 tom Exp $ */
+/* $XTermId: util.c,v 1.1022 2026/08/11 23:11:45 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -665,7 +665,7 @@ scrollInMargins(XtermWidget xw, int amount, int top)
 }
 
 static Boolean
-row_has_data(const TScreen *screen, int row)
+row_has_data(const TScreen *screen, int row, Boolean trim)
 {
     Boolean result = False;
     CLineData *ld;
@@ -674,7 +674,27 @@ row_has_data(const TScreen *screen, int row)
 	int col;
 
 	for (col = 0; col < screen->max_col; ++col) {
-	    if (ld->attribs[col] & CHARDRAWN && ld->charData[col] != ' ') {
+	    if (ld->attribs[col] & CHARDRAWN &&
+		(!trim || ld->charData[col] != ' ')) {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static Boolean
+row_has_data2(const TScreen *screen, int row, int left, int right)
+{
+    Boolean result = False;
+    CLineData *ld;
+
+    if ((ld = getLineData(screen, row)) != NULL) {
+	int col;
+
+	for (col = left; col < right; ++col) {
+	    if (ld->attribs[col] & CHARDRAWN) {
 		result = True;
 		break;
 	    }
@@ -691,7 +711,7 @@ screen_has_data(XtermWidget xw)
     int row;
 
     for (row = 0; row < screen->max_row; ++row) {
-	if (row_has_data(screen, row)) {
+	if (row_has_data(screen, row, False)) {
 	    result = True;
 	    break;
 	}
@@ -754,7 +774,7 @@ ClearPartOfUndrawn(XtermWidget xw, int top, int left, int bottom, int right)
  * inclusive, clearing them on the display.
  */
 static void
-ClearUndrawn(XtermWidget xw, int first, int last)
+ClearUndrawn(XtermWidget xw, int first, int last, int left, int right)
 {
     const TScreen *screen = TScreenOf(xw);
     int row_lo = last + 1;
@@ -762,8 +782,6 @@ ClearUndrawn(XtermWidget xw, int first, int last)
     int col_lo = MaxCols(screen) + 1;
     int col_hi = -1;
     int row;
-    int left = ScrnLeftMargin(xw);
-    int right = ScrnRightMargin(xw);
     int state = 0;
     int prefix = -1;
     int suffix = -1;
@@ -838,10 +856,11 @@ RepaintRow(XtermWidget xw, int row, int col)
     const TScreen *screen = TScreenOf(xw);
     LineLimits ll;
 
-    if (screen->no_copy_area)
-	ClearUndrawn(xw, row, row);
+    if (screen->no_copy_area) {
+	ClearUndrawn(xw, row, row, col, screen->max_col);
+    }
 
-    if (row_has_data(screen, row)) {
+    if (row_has_data(screen, row, False)) {
 	/* *INDENT-EQLS* */
 	memset(&ll, 0, sizeof(ll));
 	ll.col_1st = col;
@@ -866,10 +885,10 @@ RepaintMultiple(XtermWidget xw,
     int last = firstline + nlines;
 
     if (screen->no_copy_area)
-	ClearUndrawn(xw, first, last - 1);
+	ClearUndrawn(xw, first, last - 1, left, right);
 
     for (source = first; source < last; ++source) {
-	if (row_has_data(screen, source)) {
+	if (row_has_data2(screen, source, left, right)) {
 	    memset(&ll, 0, sizeof(ll));
 	    ll.col_1st = left;
 	    ll.col_end = right;
@@ -998,7 +1017,11 @@ xtermScroll(XtermWidget xw, int amount)
 	    screen->endH.row - amount >= screen->top_marg) {
 	    ScrollSelection(screen, -amount, True);
 	}
-	ClearUndrawn(xw, screen->top_marg, screen->bot_marg);
+	ClearUndrawn(xw,
+		     screen->top_marg,
+		     screen->bot_marg,
+		     ScrnLeftMargin(xw),
+		     ScrnRightMargin(xw));
     } else {
 	if (screen->jumpscroll) {
 	    if (screen->scroll_amt > 0) {
@@ -2485,11 +2508,11 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	if (trimmed) {
 	    int row;
 	    Boolean hadData = (Boolean) ((screen->saved_fifo > 0)
-					 ? row_has_data(screen, -1)
+					 ? row_has_data(screen, -1, True)
 					 : False);
 
 	    for (row = 0; row < screen->max_row; ++row) {
-		Boolean hasData = row_has_data(screen, row);
+		Boolean hasData = row_has_data(screen, row, True);
 		if (hasData || hadData) {
 		    const LineData *src = getLineData(screen, row);
 		    LineData *dst = addScrollbackForLine(screen, src);
