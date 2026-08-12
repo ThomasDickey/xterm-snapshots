@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2783 2026/08/09 20:09:16 tom Exp $
+  $XTermId: xterm.log.html,v 1.2784 2026/08/12 22:07:33 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1103,6 +1103,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>correct a limit-check added in <a href="#xterm_399">patch
+    #399</a>, which resulted in regex-based selections to be
+    limited to the first row of a wrapped line (Redhat
+    #2479962).</li>
+
     <li>add resource <tt>brokenCopyArea</tt>, using that to control
     whether <tt>XCopyArea</tt> is used for indexing and scrolling,
     as well as inserting or deleting characters and lines.</li>

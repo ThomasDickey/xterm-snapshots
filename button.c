@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.683 2026/04/07 10:54:25 tom Exp $ */
+/* $XTermId: button.c,v 1.684 2026/08/12 21:06:40 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -4029,7 +4029,7 @@ cellToColumn(TScreen *screen, CELL *cell)
 	int adj;
 	if ((ld = GET_LINEDATA(screen, row)) == NULL)
 	    break;
-	if ((adj = LastTextCol(screen, ld, row++)) < 0)
+	if ((adj = LastTextCol(screen, ld, row++)) > 0)
 	    col += adj;
     }
 #if OPT_DEC_CHRSET
