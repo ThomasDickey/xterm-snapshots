@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2784 2026/08/12 22:07:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.2786 2026/08/14 00:23:36 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -1103,6 +1103,14 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix a couple of places in <tt>terminfo</tt> which used
+    <tt>BEL</tt> rather than <tt>ST</tt>.</li>
+
+    <li>add <tt>DECSCUSR 7</tt> for the &ldquo;power-up&rdquo;
+    configuration, which can be different from the documented VT520
+    behavior (prompted by discussion with
+    &ldquo;heurist&rdquo;).</li>
+
     <li>correct a limit-check added in <a href="#xterm_399">patch
     #399</a>, which resulted in regex-based selections to be
     limited to the first row of a wrapped line (Redhat

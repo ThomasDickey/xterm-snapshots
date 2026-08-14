@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1172 2026/07/19 17:46:21 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1173 2026/08/13 08:12:26 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -2491,6 +2491,7 @@ typedef enum {
 	, STEADY_UNDERLINE
 	, BLINK_BAR
 	, STEADY_BAR
+	, INITIAL_CURSOR
 } XtCursorStyle;
 
 #if OPT_GRAPHICS
@@ -2799,6 +2800,7 @@ typedef struct {
 
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
+	int		initial_cursor;	/* see DECSCUSR			*/
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
 	Boolean         cursor_bar;     /* true if cursor is in bar mode */
 	XtCursorShape	cursor_shape;

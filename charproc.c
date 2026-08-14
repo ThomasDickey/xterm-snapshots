@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2129 2026/07/26 23:43:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2130 2026/08/13 08:24:10 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -4950,7 +4950,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		HideCursor(xw);
 
-		switch (GetParam(0)) {
+		if ((value = GetParam(0)) == INITIAL_CURSOR)
+		    value = screen->initial_cursor;
+
+		switch (value) {
 		case DEFAULT:
 		    /* FALLTHRU */
 		case DEFAULT_STYLE:
@@ -10934,9 +10937,17 @@ VTInitialize(Widget wrequest,
 #endif
     init_Bres(screen.cursor_underline);
     init_Bres(screen.cursor_bar);
-    /* resources allow for underline or block, not (yet) bar */
+    /* resources allow for underline, block, or bar */
     InitCursorShape(screen, TScreenOf(request));
+    if (screen->cursor_underline)
+	screen->initial_cursor = STEADY_UNDERLINE;
+    else if (screen->cursor_bar)
+	screen->initial_cursor = STEADY_BAR;
+    else
+	screen->initial_cursor = STEADY_BLOCK;
 #if OPT_BLINK_CURS
+    if (screen->cursor_blink == cbTrue || screen->cursor_blink == cbAlways)
+	screen->initial_cursor--;	/* see XtCursorStyle */
     TRACE(("cursor_shape:%d blinks:%d\n",
 	   screen->cursor_shape,
 	   screen->cursor_blink));
