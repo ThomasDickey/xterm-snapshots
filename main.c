@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.945 2026/07/15 22:42:50 tom Exp $ */
+/* $XTermId: main.c,v 1.946 2026/08/14 23:15:48 tom Exp $ */
 
 /*
  * Copyright 2002-2025,2026 by Thomas E. Dickey
@@ -3918,6 +3918,7 @@ xtermTrimEnv(void)
 	TRIM(0, COLUMNS),
 	TRIM(0, DEFAULT_COLORS),
 	TRIM(0, DESKTOP_STARTUP_ID),
+	TRIM(0, G_ENABLE_DIAGNOSTIC),
 	TRIM(0, LINES),
 	TRIM(0, SHLVL),		/* ksh, bash */
 	TRIM(0, STY),		/* screen */
@@ -3932,9 +3933,9 @@ xtermTrimEnv(void)
 	TRIM(1, ALACRITTY_),
 	TRIM(1, COLORFGBG),
 	TRIM(1, COLORTERM),
-	TRIM(1, GIO_LAUNCHED_),
+	TRIM(1, GIO_LAUNCHED_),	/* Glib's GIO library */
 	TRIM(1, GHOSTTY_),
-	TRIM(1, GTK_),
+	TRIM(1, GNOME_TERMINAL_),
 	TRIM(1, ITERM_),
 	TRIM(1, ITERM2_),
 	TRIM(1, KITTY_),
@@ -3949,6 +3950,8 @@ xtermTrimEnv(void)
 	TRIM(1, TERMINAL_),	/* e.g., TERMINAL_NAME */
 	TRIM(1, URXVT_),
 	TRIM(1, VTE_),
+	TRIM(1, WARP_),
+	TRIM(1, WEZTERM),
 	TRIM(1, WT_SESSION),
 	TRIM(1, WT_PROFILE),
 	TRIM(1, XTERM_),
