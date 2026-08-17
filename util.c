@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1022 2026/08/11 23:11:45 tom Exp $ */
+/* $XTermId: util.c,v 1.1025 2026/08/17 20:37:28 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -6003,35 +6003,34 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 		}
 
 		if (valid && screen->char_was_written && (expect != actual)) {
-		    ++col;	/* point to the second half */
+		    TRACE2(("TEXT:%s\n", visibleIChars(ld->charData, ld->lineSize)));
 		    if (expect > actual) {
 			TRACE(("...shrink base\n"));
-			ld->charData[col] = ' ';
+			Clear1Cell(ld, col);
 			IAttrClr(ld->attribs[col], CHARDRAWN);
 			/* adjust the next-column value */
 			col = screen->cur_col;
 			set_cur_col(screen, --col);
+		    } else if (screen->cur_col < screen->max_col) {
+			TRACE(("...increase base\n"));
+			++col;
+			ld->attribs[col] = ld->attribs[col - 1];
+			if_OPT_ISO_COLORS(screen, {
+			    ld->color[col] = ld->color[col - 1];
+			});
+			TRACE(("...put filler in column %d\n", col));
+			/* extend the current cell per VS16 */
+			ld->charData[col] = VS16_FILLER;
+			IAttrSet(ld->attribs[col], CHARDRAWN);
+			/* adjust the next-column value */
+			set_cur_col(screen, ++col);
 		    } else {
-			if (screen->cur_col < screen->max_col) {
-			    TRACE(("...increase base\n"));
-			    ld->attribs[col] = ld->attribs[col - 1];
-			    if_OPT_ISO_COLORS(screen, {
-				ld->color[col] = ld->color[col - 1];
-			    });
-			    TRACE(("...put filler in column %d\n", col));
-			    /* extend the current cell per VS16 */
-			    ld->charData[col] = VS16_FILLER;
-			    IAttrSet(ld->attribs[col], CHARDRAWN);
-			    /* adjust the next-column value */
-			    col = screen->cur_col;
-			    set_cur_col(screen, ++col);
-			} else {
-			    TRACE(("...disallow wrapping of base\n"));
-			    /* disallow wrapping via VS16 */
-			    ld->charData[col] = ' ';
-			    IAttrClr(ld->attribs[col], CHARDRAWN);
-			}
+			TRACE(("...disallow wrapping of base\n"));
+			/* disallow wrapping via VS16 */
+			Clear1Cell(ld, col);
+			IAttrClr(ld->attribs[col], CHARDRAWN);
 		    }
+		    TRACE2(("==>>:%s\n", visibleIChars(ld->charData, ld->lineSize)));
 		}
 	    }
 #else

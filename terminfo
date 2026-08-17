@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.218 2026/08/14 00:16:46 tom Exp $
+# $XTermId: terminfo,v 1.221 2026/08/16 09:52:23 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -37,10 +37,10 @@
 #
 # Special Capabilities:
 # --------------------
-# ich has a corresponding capability that inserts a single blank.  We could
-#	have used ich1=\E[@, which works with ncurses, but that is not standard
-#	behavior.  If it is set, then SVr4 vi (e.g., Solaris 2.6) emits both
-#	smir/rmir and ich1.
+# ich has a corresponding capability ich1 that inserts a single blank.
+#	If it is set, then SVr4 vi (e.g., Solaris 2.6) emits both smir/rmir
+#	and ich1.  This works (because it was a direct translation from the
+#	original termcap implementation), but is not optimal.
 # meml locks memory above the cursor; memu unlocks (ala HP terminals).  This
 #	is not recognized by some older (e.g., SVr3) tic programs, but none
 #	do more than warn about it.  Ignore the warning.
@@ -1230,6 +1230,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	flash=\E[?5h$<100/>\E[?5l,
 	home=\E[H,
 	ich=\E[%p1%d@,
+	ich1=\E[@,
 	ind=\n,
 	is2=\E[!p\E[?3;4l\E[4l\E>,
 	kmous=\E[M,
@@ -2184,6 +2185,7 @@ xterm+osc104|reset color palette,
 	oc=\E]104\E\\,
 	rs1=\Ec\E]104\E\\,
 
+
 # "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
 # This implementation uses a 256-element color map where the first 16 entries
@@ -2234,6 +2236,7 @@ xterm+256color|original xterm 256-color feature,
 		m,
 	setb@,
 	setf@,
+
 xterm+256color2|xterm 256-color feature,
 	oc=\E]104\007,
 	setab=\E[
@@ -2263,10 +2266,17 @@ xterm+256color2|xterm 256-color feature,
 		%;
 		m,
 	use=xterm+256color,
+
 xterm-256color|xterm with 256 colors,
 	use=xterm+osc104,
 	use=xterm+256color,
 	use=xterm-new,
+
+xterm+88color|original xterm 88-color feature,
+	colors#88,
+	pairs#7744,
+	use=xterm+256color,
+
 xterm-88color|xterm with 88 colors,
 	use=xterm+osc104,
 	use=xterm+88color,
@@ -2315,6 +2325,7 @@ xterm+direct|xterm fragment with direct-color indexing,
 		m,
 	setb@,
 	setf@,
+
 xterm-direct|xterm with direct-color indexing,
 	use=xterm+direct,
 	use=xterm,
@@ -2377,6 +2388,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	ht=^I,
 	hts=\210,
 	ich=\233%p1%d@,
+	ich1=\233@,
 	il=\233%p1%dL,
 	il1=\233L,
 	ind=\n,
@@ -2559,6 +2571,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	flash=\E[?5h$<100/>\E[?5l,
 	hpa=\E[%i%p1%dG,
 	ich=\E[%p1%d@,
+	ich1=\E[@,
 	ind=\n,
 	is2=\E[!p\E[?3;4l\E[4l\E>,
 	kDC=\E[3;2~,

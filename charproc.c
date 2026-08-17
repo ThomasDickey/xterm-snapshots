@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2130 2026/08/13 08:24:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2132 2026/08/17 20:28:33 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3149,8 +3149,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 
 	    if (used) {
-		if (!screen->scroll_amt)
-		    ScrnUpdate(xw, use_row, use_col, 1, 1, 1);
+		if (!screen->scroll_amt) {
+		    ScrnUpdate(xw,
+			       use_row, use_col,
+			       1, Max(1, (screen->cur_col - use_col)),
+			       True);
+		}
 		break;
 	    }
 	}
@@ -12344,6 +12348,24 @@ VTDestroy(Widget w GCC_UNUSED)
 	}
     }
 #endif
+    for (n = 0; n < NMENUFONTS; ++n) {
+	Cardinal k;
+	for (k = 0; k < MaxXftCache; ++k) {
+#define CLOSE_XFT(name) closeCachedXft(screen, screen->name[n].cache[k].font)
+	    CLOSE_XFT(renderFontNorm);
+	    CLOSE_XFT(renderFontBold);
+#if OPT_WIDE_ATTRS || OPT_RENDERWIDE
+	    CLOSE_XFT(renderFontItal);
+	    CLOSE_XFT(renderFontBtal);
+#endif
+#if OPT_RENDERWIDE
+	    CLOSE_XFT(renderWideNorm);
+	    CLOSE_XFT(renderWideBold);
+	    CLOSE_XFT(renderWideItal);
+	    CLOSE_XFT(renderWideBtal);
+#endif
+	}
+    }
 
 #if OPT_BLINK_CURS
     TRACE_FREE_LEAK(screen->cursor_blink_s);
