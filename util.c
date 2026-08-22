@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1025 2026/08/17 20:37:28 tom Exp $ */
+/* $XTermId: util.c,v 1.1027 2026/08/22 10:15:18 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -808,23 +808,25 @@ ClearUndrawn(XtermWidget xw, int first, int last, int left, int right)
 	    }
 	    if (state == 0) {
 		prefix = row;
-	    } else if (partial) {
-		suffix = -1;
+	    } else {
+		if (partial)
+		    suffix = -1;
+		else if (suffix < 0)
+		    suffix = row;
 		for (col = left; col <= right; ++col) {
 		    if (!(ld->attribs[col] & CHARDRAWN)) {
-			if (row_lo > row)
-			    row_lo = row;
-			if (row_hi < row)
-			    row_hi = row;
+			if (suffix != row) {
+			    if (row_lo > row)
+				row_lo = row;
+			    if (row_hi < row)
+				row_hi = row;
+			}
 			if (col_lo > col)
 			    col_lo = col;
 			if (col_hi < col)
 			    col_hi = col;
 		    }
 		}
-	    } else {
-		if (suffix < 0)
-		    suffix = row;
 	    }
 	}
     }
@@ -4151,6 +4153,7 @@ fixupItalics(XTermDraw * params,
     int need_clipping = 0;
     int need_filling = 0;
 
+    (void) cgsWin;
     if (thisFp->ascent > realFp->ascent)
 	need_clipping = 1;
     else if (thisFp->ascent < realFp->ascent)
@@ -4365,6 +4368,8 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
     XTermFonts *fn = getNormalFont(screen, fNorm);
     XTermFonts *fp = xf ? xf : fn;
 
+    (void) screen;
+    (void) currentWin;
     for (src = dst = 0; src < (int) length; src++) {
 	IChar ch = mapped[src];
 	int ch_width = CharWidth(screen, ch);
@@ -4639,6 +4644,7 @@ drawXtermText(const XTermDraw * params,
 	Boolean forceDbl = False;
 #endif
 
+	(void) currentWin;
 	(void) forceDbl;
 	/*
 	 * Defer creating the drawable until we need it.
@@ -5651,8 +5657,8 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background);
-#ifndef NO_ACTIVE_ICON
     TScreen *screen = TScreenOf(xw);
+#ifndef NO_ACTIVE_ICON
     VTwin *win = WhichVWin(screen);
 #endif
 

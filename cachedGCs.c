@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.93 2026/08/09 18:05:41 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.94 2026/08/22 10:15:18 tom Exp $ */
 
 /*
  * Copyright 2007-2025,2026 by Thomas E. Dickey
@@ -496,6 +496,7 @@ setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 {
     CgsCache *me;
 
+    (void) cgsWin;
     CHECK_ID(cgsId);
     getMyCache(xw, cgsWin, cgsId, me);
     {

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2132 2026/08/17 20:28:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2133 2026/08/22 10:15:18 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1050,6 +1050,7 @@ SGR_Foreground(XtermWidget xw, int color)
     fg = getXtermFG(xw, xw->flags, color);
     xw->cur_foreground = color;
 
+    (void) screen;
     setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
     setCgsBack(xw, WhichVWin(screen), gcNormReverse, fg);
 
