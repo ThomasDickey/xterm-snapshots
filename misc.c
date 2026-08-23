@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1133 2026/06/28 13:25:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.1135 2026/08/23 23:12:18 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3484,6 +3484,7 @@ typedef enum {
     ,OSC_SetAnsiColor = 4
     ,OSC_GetAnsiColors = 5
     ,OSC_ColorMode = 6
+    ,OSC_DECSWT = 21
     ,OSC_SetupPointer = 22
     ,OSC_Unused_30 = 30		/* Konsole (unused) */
     ,OSC_Unused_31 = 31		/* Konsole (unused) */
@@ -4167,6 +4168,12 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_IconOnly:		/* new icon name only */
 	ChangeIconName(xw, buf);
 	break;
+
+    case OSC_DECSWT:
+	/* https://invisible-island.net/xterm/xterm.faq.html#bug_dxterm */
+	if (screen->terminal_id < 520)
+	    break;
+	/* FALLTHRU */
 
     case OSC_TitleOnly:	/* new title only */
 	ChangeTitle(xw, buf);

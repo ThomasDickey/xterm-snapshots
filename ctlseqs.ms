@@ -1,5 +1,5 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.747 2026/08/13 20:39:15 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.748 2026/08/23 23:04:10 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
@@ -41,7 +41,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #411
-.ds RF 2026/08/13
+.ds RF 2026/08/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -2907,6 +2907,8 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt.
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt.
   \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt.
+.sp
+  \*(Ps = \*2\*1 \(-> Change Window Title to \*(Pt (DECSWT), VT520.
 .sp
   \*(Ps = \*2\*2 \(-> Change pointer cursor shape to \*(Pt.
 The parameter \*(Pt sets the \fB\%pointerShape\fP resource.
