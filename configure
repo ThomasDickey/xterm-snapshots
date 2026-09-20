@@ -23791,16 +23791,16 @@ rm -f "conftest.$ac_objext" "conftest$ac_exeext" "conftest.$ac_ext"
 		cat >"conftest.$ac_ext" <<_ACEOF
 #line 23792 "configure"
 #include "confdefs.h"
-#include <sys/types.h>
-#include <stdio.h>
+$ac_includes_default
 #include <$cf_regex_hdr>
 int
 main (void)
 {
 
-			regex_t *p = NULL;
+			regex_t *p = malloc(sizeof(*p));
+			regmatch_t *q = malloc(5 * sizeof(*q));
 			int x = regcomp(p, "", 0);
-			int y = regexec(p, "", 0, NULL, 0);
+			int y = regexec(p, "", 5, q, 0);
 			(void)x;
 			(void)y;
 			regfree(p);

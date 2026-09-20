@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.564 2026/04/12 18:39:22 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.565 2026/04/25 00:37:12 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2667,7 +2667,7 @@ AC_SUBST(LINT_OPTS)
 AC_SUBST(LINT_LIBS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 22 updated: 2026/04/08 04:23:56
+dnl CF_REGEX version: 23 updated: 2026/04/24 20:37:12
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -2743,12 +2743,12 @@ case "$cf_regex_func" in
 (*)
 	for cf_regex_hdr in regex.h
 	do
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <sys/types.h>
-#include <stdio.h>
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([$ac_includes_default
 #include <$cf_regex_hdr>],[
-			regex_t *p = NULL;
+			regex_t *p = malloc(sizeof(*p));
+			regmatch_t *q = malloc(5 * sizeof(*q));
 			int x = regcomp(p, "", 0);
-			int y = regexec(p, "", 0, NULL, 0);
+			int y = regexec(p, "", 5, q, 0);
 			(void)x;
 			(void)y;
 			regfree(p);
