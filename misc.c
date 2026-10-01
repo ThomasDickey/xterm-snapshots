@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1135 2026/08/23 23:12:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.1136 2026/10/01 23:32:24 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -5711,7 +5711,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->keepClipboard);
 	    break;
 	case srm_ALLOW_ALTBUF:
-	    result = MdBool(xw->misc.titeInhibit);
+	    result = MdBool(!xw->misc.titeInhibit);
 	    break;
 	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
