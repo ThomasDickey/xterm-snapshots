@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1173 2026/08/13 08:12:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1174 2026/10/07 19:06:37 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3866,11 +3866,16 @@ typedef struct {
 #define PrinterOf(screen) (screen)->printer_state
 
 #ifdef SCROLLBAR_RIGHT
-#define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
+#define UseRightSb(screen) ((term)->misc.useRight)
+#define RightSb(screen) (UseRightSb(screen) ? ScrollbarWidth(screen) : 0)
+#define LeftSb(screen)  (UseRightSb(screen) ? 0 : ScrollbarWidth(screen))
 #else
-#define OriginX(screen) (ScrollbarWidth(screen) + screen->border)
+#define UseRightSb(screen) False
+#define RightSb(screen) 0
+#define LeftSb(screen)  ScrollbarWidth(screen)
 #endif
 
+#define OriginX(screen) (LeftSb(screen) + screen->border)
 #define OriginY(screen) (screen->border)
 
 #define CursorMoved(screen) \

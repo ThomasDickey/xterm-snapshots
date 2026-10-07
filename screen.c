@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.680 2026/07/30 18:16:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.682 2026/10/07 08:28:28 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1918,12 +1918,15 @@ LineRefresh(XtermWidget xw,
 			      (unsigned) (col - lastind));
 	(void) x_end;
 	if_OPT_WIDE_CHARS(screen, {
+	    int x_1st;
+	    int x_2nd;
 	    int i;
 	    size_t off;
 	    Char combining = 0;
 
-	    if (x_end < Width(screen) &&
-		x_end + FontWidth(screen) >= Width(screen)) {
+	    x_2nd = FullWidth(screen) - screen->border - RightSb(screen);
+	    x_1st = x_2nd - FontWidth(screen);
+	    if (x_end > x_1st && x_end < x_2nd) {
 		IChar fills[2];
 		Char sizes[2];
 		fills[0] = ' ';
