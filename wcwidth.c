@@ -1,4 +1,4 @@
-/* $XTermId: wcwidth.c,v 1.97 2026/09/20 09:12:06 tom Exp $ */
+/* $XTermId: wcwidth.c,v 1.99 2026/10/07 23:48:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/wcwidth.c,v 1.9 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -830,9 +830,9 @@ mk_wcwidth(wchar_t ucs)
     unsigned long cmp = (unsigned long) ucs;
     int result;
 
+#define SizeOf(table) (int) (sizeof(table) / sizeof(struct interval) - 1)
 #define Lookup(cmp, table) \
-      bisearch(cmp, table, \
-               (int) (sizeof(table) / sizeof(struct interval) - 1))
+      bisearch(cmp, table, SizeOf(table))
 
     /* test for 8-bit control characters */
     if (cmp == 0) {
@@ -956,7 +956,7 @@ usage(void)
 	" -m  ignore characters missing in system's wcwidth",
 	" -s  show only summary",
 	" -t  use built-in table of ranges",
-	" -w  use width-characters for ambiguous-width"
+	" -w  use two-cells for ambiguous-width"
     };
     size_t n;
     for (n = 0; n < sizeof(msg) / sizeof(msg[0]); ++n) {
@@ -966,13 +966,20 @@ usage(void)
 }
 
 static void
-show_summary(long errs, long tested)
+show_percent(long errs, long tested, int width, int prec, const char *tag)
 {
     if (tested != 0)
-	printf("%ld/%ld mismatches (%.0f%%)\n",
-	       errs,
-	       tested,
+	printf("%*ld/%*ld %s (%.*f%%)\n",
+	       width, errs,
+	       width, tested,
+	       tag, prec,
 	       (100.0 * (double) errs) / (double) tested);
+}
+
+static void
+show_summary(long errs, long tested)
+{
+    show_percent(errs, tested, 0, 0, "mismatches");
 }
 
 static int
@@ -1100,6 +1107,28 @@ do_range(const char *source, long *errorp, long *totalp)
     }
 }
 
+static void
+do_table(long *totals, int pass, const struct interval table[], int length, const char *tag)
+{
+    long amount = 0;
+    unsigned long first = 0xffffffff;
+    unsigned long last = 0;
+    int n;
+    for (n = 0; n < length; ++n) {
+	if (first > table[n].first)
+	    first = table[n].first;
+	if (last < table[n].last)
+	    last = table[n].last;
+	amount += table[n].last + 1 - table[n].first;
+    }
+    if (pass) {
+	printf("   [ %8lu, %8lu ]  ", first, last);
+	show_percent(amount, *totals, 10, 1, tag);
+    } else {
+	*totals += amount;
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1135,25 +1164,31 @@ main(int argc, char **argv)
 	}
     }
 #endif /* HAVE_LANGINFO_CODESET */
+
+    printf(".. range");
+    for (ch = 1; ch < argc; ++ch)
+	printf(" %s", argv[ch]);
+    printf("\n");
+
     while ((ch = getopt(argc, argv, "aemstw")) != -1) {
 	switch (ch) {
 	case 'a':
-	    opt_all = 1;
+	    opt_all++;
 	    break;
 	case 'e':
-	    opt_emoji = 1;
+	    opt_emoji++;
 	    break;
 	case 'm':
-	    opt_missing = 1;
+	    opt_missing++;
 	    break;
 	case 's':
-	    opt_quiet = 1;
+	    opt_quiet++;
 	    break;
 	case 't':
-	    opt_table = 1;
+	    opt_table++;
 	    break;
 	case 'w':
-	    opt_wider = 1;
+	    opt_wider++;
 	    break;
 	default:
 	    usage();
@@ -1163,7 +1198,20 @@ main(int argc, char **argv)
 	int mask = mk_wcwidth_init(0);
 	mk_wcwidth_init(mask | WcEmojiFullwidth);
     }
-    if (opt_table) {
+    if (opt_table > 1) {
+	int pass;
+#define DO_TABLE(table, tag) do_table(&totals, pass, table, SizeOf(table), tag)
+	printf(".. sizes of uniset-tables:\n");
+	for (pass = 0; pass < 2; ++pass) {
+	    DO_TABLE(ambiguous, "Ambiguous width");
+	    DO_TABLE(combining, "Combining");
+	    DO_TABLE(doublewidth, "Double width");
+	    DO_TABLE(emoji_chars, "Emoji");
+	    DO_TABLE(formatting, "Formatting");
+	    DO_TABLE(unknowns, "Unknowns");
+	}
+	totals = 0;
+    } else if (opt_table) {
 	/* *INDENT-OFF* */
 	static const struct {
 	    int lo, hi;
