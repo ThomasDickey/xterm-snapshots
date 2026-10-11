@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.800 2026/07/21 21:13:25 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.801 2026/10/11 09:53:12 tom Exp $ */
 
 /*
  * Copyright 1998-2025,2026 by Thomas E. Dickey
@@ -1495,7 +1495,7 @@ loadBoldFP(XtermWidget xw,
     TRACE(("loadBoldFP (%s)\n", NonNull(*nameOutP)));
 
     if (!check_fontname(*nameOutP)) {
-	FontNameProperties *fp;
+	const FontNameProperties *fp;
 	char *normal = x_strdup(nameRef);
 
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
@@ -5193,7 +5193,7 @@ useFaceSizes(XtermWidget xw)
 int
 lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int m = -1;
 
     TRACE(("lookupRelativeFontSize(old=%d, relative=%d)\n", old, relative));

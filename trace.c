@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.256 2026/07/30 23:41:44 tom Exp $ */
+/* $XTermId: trace.c,v 1.257 2026/10/11 09:51:21 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -694,7 +694,7 @@ TraceAtomName(Display *dpy, Atom atom)
 void
 TraceScreen(XtermWidget xw, int whichBuf)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     if (screen->editBuf_index[whichBuf]) {
 	int row;

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1027 2026/08/22 10:15:18 tom Exp $ */
+/* $XTermId: util.c,v 1.1032 2026/10/11 10:53:38 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -169,7 +169,7 @@ int (*my_wcwidth) (wchar_t);
  * that we should fill with blanks, return true if filling is needed.
  */
 int
-DamagedCells(TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
+DamagedCells(const TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
     int result = False;
@@ -222,7 +222,7 @@ DamagedCells(TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
 }
 
 int
-DamagedCurCells(TScreen *screen, unsigned n, int *klp, int *krp)
+DamagedCurCells(const TScreen *screen, unsigned n, int *klp, int *krp)
 {
     return DamagedCells(screen, n, klp, krp, screen->cur_row, screen->cur_col);
 }
@@ -706,7 +706,7 @@ row_has_data2(const TScreen *screen, int row, int left, int right)
 static Boolean
 screen_has_data(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     Boolean result = False;
     int row;
 
@@ -2320,7 +2320,7 @@ ClearRight(XtermWidget xw, int n)
 static void
 ClearLeft(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     unsigned len = (unsigned) screen->cur_col + 1;
 
     assert(screen->cur_col >= 0);
@@ -2951,13 +2951,21 @@ handle_translated_exposure(XtermWidget xw,
 		    (unsigned) rect_width,
 		    (unsigned) rect_height);
     }
-    toprow = y0 / FontHeight(screen);
-    if (toprow < 0)
-	toprow = 0;
 
+    if (y0 < 0)
+	y0 = 0;
+    if (x0 < 0)
+	x0 = 0;
+#define NUM_FRAC(num,den) num / den, 10 * (num % den) / den
+#define FMT_FRAC "[ %2d.%d, %2d.%d ]"
+    TRACE(("ULC " FMT_FRAC " RRC " FMT_FRAC "\n",
+	   NUM_FRAC(y0, FontHeight(screen)),
+	   NUM_FRAC(x0, FontWidth(screen)),
+	   NUM_FRAC(y1, FontHeight(screen)),
+	   NUM_FRAC(x1, FontWidth(screen))));
+
+    toprow = y0 / FontHeight(screen);
     leftcol = x0 / FontWidth(screen);
-    if (leftcol < 0)
-	leftcol = 0;
 
     nrows = (y1 - 1) / FontHeight(screen) - toprow + 1;
     ncols = (x1 - 1) / FontWidth(screen) - leftcol + 1;
@@ -3519,7 +3527,7 @@ getNormXftFont(XTermDraw * params,
 	       unsigned attr_flags,
 	       Bool *did_ul)
 {
-    TScreen *screen = TScreenOf(params->xw);
+    const TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
     XTermXftFonts *result = NULL;
 
@@ -4361,7 +4369,7 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
     XtermWidget xw = params->xw;
     TScreen *screen = TScreenOf(xw);
     int src, dst;
-    IChar *mapped = BfBuf(IChar);
+    const IChar *mapped = BfBuf(IChar);
     XChar2b *buffer2 = BfBuf(XChar2b);
     VTwin *currentWin = WhichVWin(screen);
     XTermFonts *xf = getCgsFont(xw, currentWin, gc);
@@ -4493,6 +4501,20 @@ drawXtermText(const XTermDraw * params,
 	   visibleIChars(text, len)));
 
     assert(size != NULL);
+
+#if OPT_WIDE_CHARS
+    if_OPT_WIDE_CHARS(screen, {
+	if (text[0] == HIDDEN_CHAR) {
+	    int next_x = start_x + FontWidth(screen);
+	    return ((len == 1)
+		    ? next_x
+		    : drawXtermText(params, gc,
+				    next_x, start_y,
+				    text + 1, size + 1, len - 1));
+	}
+    });
+#endif
+
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(recur.this_chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -5487,7 +5509,7 @@ getXtermSizeHints(XtermWidget xw)
 CgsEnum
 whichXtermCgs(XtermWidget xw, unsigned attr_flags, Bool hilite)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     CgsEnum cgsId = gcMAX;
 
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
@@ -5657,13 +5679,13 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background);
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 #ifndef NO_ACTIVE_ICON
     VTwin *win = WhichVWin(screen);
 #endif
 
     checkVeryBoldColors(attr_flags, xw->cur_foreground);
-
+    (void) screen;
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
 	setCgsFore(xw, win, cgsId, bg_pix);
 	setCgsBack(xw, win, cgsId, fg_pix);
@@ -5930,7 +5952,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
  * Returns a single base character for the given cell.
  */
 unsigned
-getXtermCell(TScreen *screen, int row, int col)
+getXtermCell(const TScreen *screen, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
 
@@ -5943,7 +5965,7 @@ getXtermCell(TScreen *screen, int row, int col)
  * Sets a single base character for the given cell.
  */
 void
-putXtermCell(TScreen *screen, int row, int col, int ch)
+putXtermCell(const TScreen *screen, int row, int col, int ch)
 {
     LineData *ld = getLineData(screen, row);
 
@@ -6054,7 +6076,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 }
 
 unsigned
-getXtermCombining(TScreen *screen, int row, int col, int off)
+getXtermCombining(const TScreen *screen, int row, int col, int off)
 {
     CLineData *ld = getLineData(screen, row);
     return (ld->combSize ? ld->combData[off][col] : 0U);

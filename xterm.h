@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.997 2026/07/30 18:17:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.998 2026/10/11 10:02:16 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1203,7 +1203,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 #endif
 
 /* charproc.c */
-extern Bool CheckBufPtrs (TScreen * /* screen */);
+extern Bool CheckBufPtrs (const TScreen * /* screen */);
 extern Bool set_cursor_gcs (XtermWidget /* xw */);
 extern char * vt100ResourceToString (XtermWidget /* xw */, const char * /* name */);
 extern int VTInit (XtermWidget /* xw */);
@@ -1972,9 +1972,9 @@ extern Boolean showZIconBeep(XtermWidget /* xw */, const char * /* name */);
 
 #define XTERM_CELL(row,col)    getXtermCell(screen,     ROW2INX(screen, row), col)
 
-extern unsigned getXtermCell (TScreen * /* screen */, int /* row */, int /* col */);
-extern unsigned getXtermCombining(TScreen * /* screen */, int /* row */, int /* col */, int /* off */);
-extern void putXtermCell (TScreen * /* screen */, int /* row */, int /* col */, int /* ch */);
+extern unsigned getXtermCell (const TScreen * /* screen */, int /* row */, int /* col */);
+extern unsigned getXtermCombining(const TScreen * /* screen */, int /* row */, int /* col */, int /* off */);
+extern void putXtermCell (const TScreen * /* screen */, int /* row */, int /* col */, int /* ch */);
 
 #define IsCellCombined(screen, row, col) (getXtermCombining(screen, row, col, 0) != 0)
 
@@ -1998,8 +1998,8 @@ extern void putXtermCell (TScreen * /* screen */, int /* row */, int /* col */, 
 	setXtermLineAttributes(dpy, gc, 0, LineSolid);
 
 #if OPT_WIDE_CHARS
-extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
-extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
+extern int DamagedCells(const TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
+extern int DamagedCurCells(const TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);
 extern void addXtermCombining (TScreen * /* screen */, int /* row */, int /* col */, unsigned /* ch */);
 extern void allocXtermChars(ScrnPtr * /* buffer */, Cardinal /* length */);

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.389 2026/08/10 19:57:54 tom Exp $ */
+/* $XTermId: menu.c,v 1.390 2026/10/11 09:54:06 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -683,7 +683,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 	   data->internal_name, (void *) list->w, XtWindow(list->w)));
 #endif
     if (list->w != NULL) {
-	Boolean *unused = unusedEntries(xw, num);
+	const Boolean *unused = unusedEntries(xw, num);
 	Cardinal n;
 #if OPT_TOOLBAR
 	Boolean useLocale = !strcmp(resource.menuLocale, "");
@@ -2808,7 +2808,7 @@ HandleFontLoading(Widget w,
 static void
 update_fontmenu(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int n;
 
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {

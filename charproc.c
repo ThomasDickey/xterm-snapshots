@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.2133 2026/08/22 10:15:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.2134 2026/10/11 09:53:12 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -1076,7 +1076,7 @@ SGR_Foreground(XtermWidget xw, int color)
 void
 SGR_Background(XtermWidget xw, int color)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     Pixel bg;
 
     /*
@@ -2252,7 +2252,7 @@ use_default_value(int which, int default_value)
 static void
 begin_sixel(XtermWidget xw, struct ParseState *sp)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
 
     sp->string_args = sa_LAST;
     if (optSixelGraphics(screen)) {
@@ -9594,7 +9594,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 }
 
 Bool
-CheckBufPtrs(TScreen *screen)
+CheckBufPtrs(const TScreen *screen)
 {
     return (screen->visbuf != NULL
 	    && screen->editBuf_index[0] != NULL
@@ -10812,7 +10812,7 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_ISO_COLORS
-    static XtResource fake_resources[] =
+    static const XtResource fake_resources[] =
     {
 #if OPT_256_COLORS
 # include <256colres.h>

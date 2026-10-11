@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1136 2026/10/01 23:32:24 tom Exp $ */
+/* $XTermId: misc.c,v 1.1137 2026/10/11 10:33:08 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -6180,7 +6180,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
      */
     titleIsUTF8 = isValidUTF8((Char *) value);
     if (IsSetUtf8Title(xw) && titleIsUTF8) {
-	TScreen *screen = TScreenOf(xw);
 	char *testc = malloc(strlen(value) + 1);
 	Char *nextc = (Char *) value;
 	Boolean ok8bit = True;
@@ -6196,7 +6195,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		nextc = convertFromUTF8(nextc, &ch);
 		if (ch > 255) {
 		    ok8bit = False;
-		} else if (!IsLatin1(screen, ch)) {
+		} else if (!IsLatin1(TScreenOf(xw), ch)) {
 		    ch = OnlyLatin1(ch);
 		}
 		*lastc++ = (Char) ch;
